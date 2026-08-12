@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { CountBadge } from "@/components/ui/Badge";
 
 interface HeaderProps {
@@ -22,8 +23,14 @@ export function Header({ cartCount = 0 }: HeaderProps) {
         aria-label="Floria — go to home"
         className="flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-700 rounded"
       >
-        {/* Botanical leaf mark + wordmark */}
-        <BotanicalMark />
+        <Image
+          src="/floria-logo.png"
+          alt="Floria Logo"
+          width={32}
+          height={32}
+          priority
+          className="object-contain"
+        />
         <span
           className="font-serif text-xl font-semibold text-ink-900 tracking-tight select-none"
           aria-hidden="true"
@@ -70,46 +77,6 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
   );
 }
 
-/** Temporary botanical leaf SVG mark — replace with final logo asset when available */
-function BotanicalMark() {
-  return (
-    <svg
-      width="28"
-      height="28"
-      viewBox="0 0 28 28"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-    >
-      {/* Leaf shape */}
-      <path
-        d="M14 3C14 3 4 8 4 16C4 21.523 8.477 26 14 26C19.523 26 24 21.523 24 16C24 8 14 3 14 3Z"
-        fill="#245718"
-      />
-      {/* Stem */}
-      <path
-        d="M14 26V13"
-        stroke="#faf7f0"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      {/* Vein left */}
-      <path
-        d="M14 17C12 15 9 15 9 15"
-        stroke="#faf7f0"
-        strokeWidth="1"
-        strokeLinecap="round"
-      />
-      {/* Vein right */}
-      <path
-        d="M14 14C16 12 19 12 19 12"
-        stroke="#faf7f0"
-        strokeWidth="1"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
 
 function CartIcon() {
   return (
