@@ -81,14 +81,18 @@ CREATE TABLE user_profiles (
 
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
 
--- Policies: user can read/update their own profile; admin can read all
+-- SELECT: own row only
+-- INSERT: not permitted via RLS (created by trigger/service-role on signup)
+-- UPDATE: own row only
+-- DELETE: not permitted via RLS (service-role only)
 CREATE POLICY "user_profiles: owner read" ON user_profiles
   FOR SELECT USING (auth.uid() = id);
 
 CREATE POLICY "user_profiles: owner update" ON user_profiles
   FOR UPDATE USING (auth.uid() = id);
 
--- Service-role bypass is implicit for server-side operations
+-- TODO(admin-rls): add admin SELECT policy once admin role check is wired
+-- Service-role bypass is implicit for all server-side operations
 
 CREATE INDEX idx_user_profiles_role ON user_profiles(role);
 
@@ -114,16 +118,21 @@ CREATE TABLE seller_profiles (
 
 ALTER TABLE seller_profiles ENABLE ROW LEVEL SECURITY;
 
--- Seller: read/update own profile
+-- SELECT: own seller profile (any status); OR public read of approved+active sellers
+-- INSERT: not permitted via RLS (operations/admin creates via service-role)
+-- UPDATE: own seller profile only
+-- DELETE: not permitted via RLS
 CREATE POLICY "seller_profiles: seller read own" ON seller_profiles
   FOR SELECT USING (auth.uid() = user_id);
 
 CREATE POLICY "seller_profiles: seller update own" ON seller_profiles
   FOR UPDATE USING (auth.uid() = user_id);
 
--- Public can read approved/active sellers (for storefront)
+-- Public (including unauthenticated) can read approved+active sellers for storefront
 CREATE POLICY "seller_profiles: public read approved" ON seller_profiles
   FOR SELECT USING (status = 'approved' AND is_active = TRUE);
+
+-- TODO(admin-rls): add admin SELECT/UPDATE policy once admin role check is wired
 
 CREATE INDEX idx_seller_profiles_user ON seller_profiles(user_id);
 CREATE INDEX idx_seller_profiles_status ON seller_profiles(status, is_active);
@@ -142,6 +151,11 @@ CREATE TABLE seller_documents (
 
 ALTER TABLE seller_documents ENABLE ROW LEVEL SECURITY;
 
+-- SELECT: own documents only (Seller A cannot read Seller B documents)
+-- INSERT: own seller only — TODO(seller-rls): add WITH CHECK when seller self-service upload is built
+-- UPDATE: not permitted via RLS
+-- DELETE: not permitted via RLS
+-- TODO(admin-rls): add admin SELECT policy once admin role check is wired
 CREATE POLICY "seller_documents: seller read own" ON seller_documents
   FOR SELECT USING (
     seller_id IN (
@@ -171,7 +185,8 @@ CREATE TABLE categories (
 
 ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
 
--- Public can read active categories
+-- SELECT: active categories only — public/unauthenticated
+-- INSERT/UPDATE/DELETE: not permitted via RLS (admin/service-role only)
 CREATE POLICY "categories: public read active" ON categories
   FOR SELECT USING (is_active = TRUE);
 
@@ -199,11 +214,14 @@ CREATE TABLE products (
 
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 
--- Public can read active products
+-- SELECT: active products publicly; own products (any status) for the owning seller
+--         Seller A cannot read Seller B draft/inactive products
+-- INSERT: own seller only (WITH CHECK prevents inserting under another seller's id)
+-- UPDATE: own products only
+-- DELETE: not permitted via RLS (use status='deleted' soft delete instead)
 CREATE POLICY "products: public read active" ON products
   FOR SELECT USING (status = 'active');
 
--- Seller can read/write own products
 CREATE POLICY "products: seller read own" ON products
   FOR SELECT USING (
     seller_id IN (
@@ -224,6 +242,8 @@ CREATE POLICY "products: seller update own" ON products
       SELECT id FROM seller_profiles WHERE user_id = auth.uid()
     )
   );
+
+-- TODO(admin-rls): add admin SELECT/UPDATE policy once admin role check is wired
 
 CREATE INDEX idx_products_seller ON products(seller_id);
 CREATE INDEX idx_products_category ON products(category_id);
@@ -246,8 +266,44 @@ CREATE TABLE product_images (
 
 ALTER TABLE product_images ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "product_images: public read" ON product_images
-  FOR SELECT USING (TRUE); -- filtered via products join
+-- SELECT: images of active products only (public); own seller's product images
+--         Prevents leaking images of draft/inactive products from other sellers
+-- INSERT: own seller's products only
+-- UPDATE/DELETE: own seller's products only
+-- NOTE: USING (TRUE) was removed — it leaked images of draft products from any seller
+CREATE POLICY "product_images: public read active products" ON product_images
+  FOR SELECT USING (
+    product_id IN (
+      SELECT id FROM products WHERE status = 'active'
+    )
+  );
+
+CREATE POLICY "product_images: seller read own" ON product_images
+  FOR SELECT USING (
+    product_id IN (
+      SELECT id FROM products WHERE seller_id IN (
+        SELECT id FROM seller_profiles WHERE user_id = auth.uid()
+      )
+    )
+  );
+
+CREATE POLICY "product_images: seller insert own" ON product_images
+  FOR INSERT WITH CHECK (
+    product_id IN (
+      SELECT id FROM products WHERE seller_id IN (
+        SELECT id FROM seller_profiles WHERE user_id = auth.uid()
+      )
+    )
+  );
+
+CREATE POLICY "product_images: seller delete own" ON product_images
+  FOR DELETE USING (
+    product_id IN (
+      SELECT id FROM products WHERE seller_id IN (
+        SELECT id FROM seller_profiles WHERE user_id = auth.uid()
+      )
+    )
+  );
 
 CREATE INDEX idx_product_images_product ON product_images(product_id);
 CREATE INDEX idx_product_images_primary ON product_images(product_id, is_primary);
@@ -271,11 +327,28 @@ CREATE TABLE inventory (
 
 ALTER TABLE inventory ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "inventory: public read" ON inventory
-  FOR SELECT USING (TRUE);
+-- SELECT: price/stock of active products is public; own inventory for the owning seller
+--         NOTE: "inventory: public read USING (TRUE)" was removed — it exposed
+--         price and stock of ALL inventory including draft products and other sellers
+-- INSERT: own seller only
+-- UPDATE: own seller only (Seller A cannot update Seller B inventory)
+-- DELETE: not permitted via RLS
+CREATE POLICY "inventory: public read active products" ON inventory
+  FOR SELECT USING (
+    product_id IN (
+      SELECT id FROM products WHERE status = 'active'
+    )
+  );
 
 CREATE POLICY "inventory: seller read own" ON inventory
   FOR SELECT USING (
+    seller_id IN (
+      SELECT id FROM seller_profiles WHERE user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "inventory: seller insert own" ON inventory
+  FOR INSERT WITH CHECK (
     seller_id IN (
       SELECT id FROM seller_profiles WHERE user_id = auth.uid()
     )
@@ -314,8 +387,11 @@ CREATE TABLE addresses (
 
 ALTER TABLE addresses ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "addresses: owner only" ON addresses
-  USING (auth.uid() = user_id);
+-- SELECT/INSERT/UPDATE/DELETE: own addresses only
+-- Customer A cannot access Customer B addresses
+CREATE POLICY "addresses: owner all" ON addresses
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
 
 CREATE INDEX idx_addresses_user ON addresses(user_id);
 
@@ -336,8 +412,10 @@ CREATE TABLE carts (
 
 ALTER TABLE carts ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "carts: owner only" ON carts
-  USING (auth.uid() = user_id);
+-- SELECT/INSERT/UPDATE/DELETE: own cart only
+CREATE POLICY "carts: owner all" ON carts
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
 
 CREATE TABLE cart_items (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -350,8 +428,14 @@ CREATE TABLE cart_items (
 
 ALTER TABLE cart_items ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "cart_items: owner only" ON cart_items
+-- SELECT/INSERT/UPDATE/DELETE: items belonging to own cart only
+CREATE POLICY "cart_items: owner all" ON cart_items
   USING (
+    cart_id IN (
+      SELECT id FROM carts WHERE user_id = auth.uid()
+    )
+  )
+  WITH CHECK (
     cart_id IN (
       SELECT id FROM carts WHERE user_id = auth.uid()
     )
@@ -384,17 +468,24 @@ CREATE TABLE orders (
 
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 
--- Customer can read own orders
+-- SELECT: customer sees own orders; seller sees orders for their nursery
+--         Customer A cannot access Customer B orders
+--         Seller A cannot access Seller B orders
+-- INSERT: not permitted via RLS (checkout Route Handler via service-role only)
+-- UPDATE: not permitted via RLS (order transitions via service-role only)
+-- DELETE: not permitted via RLS (orders are immutable records)
 CREATE POLICY "orders: customer read own" ON orders
   FOR SELECT USING (auth.uid() = customer_id);
 
--- Seller can read orders for their nursery
 CREATE POLICY "orders: seller read own" ON orders
   FOR SELECT USING (
     seller_id IN (
       SELECT id FROM seller_profiles WHERE user_id = auth.uid()
     )
   );
+
+-- TODO(admin-rls): add operations/admin SELECT policy once admin role check is wired
+-- TODO(seller-rls): seller status UPDATE policy (accepted/preparing/ready) via service-role transition fn
 
 CREATE INDEX idx_orders_customer ON orders(customer_id);
 CREATE INDEX idx_orders_seller ON orders(seller_id);
@@ -419,6 +510,9 @@ CREATE TABLE order_items (
 
 ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
 
+-- SELECT: customer sees own order items; seller sees items for their orders
+--         Seller A cannot read Seller B order items
+-- INSERT/UPDATE/DELETE: not permitted via RLS (checkout Route Handler only)
 CREATE POLICY "order_items: customer read own" ON order_items
   FOR SELECT USING (
     order_id IN (
@@ -460,7 +554,11 @@ CREATE TABLE payments (
 
 ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
 
--- Customers can see their own payment records
+-- SELECT: customer sees payment records for own orders
+--         Seller does NOT have direct payment read access — settlement is internal
+-- INSERT/UPDATE: not permitted via RLS (webhook Route Handler via service-role only)
+-- DELETE: not permitted via RLS
+-- TODO(admin-rls): add operations/admin SELECT policy once admin role check is wired
 CREATE POLICY "payments: customer read own" ON payments
   FOR SELECT USING (
     order_id IN (
@@ -490,6 +588,9 @@ CREATE TABLE order_events (
 
 ALTER TABLE order_events ENABLE ROW LEVEL SECURITY;
 
+-- SELECT: customer sees events for own orders; seller sees events for their orders
+-- INSERT: not permitted via RLS (order transition service-role functions only)
+-- UPDATE/DELETE: not permitted via RLS (audit trail is immutable)
 CREATE POLICY "order_events: customer read own" ON order_events
   FOR SELECT USING (
     order_id IN (
@@ -505,6 +606,8 @@ CREATE POLICY "order_events: seller read own" ON order_events
       )
     )
   );
+
+-- TODO(admin-rls): add admin SELECT policy once admin role check is wired
 
 CREATE INDEX idx_order_events_order ON order_events(order_id);
 CREATE INDEX idx_order_events_created ON order_events(created_at DESC);
@@ -527,9 +630,13 @@ CREATE TABLE audit_records (
 
 ALTER TABLE audit_records ENABLE ROW LEVEL SECURITY;
 
--- Only admins/service role can read audit records
--- Admin policy applied via service-role or future admin RLS check
--- ponytail: admin RLS policy added when admin role check is wired in
+-- SELECT: no policy — blocked for all authenticated users via RLS
+--         Only service-role (server-side admin operations) can read audit records
+-- INSERT: not permitted via RLS (service-role only)
+-- UPDATE/DELETE: not permitted via RLS (audit records are immutable)
+-- TODO(admin-rls): add admin/operations SELECT policy once admin role check is wired
+-- NOTE: Absence of a SELECT policy means RLS blocks all authenticated reads.
+--       This is intentional — audit_records are internal only.
 
 CREATE INDEX idx_audit_records_actor ON audit_records(actor_id);
 CREATE INDEX idx_audit_records_entity ON audit_records(entity_type, entity_id);
@@ -551,7 +658,11 @@ CREATE TABLE commission_config (
 );
 
 ALTER TABLE commission_config ENABLE ROW LEVEL SECURITY;
--- Only admins can manage commission; accessed via service-role for now
+
+-- SELECT/INSERT/UPDATE/DELETE: no RLS policies — service-role access only
+-- TODO(admin-rls): add admin SELECT/INSERT policy once admin role check is wired
+-- NOTE: commission_config is fully protected by RLS with no public policies.
+--       All access must go through server-side service-role client.
 
 -- ============================================================
 -- UPDATED_AT trigger function (reusable)
