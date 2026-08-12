@@ -27,6 +27,12 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@floria/types": [
+        "../../packages/types/src/index.ts"
+      ],
+      "@floria/validation": [
+        "../../packages/validation/src/index.ts"
       ]
     },
     "incremental": true
