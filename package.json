@@ -4,12 +4,12 @@
   "private": true,
   "description": "Floria — multi-vendor plant marketplace",
   "scripts": {
-    "dev": "pnpm --filter web dev",
-    "build": "pnpm --filter web build",
-    "lint": "pnpm --filter web lint",
-    "typecheck": "pnpm --filter web typecheck",
-    "test": "pnpm --filter web test",
-    "test:e2e": "pnpm --filter web test:e2e",
+    "dev": "pnpm --filter @floria/web dev",
+    "build": "pnpm --filter @floria/web build",
+    "lint": "pnpm --filter @floria/web lint",
+    "typecheck": "pnpm --filter @floria/web typecheck",
+    "test": "pnpm --filter @floria/web test",
+    "test:e2e": "pnpm --filter @floria/web test:e2e",
     "format": "prettier --write \"**/*.{ts,tsx,md,json}\" --ignore-path .gitignore"
   },
   "devDependencies": {
@@ -18,7 +18,7 @@
   },
   "engines": {
     "node": ">=20",
-    "pnpm": ">=9"
+    "pnpm": ">=11"
   },
   "packageManager": "pnpm@11.21.0"
 }
