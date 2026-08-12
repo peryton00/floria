@@ -1,0 +1,41 @@
+# OS and editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/settings.json
+
+# Node
+node_modules/
+.npm/
+
+# Environment variables — NEVER commit real credentials
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Next.js build
+apps/web/.next/
+apps/web/out/
+
+# Turbo cache
+.turbo/
+
+# Vercel
+.vercel/
+
+# Testing
+coverage/
+playwright-report/
+test-results/
+
+# pnpm lock (committed), pnpm store
+# pnpm-lock.yaml is intentionally tracked
+
+# TypeScript
+*.tsbuildinfo
+
+# Misc
+*.log
