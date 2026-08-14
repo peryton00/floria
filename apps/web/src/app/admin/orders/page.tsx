@@ -1,0 +1,234 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { AdminShell } from "@/components/admin/AdminShell";
+import { api } from "@/lib/api";
+import { formatINR } from "@/lib/format";
+import { SearchIcon } from "@/components/ui/Icons";
+
+export default function AdminOrdersPage() {
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      const res = await api.getAdminOrders({
+        search: search || undefined,
+        status: statusFilter !== "all" ? statusFilter : undefined,
+      });
+
+      if (res.success && res.data) {
+        setOrders(res.data);
+      } else {
+        setError(res.error?.message || "Failed to load master orders");
+      }
+    } catch (e: any) {
+      setError(e.message || "Failed to connect to API");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrders();
+  }, [statusFilter]);
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    fetchOrders();
+  };
+
+  return (
+    <AdminShell>
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="font-serif text-2xl font-bold text-ink-900 leading-tight">Master Order Oversight</h1>
+            <p className="text-xs text-ink-400 mt-0.5">Platform-wide visibility across multi-nursery customer orders and fulfillment states.</p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-ink-500 uppercase tracking-wider">Master Orders:</span>
+            <span className="px-3 py-1 rounded-full bg-forest-50 text-forest-700 font-bold text-xs border border-forest-100">
+              {orders.length} Total
+            </span>
+          </div>
+        </div>
+
+        {error && (
+          <div className="bg-error-50 border border-error-100 rounded-xl p-4 text-xs text-error-700">
+            {error}
+          </div>
+        )}
+
+        {/* Filters */}
+        <form onSubmit={handleSearchSubmit} className="bg-white rounded-xl border border-ink-100 p-4 shadow-sm flex flex-col sm:flex-row gap-4 items-center justify-between">
+          <div className="w-full sm:w-80 relative">
+            <input
+              type="search"
+              placeholder="Search by Order ID or Customer Name..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 text-xs rounded-lg border border-ink-200 focus:outline-none focus:ring-1 focus:ring-forest-700"
+            />
+            <SearchIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-300" />
+          </div>
+
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-3 py-2 text-xs rounded-lg border border-ink-200 focus:outline-none focus:ring-1 focus:ring-forest-700 bg-white"
+            >
+              <option value="all">All Fulfillment Statuses</option>
+              <option value="seller_pending">Seller Pending</option>
+              <option value="preparing">Preparing</option>
+              <option value="ready for pickup">Ready for Pickup</option>
+              <option value="picked up">Picked Up</option>
+              <option value="packing">Packing</option>
+              <option value="out for delivery">Out for Delivery</option>
+              <option value="delivered">Delivered</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+
+            <button
+              type="submit"
+              className="px-4 py-2 bg-forest-700 hover:bg-forest-800 text-white font-bold text-xs uppercase tracking-wider rounded-lg transition-colors"
+            >
+              Search
+            </button>
+          </div>
+        </form>
+
+        {/* Orders Table */}
+        <div className="bg-white rounded-xl border border-ink-100 shadow-sm overflow-hidden">
+          {loading ? (
+            <div className="py-12 flex justify-center">
+              <div className="w-8 h-8 border-2 border-forest-600 border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : orders.length === 0 ? (
+            <div className="p-12 text-center text-xs text-ink-400">No master orders found matching the filter criteria.</div>
+          ) : (
+            <table className="w-full border-collapse text-left text-xs">
+              <thead>
+                <tr className="bg-cream-100 text-ink-500 font-bold uppercase tracking-wider border-b border-ink-100">
+                  <th className="p-4">Master Order ID</th>
+                  <th className="p-4">Customer</th>
+                  <th className="p-4">Delivery City</th>
+                  <th className="p-4">Fulfillments</th>
+                  <th className="p-4">Status</th>
+                  <th className="p-4 text-right">Total</th>
+                  <th className="p-4 text-right">Details</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-ink-100">
+                {orders.map((o) => {
+                  const itemsCount = o.order_items?.length || 0;
+                  const fulfillmentsCount = o.seller_order_fulfillments?.length || 1;
+                  const customerName = o.delivery_address_snapshot?.full_name || "Customer";
+                  const city = o.delivery_address_snapshot?.city || "Raipur";
+
+                  return (
+                    <tr key={o.id} className="hover:bg-cream-50/50">
+                      <td className="p-4 font-mono font-bold text-ink-900">{o.id}</td>
+                      <td className="p-4 font-semibold text-ink-800">{customerName}</td>
+                      <td className="p-4 text-ink-600">{city}</td>
+                      <td className="p-4 text-ink-600">
+                        {fulfillmentsCount} Nursery ({itemsCount} items)
+                      </td>
+                      <td className="p-4">
+                        <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-forest-50 text-forest-700 border border-forest-100">
+                          {o.status}
+                        </span>
+                      </td>
+                      <td className="p-4 font-bold text-forest-800 text-right">{formatINR(o.total_paise || o.subtotal_paise || 0)}</td>
+                      <td className="p-4 text-right">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedOrder(o)}
+                          className="px-3 py-1 rounded-lg border border-ink-200 hover:bg-cream-100 text-ink-700 font-bold text-[10px] uppercase tracking-wider transition-colors"
+                        >
+                          View Master Order
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {/* Modal: Master Order Detail View */}
+        {selectedOrder && (
+          <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl border border-ink-100 p-6 max-w-2xl w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-start border-b border-ink-100 pb-3">
+                <div>
+                  <h3 className="font-serif text-lg font-bold text-ink-900">Master Order {selectedOrder.id}</h3>
+                  <p className="text-xs text-ink-400 mt-0.5">Placed: {new Date(selectedOrder.created_at).toLocaleString()}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedOrder(null)}
+                  className="text-ink-400 hover:text-ink-900 font-bold text-sm"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Delivery & Payment Metadata */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-cream-50 rounded-xl p-4 text-xs">
+                <div>
+                  <p className="font-bold uppercase tracking-wider text-ink-500 mb-1">Customer Delivery Address</p>
+                  <p className="font-bold text-ink-900">{selectedOrder.delivery_address_snapshot?.full_name}</p>
+                  <p className="text-ink-600">{selectedOrder.delivery_address_snapshot?.line1}</p>
+                  <p className="text-ink-600">
+                    {selectedOrder.delivery_address_snapshot?.city}, {selectedOrder.delivery_address_snapshot?.state} - {selectedOrder.delivery_address_snapshot?.pincode}
+                  </p>
+                  <p className="font-mono text-ink-500 mt-1">{selectedOrder.delivery_address_snapshot?.phone}</p>
+                </div>
+
+                <div>
+                  <p className="font-bold uppercase tracking-wider text-ink-500 mb-1">Payment & Financial Summary</p>
+                  <p className="flex justify-between py-0.5"><span className="text-ink-500">Method:</span> <span className="font-bold uppercase">{selectedOrder.notes || "Online"}</span></p>
+                  <p className="flex justify-between py-0.5"><span className="text-ink-500">Subtotal:</span> <span className="font-bold">{formatINR(selectedOrder.subtotal_paise || 0)}</span></p>
+                  <p className="flex justify-between py-0.5"><span className="text-ink-500">Commission (12%):</span> <span className="font-bold text-forest-700">{formatINR(selectedOrder.commission_paise || 0)}</span></p>
+                  <p className="flex justify-between py-0.5 border-t border-ink-200 pt-1 mt-1 font-bold text-ink-900">
+                    <span>Order Total:</span> <span>{formatINR(selectedOrder.total_paise || selectedOrder.subtotal_paise || 0)}</span>
+                  </p>
+                </div>
+              </div>
+
+              {/* Multi-Nursery Order Items */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-ink-700">Multi-Nursery Fulfillment Items</h4>
+                <div className="space-y-2">
+                  {(selectedOrder.order_items || []).map((item: any, idx: number) => (
+                    <div key={idx} className="flex justify-between items-center p-3 border border-ink-100 rounded-xl text-xs">
+                      <div>
+                        <p className="font-bold text-ink-900">{item.product_name_snapshot || item.product?.name || "Plant Product"}</p>
+                        <p className="text-[10px] text-ink-400">
+                          Seller: <span className="font-semibold text-ink-700">{item.seller?.business_name || "Partner Nursery"}</span>
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-forest-800">{formatINR(item.line_total_paise || 0)}</p>
+                        <p className="text-[10px] text-ink-400">Qty: {item.quantity}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </AdminShell>
+  );
+}

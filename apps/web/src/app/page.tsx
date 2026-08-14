@@ -1,215 +1,442 @@
 import type { Metadata } from "next";
+import Image from "next/image";
+import Link from "next/link";
 import { CustomerShell } from "@/components/layout/CustomerShell";
+import { ProductCard } from "@/components/ui/ProductCard";
+import { getProductListings } from "@/lib/services/storefront";
+import {
+  LeafIcon,
+  SproutIcon,
+  PlanterIcon,
+  FlaskIcon,
+  ToolsIcon,
+  ShieldIcon,
+  TruckIcon,
+  ReturnIcon,
+  StarIcon,
+} from "@/components/ui/Icons";
 
 export const metadata: Metadata = {
   title: "Floria — Plants & Gardening Marketplace",
   description:
-    "Shop premium plants and gardening products from local nurseries. Floria handles packing and delivery.",
+    "Discover. Choose. Grow. Shop premium plants and gardening products from trusted local nurseries. Floria handles packing and delivery.",
 };
 
-// Demo category data — replace with Supabase query in Phase 2
-const DEMO_CATEGORIES = [
-  { id: "1", name: "Indoor Plants",      slug: "indoor-plants",      emoji: "🌿" },
-  { id: "2", name: "Outdoor Plants",     slug: "outdoor-plants",     emoji: "🌳" },
-  { id: "3", name: "Succulents & Cacti", slug: "succulents-cacti",   emoji: "🌵" },
-  { id: "4", name: "Flowering Plants",   slug: "flowering-plants",   emoji: "🌸" },
-  { id: "5", name: "Herbs & Edibles",    slug: "herbs-edibles",      emoji: "🌱" },
-  { id: "6", name: "Planters & Pots",    slug: "planters-pots",      emoji: "🪴" },
-  { id: "7", name: "Soil & Fertilizers", slug: "soil-fertilizers",   emoji: "🌍" },
-  { id: "8", name: "Tools & Accessories",slug: "tools-accessories",  emoji: "🛠️" },
+const CATEGORIES = [
+  {
+    name: "Plants",
+    slug: "indoor-plants",
+    subtitle: "Bring life to your space.",
+    image: "/cat-plants.png",
+  },
+  {
+    name: "Seeds",
+    slug: "herbs-edibles",
+    subtitle: "Start something beautiful.",
+    image: "/cat-seeds.png",
+  },
+  {
+    name: "Pots & Planters",
+    slug: "planters-pots",
+    subtitle: "The perfect home for your plants.",
+    image: "/cat-pots.png",
+  },
+  {
+    name: "Fertilizers & Soil",
+    slug: "soil-fertilizers",
+    subtitle: "Nourish your plants the right way.",
+    image: "/cat-fertilizers.png",
+  },
+  {
+    name: "Gardening Tools",
+    slug: "tools-accessories",
+    subtitle: "Everything you need to garden better.",
+    image: "/cat-tools.png",
+  },
 ] as const;
 
-export default function HomePage() {
+const NURSERIES = [
+  {
+    name: "Green Leaf Nursery",
+    location: "Raipur, Chhattisgarh",
+    rating: 4.8,
+    count: 320,
+  },
+  {
+    name: "Nature's Bloom",
+    location: "Bhilai, Chhattisgarh",
+    rating: 4.7,
+    count: 210,
+  },
+  {
+    name: "Sai Garden Center",
+    location: "Durg, Chhattisgarh",
+    rating: 4.6,
+    count: 160,
+  },
+  {
+    name: "Plant Paradise",
+    location: "Raipur, Chhattisgarh",
+    rating: 4.8,
+    count: 290,
+  },
+] as const;
+
+export default async function HomePage() {
+  const allListings = await getProductListings();
+  const bestSellers = allListings.slice(0, 5);
+
   return (
-    <CustomerShell>
-      {/* ── Hero ─────────────────────────────────────────── */}
+    <CustomerShell fullWidth>
+      {/* ── HERO ─────────────────────────────────────────────── */}
       <section
         aria-labelledby="hero-heading"
-        className={[
-          "relative rounded-2xl overflow-hidden",
-          "bg-forest-700",
-          "px-6 py-10 md:px-12 md:py-16",
-          "mb-8",
-        ].join(" ")}
+        style={{ backgroundColor: "#F7F4EF" }}
+        className="w-full relative overflow-hidden min-h-[calc(100vh-4rem)] md:h-screen flex flex-col justify-between pt-0"
       >
-        {/* Botanical texture overlay */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 opacity-10"
-          style={{
-            backgroundImage: `radial-gradient(circle at 70% 50%, #82c36b 0%, transparent 60%),
-                              radial-gradient(circle at 20% 80%, #245718 0%, transparent 50%)`,
-          }}
-        />
+        {/* Main Content */}
+        <div className="flex-1 flex items-center w-full relative z-10">
+          <div className="max-w-screen-xl mx-auto w-full px-4 md:px-6 lg:px-8 pt-16 pb-8 md:py-12 relative z-10">
+            <div className="w-[58%] md:w-[50%] lg:w-[48%] flex flex-col">
+              {/* Pill badge */}
+              <div
+                className="inline-flex self-start items-center gap-1.5 px-2 py-0.5 mb-2 text-[10px] font-bold uppercase tracking-widest rounded"
+                style={{
+                  color: "#4A6B43",
+                  borderColor: "#D5DEC8",
+                  backgroundColor: "#F0F5EB",
+                }}
+              >
+                <LeafIcon
+                  size={11}
+                  className="text-[#4A6B43] fill-[#4A6B43]/20"
+                />
+                <span>PURE. ORGANIC. SUSTAINABLE.</span>
+              </div>
 
-        <div className="relative z-10 max-w-lg">
-          <p className="text-sage-200 text-sm font-medium uppercase tracking-widest mb-2">
-            Welcome to Floria
-          </p>
-          <h1
-            id="hero-heading"
-            className="font-serif text-3xl md:text-5xl font-semibold text-white leading-tight mb-4"
-          >
-            Bring nature home
-          </h1>
-          <p className="text-sage-200 text-base md:text-lg leading-relaxed mb-6 max-w-sm">
-            Premium plants and gardening products from local nurseries,
-            delivered carefully to your door.
-          </p>
-          <div className="flex flex-wrap gap-3">
-            <a
-              href="/categories"
-              className={[
-                "inline-flex items-center gap-2 px-5 py-2.5",
-                "bg-white text-forest-800 font-medium text-sm rounded-lg",
-                "hover:bg-cream-100 transition-colors",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white",
-              ].join(" ")}
-            >
-              Browse Plants
-            </a>
-            <a
-              href="/search"
-              className={[
-                "inline-flex items-center gap-2 px-5 py-2.5",
-                "bg-transparent border border-white/40 text-white font-medium text-sm rounded-lg",
-                "hover:bg-white/10 transition-colors",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white",
-              ].join(" ")}
-            >
-              Search
-            </a>
+              {/* Headline */}
+              <h1
+                id="hero-heading"
+                className="font-serif font-bold leading-[1.05] text-forest-700 mb-5"
+                style={{
+                  fontSize: "clamp(2.4rem, 5vw, 3.75rem)",
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                Discover.
+                <br />
+                Choose. Grow.
+              </h1>
+
+              <p className="text-xs md:text-base text-ink-500 leading-relaxed mb-6 max-w-sm font-medium">
+                Plants &amp; gardening essentials from trusted nurseries,
+                delivered to your door.
+              </p>
+
+              <div className="flex flex-wrap gap-3 mt-10.5">
+                <Link
+                  href="/categories"
+                  className="inline-flex items-center justify-center gap-1.5 px-5 py-3 md:px-6 md:py-3.5 text-xs font-bold rounded transition-all hover:bg-[#152B1B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-700 focus-visible:ring-offset-2 shadow-sm"
+                  style={{ backgroundColor: "#1E3E26", color: "#ffffff" }}
+                >
+                  <span>Explore Plants</span>
+                  <span className="text-[13px] leading-none mb-0.5">→</span>
+                </Link>
+                <Link
+                  href="/search"
+                  className="hidden sm:inline-flex items-center justify-center px-6 py-3.5 text-xs font-bold uppercase tracking-wider rounded border transition-all hover:bg-[#1E3E26]/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-700"
+                  style={{ borderColor: "#1E3E26", color: "#1E3E26" }}
+                >
+                  SHOP GARDENING
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Side Image (always visible, floats to the right edge) */}
+          <div className="absolute right-0 top-0 bottom-0 w-[60%] md:w-[50%] lg:w-[52%] h-full z-0">
+            {/* Smooth left-edge fade overlay */}
+            <div
+              className="absolute left-0 top-0 bottom-0 w-20 md:w-32 z-10 bg-gradient-to-r pointer-events-none"
+              style={{
+                background:
+                  "linear-gradient(to right, #F7F4EF 0%, rgba(247, 244, 239, 0.8) 30%, rgba(247, 244, 239, 0) 100%)",
+              }}
+            />
+            {/* Main image */}
+            <Image
+              src="/hero-plants.png"
+              alt="Plants from Floria nurseries"
+              fill
+              priority
+              className="object-cover object-left md:object-left"
+            />
+          </div>
+        </div>
+
+        {/* ── TRUST STRIP (Docked at the bottom of the full screen hero section) ────────────────────── */}
+        <div className="w-full z-20">
+          {/* Mobile version (4 items, vertical stack, centered) */}
+          <div className="md:hidden w-full px-2 py-3">
+            <ul className="grid grid-cols-4 divide-x divide-ink-100">
+              {[
+                {
+                  icon: (
+                    <PlanterIcon
+                      size={20}
+                      className="text-forest-700 mx-auto"
+                    />
+                  ),
+                  lines: ["Trusted", "Nurseries"],
+                },
+                {
+                  icon: (
+                    <LeafIcon size={20} className="text-forest-700 mx-auto" />
+                  ),
+                  lines: ["Quality", "Products"],
+                },
+                {
+                  icon: (
+                    <ShieldIcon size={20} className="text-forest-700 mx-auto" />
+                  ),
+                  lines: ["Secure", "Payments"],
+                },
+                {
+                  icon: (
+                    <TruckIcon size={20} className="text-forest-700 mx-auto" />
+                  ),
+                  lines: ["Fast", "Delivery"],
+                },
+              ].map(({ icon, lines }, i) => (
+                <li
+                  key={i}
+                  className="flex flex-col items-center text-center gap-1.5 px-1 first:pl-0"
+                >
+                  {icon}
+                  <div className="flex flex-col text-[8.5px] font-bold leading-tight text-ink-700 font-ui">
+                    <span>{lines[0]}</span>
+                    <span>{lines[1]}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Desktop version (6 items, horizontal) */}
+          <div className="hidden md:block max-w-screen-xl mx-auto px-4 md:px-6">
+            <ul className="flex items-center justify-between divide-x divide-ink-100 py-3">
+              {[
+                {
+                  icon: <LeafIcon size={20} className="text-forest-700" />,
+                  lines: ["100%", "Organic"],
+                },
+                {
+                  icon: <SproutIcon size={20} className="text-forest-700" />,
+                  lines: ["Sustainably", "Sourced"],
+                },
+                {
+                  icon: (
+                    <StarIcon
+                      size={20}
+                      className="text-amber-400 fill-amber-400"
+                    />
+                  ),
+                  lines: ["Premium", "Quality"],
+                },
+                {
+                  icon: <TruckIcon size={20} className="text-forest-700" />,
+                  lines: ["Fast & Safe", "Delivery"],
+                },
+                {
+                  icon: <ShieldIcon size={20} className="text-forest-700" />,
+                  lines: ["Secure", "Payments"],
+                },
+                {
+                  icon: <ReturnIcon size={20} className="text-forest-700" />,
+                  lines: ["Easy", "Returns"],
+                },
+              ].map(({ icon, lines }, i) => (
+                <li
+                  key={i}
+                  className="flex-shrink-0 flex items-center gap-2.5 px-4 md:px-6 py-1 first:pl-0"
+                >
+                  {icon}
+                  <div className="flex flex-col text-[11px] font-bold leading-tight text-ink-700 font-ui">
+                    <span>{lines[0]}</span>
+                    <span>{lines[1]}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </section>
 
-      {/* ── Shop by Category ────────────────────────────── */}
-      <section aria-labelledby="categories-heading" className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2
-            id="categories-heading"
-            className="font-serif text-xl md:text-2xl font-semibold text-ink-900"
-          >
-            Shop by category
-          </h2>
-          <a
-            href="/categories"
-            className="text-sm font-medium text-forest-700 hover:text-forest-900 transition-colors"
-          >
-            View all →
-          </a>
-        </div>
-
-        <div
-          role="list"
-          className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-8 gap-3"
-          aria-label="Product categories"
-        >
-          {DEMO_CATEGORIES.map((cat) => (
-            <div key={cat.id} role="listitem">
-              <a
-                href={`/categories/${cat.slug}`}
-                className={[
-                  "flex flex-col items-center gap-2 p-3",
-                  "bg-white rounded-xl border border-ink-100",
-                  "hover:border-forest-300 hover:shadow-sm transition-all",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-700",
-                  "group",
-                ].join(" ")}
+      {/* ── SHOP BY CATEGORY ────────────────────────────────── */}
+      <section aria-labelledby="categories-heading" className="py-10 md:py-14">
+        <div className="max-w-screen-xl mx-auto px-4 md:px-6 lg:px-8">
+          <div className="flex items-end justify-between mb-1.5">
+            <div>
+              <h2
+                id="categories-heading"
+                className="font-serif font-semibold text-ink-900"
+                style={{ fontSize: "clamp(1.25rem, 2.5vw, 1.625rem)" }}
               >
-                <span
-                  className="text-2xl group-hover:scale-110 transition-transform duration-200"
-                  aria-hidden="true"
-                >
-                  {cat.emoji}
-                </span>
-                <span className="text-[10px] md:text-xs font-medium text-ink-700 text-center leading-tight">
-                  {cat.name}
-                </span>
-              </a>
+                Shop by Category
+              </h2>
+              <p className="text-xs text-ink-400 mt-0.5 font-medium">
+                Explore our wide range of plants and gardening essentials.
+              </p>
             </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Featured Products Placeholder ───────────────── */}
-      <section aria-labelledby="featured-heading" className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2
-            id="featured-heading"
-            className="font-serif text-xl md:text-2xl font-semibold text-ink-900"
-          >
-            Featured plants
-          </h2>
-        </div>
-
-        {/* Skeleton grid — replace with real products in Phase 2 */}
-        <div
-          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
-          aria-label="Featured product placeholders — data coming soon"
-        >
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div
-              key={i}
-              className={[
-                "bg-white rounded-xl border border-ink-100 overflow-hidden",
-                "animate-pulse",
-              ].join(" ")}
-              aria-hidden="true"
+            <Link
+              href="/categories"
+              className="text-xs font-bold uppercase tracking-wider text-forest-700 hover:text-forest-900 transition-colors flex-shrink-0 ml-4"
             >
-              <div className="aspect-square bg-cream-200" />
-              <div className="p-3 space-y-2">
-                <div className="h-3 bg-cream-200 rounded-full w-3/4" />
-                <div className="h-3 bg-cream-200 rounded-full w-1/2" />
-                <div className="h-8 bg-cream-200 rounded-lg mt-3" />
-              </div>
-            </div>
-          ))}
-        </div>
+              VIEW ALL
+            </Link>
+          </div>
 
-        <p className="text-center text-sm text-ink-300 mt-4">
-          Products load in Phase 2 after Supabase is connected.
-        </p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mt-6">
+            {CATEGORIES.map((cat) => (
+              <Link
+                key={cat.slug}
+                href={`/categories/${cat.slug}`}
+                className="group flex flex-col bg-white rounded-xl overflow-hidden border border-ink-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-700"
+              >
+                {/* Photo Container */}
+                <div className="relative aspect-[4/3] w-full bg-cream-50 overflow-hidden">
+                  <Image
+                    src={cat.image}
+                    alt={cat.name}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                  />
+                </div>
+                {/* Text Area */}
+                <div className="p-3 bg-white flex flex-col flex-1 border-t border-ink-100/50">
+                  <p className="font-sans text-xs font-bold text-ink-900 leading-tight group-hover:text-forest-700 transition-colors">
+                    {cat.name}
+                  </p>
+                  <p className="text-[10px] text-ink-400 leading-snug mt-1 font-medium">
+                    {cat.subtitle}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
       </section>
 
-      {/* ── How Floria works ────────────────────────────── */}
+      {/* ── BEST SELLERS ──────────────────────────────────────── */}
       <section
-        aria-labelledby="how-it-works-heading"
-        className="mb-8 bg-white rounded-2xl border border-ink-100 p-6 md:p-8"
+        aria-labelledby="best-sellers-heading"
+        className="py-10 md:py-14"
+        style={{ backgroundColor: "#FAFAF7" }}
       >
-        <h2
-          id="how-it-works-heading"
-          className="font-serif text-xl md:text-2xl font-semibold text-ink-900 mb-6 text-center"
-        >
-          How Floria works
-        </h2>
-        <ol className="grid grid-cols-1 md:grid-cols-3 gap-6" role="list">
-          {[
-            {
-              step: "01",
-              title: "Browse & choose",
-              desc: "Explore plants and gardening products from verified local nurseries.",
-            },
-            {
-              step: "02",
-              title: "Nursery prepares",
-              desc: "Your chosen nursery accepts and prepares your order with care.",
-            },
-            {
-              step: "03",
-              title: "Floria delivers",
-              desc: "We handle packing and delivery so your plants arrive safely.",
-            },
-          ].map(({ step, title, desc }) => (
-            <li key={step} className="flex flex-col items-center text-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-forest-700 flex items-center justify-center">
-                <span className="text-xs font-bold text-white">{step}</span>
-              </div>
-              <h3 className="font-sans text-base font-semibold text-ink-900">{title}</h3>
-              <p className="text-sm text-ink-500 leading-relaxed">{desc}</p>
-            </li>
-          ))}
-        </ol>
+        <div className="max-w-screen-xl mx-auto px-4 md:px-6 lg:px-8">
+          <div className="flex items-end justify-between mb-6">
+            <div>
+              <h2
+                id="best-sellers-heading"
+                className="font-serif font-semibold text-ink-900"
+                style={{ fontSize: "clamp(1.25rem, 2.5vw, 1.625rem)" }}
+              >
+                Best Sellers
+              </h2>
+              <p className="text-xs text-ink-400 mt-0.5 font-medium">
+                Handpicked favorites from top nurseries.
+              </p>
+            </div>
+            <Link
+              href="/categories"
+              className="text-xs font-bold uppercase tracking-wider text-forest-700 hover:text-forest-900 transition-colors flex-shrink-0 ml-4"
+            >
+              VIEW ALL
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {bestSellers.map((listing, i) => (
+              <ProductCard
+                key={listing.product.id}
+                listing={listing}
+                showBestSeller={i === 0}
+                discountPercent={i === 2 ? 20 : undefined}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── FROM TRUSTED NURSERIES ──────────────────────────── */}
+      <section
+        aria-labelledby="nurseries-heading"
+        className="py-10 md:py-14"
+        style={{ backgroundColor: "var(--color-canopy-900)" }}
+      >
+        <div className="max-w-screen-xl mx-auto px-4 md:px-6 lg:px-8">
+          <div className="flex items-end justify-between mb-6">
+            <div>
+              <h2
+                id="nurseries-heading"
+                className="font-serif font-semibold"
+                style={{ fontSize: "clamp(1.25rem, 2.5vw, 1.625rem)", color: "var(--color-forest-100)" }}
+              >
+                From Trusted Nurseries
+              </h2>
+              <p className="text-xs text-white/60 mt-0.5 font-medium">
+                Curated products from verified nurseries you can trust.
+              </p>
+            </div>
+            <Link
+              href="/categories"
+              className="text-xs font-bold uppercase tracking-wider text-white hover:text-white/80 transition-colors flex-shrink-0 ml-4"
+            >
+              VIEW ALL
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {NURSERIES.map((nursery, i) => (
+              <Link
+                key={nursery.name}
+                href="/categories"
+                className="group flex flex-col bg-white rounded-xl overflow-hidden border border-ink-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-700"
+              >
+                {/* Photo Container */}
+                <div className="relative aspect-[16/10] w-full overflow-hidden">
+                  <Image
+                    src={`/nursery-${i + 1}.png`}
+                    alt={nursery.name}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                  />
+                </div>
+                {/* Info */}
+                <div className="p-3 bg-white flex flex-col flex-1">
+                  <p className="font-sans text-xs font-bold text-ink-900 group-hover:text-forest-700 transition-colors leading-tight">
+                    {nursery.name}
+                  </p>
+                  <p className="text-[10px] text-ink-400 mt-1 font-medium">
+                    {nursery.location}
+                  </p>
+                  <div className="flex items-center gap-1 mt-2">
+                    <StarIcon
+                      size={10}
+                      className="text-amber-400 fill-amber-400"
+                    />
+                    <span className="text-[10px] font-bold text-ink-700">
+                      {nursery.rating}
+                    </span>
+                    <span className="text-[10px] text-ink-300 font-medium">
+                      ({nursery.count})
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
       </section>
     </CustomerShell>
   );

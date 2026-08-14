@@ -2,34 +2,60 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CustomerShell } from "@/components/layout/CustomerShell";
 import { getActiveCategories } from "@/lib/services/storefront";
+import {
+  LeafIcon,
+  SproutIcon,
+  PlanterIcon,
+  FlaskIcon,
+  ToolsIcon,
+} from "@/components/ui/Icons";
 
 export const metadata: Metadata = {
   title: "Categories — Floria",
   description: "Browse all plant and gardening product categories on Floria.",
 };
 
-const CATEGORY_EMOJIS: Record<string, string> = {
-  "indoor-plants": "🌿",
-  "outdoor-plants": "🌳",
-  "succulents-cacti": "🌵",
-  "flowering-plants": "🌸",
-  "herbs-edibles": "🌱",
-  "planters-pots": "🪴",
-  "soil-fertilizers": "🌍",
-  "tools-accessories": "🛠️",
-};
+function CategoryIcon({ slug, className, size = 36 }: { slug: string; className?: string; size?: number }) {
+  switch (slug) {
+    case "indoor-plants":
+    case "outdoor-plants":
+    case "succulents-cacti":
+    case "flowering-plants":
+      return <LeafIcon size={size} className={className} />;
+    case "herbs-edibles":
+      return <SproutIcon size={size} className={className} />;
+    case "planters-pots":
+      return <PlanterIcon size={size} className={className} />;
+    case "soil-fertilizers":
+      return <FlaskIcon size={size} className={className} />;
+    case "tools-accessories":
+      return <ToolsIcon size={size} className={className} />;
+    default:
+      return <LeafIcon size={size} className={className} />;
+  }
+}
 
 export default async function CategoriesPage() {
   const categories = await getActiveCategories();
 
   return (
     <CustomerShell>
-      <h1 className="font-serif text-2xl md:text-3xl font-semibold text-ink-900 mb-2">
-        Categories
-      </h1>
-      <p className="text-sm text-ink-400 mb-8">
-        {categories.length} categories available
-      </p>
+      <div className="flex flex-wrap items-baseline justify-between gap-4 mb-8">
+        <div>
+          <h1 className="font-serif text-2xl md:text-3xl font-semibold text-ink-900 mb-1">
+            Browse Categories
+          </h1>
+          <p className="text-xs text-ink-400">
+            {categories.length} marketplace categories available
+          </p>
+        </div>
+        <Link
+          href="/shop"
+          className="py-2.5 px-4 bg-forest-700 hover:bg-forest-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-colors shadow-xs"
+        >
+          View All Products &rarr;
+        </Link>
+      </div>
 
       <div
         role="list"
@@ -49,11 +75,8 @@ export default async function CategoriesPage() {
                 "group",
               ].join(" ")}
             >
-              <span
-                className="text-4xl group-hover:scale-110 transition-transform duration-300"
-                aria-hidden="true"
-              >
-                {CATEGORY_EMOJIS[cat.slug] || "🌿"}
+              <span className="group-hover:scale-110 transition-transform duration-300">
+                <CategoryIcon slug={cat.slug} className="text-forest-700" size={36} />
               </span>
               <div className="text-center">
                 <p className="font-sans text-sm font-semibold text-ink-900 group-hover:text-forest-700 transition-colors leading-tight">

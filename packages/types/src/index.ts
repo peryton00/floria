@@ -66,7 +66,7 @@ export interface CustomerProfile {
 // Seller (Nursery)
 // ------------------------------------------------------------------
 
-export type SellerStatus = "pending" | "approved" | "suspended";
+export type SellerStatus = "pending" | "approved" | "suspended" | "rejected";
 
 export interface SellerProfile {
   id: UUID;

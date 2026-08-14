@@ -5,10 +5,14 @@
   "description": "Floria — multi-vendor plant marketplace",
   "scripts": {
     "dev": "pnpm --filter @floria/web dev",
-    "build": "pnpm --filter @floria/web build",
+    "dev:backend": "pnpm --filter @floria/api dev",
+    "build": "pnpm --filter @floria/web build && pnpm --filter @floria/api build",
+    "build:backend": "pnpm --filter @floria/api build",
     "lint": "pnpm --filter @floria/web lint",
-    "typecheck": "pnpm --filter @floria/web typecheck",
-    "test": "pnpm --filter @floria/web test",
+    "typecheck": "pnpm --filter @floria/web typecheck && pnpm --filter @floria/api typecheck",
+    "typecheck:backend": "pnpm --filter @floria/api typecheck",
+    "test": "pnpm --filter @floria/web test && pnpm --filter @floria/api test",
+    "test:backend": "pnpm --filter @floria/api test",
     "test:e2e": "pnpm --filter @floria/web test:e2e",
     "format": "prettier --write \"**/*.{ts,tsx,md,json}\" --ignore-path .gitignore"
   },

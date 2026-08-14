@@ -5,7 +5,7 @@
    ============================================================ */
 
 /* Google Fonts — must precede all other rules (CSS spec) */
-@import url("https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Manrope:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap");
 
 @import "tailwindcss";
 
@@ -54,6 +54,16 @@
   --color-glow-300: #e8b48a;
   --color-glow-100: #faeee3;
 
+  /* --- Color: Red emphasis ("Delivered with Care.", Best Seller badge) --- */
+  --color-red-700: #8B1919;  /* deep botanical red */
+  --color-red-600: #A52020;
+  --color-red-100: #fde8e8;
+
+  /* --- Color: Dark canopy (footer, dark hero band) --- */
+  --color-canopy-900: #1A2B1A;  /* very dark forest green footer */
+  --color-canopy-800: #1E3320;
+  --color-canopy-700: #243D27;
+
   /* --- Color: Status --- */
   --color-success-600: #2d7a47;
   --color-success-100: #dcf0e5;
@@ -65,8 +75,13 @@
   --color-info-100:    #dceeff;
 
   /* --- Typography --- */
-  --font-serif: "Lora", Georgia, serif;
-  --font-sans:  "Inter", system-ui, sans-serif;
+  --font-display: "Cormorant Garamond", serif;
+  --font-body: "Manrope", sans-serif;
+  --font-ui: "DM Sans", sans-serif;
+  --font-editorial: "Playfair Display", serif;
+
+  --font-serif: var(--font-display);
+  --font-sans:  var(--font-body);
 
   /* --- Spacing scale (base 4px) --- */
   --space-px:  1px;
@@ -108,7 +123,7 @@
   --bottom-nav-height: 64px;
 
   /* --- Header height --- */
-  --header-height: 56px;
+  --header-height: 64px;
 }
 
 /* ============================================================
@@ -152,9 +167,23 @@
   --color-glow-300: var(--color-glow-300);
   --color-glow-100: var(--color-glow-100);
 
+  /* Red emphasis */
+  --color-red-700: var(--color-red-700);
+  --color-red-600: var(--color-red-600);
+  --color-red-100: var(--color-red-100);
+
+  /* Dark canopy (footer) */
+  --color-canopy-900: var(--color-canopy-900);
+  --color-canopy-800: var(--color-canopy-800);
+  --color-canopy-700: var(--color-canopy-700);
+
   /* Fonts */
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-ui: var(--font-ui);
+  --font-editorial: var(--font-editorial);
   --font-serif: var(--font-serif);
-  --font-sans:  var(--font-sans);
+  --font-sans: var(--font-sans);
 
   /* Border radius */
   --radius-sm:   var(--radius-sm);
@@ -218,7 +247,7 @@ a {
    ============================================================ */
 h1, h2, h3 {
   font-family: var(--font-serif);
-  color: var(--color-ink-900);
+  color: var(--color-forest-800);
   line-height: 1.2;
   font-weight: 600;
   margin: 0;

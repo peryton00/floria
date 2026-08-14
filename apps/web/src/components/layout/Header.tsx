@@ -1,100 +1,170 @@
+// Floria — Header
+// Reference: White background, 64px height, FLORIA logo left, full nav center, icons right
+"use client";
+
+import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { CountBadge } from "@/components/ui/Badge";
+import { SearchIcon, UserIcon, BagIcon, BellIcon, WishlistIcon } from "@/components/ui/Icons";
+import { useCart } from "@/lib/contexts/CartContext";
+import { useWishlist } from "@/lib/contexts/WishlistContext";
 
-interface HeaderProps {
-  cartCount?: number;
-}
+const NAV_ITEMS = [
+  { label: "Plants",          href: "/categories/indoor-plants" },
+  { label: "Seeds",           href: "/categories/herbs-edibles" },
+  { label: "Fertilizers",     href: "/categories/soil-fertilizers" },
+  { label: "Pots & Planners", href: "/categories/planters-pots" },
+  { label: "Gardening",       href: "/categories/tools-accessories" },
+  { label: "Offers",          href: "/search?q=offer" },
+] as const;
 
-export function Header({ cartCount = 0 }: HeaderProps) {
+export function Header() {
+  const { cartCount } = useCart();
+  const { wishlistItems } = useWishlist();
+  const wishlistCount = wishlistItems.length;
+  const pathname = usePathname();
+  const isHome = pathname === "/";
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    if (!isHome) {
+      setIsScrolled(false);
+      return;
+    }
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    handleScroll();
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [isHome]);
+
+  const headerClass = [
+    isHome ? "fixed" : "sticky",
+    "top-0 left-0 right-0 z-40",
+    "flex items-center transition-all duration-400",
+    isHome && !isScrolled
+      ? "h-20 bg-transparent border-b border-transparent"
+      : "h-16 bg-white/95 backdrop-blur-md border-b border-ink-100 shadow-xs",
+  ].join(" ");
+
+  const logoTextClass = [
+    "font-serif font-semibold text-ink-900 tracking-tight select-none transition-all duration-300",
+    isHome && !isScrolled ? "text-xl" : "text-lg",
+  ].join(" ");
+
+  const logoImageSizeClass = [
+    "object-contain transition-all duration-300",
+    isHome && !isScrolled ? "w-8 h-8" : "w-7 h-7",
+  ].join(" ");
+
+  const navLinkClass = [
+    "font-medium text-ink-500 hover:text-ink-900 whitespace-nowrap transition-all duration-300 rounded-md hover:bg-cream-100 flex items-center gap-1",
+    isHome && !isScrolled ? "text-[14px] px-3.5 py-2.5" : "text-[13px] px-3 py-2",
+  ].join(" ");
+
+  const iconLinkClass = [
+    "rounded-lg text-ink-500 hover:text-ink-900 hover:bg-cream-100 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-700",
+    isHome && !isScrolled ? "p-2.5" : "p-2",
+  ].join(" ");
+
   return (
-    <header
-      className={[
-        "sticky top-0 z-40",
-        "h-14 flex items-center",
-        "px-4 md:px-6 lg:px-8",
-        "bg-cream-50/95 backdrop-blur-sm",
-        "border-b border-ink-100",
-      ].join(" ")}
-    >
-      {/* Wordmark */}
-      <Link
-        href="/"
-        aria-label="Floria — go to home"
-        className="flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-700 rounded"
-      >
-        <Image
-          src="/floria-logo.png"
-          alt="Floria Logo"
-          width={32}
-          height={32}
-          priority
-          className="object-contain"
-        />
-        <span
-          className="font-serif text-xl font-semibold text-ink-900 tracking-tight select-none"
-          aria-hidden="true"
+    <header className={headerClass}>
+      <div className="w-full max-w-screen-xl mx-auto px-4 md:px-6 flex items-center gap-4">
+        {/* Logo */}
+        <Link
+          href="/"
+          aria-label="Floria — go to home"
+          className="flex items-center gap-2 flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-700 rounded"
         >
-          Floria
-        </span>
-      </Link>
+          <Image
+            src="/floria-logo.png"
+            alt="Floria"
+            width={36}
+            height={36}
+            priority
+            className={logoImageSizeClass}
+          />
+          <span className={logoTextClass}>
+            FLORIA
+          </span>
+        </Link>
 
-      {/* Spacer */}
-      <div className="flex-1" />
+        <nav
+          aria-label="Primary navigation"
+          className="hidden md:flex items-center gap-1 flex-1 justify-center"
+        >
+          {NAV_ITEMS.map(({ label, href }) => {
+            const hasChevron = label !== "Offers";
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={navLinkClass}
+              >
+                <span>{label}</span>
+                {hasChevron && (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="opacity-70 mt-0.5">
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                )}
+              </Link>
+            );
+          })}
+        </nav>
 
-      {/* Desktop nav links */}
-      <nav
-        aria-label="Desktop navigation"
-        className="hidden md:flex items-center gap-6 mr-6"
-      >
-        <NavLink href="/categories">Categories</NavLink>
-        <NavLink href="/search">Search</NavLink>
-        <NavLink href="/orders">Orders</NavLink>
-        <NavLink href="/account">Account</NavLink>
-      </nav>
+        {/* Right icons */}
+        <div className="flex items-center gap-1 ml-auto md:ml-0 flex-shrink-0">
+          {/* Search */}
+          <Link
+            href="/search"
+            aria-label="Search"
+            className={iconLinkClass}
+          >
+            <SearchIcon />
+          </Link>
 
-      {/* Cart icon */}
-      <Link
-        href="/cart"
-        aria-label={`Cart${cartCount > 0 ? ` — ${cartCount} item${cartCount === 1 ? "" : "s"}` : ""}`}
-        className="relative p-2 rounded-lg text-ink-700 hover:text-forest-700 hover:bg-sage-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-700"
-      >
-        <CartIcon />
-        <CountBadge count={cartCount} />
-      </Link>
+          {/* Wishlist */}
+          <Link
+            href="/wishlist"
+            aria-label={`Wishlist${wishlistCount > 0 ? ` — ${wishlistCount} item${wishlistCount === 1 ? "" : "s"}` : ""}`}
+            className={["relative", iconLinkClass].join(" ")}
+          >
+            <WishlistIcon />
+            <CountBadge count={wishlistCount} />
+          </Link>
+
+          {/* Bell (Mobile only) */}
+          <Link
+            href="/account"
+            aria-label="Notifications"
+            className={[iconLinkClass, "md:hidden"].join(" ")}
+          >
+            <BellIcon />
+          </Link>
+
+          {/* Account (Desktop only) */}
+          <Link
+            href="/account"
+            aria-label="My account"
+            className={[iconLinkClass, "hidden md:block"].join(" ")}
+          >
+            <UserIcon />
+          </Link>
+
+          {/* Cart */}
+          <Link
+            href="/cart"
+            aria-label={`Cart${cartCount > 0 ? ` — ${cartCount} item${cartCount === 1 ? "" : "s"}` : ""}`}
+            className={["relative", iconLinkClass].join(" ")}
+          >
+            <BagIcon />
+            <CountBadge count={cartCount} />
+          </Link>
+        </div>
+      </div>
     </header>
-  );
-}
-
-function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
-  return (
-    <Link
-      href={href}
-      className="text-sm font-medium text-ink-500 hover:text-ink-900 transition-colors"
-    >
-      {children}
-    </Link>
-  );
-}
-
-
-function CartIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="22"
-      height="22"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <circle cx="9" cy="21" r="1" />
-      <circle cx="20" cy="21" r="1" />
-      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-    </svg>
   );
 }

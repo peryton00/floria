@@ -1,6 +1,7 @@
-﻿packages:
+packages:
   - "apps/*"
   - "packages/*"
+  - "backend/*"
 
 # pnpm 11: explicitly allow build scripts for packages with native binaries
 # strictDepBuilds is true by default in pnpm 11

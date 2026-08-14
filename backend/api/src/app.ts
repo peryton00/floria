@@ -1,0 +1,96 @@
+// Floria Standalone REST API Application Setup
+import express from "express";
+import { createSecurityMiddleware } from "./middleware/security.js";
+import { createCorsMiddleware } from "./middleware/cors.js";
+import { errorHandler } from "./middleware/errorHandler.js";
+import { getAdminDb } from "./config/database.js";
+
+// Domain Route Modules
+import authRoutes from "./auth/auth.routes.js";
+import productsRoutes from "./products/products.routes.js";
+import categoriesRoutes from "./categories/categories.routes.js";
+import cartRoutes from "./cart/cart.routes.js";
+import checkoutRoutes from "./checkout/checkout.routes.js";
+import ordersRoutes from "./orders/orders.routes.js";
+import fulfillmentRoutes from "./fulfillment/fulfillment.routes.js";
+import sellersRoutes from "./sellers/sellers.routes.js";
+import usersRoutes from "./users/users.routes.js";
+import adminRoutes from "./admin/admin.routes.js";
+import operationsRoutes from "./operations/operations.routes.js";
+import inventoryRoutes from "./inventory/inventory.routes.js";
+import wishlistRoutes from "./wishlist/wishlist.routes.js";
+import paymentsRoutes from "./payments/payments.routes.js";
+import payoutsRoutes from "./payouts/payouts.routes.js";
+import notificationsRoutes from "./notifications/notifications.routes.js";
+import reportsRoutes from "./reports/reports.routes.js";
+
+export function createApp() {
+  const app = express();
+
+  // 1. Security & CORS
+  app.use(createCorsMiddleware());
+  app.use(createSecurityMiddleware());
+
+  // 2. Request Parsing
+  app.use(express.json({ limit: "2mb" }));
+  app.use(express.urlencoded({ extended: true }));
+
+  // 3. Health & Readiness Endpoints
+  app.get("/health", (_req, res) => {
+    res.json({
+      status: "healthy",
+      service: "floria-api",
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  app.get("/ready", async (_req, res) => {
+    try {
+      const db = getAdminDb();
+      const { error } = await db.from("categories").select("id").limit(1);
+      if (error) throw error;
+      res.json({ status: "ready", database: "connected" });
+    } catch (err) {
+      res.status(503).json({ status: "unready", database: "disconnected" });
+    }
+  });
+
+  // 4. Versioned API V1 Routes (/api/v1)
+  const apiV1 = express.Router();
+
+  apiV1.use("/auth", authRoutes);
+  apiV1.use("/catalog/products", productsRoutes);
+  apiV1.use("/catalog/categories", categoriesRoutes);
+  apiV1.use("/customer/cart", cartRoutes);
+  apiV1.use("/customer/checkout", checkoutRoutes);
+  apiV1.use("/customer/orders", ordersRoutes);
+  apiV1.use("/customer/wishlist", wishlistRoutes);
+  apiV1.use("/customer/users", usersRoutes);
+
+  apiV1.use("/seller/fulfillment", fulfillmentRoutes);
+  apiV1.use("/seller/inventory", inventoryRoutes);
+  apiV1.use("/seller/payouts", payoutsRoutes);
+  apiV1.use("/seller", sellersRoutes);
+
+  apiV1.use("/operations", operationsRoutes);
+  apiV1.use("/admin", adminRoutes);
+
+  apiV1.use("/payments", paymentsRoutes);
+  apiV1.use("/notifications", notificationsRoutes);
+  apiV1.use("/reports", reportsRoutes);
+
+  app.use("/api/v1", apiV1);
+
+  // 5. 404 Route Handler
+  app.use((_req, res) => {
+    res.status(404).json({
+      success: false,
+      error: { code: "RESOURCE_NOT_FOUND", message: "Endpoint not found." },
+    });
+  });
+
+  // 6. Centralized Error Handler
+  app.use(errorHandler);
+
+  return app;
+}

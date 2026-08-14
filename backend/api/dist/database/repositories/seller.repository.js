@@ -1,0 +1,492 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.sellerRepository = exports.SellerRepository = void 0;
+// Floria API — Seller Profile & Dashboard Repository
+const database_js_1 = require("../../config/database.js");
+const PRODUCT_LISTING_SELECT = `*, category:categories(id,name,slug), seller:seller_profiles(id,business_name), inventory:inventory(id,price_paise,stock_quantity,low_stock_threshold,sku,updated_at), images:product_images(*)`;
+class SellerRepository {
+    async findByUserId(userId) {
+        const db = (0, database_js_1.getAdminDb)();
+        const { data, error } = await db
+            .from("seller_profiles")
+            .select("*")
+            .eq("user_id", userId)
+            .maybeSingle();
+        if (error || !data)
+            return null;
+        return data;
+    }
+    async findById(sellerId) {
+        const db = (0, database_js_1.getAdminDb)();
+        const { data, error } = await db
+            .from("seller_profiles")
+            .select("*")
+            .eq("id", sellerId)
+            .maybeSingle();
+        if (error || !data)
+            return null;
+        return data;
+    }
+    async updateProfile(sellerId, updates) {
+        const db = (0, database_js_1.getAdminDb)();
+        const payload = {
+            ...updates,
+            updated_at: new Date().toISOString(),
+        };
+        const { data, error } = await db
+            .from("seller_profiles")
+            .update(payload)
+            .eq("id", sellerId)
+            .select()
+            .maybeSingle();
+        if (error || !data)
+            return null;
+        return data;
+    }
+    async submitApplication(userId, appData) {
+        const db = (0, database_js_1.getAdminDb)();
+        const existing = await this.findByUserId(userId);
+        const payload = {
+            user_id: userId,
+            business_name: appData.business_name || "New Nursery",
+            business_description: appData.business_description || "",
+            contact_phone: appData.contact_phone || "",
+            contact_email: appData.contact_email || "",
+            address: appData.address || "",
+            status: "pending",
+            updated_at: new Date().toISOString(),
+        };
+        if (existing) {
+            const { data, error } = await db
+                .from("seller_profiles")
+                .update(payload)
+                .eq("id", existing.id)
+                .select()
+                .single();
+            if (error)
+                throw error;
+            return data;
+        }
+        else {
+            const { data, error } = await db
+                .from("seller_profiles")
+                .insert({ ...payload, created_at: new Date().toISOString() })
+                .select()
+                .single();
+            if (error)
+                throw error;
+            return data;
+        }
+    }
+    async findAll(status) {
+        const db = (0, database_js_1.getAdminDb)();
+        let query = db.from("seller_profiles").select("*");
+        if (status) {
+            query = query.eq("status", status);
+        }
+        const { data, error } = await query;
+        if (error || !data)
+            return [];
+        return data;
+    }
+    async updateStatus(sellerId, status) {
+        const db = (0, database_js_1.getAdminDb)();
+        const { error } = await db
+            .from("seller_profiles")
+            .update({ status, updated_at: new Date().toISOString() })
+            .eq("id", sellerId);
+        return !error;
+    }
+    // ── Products ─────────────────────────────────────────────────────────────
+    async findSellerProducts(sellerId, filters) {
+        const db = (0, database_js_1.getAdminDb)();
+        let q = db.from("products").select(PRODUCT_LISTING_SELECT).eq("seller_id", sellerId);
+        if (filters?.status && filters.status !== "all") {
+            q = q.eq("status", filters.status);
+        }
+        if (filters?.search) {
+            q = q.or(`name.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
+        }
+        const { data, error } = await q.order("created_at", { ascending: false });
+        if (error || !data)
+            return [];
+        let results = data.filter((p) => p.status !== "deleted");
+        if (filters?.stock === "low") {
+            results = results.filter((p) => {
+                const qty = p.inventory?.[0]?.stock_quantity ?? p.inventory?.stock_quantity ?? 0;
+                const thresh = p.inventory?.[0]?.low_stock_threshold ?? p.inventory?.low_stock_threshold ?? 5;
+                return qty > 0 && qty <= thresh;
+            });
+        }
+        else if (filters?.stock === "out") {
+            results = results.filter((p) => {
+                const qty = p.inventory?.[0]?.stock_quantity ?? p.inventory?.stock_quantity ?? 0;
+                return qty <= 0;
+            });
+        }
+        return results;
+    }
+    async findSellerProductById(sellerId, productId) {
+        const db = (0, database_js_1.getAdminDb)();
+        const { data, error } = await db
+            .from("products")
+            .select(PRODUCT_LISTING_SELECT)
+            .eq("id", productId)
+            .eq("seller_id", sellerId)
+            .neq("status", "deleted")
+            .maybeSingle();
+        if (error || !data)
+            return null;
+        return data;
+    }
+    async createProduct(sellerId, productData) {
+        const db = (0, database_js_1.getAdminDb)();
+        const now = new Date().toISOString();
+        const slug = (productData.name || "plant")
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9\s-]/g, "")
+            .replace(/\s+/g, "-") + `-${Date.now().toString().slice(-4)}`;
+        const { data: prod, error: prodErr } = await db
+            .from("products")
+            .insert({
+            seller_id: sellerId,
+            category_id: productData.category_id,
+            name: productData.name.trim(),
+            slug,
+            description: productData.description?.trim() || null,
+            care_instructions: productData.care_instructions?.trim() || null,
+            status: productData.status || "active",
+            created_at: now,
+            updated_at: now,
+        })
+            .select()
+            .single();
+        if (prodErr || !prod)
+            throw prodErr || new Error("Failed to create product");
+        // Inventory
+        await db.from("inventory").insert({
+            product_id: prod.id,
+            seller_id: sellerId,
+            price_paise: Math.max(0, productData.price_paise || 0),
+            stock_quantity: Math.max(0, productData.stock_quantity || 0),
+            low_stock_threshold: Math.max(0, productData.low_stock_threshold ?? 5),
+            sku: productData.sku?.trim() || null,
+            updated_at: now,
+        });
+        // Primary Image
+        if (productData.image_url) {
+            await db.from("product_images").insert({
+                product_id: prod.id,
+                url: productData.image_url,
+                alt_text: prod.name,
+                display_order: 1,
+                is_primary: true,
+                created_at: now,
+            });
+        }
+        return this.findSellerProductById(sellerId, prod.id);
+    }
+    async updateProduct(sellerId, productId, updates) {
+        const db = (0, database_js_1.getAdminDb)();
+        const existing = await this.findSellerProductById(sellerId, productId);
+        if (!existing)
+            return null;
+        const now = new Date().toISOString();
+        const prodPayload = { updated_at: now };
+        if (updates.name)
+            prodPayload["name"] = updates.name.trim();
+        if (updates.category_id)
+            prodPayload["category_id"] = updates.category_id;
+        if (updates.description !== undefined)
+            prodPayload["description"] = updates.description?.trim() || null;
+        if (updates.care_instructions !== undefined)
+            prodPayload["care_instructions"] = updates.care_instructions?.trim() || null;
+        if (updates.status)
+            prodPayload["status"] = updates.status;
+        await db.from("products").update(prodPayload).eq("id", productId).eq("seller_id", sellerId);
+        // Update Inventory
+        if (updates.price_paise !== undefined ||
+            updates.stock_quantity !== undefined ||
+            updates.low_stock_threshold !== undefined ||
+            updates.sku !== undefined) {
+            const invPayload = { updated_at: now };
+            if (updates.price_paise !== undefined)
+                invPayload["price_paise"] = Math.max(0, updates.price_paise);
+            if (updates.stock_quantity !== undefined)
+                invPayload["stock_quantity"] = Math.max(0, updates.stock_quantity);
+            if (updates.low_stock_threshold !== undefined)
+                invPayload["low_stock_threshold"] = Math.max(0, updates.low_stock_threshold);
+            if (updates.sku !== undefined)
+                invPayload["sku"] = updates.sku?.trim() || null;
+            await db.from("inventory").update(invPayload).eq("product_id", productId).eq("seller_id", sellerId);
+        }
+        return this.findSellerProductById(sellerId, productId);
+    }
+    async updateProductStatus(sellerId, productId, status) {
+        return this.updateProduct(sellerId, productId, { status });
+    }
+    async deleteProduct(sellerId, productId) {
+        const db = (0, database_js_1.getAdminDb)();
+        const { error } = await db
+            .from("products")
+            .update({ status: "deleted", updated_at: new Date().toISOString() })
+            .eq("id", productId)
+            .eq("seller_id", sellerId);
+        return !error;
+    }
+    // ── Inventory ─────────────────────────────────────────────────────────────
+    async findSellerInventory(sellerId) {
+        const db = (0, database_js_1.getAdminDb)();
+        const { data, error } = await db
+            .from("inventory")
+            .select("*, product:products(*)")
+            .eq("seller_id", sellerId);
+        if (error || !data)
+            return [];
+        return data;
+    }
+    // ── Orders & Fulfillment ──────────────────────────────────────────────────
+    async findSellerOrders(sellerId, filters) {
+        const db = (0, database_js_1.getAdminDb)();
+        // Query order_items where seller_id_snapshot = sellerId OR product seller_id = sellerId
+        const { data: items, error: itemsErr } = await db
+            .from("order_items")
+            .select("*, order:orders(*), product:products(name,slug), seller:seller_profiles(id,business_name)")
+            .eq("seller_id_snapshot", sellerId);
+        if (itemsErr || !items || items.length === 0)
+            return [];
+        // Group items by order
+        const orderMap = new Map();
+        items.forEach((item) => {
+            const order = item.order;
+            if (!order)
+                return;
+            if (!orderMap.has(order.id)) {
+                orderMap.set(order.id, {
+                    masterOrderId: order.id,
+                    sellerId,
+                    sellerName: item.seller?.business_name || "Nursery",
+                    customer: {
+                        name: order.delivery_address_snapshot?.full_name || "Customer",
+                        phone: order.delivery_address_snapshot?.phone || "",
+                        address: order.delivery_address_snapshot || {},
+                    },
+                    items: [],
+                    subtotalPaise: 0,
+                    discountPaise: 0,
+                    totalPaise: 0,
+                    status: order.status === "preparing" ? "Preparing" : "Order Placed",
+                    masterStatus: order.status,
+                    paymentMethod: order.notes?.includes("COD") ? "Cash on Delivery" : "Online Payment",
+                    createdAt: new Date(order.created_at || Date.now()).toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                    }),
+                    createdAtTimestamp: new Date(order.created_at || Date.now()).getTime(),
+                });
+            }
+            const entry = orderMap.get(order.id);
+            const pricePaise = item.unit_price_paise_snapshot || 0;
+            entry.items.push({
+                product: {
+                    id: item.product_id,
+                    name: item.product_name_snapshot || item.product?.name || "Plant",
+                    slug: item.product?.slug || "plant",
+                },
+                quantity: item.quantity,
+                pricePaise,
+            });
+            entry.subtotalPaise += pricePaise * item.quantity;
+            entry.totalPaise = entry.subtotalPaise;
+        });
+        // Check seller_order_fulfillments table for status overrides
+        const { data: fulfillments } = await db
+            .from("seller_order_fulfillments")
+            .select("*")
+            .eq("seller_id", sellerId);
+        if (fulfillments) {
+            const fulMap = new Map();
+            fulfillments.forEach((f) => fulMap.set(f.order_id, f.status));
+            orderMap.forEach((view, orderId) => {
+                if (fulMap.has(orderId)) {
+                    view.status = fulMap.get(orderId);
+                }
+            });
+        }
+        let results = Array.from(orderMap.values());
+        if (filters?.status && filters.status !== "all") {
+            results = results.filter((o) => o.status.toLowerCase() === filters.status.toLowerCase());
+        }
+        if (filters?.search) {
+            const q = filters.search.toLowerCase();
+            results = results.filter((o) => o.masterOrderId.toLowerCase().includes(q) ||
+                o.customer.name.toLowerCase().includes(q));
+        }
+        return results;
+    }
+    async findSellerOrderById(sellerId, orderId) {
+        const orders = await this.findSellerOrders(sellerId);
+        return orders.find((o) => o.masterOrderId.toLowerCase() === orderId.toLowerCase()) || null;
+    }
+    async updateFulfillmentStatus(sellerId, masterOrderId, newStatus) {
+        const db = (0, database_js_1.getAdminDb)();
+        const orderView = await this.findSellerOrderById(sellerId, masterOrderId);
+        if (!orderView)
+            throw new Error("Order not found or access denied");
+        // Allowed transition logic
+        const currentStatus = orderView.status;
+        const allowedTransitions = {
+            "Order Placed": "Nursery Confirmed",
+            "Nursery Confirmed": "Preparing",
+            "Preparing": "Ready for Pickup",
+            "Ready for Pickup": "Picked Up",
+        };
+        if (allowedTransitions[currentStatus] !== newStatus) {
+            throw new Error(`Invalid status transition from '${currentStatus}' to '${newStatus}'`);
+        }
+        const payload = {
+            order_id: masterOrderId,
+            seller_id: sellerId,
+            status: newStatus,
+            updated_at: new Date().toISOString(),
+        };
+        if (newStatus === "Nursery Confirmed")
+            payload["confirmed_at"] = new Date().toISOString();
+        if (newStatus === "Preparing")
+            payload["preparing_at"] = new Date().toISOString();
+        if (newStatus === "Ready for Pickup")
+            payload["ready_at"] = new Date().toISOString();
+        if (newStatus === "Picked Up")
+            payload["picked_up_at"] = new Date().toISOString();
+        const { error } = await db.from("seller_order_fulfillments").upsert(payload, {
+            onConflict: "order_id,seller_id",
+        });
+        if (error)
+            throw error;
+        orderView.status = newStatus;
+        return orderView;
+    }
+    // ── Dashboard Metrics ─────────────────────────────────────────────────────
+    async getDashboard(sellerId) {
+        const [profile, prods, orders] = await Promise.all([
+            this.findById(sellerId),
+            this.findSellerProducts(sellerId),
+            this.findSellerOrders(sellerId),
+        ]);
+        let publishedProducts = 0;
+        let draftProducts = 0;
+        let lowStockProducts = 0;
+        let outOfStockProducts = 0;
+        const inventoryAlerts = [];
+        prods.forEach((p) => {
+            if (p.status === "active")
+                publishedProducts++;
+            else if (p.status === "draft")
+                draftProducts++;
+            const qty = p.inventory?.[0]?.stock_quantity ?? p.inventory?.stock_quantity ?? 0;
+            const thresh = p.inventory?.[0]?.low_stock_threshold ?? p.inventory?.low_stock_threshold ?? 5;
+            const pricePaise = p.inventory?.[0]?.price_paise ?? p.inventory?.price_paise ?? 0;
+            if (qty <= 0) {
+                outOfStockProducts++;
+                inventoryAlerts.push({
+                    id: p.id,
+                    name: p.name,
+                    slug: p.slug,
+                    stockQuantity: qty,
+                    lowStockThreshold: thresh,
+                    pricePaise,
+                    status: "out_of_stock",
+                });
+            }
+            else if (qty <= thresh) {
+                lowStockProducts++;
+                inventoryAlerts.push({
+                    id: p.id,
+                    name: p.name,
+                    slug: p.slug,
+                    stockQuantity: qty,
+                    lowStockThreshold: thresh,
+                    pricePaise,
+                    status: "low_stock",
+                });
+            }
+        });
+        let newOrders = 0;
+        let preparingOrders = 0;
+        let readyForPickupOrders = 0;
+        let completedOrders = 0;
+        let totalRevenuePaise = 0;
+        orders.forEach((o) => {
+            const s = o.status;
+            if (s === "Order Placed")
+                newOrders++;
+            else if (s === "Nursery Confirmed" || s === "Preparing")
+                preparingOrders++;
+            else if (s === "Ready for Pickup")
+                readyForPickupOrders++;
+            else if (s === "Picked Up" || s === "Delivered")
+                completedOrders++;
+            totalRevenuePaise += o.subtotalPaise || o.totalPaise || 0;
+        });
+        const actionRequired = [];
+        if (newOrders > 0) {
+            actionRequired.push({
+                id: "action-new-orders",
+                title: `${newOrders} new order(s) awaiting nursery confirmation`,
+                count: newOrders,
+                type: "NEW_ORDERS",
+                href: "/seller/orders?status=Order+Placed",
+            });
+        }
+        if (outOfStockProducts > 0) {
+            actionRequired.push({
+                id: "action-out-of-stock",
+                title: `${outOfStockProducts} product(s) out of stock`,
+                count: outOfStockProducts,
+                type: "OUT_OF_STOCK",
+                href: "/seller/products?stock=out_of_stock",
+            });
+        }
+        if (profile?.status === "pending") {
+            actionRequired.push({
+                id: "action-pending-app",
+                title: "Your seller application is under review by Floria Admin",
+                count: 1,
+                type: "APPLICATION_PENDING",
+                href: "/seller/profile",
+            });
+        }
+        else if (profile?.status === "suspended") {
+            actionRequired.push({
+                id: "action-suspended-app",
+                title: "Your seller account is suspended. Product creation and order fulfillment are restricted.",
+                count: 1,
+                type: "APPLICATION_SUSPENDED",
+                href: "/seller/profile",
+            });
+        }
+        return {
+            profile,
+            kpis: {
+                totalProducts: prods.length,
+                publishedProducts,
+                draftProducts,
+                lowStockProducts,
+                outOfStockProducts,
+                newOrders,
+                preparingOrders,
+                readyForPickupOrders,
+                completedOrders,
+                totalOrders: orders.length,
+                totalRevenuePaise,
+            },
+            recentOrders: orders.slice(0, 5),
+            inventoryAlerts,
+            actionRequired,
+        };
+    }
+}
+exports.SellerRepository = SellerRepository;
+exports.sellerRepository = new SellerRepository();

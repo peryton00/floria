@@ -8,7 +8,14 @@ export const metadata: Metadata = {
   },
   description:
     "Discover premium plants and gardening products from local nurseries. Floria coordinates packing and delivery direct to your door.",
-  keywords: ["plants", "nursery", "gardening", "indoor plants", "outdoor plants", "Floria"],
+  keywords: [
+    "plants",
+    "nursery",
+    "gardening",
+    "indoor plants",
+    "outdoor plants",
+    "Floria",
+  ],
   openGraph: {
     siteName: "Floria",
     type: "website",
@@ -26,6 +33,8 @@ export const viewport: Viewport = {
   maximumScale: 5,
   themeColor: "#245718",
 };
+
+import { Providers } from "@/components/ui/Providers";
 
 export default function RootLayout({
   children,
@@ -57,7 +66,7 @@ export default function RootLayout({
         >
           Skip to main content
         </a>
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
