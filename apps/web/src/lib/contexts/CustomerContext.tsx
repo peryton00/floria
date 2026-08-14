@@ -9,6 +9,7 @@ export interface UserProfile {
   name: string;
   email: string;
   phone: string;
+  role?: string;
   avatarUrl?: string;
 }
 
@@ -16,6 +17,7 @@ const EMPTY_PROFILE: UserProfile = {
   name: "",
   email: "",
   phone: "",
+  role: "customer",
 };
 
 const EMPTY_ADDRESSES: AddressItem[] = [];
@@ -61,6 +63,7 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
             name: p.full_name || u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split("@")[0] || "Customer Account",
             email: u.email || "",
             phone: p.phone || "",
+            role: p.role || u.user_metadata?.role || "customer",
             avatarUrl: p.avatar_url || undefined,
           });
         } else {
@@ -68,6 +71,7 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
             name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email?.split("@")[0] || "Customer Account",
             email: session.user.email || "",
             phone: session.user.user_metadata?.phone || "",
+            role: session.user.user_metadata?.role || "customer",
           });
         }
 

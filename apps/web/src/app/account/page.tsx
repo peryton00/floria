@@ -330,6 +330,58 @@ export default function AccountPage() {
               </div>
             </div>
 
+            {/* Role-Based Dashboard Shortcuts */}
+            {profile.role === "seller" && (
+              <div className="pt-2">
+                <div className="p-4 bg-forest-900 text-white rounded-xl shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-forest-800">
+                  <div>
+                    <p className="font-serif font-bold text-sm">Seller Partner Portal</p>
+                    <p className="text-xs text-forest-200">Manage your nursery inventory, products &amp; orders</p>
+                  </div>
+                  <Link
+                    href="/seller/dashboard"
+                    className="inline-flex items-center justify-center px-4 py-2 bg-white text-forest-900 font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-cream-100 transition-colors shadow-xs shrink-0"
+                  >
+                    Open Seller Dashboard &rarr;
+                  </Link>
+                </div>
+              </div>
+            )}
+
+            {(profile.role === "admin" || profile.role === "super_admin") && (
+              <div className="pt-2">
+                <div className="p-4 bg-ink-900 text-white rounded-xl shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-ink-800">
+                  <div>
+                    <p className="font-serif font-bold text-sm">Platform Admin Console</p>
+                    <p className="text-xs text-ink-300">Access seller approvals, catalog, settings &amp; audit logs</p>
+                  </div>
+                  <Link
+                    href="/admin/dashboard"
+                    className="inline-flex items-center justify-center px-4 py-2 bg-forest-600 hover:bg-forest-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-colors shadow-xs shrink-0"
+                  >
+                    Open Admin Dashboard &rarr;
+                  </Link>
+                </div>
+              </div>
+            )}
+
+            {profile.role === "operations" && (
+              <div className="pt-2">
+                <div className="p-4 bg-forest-800 text-white rounded-xl shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-forest-700">
+                  <div>
+                    <p className="font-serif font-bold text-sm">Operations &amp; Delivery Portal</p>
+                    <p className="text-xs text-forest-200">Manage order pickup, packing &amp; delivery assignments</p>
+                  </div>
+                  <Link
+                    href="/operations"
+                    className="inline-flex items-center justify-center px-4 py-2 bg-white text-forest-900 font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-cream-100 transition-colors shadow-xs shrink-0"
+                  >
+                    Open Operations Portal &rarr;
+                  </Link>
+                </div>
+              </div>
+            )}
+
             {/* Relocated Sign Out Button inside Personal Information */}
             <div className="pt-3 border-t border-ink-100">
               <button
