@@ -162,8 +162,9 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
 
       if (session?.user) {
         const res = await api.getOrders();
-        if (res.success && res.data && Array.isArray(res.data)) {
-          const mapped = mapDbOrders(res.data);
+        if (res.success && res.data) {
+          const rawOrders = Array.isArray(res.data) ? res.data : ((res.data as any)?.orders || []);
+          const mapped = mapDbOrders(rawOrders);
           setOrders(mapped);
           return;
         }

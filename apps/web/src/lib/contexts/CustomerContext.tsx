@@ -51,6 +51,35 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
 
       if (session?.user) {
         setIsAuthenticated(true);
+
+        // Check if guest addresses exist in localStorage and merge to database
+        try {
+          const stored = localStorage.getItem("floria_addresses");
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              for (const addr of parsed) {
+                if (addr.full_name && addr.line1 && addr.pincode) {
+                  await api.createAddress({
+                    full_name: addr.full_name,
+                    phone: addr.phone,
+                    line1: addr.line1,
+                    line2: addr.line2,
+                    city: addr.city,
+                    state: addr.state,
+                    pincode: addr.pincode,
+                    label: addr.instructions || "Home",
+                    is_default: addr.is_default,
+                  }).catch(() => null);
+                }
+              }
+              localStorage.removeItem("floria_addresses");
+            }
+          }
+        } catch (e) {
+          console.error("Failed to merge guest addresses:", e);
+        }
+
         const [profRes, addrRes] = await Promise.all([
           api.getProfile().catch(() => ({ success: false, data: null })),
           api.getAddresses().catch(() => ({ success: false, data: [] })),
@@ -75,8 +104,9 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
           });
         }
 
-        if (addrRes.success && addrRes.data && Array.isArray(addrRes.data)) {
-          const mapped: AddressItem[] = addrRes.data.map((a: any) => ({
+        if (addrRes.success && addrRes.data) {
+          const raw = Array.isArray(addrRes.data) ? addrRes.data : ((addrRes.data as any)?.addresses || []);
+          const mapped: AddressItem[] = raw.map((a: any) => ({
             id: a.id,
             full_name: a.full_name,
             phone: a.phone,
@@ -96,15 +126,26 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
       } else {
         setIsAuthenticated(false);
         setProfile(EMPTY_PROFILE);
-        setAddresses([]);
       }
     } catch (err) {
       console.error("[CustomerContext] Error fetching profile/addresses:", err);
       setIsAuthenticated(false);
       setProfile(EMPTY_PROFILE);
-      setAddresses([]);
     } finally {
       setIsLoading(false);
+    }
+
+    // Guest fallback: load addresses from localStorage
+    try {
+      const stored = localStorage.getItem("floria_addresses");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          setAddresses(parsed);
+        }
+      }
+    } catch {
+      // Ignore
     }
   }, []);
 
@@ -120,6 +161,11 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
         setProfile(EMPTY_PROFILE);
         setAddresses([]);
         setIsLoading(false);
+        try {
+          localStorage.removeItem("floria_addresses");
+        } catch {
+          // Ignore
+        }
       }
     });
 
@@ -184,6 +230,11 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
     }
 
     setAddresses(updated);
+    try {
+      localStorage.setItem("floria_addresses", JSON.stringify(updated));
+    } catch (e) {
+      console.error("Error saving guest address to localStorage:", e);
+    }
   };
 
   const deleteAddress = async (id: string) => {
@@ -197,6 +248,11 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
 
     const updated = addresses.filter((a) => a.id !== id);
     setAddresses(updated);
+    try {
+      localStorage.setItem("floria_addresses", JSON.stringify(updated));
+    } catch (e) {
+      console.error("Error updating guest address in localStorage:", e);
+    }
   };
 
   const setDefaultAddress = async (id: string) => {
@@ -213,6 +269,11 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
       is_default: a.id === id,
     }));
     setAddresses(updated);
+    try {
+      localStorage.setItem("floria_addresses", JSON.stringify(updated));
+    } catch (e) {
+      console.error("Error updating guest default address in localStorage:", e);
+    }
   };
 
   const getDefaultAddress = () => {

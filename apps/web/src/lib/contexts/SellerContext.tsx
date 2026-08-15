@@ -49,7 +49,7 @@ export function SellerProvider({ children }: { children: React.ReactNode }) {
 
     const supabase = getSupabaseBrowserClient();
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_IN" && session?.user) {
+      if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session?.user) {
         await refreshProfile();
       } else if (event === "SIGNED_OUT") {
         setSellerProfile(null);

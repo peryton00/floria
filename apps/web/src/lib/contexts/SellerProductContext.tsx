@@ -185,6 +185,21 @@ export function SellerProductProvider({ children }: { children: React.ReactNode 
 
   useEffect(() => {
     refreshProducts().then(() => setIsLoading(false));
+
+    const supabase = getSupabaseBrowserClient();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session?.user) {
+        await refreshProducts();
+      } else if (event === "SIGNED_OUT") {
+        setProducts(SEED_PRODUCTS);
+        setInventories(SEED_INVENTORY);
+        setImages(SEED_IMAGES);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [refreshProducts]);
 
   const getProductListingById = (productId: string): ProductListing | null => {
