@@ -36,7 +36,7 @@ export default function CheckoutPage() {
   const { cartItems, clearCart } = useCart();
   const { addresses, saveAddress, deleteAddress, setDefaultAddress, getDefaultAddress } = useCustomer();
 
-  // State
+  // State----
   const defaultAddr = getDefaultAddress();
   const [selectedAddressId, setSelectedAddressId] = useState<string>(defaultAddr?.id ?? "");
   const [paymentMethod, setPaymentMethod] = useState<"online" | "cod">("online");
