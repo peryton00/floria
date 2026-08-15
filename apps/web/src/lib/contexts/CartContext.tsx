@@ -59,7 +59,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       if (session?.user) {
         setIsAuthenticated(true);
 
-        // Check if guest cart exists in localStorage and merge before retrieving user cart
+        // Merge any guest cart items sitting in localStorage first
         try {
           const stored = localStorage.getItem("floria_cart");
           if (stored) {
@@ -91,6 +91,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           const rawItems = res.data.cart_items || res.data.items || [];
           const mapped = mapDbCartItems(rawItems);
           setCartItems(mapped);
+          // Keep localStorage in sync as a resilient cache
+          try { localStorage.setItem("floria_cart", JSON.stringify(mapped)); } catch { /* ignore */ }
           return;
         }
       } else {
@@ -100,7 +102,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       setIsAuthenticated(false);
     }
 
-    // Guest localStorage fallback
+    // Fallback: restore from localStorage (works for both guests and when API is unreachable)
     try {
       const stored = localStorage.getItem("floria_cart");
       if (stored) {
@@ -142,27 +144,29 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     };
   }, [refreshCart]);
 
-  // Save guest cart to localStorage when unauthenticated
+  // Always persist cart to localStorage as a resilient cache (guests + authenticated)
   useEffect(() => {
-    if (!isHydrated || isAuthenticated) return;
+    if (!isHydrated) return;
     try {
       localStorage.setItem("floria_cart", JSON.stringify(cartItems));
     } catch (e) {
-      console.error("Error saving guest cart to localStorage:", e);
+      console.error("Error saving cart to localStorage:", e);
     }
-  }, [cartItems, isHydrated, isAuthenticated]);
+  }, [cartItems, isHydrated]);
 
   const addToCart = async (listing: ProductListing, qty = 1) => {
     if (isAuthenticated) {
       const res = await api.addToCart(listing.product.id, qty);
       if (res.success && res.data) {
         const rawItems = res.data.cart_items || res.data.items || [];
-        setCartItems(mapDbCartItems(rawItems));
+        const mapped = mapDbCartItems(rawItems);
+        setCartItems(mapped);
+        try { localStorage.setItem("floria_cart", JSON.stringify(mapped)); } catch { /* ignore */ }
         return;
       }
     }
 
-    // Guest mode
+    // Guest mode or API unavailable — update local state (useEffect will persist to localStorage)
     setCartItems((prev) => {
       const existing = prev.find((item) => item.listing.product.id === listing.product.id);
       if (existing) {

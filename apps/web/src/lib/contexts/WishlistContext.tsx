@@ -77,6 +77,8 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
           const rawItems = res.data.wishlist_items || res.data.items || [];
           const mapped = mapDbWishlistItems(rawItems);
           setWishlistItems(mapped);
+          // Keep localStorage in sync as a resilient cache
+          try { localStorage.setItem("floria_wishlist", JSON.stringify(mapped)); } catch { /* ignore */ }
           return;
         }
       } else {
@@ -126,14 +128,15 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     };
   }, [refreshWishlist]);
 
+  // Always persist wishlist to localStorage as a resilient cache (guests + authenticated)
   useEffect(() => {
-    if (!isHydrated || isAuthenticated) return;
+    if (!isHydrated) return;
     try {
       localStorage.setItem("floria_wishlist", JSON.stringify(wishlistItems));
     } catch (e) {
-      console.error("Error saving guest wishlist to localStorage:", e);
+      console.error("Error saving wishlist to localStorage:", e);
     }
-  }, [wishlistItems, isHydrated, isAuthenticated]);
+  }, [wishlistItems, isHydrated]);
 
   const isWishlisted = (productId: string) => {
     return wishlistItems.some((item) => item.product.id === productId);
@@ -144,7 +147,9 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
       const res = await api.addToWishlist(listing.product.id);
       if (res.success && res.data) {
         const rawItems = res.data.wishlist_items || res.data.items || [];
-        setWishlistItems(mapDbWishlistItems(rawItems));
+        const mapped = mapDbWishlistItems(rawItems);
+        setWishlistItems(mapped);
+        try { localStorage.setItem("floria_wishlist", JSON.stringify(mapped)); } catch { /* ignore */ }
         return;
       }
     }
