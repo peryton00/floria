@@ -30,8 +30,23 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
   const [activeTab, setActiveTab] = useState("description");
 
   const { isWishlisted, toggleWishlist } = useWishlist();
-  const { addToCart } = useCart();
+  const { addToCart, cartItems } = useCart();
   const wishlisted = isWishlisted(product.id);
+
+  const handleBuyNow = async () => {
+    if (isOutOfStock) return;
+
+    // Client-side condition check: verify if product is already in cart
+    const existsInCart = cartItems.some(
+      (item) => item.listing?.product?.id === product.id
+    );
+
+    if (!existsInCart) {
+      await addToCart(listing, quantity);
+    }
+
+    window.location.href = "/cart";
+  };
 
   // Mock details
   const mockRating = 4.8;
@@ -348,10 +363,7 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
           <button
             type="button"
             disabled={isOutOfStock}
-            onClick={() => {
-              addToCart(listing, quantity);
-              window.location.href = "/cart";
-            }}
+            onClick={handleBuyNow}
             className={[
               "py-3.5 rounded-xl font-bold text-sm tracking-wider uppercase transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2",
               isOutOfStock
