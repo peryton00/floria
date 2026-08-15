@@ -14,11 +14,17 @@ export function createCorsMiddleware() {
         return callback(null, true);
       }
 
-      if (env.CORS_ALLOWED_ORIGINS.includes(origin)) {
+      if (
+        env.CORS_ALLOWED_ORIGINS.includes(origin) ||
+        env.CORS_ALLOWED_ORIGINS.includes("*") ||
+        origin.endsWith(".vercel.app") ||
+        origin.startsWith("http://localhost:")
+      ) {
         return callback(null, true);
       }
 
-      callback(new Error(`CORS policy violation: Origin '${origin}' is not allowed.`));
+      console.warn(`[CORS] Rejected unlisted origin: '${origin}'`);
+      callback(null, false);
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],

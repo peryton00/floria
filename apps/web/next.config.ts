@@ -22,6 +22,7 @@ const csp = [
   `font-src 'self' https://fonts.gstatic.com`,
   `img-src 'self' data: blob: https://${supabaseHostname} https://*.supabase.co https://images.unsplash.com https://plus.unsplash.com`,
   `connect-src 'self' https://${supabaseHostname} https://*.supabase.co https://${apiHostname} https://*.onrender.com https://floria-api.onrender.com https://nominatim.openstreetmap.org https://vercel.live https://*.vercel.app wss://*.vercel.app`,
+  `frame-src 'self' https://vercel.live https://*.vercel.app`,
   `frame-ancestors 'none'`,
   `object-src 'none'`,
   `base-uri 'self'`,
