@@ -36,7 +36,8 @@ var FloriaApiClient = class {
   constructor(config) {
     this.baseUrl = config.baseUrl.replace(/\/$/, "");
     this.getAccessToken = config.getAccessToken;
-    this.customFetch = config.fetch || globalThis.fetch;
+    const fn = config.fetch || (typeof window !== "undefined" ? window.fetch : globalThis.fetch);
+    this.customFetch = typeof window !== "undefined" ? fn.bind(window) : fn.bind(globalThis);
   }
   async request(endpoint, options = {}) {
     const url = `${this.baseUrl}${endpoint.startsWith("/") ? "" : "/"}${endpoint}`;
@@ -51,7 +52,8 @@ var FloriaApiClient = class {
       }
     }
     try {
-      const response = await this.customFetch(url, {
+      const fetchFn = this.customFetch || (typeof window !== "undefined" ? window.fetch.bind(window) : globalThis.fetch.bind(globalThis));
+      const response = await fetchFn(url, {
         ...options,
         headers
       });
