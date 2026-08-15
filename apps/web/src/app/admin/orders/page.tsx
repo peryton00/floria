@@ -250,7 +250,7 @@ export default function AdminOrdersPage() {
                       <div>
                         <p className="font-bold text-ink-900">{item.product_name_snapshot || item.product?.name || "Plant Product"}</p>
                         <p className="text-[10px] text-ink-400">
-                          Seller: <span className="font-semibold text-ink-700">{item.seller?.business_name || "Partner Nursery"}</span>
+                          Seller: <span className="font-semibold text-ink-700">{item.product?.seller?.business_name || item.seller?.business_name || "Partner Nursery"}</span>
                         </p>
                       </div>
                       <div className="text-right">

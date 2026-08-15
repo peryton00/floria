@@ -30,7 +30,18 @@ export class OrderRepository {
     const db = getAdminDb();
     let q = db
       .from("orders")
-      .select("*, order_items(*, product:products(name,slug), seller:seller_profiles(id,business_name)), seller_order_fulfillments(*)")
+      .select(`
+        *,
+        order_items(
+          *,
+          product:products(
+            name,
+            slug,
+            seller:seller_profiles(id, business_name)
+          )
+        ),
+        seller_order_fulfillments(*)
+      `)
       .order("created_at", { ascending: false });
 
     if (filters?.status && filters.status !== "all") {
