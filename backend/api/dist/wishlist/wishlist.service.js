@@ -12,7 +12,7 @@ class WishlistService {
             .select("*, wishlist_items(*, product:products(*, inventory(*), images:product_images(*)))")
             .eq("user_id", userId)
             .maybeSingle();
-        return wishlist || { user_id: userId, items: [] };
+        return wishlist || { user_id: userId, wishlist_items: [] };
     }
     async addItem(userId, productId) {
         const db = (0, database_js_1.getAdminDb)();

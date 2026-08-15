@@ -47,4 +47,7 @@ router.get("/orders", admin_controller_js_1.adminController.getOrders);
 router.get("/orders/:id", admin_controller_js_1.adminController.getOrderById);
 // Audit Logging Visibility
 router.get("/audit-logs", admin_controller_js_1.adminController.getAuditLogs);
+// Platform Settings & Commission Rate Management
+router.get("/settings/platform", admin_controller_js_1.adminController.getSettings);
+router.patch("/settings/commission", admin_controller_js_1.adminController.updateCommissionRate);
 exports.default = router;

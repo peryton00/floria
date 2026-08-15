@@ -12,7 +12,7 @@ class CartService {
             .select("*, cart_items(*, product:products(*, inventory(*), images:product_images(*)))")
             .eq("user_id", userId)
             .maybeSingle();
-        return cart || { user_id: userId, items: [] };
+        return cart || { user_id: userId, cart_items: [] };
     }
     async addItem(userId, productId, quantity) {
         const db = (0, database_js_1.getAdminDb)();
@@ -40,7 +40,7 @@ class CartService {
         if (!cart) {
             const { data: newCart, error: cartErr } = await db
                 .from("carts")
-                .insert({ user_id: userId, seller_id: product.seller_id })
+                .insert({ user_id: userId })
                 .select("id")
                 .single();
             if (cartErr)

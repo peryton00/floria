@@ -6,7 +6,7 @@ const database_js_1 = require("../config/database.js");
 const order_repository_js_1 = require("../database/repositories/order.repository.js");
 const audit_repository_js_1 = require("../database/repositories/audit.repository.js");
 const errors_js_1 = require("../utils/errors.js");
-const constants_js_1 = require("../config/constants.js");
+const settings_repository_js_1 = require("../database/repositories/settings.repository.js");
 class CheckoutService {
     async processCheckout(input) {
         const db = (0, database_js_1.getAdminDb)();
@@ -95,7 +95,9 @@ class CheckoutService {
             }
         }
         const subtotalPaise = lineItems.reduce((s, li) => s + li.line_total_paise, 0);
-        const commissionPaise = Math.round(subtotalPaise * constants_js_1.PLATFORM_COMMISSION_RATE);
+        const ratePct = await settings_repository_js_1.settingsRepository.getCommissionRate();
+        const commissionDecimalRate = ratePct / 100.0;
+        const commissionPaise = Math.round(subtotalPaise * commissionDecimalRate);
         const primarySellerId = lineItems[0].seller_id_snapshot;
         const uniqueSellers = [...new Set(lineItems.map((li) => li.seller_id_snapshot))];
         const fulfillments = uniqueSellers.map((sellerId) => ({
@@ -109,7 +111,7 @@ class CheckoutService {
             delivery_address_snapshot: deliveryAddress,
             subtotal_paise: subtotalPaise,
             delivery_fee_paise: 0,
-            commission_rate: constants_js_1.PLATFORM_COMMISSION_RATE,
+            commission_rate: commissionDecimalRate,
             commission_paise: commissionPaise,
             total_paise: subtotalPaise,
             notes: input.paymentMethod === "cod" ? "COD" : "Online",

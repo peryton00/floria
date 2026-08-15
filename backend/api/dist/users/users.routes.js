@@ -19,16 +19,46 @@ router.get("/me", async (req, res, next) => {
         next(err);
     }
 });
+router.patch("/me", async (req, res, next) => {
+    try {
+        const { name, full_name, phone } = req.body || {};
+        const updated = await user_repository_js_1.userRepository.updateProfile(req.user.id, {
+            full_name: full_name || name,
+            phone,
+        });
+        res.json({ success: true, data: updated });
+    }
+    catch (err) {
+        next(err);
+    }
+});
+router.delete("/me", async (req, res, next) => {
+    try {
+        const { auditRepository } = await import("../database/repositories/audit.repository.js");
+        await user_repository_js_1.userRepository.deleteAccount(req.user.id);
+        await auditRepository.log({
+            actor_user_id: req.user.id,
+            actor_role: req.user.role,
+            action: "USER_DELETED",
+            resource_type: "user_profile",
+            resource_id: req.user.id,
+        });
+        res.json({ success: true, message: "Account deleted successfully" });
+    }
+    catch (err) {
+        next(err);
+    }
+});
 // Addresses
 const createAddressSchema = {
     body: zod_1.z.object({
         full_name: zod_1.z.string().min(2, "Full name required"),
-        phone: zod_1.z.string().min(10, "Valid phone number required"),
+        phone: zod_1.z.string().min(8, "Valid phone number required"),
         line1: zod_1.z.string().min(3, "Address line 1 required"),
         line2: zod_1.z.string().optional(),
         city: zod_1.z.string().min(2, "City required"),
         state: zod_1.z.string().min(2, "State required"),
-        pincode: zod_1.z.string().regex(/^\d{6}$/, "Pincode must be 6 digits"),
+        pincode: zod_1.z.string().min(3, "Pincode required"),
         is_default: zod_1.z.boolean().optional(),
         label: zod_1.z.string().optional(),
     }),
@@ -45,6 +75,15 @@ router.get("/addresses", async (req, res, next) => {
 router.post("/addresses", (0, validation_js_1.validateRequest)(createAddressSchema), async (req, res, next) => {
     try {
         const address = await addresses_service_js_1.addressService.createAddress(req.user.id, req.body);
+        res.json({ success: true, data: address });
+    }
+    catch (err) {
+        next(err);
+    }
+});
+router.patch("/addresses/:id", (0, validation_js_1.validateRequest)(createAddressSchema), async (req, res, next) => {
+    try {
+        const address = await addresses_service_js_1.addressService.updateAddress(req.user.id, String(req.params.id), req.body);
         res.json({ success: true, data: address });
     }
     catch (err) {

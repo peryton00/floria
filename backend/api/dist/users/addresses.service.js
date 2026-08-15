@@ -16,6 +16,16 @@ class AddressService {
     }
     async createAddress(userId, input) {
         const db = (0, database_js_1.getAdminDb)();
+        // Ensure user_profiles row exists for foreign key constraint
+        const { data: profile } = await db.from("user_profiles").select("id").eq("id", userId).maybeSingle();
+        if (!profile) {
+            await db.from("user_profiles").insert({
+                id: userId,
+                role: "customer",
+                full_name: input.full_name,
+                phone: input.phone,
+            });
+        }
         // Check if user has any addresses currently
         const existing = await this.getAddresses(userId);
         const shouldBeDefault = existing.length === 0 || input.is_default === true;
@@ -39,8 +49,43 @@ class AddressService {
         })
             .select("*")
             .single();
-        if (error || !addr)
+        if (error || !addr) {
+            console.error("[AddressService.createAddress] error:", error);
             throw errors_js_1.Errors.database("Failed to create address.");
+        }
+        return addr;
+    }
+    async updateAddress(userId, addressId, input) {
+        const db = (0, database_js_1.getAdminDb)();
+        const existing = await this.getAddresses(userId);
+        const target = existing.find((a) => a.id === addressId);
+        if (!target)
+            throw errors_js_1.Errors.notFound("Address");
+        if (input.is_default && existing.length > 1) {
+            await db.from("addresses").update({ is_default: false }).eq("user_id", userId);
+        }
+        const { data: addr, error } = await db
+            .from("addresses")
+            .update({
+            full_name: input.full_name,
+            phone: input.phone,
+            line1: input.line1,
+            line2: input.line2 || null,
+            city: input.city,
+            state: input.state,
+            pincode: input.pincode,
+            label: input.label || target.label || "Home",
+            is_default: input.is_default ?? target.is_default,
+            updated_at: new Date().toISOString(),
+        })
+            .eq("id", addressId)
+            .eq("user_id", userId)
+            .select("*")
+            .single();
+        if (error || !addr) {
+            console.error("[AddressService.updateAddress] error:", error);
+            throw errors_js_1.Errors.database("Failed to update address.");
+        }
         return addr;
     }
     async setDefaultAddress(userId, addressId) {

@@ -232,6 +232,37 @@ class AdminController {
             next(err);
         }
     }
+    async getSettings(_req, res, next) {
+        try {
+            const { settingsRepository } = await import("../database/repositories/settings.repository.js");
+            const commissionRate = await settingsRepository.getCommissionRate();
+            res.json({
+                success: true,
+                data: {
+                    commissionRate,
+                },
+            });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+    async updateCommissionRate(req, res, next) {
+        try {
+            const { settingsRepository } = await import("../database/repositories/settings.repository.js");
+            const rate = Number(req.body.commissionRate);
+            const updatedRate = await settingsRepository.updateCommissionRate(rate, req.user.id);
+            res.json({
+                success: true,
+                data: {
+                    commissionRate: updatedRate,
+                },
+            });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
 }
 exports.AdminController = AdminController;
 exports.adminController = new AdminController();

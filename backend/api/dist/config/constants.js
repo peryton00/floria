@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PLATFORM_COMMISSION_RATE = exports.ROLE_PERMISSIONS = void 0;
+exports.DEFAULT_FALLBACK_COMMISSION_RATE = exports.ROLE_PERMISSIONS = void 0;
 exports.ROLE_PERMISSIONS = {
     customer: [
         "profile.read.self",
@@ -58,4 +58,5 @@ exports.ROLE_PERMISSIONS = {
         "platform.admin",
     ],
 };
-exports.PLATFORM_COMMISSION_RATE = 0.12; // 12%
+// Default fallback commission rate percentage (12.0%) used ONLY when platform_settings table is uninitialized
+exports.DEFAULT_FALLBACK_COMMISSION_RATE = 12.0;
