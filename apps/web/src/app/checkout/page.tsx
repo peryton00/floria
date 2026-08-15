@@ -152,7 +152,13 @@ export default function CheckoutPage() {
         return;
       }
 
-      setConfirmedOrder({ ...selectedAddr, id: res.data.orderId, paymentMethod });
+      setConfirmedOrder({
+        id: res.data.orderId,
+        createdAt: new Date().toLocaleString(),
+        paymentMethod,
+        address: selectedAddr,
+        nurseryGroups,
+      });
       setStep("confirmation");
       clearCart();
     } catch {
