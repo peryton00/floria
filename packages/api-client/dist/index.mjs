@@ -237,6 +237,15 @@ var FloriaApiClient = class {
   async getSellerDashboard() {
     return this.request("/api/v1/seller/dashboard");
   }
+  async getSellerEarnings() {
+    return this.request("/api/v1/seller/earnings");
+  }
+  async getSellerPayouts() {
+    return this.request("/api/v1/seller/payouts");
+  }
+  async getSellerAnalytics(params) {
+    return this.request(`/api/v1/seller/analytics${buildQueryString(params)}`);
+  }
   // ── Admin API (/api/v1/admin) ─────────────────────────────────────────────
   async getAdminHealth() {
     return this.request("/api/v1/admin/health");

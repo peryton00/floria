@@ -166,6 +166,37 @@ class SellersController {
             next(err);
         }
     }
+    async getEarnings(req, res, next) {
+        try {
+            const profile = await sellers_service_js_1.sellersService.getProfile(req.user.id);
+            const earnings = await sellers_service_js_1.sellersService.getEarnings(profile.id);
+            res.json({ success: true, data: earnings });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+    async getPayouts(req, res, next) {
+        try {
+            const profile = await sellers_service_js_1.sellersService.getProfile(req.user.id);
+            const payouts = await sellers_service_js_1.sellersService.getPayouts(profile.id);
+            res.json({ success: true, data: payouts });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+    async getAnalytics(req, res, next) {
+        try {
+            const profile = await sellers_service_js_1.sellersService.getProfile(req.user.id);
+            const range = typeof req.query.range === "string" ? req.query.range : "30d";
+            const stats = await sellers_service_js_1.sellersService.getAnalytics(profile.id, range);
+            res.json({ success: true, data: stats });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
 }
 exports.SellersController = SellersController;
 exports.sellersController = new SellersController();

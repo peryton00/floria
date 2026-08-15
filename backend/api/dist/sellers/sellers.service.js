@@ -167,6 +167,15 @@ class SellersService {
     async getDashboard(sellerId) {
         return seller_repository_js_1.sellerRepository.getDashboard(sellerId);
     }
+    async getEarnings(sellerId) {
+        return seller_repository_js_1.sellerRepository.getEarnings(sellerId);
+    }
+    async getPayouts(sellerId) {
+        return seller_repository_js_1.sellerRepository.getPayouts(sellerId);
+    }
+    async getAnalytics(sellerId, range) {
+        return seller_repository_js_1.sellerRepository.getAnalytics(sellerId, range);
+    }
 }
 exports.SellersService = SellersService;
 exports.sellersService = new SellersService();

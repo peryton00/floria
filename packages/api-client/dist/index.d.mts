@@ -107,6 +107,9 @@ declare class FloriaApiClient {
     getSellerOrderById(id: string): Promise<ApiResponse<any>>;
     updateFulfillmentStatus(masterOrderId: string, newStatus: string): Promise<ApiResponse<any>>;
     getSellerDashboard(): Promise<ApiResponse<SellerDashboardData>>;
+    getSellerEarnings(): Promise<ApiResponse<any>>;
+    getSellerPayouts(): Promise<ApiResponse<any>>;
+    getSellerAnalytics(params?: QueryParams): Promise<ApiResponse<any>>;
     getAdminHealth(): Promise<ApiResponse<any>>;
     getAdminDashboard(): Promise<ApiResponse<any>>;
     getAdminAnalytics(params?: QueryParams): Promise<ApiResponse<any>>;

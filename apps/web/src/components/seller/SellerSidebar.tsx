@@ -6,12 +6,19 @@ import { usePathname } from "next/navigation";
 import { useSeller } from "@/lib/contexts/SellerContext";
 import { SellerStatusBadge } from "./SellerStatusBadge";
 import {
-  GridIcon,
-  OrderIcon,
-  LeafIcon,
-  PayoutIcon,
-  SettingsIcon,
-} from "@/components/ui/Icons";
+  LayoutDashboard,
+  ShoppingBag,
+  Leaf,
+  Boxes,
+  FolderTree,
+  DollarSign,
+  History,
+  BarChart3,
+  Star,
+  User,
+  FileText,
+  Settings
+} from "lucide-react";
 
 interface SidebarItem {
   label: string;
@@ -21,11 +28,18 @@ interface SidebarItem {
 }
 
 const NAV_ITEMS: SidebarItem[] = [
-  { label: "Overview",       href: "/seller/dashboard", icon: <GridIcon size={18} /> },
-  { label: "Orders",         href: "/seller/orders",    icon: <OrderIcon size={18} /> },
-  { label: "Products",       href: "/seller/products",  icon: <LeafIcon size={18} /> },
-  { label: "Earnings",       href: "/seller/payouts",   icon: <PayoutIcon size={18} />,  comingSoon: true },
-  { label: "Nursery Profile",href: "/seller/profile",   icon: <SettingsIcon size={18} /> },
+  { label: "Overview",        href: "/seller/dashboard",  icon: <LayoutDashboard size={18} /> },
+  { label: "Orders",          href: "/seller/orders",     icon: <ShoppingBag size={18} /> },
+  { label: "Products",        href: "/seller/products",   icon: <Leaf size={18} /> },
+  { label: "Inventory",       href: "/seller/inventory",  icon: <Boxes size={18} /> },
+  { label: "Categories",      href: "/seller/categories", icon: <FolderTree size={18} /> },
+  { label: "Earnings",        href: "/seller/earnings",   icon: <DollarSign size={18} /> },
+  { label: "Payouts",         href: "/seller/payouts",    icon: <History size={18} /> },
+  { label: "Analytics",       href: "/seller/analytics",  icon: <BarChart3 size={18} /> },
+  { label: "Reviews",         href: "/seller/reviews",    icon: <Star size={18} /> },
+  { label: "Nursery Profile", href: "/seller/profile",    icon: <User size={18} /> },
+  { label: "Documents",       href: "/seller/documents",  icon: <FileText size={18} /> },
+  { label: "Settings",        href: "/seller/settings",   icon: <Settings size={18} /> },
 ];
 
 interface SellerSidebarProps {

@@ -184,6 +184,18 @@ export class SellersService {
   async getDashboard(sellerId: string) {
     return sellerRepository.getDashboard(sellerId);
   }
+
+  async getEarnings(sellerId: string) {
+    return sellerRepository.getEarnings(sellerId);
+  }
+
+  async getPayouts(sellerId: string) {
+    return sellerRepository.getPayouts(sellerId);
+  }
+
+  async getAnalytics(sellerId: string, range: string) {
+    return sellerRepository.getAnalytics(sellerId, range);
+  }
 }
 
 export const sellersService = new SellersService();

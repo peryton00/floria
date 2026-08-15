@@ -22,10 +22,8 @@ const sellers_routes_js_1 = __importDefault(require("./sellers/sellers.routes.js
 const users_routes_js_1 = __importDefault(require("./users/users.routes.js"));
 const admin_routes_js_1 = __importDefault(require("./admin/admin.routes.js"));
 const operations_routes_js_1 = __importDefault(require("./operations/operations.routes.js"));
-const inventory_routes_js_1 = __importDefault(require("./inventory/inventory.routes.js"));
 const wishlist_routes_js_1 = __importDefault(require("./wishlist/wishlist.routes.js"));
 const payments_routes_js_1 = __importDefault(require("./payments/payments.routes.js"));
-const payouts_routes_js_1 = __importDefault(require("./payouts/payouts.routes.js"));
 const notifications_routes_js_1 = __importDefault(require("./notifications/notifications.routes.js"));
 const reports_routes_js_1 = __importDefault(require("./reports/reports.routes.js"));
 function createApp() {
@@ -67,8 +65,6 @@ function createApp() {
     apiV1.use("/customer/wishlist", wishlist_routes_js_1.default);
     apiV1.use("/customer/users", users_routes_js_1.default);
     apiV1.use("/seller/fulfillment", fulfillment_routes_js_1.default);
-    apiV1.use("/seller/inventory", inventory_routes_js_1.default);
-    apiV1.use("/seller/payouts", payouts_routes_js_1.default);
     apiV1.use("/seller", sellers_routes_js_1.default);
     apiV1.use("/operations", operations_routes_js_1.default);
     apiV1.use("/admin", admin_routes_js_1.default);

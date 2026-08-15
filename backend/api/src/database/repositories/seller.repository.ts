@@ -525,6 +525,167 @@ export class SellerRepository {
       actionRequired,
     };
   }
+
+  async getEarnings(sellerId: string): Promise<any> {
+    const db = getAdminDb();
+    const { data: items, error } = await db
+      .from("order_items")
+      .select("*, order:orders(*)")
+      .eq("seller_id_snapshot", sellerId);
+
+    if (error || !items) return {
+      totalGrossRevenuePaise: 0,
+      totalCommissionPaise: 0,
+      totalNetEarningsPaise: 0,
+      ordersCount: 0,
+      payouts: []
+    };
+
+    let totalGross = 0;
+    let totalCommission = 0;
+    const uniqueOrders = new Set<string>();
+
+    items.forEach((item: any) => {
+      const order = item.order;
+      if (!order) return;
+      uniqueOrders.add(order.id);
+
+      const gross = (item.unit_price_paise_snapshot || 0) * item.quantity;
+      const rate = order.commission_rate || 0.12;
+      const commission = Math.round(gross * rate);
+
+      totalGross += gross;
+      totalCommission += commission;
+    });
+
+    const net = totalGross - totalCommission;
+
+    return {
+      totalGrossRevenuePaise: totalGross,
+      totalCommissionPaise: totalCommission,
+      totalNetEarningsPaise: net,
+      ordersCount: uniqueOrders.size,
+      payouts: []
+    };
+  }
+
+  async getPayouts(sellerId: string): Promise<any> {
+    return {
+      message: "Payout processing is not yet available.",
+      data: []
+    };
+  }
+
+  async getAnalytics(sellerId: string, range: string): Promise<any> {
+    const db = getAdminDb();
+    const { data: items, error } = await db
+      .from("order_items")
+      .select("*, order:orders(*), product:products(name, category_id, category:categories(name))")
+      .eq("seller_id_snapshot", sellerId);
+
+    if (error || !items) {
+      return {
+        summary: { grossRevenuePaise: 0, ordersCount: 0, unitsSold: 0 },
+        series: [],
+        topProducts: [],
+        categories: []
+      };
+    }
+
+    const now = Date.now();
+    let filterMs = 30 * 24 * 60 * 60 * 1000;
+    if (range === "7d") filterMs = 7 * 24 * 60 * 60 * 1000;
+    else if (range === "90d") filterMs = 90 * 24 * 60 * 60 * 1000;
+    else if (range === "12m") filterMs = 365 * 24 * 60 * 60 * 1000;
+    else if (range === "today") filterMs = 24 * 60 * 60 * 1000;
+
+    const filteredItems = items.filter((item: any) => {
+      const order = item.order;
+      if (!order) return false;
+      const orderTime = new Date(order.created_at).getTime();
+      return (now - orderTime) <= filterMs;
+    });
+
+    let totalGross = 0;
+    let unitsSold = 0;
+    const uniqueOrders = new Set<string>();
+    const productStats = new Map<string, { name: string; quantity: number; revenuePaise: number }>();
+    const categoryStats = new Map<string, { name: string; quantity: number; revenuePaise: number }>();
+    const seriesStats = new Map<string, { grossRevenuePaise: number; ordersCount: number; unitsSold: number }>();
+
+    filteredItems.forEach((item: any) => {
+      const order = item.order;
+      if (!order) return;
+
+      uniqueOrders.add(order.id);
+      const gross = (item.unit_price_paise_snapshot || 0) * item.quantity;
+      totalGross += gross;
+      unitsSold += item.quantity;
+
+      const prodId = item.product_id;
+      const prodName = item.product_name_snapshot || item.product?.name || "Plant Product";
+      if (!productStats.has(prodId)) {
+        productStats.set(prodId, { name: prodName, quantity: 0, revenuePaise: 0 });
+      }
+      const pStat = productStats.get(prodId)!;
+      pStat.quantity += item.quantity;
+      pStat.revenuePaise += gross;
+
+      const catName = item.product?.category?.name || "Uncategorized";
+      if (!categoryStats.has(catName)) {
+        categoryStats.set(catName, { name: catName, quantity: 0, revenuePaise: 0 });
+      }
+      const cStat = categoryStats.get(catName)!;
+      cStat.quantity += item.quantity;
+      cStat.revenuePaise += gross;
+
+      const dateStr = new Date(order.created_at).toISOString().split("T")[0];
+      if (!seriesStats.has(dateStr)) {
+        seriesStats.set(dateStr, { grossRevenuePaise: 0, ordersCount: 0, unitsSold: 0 });
+      }
+      const sStat = seriesStats.get(dateStr)!;
+      sStat.grossRevenuePaise += gross;
+      sStat.unitsSold += item.quantity;
+    });
+
+    const orderDatesMap = new Map<string, Set<string>>();
+    filteredItems.forEach((item: any) => {
+      const order = item.order;
+      if (!order) return;
+      const dateStr = new Date(order.created_at).toISOString().split("T")[0];
+      if (!orderDatesMap.has(dateStr)) {
+        orderDatesMap.set(dateStr, new Set());
+      }
+      orderDatesMap.get(dateStr)!.add(order.id);
+    });
+    orderDatesMap.forEach((ordersSet, dateStr) => {
+      if (seriesStats.has(dateStr)) {
+        seriesStats.get(dateStr)!.ordersCount = ordersSet.size;
+      }
+    });
+
+    const topProducts = Array.from(productStats.values())
+      .sort((a, b) => b.revenuePaise - a.revenuePaise)
+      .slice(0, 5);
+
+    const categories = Array.from(categoryStats.values())
+      .sort((a, b) => b.revenuePaise - a.revenuePaise);
+
+    const series = Array.from(seriesStats.entries())
+      .map(([date, val]) => ({ date, ...val }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    return {
+      summary: {
+        grossRevenuePaise: totalGross,
+        ordersCount: uniqueOrders.size,
+        unitsSold
+      },
+      series,
+      topProducts,
+      categories
+    };
+  }
 }
 
 export const sellerRepository = new SellerRepository();

@@ -34,4 +34,9 @@ router.get("/orders/:id", authenticateToken, requireRole("seller", "admin"), sel
 router.post("/fulfillment", authenticateToken, sellerFulfillmentRateLimiter, requireApprovedSeller, sellersController.updateFulfillment);
 router.post("/fulfillment/:orderId/status", authenticateToken, sellerFulfillmentRateLimiter, requireApprovedSeller, sellersController.updateFulfillment);
 
+// Earnings & Payouts & Analytics
+router.get("/earnings", authenticateToken, requireApprovedSeller, sellersController.getEarnings);
+router.get("/payouts", authenticateToken, requireApprovedSeller, sellersController.getPayouts);
+router.get("/analytics", authenticateToken, requireApprovedSeller, sellersController.getAnalytics);
+
 export default router;

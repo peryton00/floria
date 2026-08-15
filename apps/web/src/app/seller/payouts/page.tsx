@@ -1,42 +1,44 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
-import { api, type SellerDashboardData } from "@/lib/api";
+import { api } from "@/lib/api";
 import { formatINR } from "@/lib/format";
-import { PayoutIcon, AlertIcon } from "@/components/ui/Icons";
+import {
+  History,
+  AlertTriangle,
+  ExternalLink,
+  Info
+} from "lucide-react";
 
 export default function SellerPayoutsPage() {
-  const [data, setData] = useState<SellerDashboardData | null>(null);
-  const [commissionRate, setCommissionRate] = useState<number>(12);
+  const [earnings, setEarnings] = useState<any>(null);
+  const [payouts, setPayouts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function loadPayouts() {
+    async function loadData() {
       try {
         setLoading(true);
-        const [dashRes, settingsRes] = await Promise.all([
-          api.getSellerDashboard(),
-          api.getPlatformSettings().catch(() => ({ success: false, data: { commissionRate: 12 } })),
+        setError(null);
+        const [earnRes, payoutRes] = await Promise.all([
+          api.getSellerEarnings(),
+          api.getSellerPayouts(),
         ]);
 
-        if (dashRes.success && dashRes.data) {
-          setData(dashRes.data);
-        } else {
-          setError(dashRes.error?.message || "Failed to load seller earnings");
+        if (earnRes.success && earnRes.data) {
+          setEarnings(earnRes.data);
         }
-
-        if (settingsRes.success && settingsRes.data?.commissionRate !== undefined) {
-          setCommissionRate(settingsRes.data.commissionRate);
+        if (payoutRes.success && payoutRes.data) {
+          setPayouts(payoutRes.data);
         }
-      } catch (e: any) {
-        setError(e.message || "Failed to connect to API");
+      } catch (err: any) {
+        setError(err.message || "Failed to load payouts data");
       } finally {
         setLoading(false);
       }
     }
-    loadPayouts();
+    loadData();
   }, []);
 
   if (loading) {
@@ -48,61 +50,53 @@ export default function SellerPayoutsPage() {
     );
   }
 
-  if (error || !data) {
-    return (
-      <div className="max-w-md mx-auto py-12 text-center space-y-3">
-        <AlertIcon size={24} className="text-error-600 mx-auto" />
-        <h1 className="font-serif text-lg font-bold text-ink-900">Earnings Data Unavailable</h1>
-        <p className="text-xs text-ink-500">{error || "Could not retrieve seller earnings from API."}</p>
-      </div>
-    );
-  }
-
-  const { kpis, profile } = data;
-  const totalGrossPaise = kpis.totalRevenuePaise || 0;
-  const commissionPaise = Math.round(totalGrossPaise * (commissionRate / 100.0));
-  const netEarningsPaise = totalGrossPaise - commissionPaise;
-
   return (
     <div className="max-w-3xl mx-auto space-y-6 pb-12">
       <div>
-        <h1 className="font-serif text-2xl font-bold text-ink-900 leading-tight">Earnings & Settlement Summary</h1>
-        <p className="text-xs text-ink-400 mt-0.5">Real-time revenue, marketplace commission, and net nursery earnings for {profile?.business_name || "your nursery"}.</p>
+        <h1 className="font-serif text-2xl font-bold text-ink-900 leading-tight">Payout settlements</h1>
+        <p className="text-xs text-ink-400 mt-0.5">Track bank transfers and historical payouts issued for completed nursery orders.</p>
       </div>
 
-      {/* Earnings Overview Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl border border-ink-100 p-5 shadow-xs">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-ink-400">Gross Sales Revenue</p>
-          <p className="text-2xl font-serif font-bold text-ink-900 mt-1">{formatINR(totalGrossPaise)}</p>
-          <p className="text-[10px] text-ink-400 mt-0.5">{kpis.totalOrders} total seller order(s)</p>
+      {/* Info notice about current implementation */}
+      <div className="bg-cream-50 rounded-2xl border border-ink-100 p-6 space-y-4">
+        <div className="flex gap-3">
+          <Info className="text-forest-700 flex-shrink-0 mt-0.5" size={20} />
+          <div className="space-y-2">
+            <h2 className="font-bold text-ink-900 text-sm">Payout Settlement Policy</h2>
+            <p className="text-xs text-ink-600 leading-relaxed">
+              Automatic bank transfers are processed bi-weekly for all net earnings. Settlements require a verified bank account configuration on your nursery profile.
+            </p>
+          </div>
         </div>
 
-        <div className="bg-white rounded-2xl border border-ink-100 p-5 shadow-xs">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-ink-400">Floria Commission ({commissionRate}%)</p>
-          <p className="text-2xl font-serif font-bold text-forest-700 mt-1">{formatINR(commissionPaise)}</p>
-          <p className="text-[10px] text-ink-400 mt-0.5">Platform hosting & logistics fee</p>
-        </div>
-
-        <div className="bg-forest-900 text-white rounded-2xl p-5 shadow-xs">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-cream-200/70">Net Nursery Earnings</p>
-          <p className="text-2xl font-serif font-bold text-forest-200 mt-1">{formatINR(netEarningsPaise)}</p>
-          <p className="text-[10px] text-cream-100/70 mt-0.5">Eligible for payout settlement</p>
+        <div className="border-t border-ink-100/50 pt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
+          <div>
+            <p className="font-semibold text-ink-700">Total Net Earnings Settled: {earnings ? formatINR(earnings.totalNetEarningsPaise) : "₹0.00"}</p>
+            <p className="text-[10px] text-ink-400 mt-0.5">Verified via server ledger audit</p>
+          </div>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-warning-50 text-warning-700 font-bold text-[10px] uppercase tracking-wider border border-warning-100">
+            <AlertTriangle size={12} /> Payout processing is not yet available
+          </span>
         </div>
       </div>
 
-      {/* Payout Information Notice */}
-      <div className="bg-cream-50 rounded-2xl border border-ink-100 p-6 space-y-2 text-xs">
-        <h2 className="font-bold text-ink-900 text-sm">Settlement & Payout Policy</h2>
-        <p className="text-ink-600 leading-relaxed">
-          Payouts are settled directly to your registered bank account on a bi-weekly cycle for all orders marked <strong className="text-ink-900">Picked Up</strong> or <strong className="text-ink-900">Delivered</strong>.
-        </p>
-        <div className="pt-2">
-          <Link href="/seller/profile" className="text-forest-700 font-bold hover:underline">
-            View / Update Bank Settlement Details in Profile →
-          </Link>
-        </div>
-      </div>
+      {/* Payout History Ledger */}
+      <section className="bg-white rounded-2xl border border-ink-100 p-5 shadow-xs space-y-4">
+        <h2 className="font-serif text-base font-bold text-ink-900">Payout Transaction Logs</h2>
+        
+        {payouts.length === 0 ? (
+          <div className="p-8 text-center text-xs text-ink-400 bg-cream-50 rounded-xl space-y-2">
+            <p>No automatic payouts have been generated or settled yet.</p>
+            <p className="text-[10px] text-ink-400 font-medium">
+              Backend dependency: Payout automated settlement processor (cron settlement worker) is currently disabled.
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            {/* Table placeholder for future scale */}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

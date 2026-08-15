@@ -17,10 +17,8 @@ import sellersRoutes from "./sellers/sellers.routes.js";
 import usersRoutes from "./users/users.routes.js";
 import adminRoutes from "./admin/admin.routes.js";
 import operationsRoutes from "./operations/operations.routes.js";
-import inventoryRoutes from "./inventory/inventory.routes.js";
 import wishlistRoutes from "./wishlist/wishlist.routes.js";
 import paymentsRoutes from "./payments/payments.routes.js";
-import payoutsRoutes from "./payouts/payouts.routes.js";
 import notificationsRoutes from "./notifications/notifications.routes.js";
 import reportsRoutes from "./reports/reports.routes.js";
 
@@ -68,8 +66,6 @@ export function createApp() {
   apiV1.use("/customer/users", usersRoutes);
 
   apiV1.use("/seller/fulfillment", fulfillmentRoutes);
-  apiV1.use("/seller/inventory", inventoryRoutes);
-  apiV1.use("/seller/payouts", payoutsRoutes);
   apiV1.use("/seller", sellersRoutes);
 
   apiV1.use("/operations", operationsRoutes);
