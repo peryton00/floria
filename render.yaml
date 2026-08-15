@@ -1,0 +1,13 @@
+﻿services:
+  - type: web
+    name: floria-api
+    runtime: node
+    rootDir: backend/api
+    buildCommand: pnpm install --frozen-lockfile && pnpm build
+    startCommand: node dist/index.js
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # All other secrets (DATABASE_URL, SUPABASE_*, JWT_SECRET, etc.)
+      # should be set in the Render dashboard Environment tab -- never committed here.
