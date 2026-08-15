@@ -47,9 +47,35 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
 
       if (session?.user) {
         setIsAuthenticated(true);
+
+        // Merge guest wishlist items from localStorage if present
+        try {
+          const stored = localStorage.getItem("floria_wishlist");
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              const productIds = parsed
+                .map((item: any) => item?.product?.id || item?.productId || item?.id)
+                .filter((id: any) => typeof id === "string" && id.length > 0);
+
+              if (productIds.length > 0) {
+                const mergeRes = await api.mergeWishlist(productIds);
+                if (mergeRes && mergeRes.success) {
+                  localStorage.removeItem("floria_wishlist");
+                }
+              } else {
+                localStorage.removeItem("floria_wishlist");
+              }
+            }
+          }
+        } catch (e) {
+          console.error("Failed to merge guest wishlist during refresh:", e);
+        }
+
         const res = await api.getWishlist();
-        if (res.success && res.data?.wishlist_items) {
-          const mapped = mapDbWishlistItems(res.data.wishlist_items);
+        if (res.success && res.data) {
+          const rawItems = res.data.wishlist_items || res.data.items || [];
+          const mapped = mapDbWishlistItems(rawItems);
           setWishlistItems(mapped);
           return;
         }
@@ -81,24 +107,17 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
 
     const supabase = getSupabaseBrowserClient();
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_IN" && session?.user) {
-        try {
-          const stored = localStorage.getItem("floria_wishlist");
-          if (stored) {
-            const parsed = JSON.parse(stored);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-              const productIds = parsed.map((item: any) => item.product.id);
-              await api.mergeWishlist(productIds);
-              localStorage.removeItem("floria_wishlist");
-            }
-          }
-        } catch {
-          // Ignore
-        }
+      if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session?.user) {
+        setIsAuthenticated(true);
         await refreshWishlist();
       } else if (event === "SIGNED_OUT") {
         setIsAuthenticated(false);
         setWishlistItems([]);
+        try {
+          localStorage.removeItem("floria_wishlist");
+        } catch {
+          // Ignore
+        }
       }
     });
 
@@ -123,8 +142,9 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   const addToWishlist = async (listing: ProductListing) => {
     if (isAuthenticated) {
       const res = await api.addToWishlist(listing.product.id);
-      if (res.success && res.data?.wishlist_items) {
-        setWishlistItems(mapDbWishlistItems(res.data.wishlist_items));
+      if (res.success && res.data) {
+        const rawItems = res.data.wishlist_items || res.data.items || [];
+        setWishlistItems(mapDbWishlistItems(rawItems));
         return;
       }
     }
@@ -140,8 +160,9 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   const removeFromWishlist = async (productId: string) => {
     if (isAuthenticated) {
       const res = await api.removeFromWishlist(productId);
-      if (res.success && res.data?.wishlist_items) {
-        setWishlistItems(mapDbWishlistItems(res.data.wishlist_items));
+      if (res.success && res.data) {
+        const rawItems = res.data.wishlist_items || res.data.items || [];
+        setWishlistItems(mapDbWishlistItems(rawItems));
         return;
       }
     }

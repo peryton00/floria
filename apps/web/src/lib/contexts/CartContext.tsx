@@ -58,9 +58,38 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
       if (session?.user) {
         setIsAuthenticated(true);
+
+        // Check if guest cart exists in localStorage and merge before retrieving user cart
+        try {
+          const stored = localStorage.getItem("floria_cart");
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              const mergePayload = parsed
+                .map((item: any) => ({
+                  productId: item?.listing?.product?.id || item?.productId || item?.id,
+                  quantity: item?.quantity || 1,
+                }))
+                .filter((item: any) => item.productId && typeof item.productId === "string");
+
+              if (mergePayload.length > 0) {
+                const mergeRes = await api.mergeCart(mergePayload);
+                if (mergeRes && mergeRes.success) {
+                  localStorage.removeItem("floria_cart");
+                }
+              } else {
+                localStorage.removeItem("floria_cart");
+              }
+            }
+          }
+        } catch (e) {
+          console.error("Failed to merge guest cart during refresh:", e);
+        }
+
         const res = await api.getCart();
-        if (res.success && res.data?.cart_items) {
-          const mapped = mapDbCartItems(res.data.cart_items);
+        if (res.success && res.data) {
+          const rawItems = res.data.cart_items || res.data.items || [];
+          const mapped = mapDbCartItems(rawItems);
           setCartItems(mapped);
           return;
         }
@@ -94,28 +123,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     const supabase = getSupabaseBrowserClient();
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_IN" && session?.user) {
-        // Merge guest localStorage cart into DB cart
-        try {
-          const stored = localStorage.getItem("floria_cart");
-          if (stored) {
-            const parsed = JSON.parse(stored);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-              const mergePayload = parsed.map((item: any) => ({
-                productId: item.listing.product.id,
-                quantity: item.quantity,
-              }));
-              await api.mergeCart(mergePayload);
-              localStorage.removeItem("floria_cart");
-            }
-          }
-        } catch {
-          // Ignore
-        }
+      if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session?.user) {
+        setIsAuthenticated(true);
         await refreshCart();
       } else if (event === "SIGNED_OUT") {
         setIsAuthenticated(false);
         setCartItems([]);
+        try {
+          localStorage.removeItem("floria_cart");
+        } catch {
+          // Ignore
+        }
       }
     });
 
@@ -137,8 +155,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const addToCart = async (listing: ProductListing, qty = 1) => {
     if (isAuthenticated) {
       const res = await api.addToCart(listing.product.id, qty);
-      if (res.success && res.data?.cart_items) {
-        setCartItems(mapDbCartItems(res.data.cart_items));
+      if (res.success && res.data) {
+        const rawItems = res.data.cart_items || res.data.items || [];
+        setCartItems(mapDbCartItems(rawItems));
         return;
       }
     }
@@ -160,8 +179,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const removeFromCart = async (productId: string) => {
     if (isAuthenticated) {
       const res = await api.removeFromCart(productId);
-      if (res.success && res.data?.cart_items) {
-        setCartItems(mapDbCartItems(res.data.cart_items));
+      if (res.success && res.data) {
+        const rawItems = res.data.cart_items || res.data.items || [];
+        setCartItems(mapDbCartItems(rawItems));
         return;
       }
     }
@@ -176,8 +196,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     if (isAuthenticated) {
       const res = await api.updateCartQuantity(productId, quantity);
-      if (res.success && res.data?.cart_items) {
-        setCartItems(mapDbCartItems(res.data.cart_items));
+      if (res.success && res.data) {
+        const rawItems = res.data.cart_items || res.data.items || [];
+        setCartItems(mapDbCartItems(rawItems));
         return;
       }
     }

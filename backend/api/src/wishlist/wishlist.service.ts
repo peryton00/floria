@@ -11,7 +11,7 @@ export class WishlistService {
       .eq("user_id", userId)
       .maybeSingle();
 
-    return wishlist || { user_id: userId, items: [] };
+    return wishlist || { user_id: userId, wishlist_items: [] };
   }
 
   async addItem(userId: string, productId: string) {

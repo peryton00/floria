@@ -11,7 +11,7 @@ export class CartService {
       .eq("user_id", userId)
       .maybeSingle();
 
-    return cart || { user_id: userId, items: [] };
+    return cart || { user_id: userId, cart_items: [] };
   }
 
   async addItem(userId: string, productId: string, quantity: number) {
