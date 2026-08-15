@@ -3,6 +3,7 @@
 // Architecture: Request → Proxy → Auth check → Role & Status Authorization → Route / API / RLS
 
 import { createServerClient } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 
 type CookieEntry = { name: string; value: string; options?: Record<string, unknown> };
@@ -47,6 +48,29 @@ export async function proxy(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  let role = "customer";
+  if (user) {
+    const serviceKey = process.env["SUPABASE_SERVICE_ROLE_KEY"];
+    if (serviceKey && url) {
+      const serviceClient = createClient(url, serviceKey, {
+        auth: { autoRefreshToken: false, persistSession: false },
+      });
+      const { data: profile } = await serviceClient
+        .from("user_profiles")
+        .select("role")
+        .eq("id", user.id)
+        .maybeSingle();
+      role = profile?.role || "customer";
+    } else {
+      const { data: profile } = await supabase
+        .from("user_profiles")
+        .select("role")
+        .eq("id", user.id)
+        .maybeSingle();
+      role = profile?.role || "customer";
+    }
+  }
 
   // Helper for JSON API error response
   const jsonError = (code: string, message: string, status: number) => {
@@ -105,15 +129,6 @@ export async function proxy(request: NextRequest) {
       return redirectToLogin(pathname);
     }
 
-    // Fetch authoritative user profile role
-    const { data: profile } = await supabase
-      .from("user_profiles")
-      .select("role")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    const role = profile?.role || "customer";
-
     if (role !== "seller" && role !== "admin" && role !== "super_admin") {
       if (isSellerApi) return jsonError("FORBIDDEN", "Seller role required.", 403);
       return redirectToHome();
@@ -155,14 +170,6 @@ export async function proxy(request: NextRequest) {
       return redirectToLogin(pathname);
     }
 
-    const { data: profile } = await supabase
-      .from("user_profiles")
-      .select("role")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    const role = profile?.role || "customer";
-
     if (role !== "operations" && role !== "admin" && role !== "super_admin") {
       if (isOperationsApi) return jsonError("FORBIDDEN", "Operations or Admin role required.", 403);
       return redirectToHome();
@@ -178,14 +185,6 @@ export async function proxy(request: NextRequest) {
       if (isAdminApi) return jsonError("AUTH_REQUIRED", "Authentication required.", 401);
       return redirectToLogin(pathname);
     }
-
-    const { data: profile } = await supabase
-      .from("user_profiles")
-      .select("role")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    const role = profile?.role || "customer";
 
     if (role !== "admin" && role !== "super_admin") {
       if (isAdminApi) return jsonError("FORBIDDEN", "Admin role required.", 403);
