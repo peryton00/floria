@@ -22,7 +22,29 @@ function AdminLoginForm() {
     } else if (err) {
       setError("Authentication failed. Please try again.");
     }
-  }, [searchParams]);
+
+    async function checkLoggedInAdmin() {
+      try {
+        const supabase = getSupabaseBrowserClient();
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const { data: profile } = await supabase
+            .from("user_profiles")
+            .select("role")
+            .eq("id", session.user.id)
+            .maybeSingle();
+
+          const role = profile?.role || session.user.user_metadata?.role;
+          if (role === "admin" || role === "super_admin") {
+            router.replace("/admin/dashboard");
+          }
+        }
+      } catch (e) {
+        console.error("Check logged in admin error:", e);
+      }
+    }
+    checkLoggedInAdmin();
+  }, [searchParams, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

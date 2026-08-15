@@ -54,8 +54,16 @@ export async function proxy(request: NextRequest) {
   };
 
   // Helper for web redirect
-  const redirectToLogin = () => {
-    const loginUrl = new URL("/login", request.url);
+  const redirectToLogin = (targetPath: string) => {
+    let loginPath = "/login";
+    if (targetPath.startsWith("/admin")) {
+      loginPath = "/admin/login";
+    } else if (targetPath.startsWith("/seller")) {
+      loginPath = "/seller/login";
+    } else if (targetPath.startsWith("/operations")) {
+      loginPath = "/operations/login";
+    }
+    const loginUrl = new URL(loginPath, request.url);
     loginUrl.searchParams.set("redirectTo", pathname);
     return NextResponse.redirect(loginUrl);
   };
@@ -83,7 +91,7 @@ export async function proxy(request: NextRequest) {
     if (pathname.startsWith("/api/")) {
       return jsonError("AUTH_REQUIRED", "Authentication required.", 401);
     }
-    return redirectToLogin();
+    return redirectToLogin(pathname);
   }
 
   // 3. Check Seller Routes
@@ -94,7 +102,7 @@ export async function proxy(request: NextRequest) {
   if (isSellerOperational || isSellerProfile || isSellerApi) {
     if (!user) {
       if (isSellerApi) return jsonError("AUTH_REQUIRED", "Authentication required.", 401);
-      return redirectToLogin();
+      return redirectToLogin(pathname);
     }
 
     // Fetch authoritative user profile role
@@ -106,7 +114,7 @@ export async function proxy(request: NextRequest) {
 
     const role = profile?.role || "customer";
 
-    if (role !== "seller" && role !== "admin") {
+    if (role !== "seller" && role !== "admin" && role !== "super_admin") {
       if (isSellerApi) return jsonError("FORBIDDEN", "Seller role required.", 403);
       return redirectToHome();
     }
@@ -121,7 +129,7 @@ export async function proxy(request: NextRequest) {
 
       const sellerStatus = sp?.status || "pending";
 
-      if (sellerStatus !== "approved" && role !== "admin") {
+      if (sellerStatus !== "approved" && role !== "admin" && role !== "super_admin") {
         if (isSellerApi) {
           return jsonError(
             "FORBIDDEN",
@@ -144,7 +152,7 @@ export async function proxy(request: NextRequest) {
   if (isOperationsRoute || isOperationsApi) {
     if (!user) {
       if (isOperationsApi) return jsonError("AUTH_REQUIRED", "Authentication required.", 401);
-      return redirectToLogin();
+      return redirectToLogin(pathname);
     }
 
     const { data: profile } = await supabase
@@ -155,7 +163,7 @@ export async function proxy(request: NextRequest) {
 
     const role = profile?.role || "customer";
 
-    if (role !== "operations" && role !== "admin") {
+    if (role !== "operations" && role !== "admin" && role !== "super_admin") {
       if (isOperationsApi) return jsonError("FORBIDDEN", "Operations or Admin role required.", 403);
       return redirectToHome();
     }
@@ -168,7 +176,7 @@ export async function proxy(request: NextRequest) {
   if (isAdminRoute || isAdminApi) {
     if (!user) {
       if (isAdminApi) return jsonError("AUTH_REQUIRED", "Authentication required.", 401);
-      return redirectToLogin();
+      return redirectToLogin(pathname);
     }
 
     const { data: profile } = await supabase
@@ -179,7 +187,7 @@ export async function proxy(request: NextRequest) {
 
     const role = profile?.role || "customer";
 
-    if (role !== "admin") {
+    if (role !== "admin" && role !== "super_admin") {
       if (isAdminApi) return jsonError("FORBIDDEN", "Admin role required.", 403);
       return redirectToHome();
     }
