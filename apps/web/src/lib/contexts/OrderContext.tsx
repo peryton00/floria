@@ -42,7 +42,7 @@ export interface OrderNurseryItem {
 export interface OrderNurseryGroup {
   sellerId: string;
   sellerName: string;
-  status: string;
+  status: OrderStatus;
   items: OrderNurseryItem[];
 }
 
@@ -96,6 +96,7 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
     return dbOrders.map((o: any) => {
       const addr = o.delivery_address_snapshot || {};
       const fulfillments = o.seller_order_fulfillments || [];
+      const groupsMap = new Map<string, OrderNurseryGroup>();
 
       (o.order_items || []).forEach((item: any) => {
         const sellerId = item.seller_id_snapshot || item.seller?.id || "seller_default";
