@@ -23,8 +23,8 @@ interface AdminShellProps {
 export function AdminShell({ children }: AdminShellProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [authorized, setAuthorized] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [authorized, setAuthorized] = useState(true);
   const [userName, setUserName] = useState("Admin User");
   const [userRole, setUserRole] = useState<string>("admin");
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);

@@ -20,8 +20,8 @@ interface OperationsShellProps {
 export function OperationsShell({ children }: OperationsShellProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [authorized, setAuthorized] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [authorized, setAuthorized] = useState(true);
   const [userName, setUserName] = useState("Operations Officer");
   const [userRole, setUserRole] = useState<string>("operations");
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
