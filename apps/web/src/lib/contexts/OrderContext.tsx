@@ -95,17 +95,31 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
   const mapDbOrders = useCallback((dbOrders: any[]): OrderRecord[] => {
     return dbOrders.map((o: any) => {
       const addr = o.delivery_address_snapshot || {};
-      const groupsMap = new Map<string, OrderNurseryGroup>();
+      const fulfillments = o.seller_order_fulfillments || [];
 
       (o.order_items || []).forEach((item: any) => {
         const sellerId = item.seller_id_snapshot || item.seller?.id || "seller_default";
         const sellerName = item.seller?.business_name || "Nursery";
 
+        const fulfillment = fulfillments.find((f: any) => f.seller_id === sellerId);
+        const rawStatus = fulfillment?.status || o.status || "Order Placed";
+        
+        let displayStatus: OrderStatus = "Order Placed";
+        if (rawStatus === "preparing" || rawStatus === "Preparing") {
+          displayStatus = "Preparing";
+        } else if (rawStatus === "delivered" || rawStatus === "Delivered") {
+          displayStatus = "Delivered";
+        } else if (rawStatus === "Cancelled" || rawStatus === "cancelled") {
+          displayStatus = "Cancelled";
+        } else if (rawStatus) {
+          displayStatus = rawStatus;
+        }
+
         if (!groupsMap.has(sellerId)) {
           groupsMap.set(sellerId, {
             sellerId,
             sellerName,
-            status: o.status === "preparing" ? "Preparing" : "Order Placed",
+            status: displayStatus,
             items: [],
           });
         }

@@ -158,40 +158,68 @@ export default function OrdersPage() {
                       </span>
                     </div>
 
-                    {/* Product Thumbnails preview */}
-                    <div className="flex items-center gap-2 overflow-x-auto pb-1">
-                      {allItems.slice(0, 4).map((item, i) => (
+                    {/* Items grouped by Nursery with separate tracking/status */}
+                    <div className="space-y-3">
+                      {order.nurseryGroups.map((group) => (
                         <div
-                          key={i}
-                          className="relative w-12 h-12 rounded-xl bg-cream-50 border border-ink-100 flex-shrink-0"
-                          title={`${item.product.name} (Qty: ${item.quantity})`}
+                          key={group.sellerId}
+                          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-cream-50/30 border border-ink-100/50 rounded-xl"
                         >
-                          <div className="relative w-full h-full rounded-xl overflow-hidden">
-                            <Image
-                              src={item.primary_image?.url || "/floria-logo.png"}
-                              alt={item.product.name}
-                              fill
-                              sizes="48px"
-                              className="object-cover"
-                            />
+                          <div className="flex flex-wrap items-center gap-3">
+                            {/* Thumbnails for this nursery group */}
+                            <div className="flex items-center gap-2">
+                              {group.items.slice(0, 3).map((item, idx) => (
+                                <div
+                                  key={idx}
+                                  className="relative w-10 h-10 rounded-lg bg-cream-50 border border-ink-100 flex-shrink-0"
+                                  title={`${item.product.name} (Qty: ${item.quantity})`}
+                                >
+                                  <div className="relative w-full h-full rounded-lg overflow-hidden">
+                                    <Image
+                                      src={item.primary_image?.url || "/floria-logo.png"}
+                                      alt={item.product.name}
+                                      fill
+                                      sizes="40px"
+                                      className="object-cover"
+                                    />
+                                  </div>
+                                  {item.quantity > 1 && (
+                                    <span className="absolute -top-1.5 -right-1.5 min-w-4 h-4 px-0.5 bg-forest-700 text-white font-bold text-[9px] rounded-full flex items-center justify-center border border-white shadow-sm">
+                                      {item.quantity}
+                                    </span>
+                                  )}
+                                </div>
+                              ))}
+                              {group.items.length > 3 && (
+                                <div className="w-10 h-10 rounded-lg bg-forest-50 border border-forest-100 flex items-center justify-center text-[10px] font-bold text-forest-700 flex-shrink-0">
+                                  +{group.items.length - 3}
+                                </div>
+                              )}
+                            </div>
+
+                            <div>
+                              <p className="text-[11px] font-bold text-ink-950 uppercase tracking-wider">
+                                {group.sellerName}
+                              </p>
+                              <p className="text-[10px] text-ink-400">
+                                {group.items.reduce((s, i) => s + i.quantity, 0)} {group.items.reduce((s, i) => s + i.quantity, 0) === 1 ? "item" : "items"}
+                              </p>
+                            </div>
                           </div>
-                          {item.quantity > 1 && (
-                            <span className="absolute -top-1.5 -right-1.5 min-w-5 h-5 px-1 bg-forest-700 text-white font-bold text-[10px] rounded-full flex items-center justify-center border border-white shadow-sm">
-                              {item.quantity}
+
+                          {/* Nursery tracking status */}
+                          <div className="flex-shrink-0">
+                            <span className={`px-2 py-0.5 text-[10px] font-bold border rounded-full ${getStatusBadgeStyle(group.status)}`}>
+                              {group.status}
                             </span>
-                          )}
+                          </div>
                         </div>
                       ))}
-                      {allItems.length > 4 && (
-                        <div className="w-12 h-12 rounded-xl bg-forest-50 border border-forest-100 flex items-center justify-center text-xs font-bold text-forest-700 flex-shrink-0">
-                          +{allItems.length - 4}
-                        </div>
-                      )}
                     </div>
 
                     {/* Delivery summary */}
-                    <p className="text-xs text-ink-500 truncate">
-                      Deliver to: <span className="font-medium text-ink-800">{order.address.full_name}</span> ({order.address.city})
+                    <p className="text-[11px] text-ink-500">
+                      Deliver to: <span className="font-semibold text-ink-850">{order.address.full_name}</span> ({order.address.city})
                     </p>
                   </div>
 
