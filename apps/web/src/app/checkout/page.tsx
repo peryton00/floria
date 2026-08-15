@@ -232,27 +232,31 @@ export default function CheckoutPage() {
                       </span>
                     </div>
                     <div className="p-3 divide-y divide-ink-50">
-                      {group.items.map((item: any) => (
-                        <div key={item.product.id} className="py-2 first:pt-0 last:pb-0 flex items-center justify-between text-xs">
-                          <div className="flex items-center gap-3">
-                            <div className="relative w-10 h-10 rounded bg-cream-50 overflow-hidden flex-shrink-0 border border-ink-100">
-                              <Image
-                                src={item.primary_image?.url || "/floria-logo.png"}
-                                alt={item.product.name}
-                                fill
-                                className="object-cover"
-                              />
+                      {group.items.map((item: any) => {
+                        const { listing, quantity } = item;
+                        const { product, inventory, primary_image } = listing;
+                        return (
+                          <div key={product.id} className="py-2 first:pt-0 last:pb-0 flex items-center justify-between text-xs">
+                            <div className="flex items-center gap-3">
+                              <div className="relative w-10 h-10 rounded bg-cream-50 overflow-hidden flex-shrink-0 border border-ink-100">
+                                <Image
+                                  src={primary_image?.url || "/floria-logo.png"}
+                                  alt={product.name}
+                                  fill
+                                  className="object-cover"
+                                />
+                              </div>
+                              <div>
+                                <p className="font-semibold text-ink-900">{product.name}</p>
+                                <p className="text-[10px] text-ink-400">Qty: {quantity}</p>
+                              </div>
                             </div>
-                            <div>
-                              <p className="font-semibold text-ink-900">{item.product.name}</p>
-                              <p className="text-[10px] text-ink-400">Qty: {item.quantity}</p>
-                            </div>
+                            <span className="font-bold text-ink-900">
+                              {formatINR(inventory.price_paise * quantity)}
+                            </span>
                           </div>
-                          <span className="font-bold text-ink-900">
-                            {formatINR(item.pricePaise * item.quantity)}
-                          </span>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 ))}
