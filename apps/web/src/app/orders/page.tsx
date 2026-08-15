@@ -163,16 +163,23 @@ export default function OrdersPage() {
                       {allItems.slice(0, 4).map((item, i) => (
                         <div
                           key={i}
-                          className="relative w-12 h-12 rounded-xl bg-cream-50 overflow-hidden border border-ink-100 flex-shrink-0"
-                          title={item.product.name}
+                          className="relative w-12 h-12 rounded-xl bg-cream-50 border border-ink-100 flex-shrink-0"
+                          title={`${item.product.name} (Qty: ${item.quantity})`}
                         >
-                          <Image
-                            src={item.primary_image?.url || "/floria-logo.png"}
-                            alt={item.product.name}
-                            fill
-                            sizes="48px"
-                            className="object-cover"
-                          />
+                          <div className="relative w-full h-full rounded-xl overflow-hidden">
+                            <Image
+                              src={item.primary_image?.url || "/floria-logo.png"}
+                              alt={item.product.name}
+                              fill
+                              sizes="48px"
+                              className="object-cover"
+                            />
+                          </div>
+                          {item.quantity > 1 && (
+                            <span className="absolute -top-1.5 -right-1.5 min-w-5 h-5 px-1 bg-forest-700 text-white font-bold text-[10px] rounded-full flex items-center justify-center border border-white shadow-sm">
+                              {item.quantity}
+                            </span>
+                          )}
                         </div>
                       ))}
                       {allItems.length > 4 && (

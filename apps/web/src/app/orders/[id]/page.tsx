@@ -199,14 +199,21 @@ export default function OrderDetailPage({ params }: Props) {
                       <div key={item.product.id} className="py-3 first:pt-0 last:pb-0 flex items-center gap-4">
                         {/* Image */}
                         <Link href={`/products/${item.product.slug}`} className="flex-shrink-0">
-                          <div className="relative w-16 h-16 rounded-xl bg-cream-50 overflow-hidden border border-ink-100">
-                            <Image
-                              src={item.primary_image?.url || "/floria-logo.png"}
-                              alt={item.product.name}
-                              fill
-                              sizes="64px"
-                              className="object-cover"
-                            />
+                          <div className="relative w-16 h-16 rounded-xl bg-cream-50 border border-ink-100">
+                            <div className="relative w-full h-full rounded-xl overflow-hidden">
+                              <Image
+                                src={item.primary_image?.url || "/floria-logo.png"}
+                                alt={item.product.name}
+                                fill
+                                sizes="64px"
+                                className="object-cover"
+                              />
+                            </div>
+                            {item.quantity > 1 && (
+                              <span className="absolute -top-1.5 -right-1.5 min-w-5 h-5 px-1 bg-forest-700 text-white font-bold text-[10px] rounded-full flex items-center justify-center border border-white shadow-sm">
+                                {item.quantity}
+                              </span>
+                            )}
                           </div>
                         </Link>
 
