@@ -27,7 +27,7 @@ export function GoogleOAuthButton({ label = "Continue with Google", redirectTo }
           redirectTo: callbackUrl,
           queryParams: {
             access_type: "offline",
-            prompt: "consent",
+            prompt: "select_account",
           },
         },
       });
