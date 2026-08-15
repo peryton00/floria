@@ -9,9 +9,18 @@ import {
   GridIcon,
   UserGroupIcon,
   LeafIcon,
+  SproutIcon,
+  PlanterIcon,
   OrderIcon,
-  SettingsIcon,
+  ToolsIcon,
+  PayoutIcon,
+  StarIcon,
+  VerifiedIcon,
   ShieldIcon,
+  SettingsIcon,
+  AlertIcon,
+  SearchIcon,
+  BellIcon,
   LockIcon,
   LogoutIcon,
 } from "@/components/ui/Icons";
@@ -28,6 +37,16 @@ export function AdminShell({ children }: AdminShellProps) {
   const [userName, setUserName] = useState("Admin User");
   const [userRole, setUserRole] = useState<string>("admin");
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [isStaging, setIsStaging] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const host = window.location.hostname;
+      if (host.includes("localhost") || host.includes("vercel.app") || host.includes("staging")) {
+        setIsStaging(true);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     async function checkAuth() {
@@ -74,9 +93,16 @@ export function AdminShell({ children }: AdminShellProps) {
     { label: "Dashboard", href: "/admin/dashboard", icon: <GridIcon size={18} /> },
     { label: "Users", href: "/admin/users", icon: <UserGroupIcon size={18} /> },
     { label: "Sellers", href: "/admin/sellers", icon: <LeafIcon size={18} /> },
-    { label: "Products", href: "/admin/products", icon: <LeafIcon size={18} /> },
-    { label: "Categories", href: "/admin/categories", icon: <GridIcon size={18} /> },
+    { label: "Products", href: "/admin/products", icon: <SproutIcon size={18} /> },
+    { label: "Categories", href: "/admin/categories", icon: <PlanterIcon size={18} /> },
     { label: "Orders", href: "/admin/orders", icon: <OrderIcon size={18} /> },
+    { label: "Inventory", href: "/admin/inventory", icon: <ToolsIcon size={18} /> },
+    { label: "Finance & Commission", href: "/admin/finance", icon: <PayoutIcon size={18} /> },
+    { label: "Payouts", href: "/admin/payouts", icon: <PayoutIcon size={18} /> },
+    { label: "Operations Overview", href: "/admin/operations", icon: <GridIcon size={18} /> },
+    { label: "Reviews", href: "/admin/reviews", icon: <StarIcon size={18} /> },
+    { label: "Promotions", href: "/admin/promotions", icon: <VerifiedIcon size={18} /> },
+    { label: "Reports", href: "/admin/reports", icon: <AlertIcon size={18} /> },
     { label: "Audit Logs", href: "/admin/audit-logs", icon: <ShieldIcon size={18} /> },
     { label: "Settings", href: "/admin/settings", icon: <SettingsIcon size={18} /> },
   ];
@@ -254,12 +280,43 @@ export function AdminShell({ children }: AdminShellProps) {
                 <line x1="3" y1="18" x2="21" y2="18" />
               </svg>
             </button>
-            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-forest-50 text-forest-700 border border-forest-100">
-              Live Environment
+            <span className={[
+              "px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider border",
+              isStaging
+                ? "bg-amber-50 text-amber-700 border-amber-200"
+                : "bg-forest-50 text-forest-700 border-forest-200"
+            ].join(" ")}>
+              {isStaging ? "Staging Sandbox" : "Production System"}
             </span>
           </div>
 
+          {/* Search bar on desktop */}
+          <div className="hidden md:flex items-center relative w-64 max-w-xs">
+            <input
+              type="text"
+              placeholder="Search users, orders, products..."
+              className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-ink-200 focus:outline-none focus:ring-1 focus:ring-forest-700 bg-cream-50/30"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  const target = e.currentTarget.value.trim();
+                  if (target) {
+                    router.push(`/admin/orders?search=${encodeURIComponent(target)}`);
+                  }
+                }
+              }}
+            />
+            <SearchIcon size={12} className="absolute left-2.5 text-ink-300" />
+          </div>
+
           <div className="flex items-center gap-4">
+            <button
+              type="button"
+              className="relative p-1.5 text-ink-400 hover:text-ink-950 transition-colors"
+              onClick={() => alert("Notification center: No new alerts.")}
+            >
+              <BellIcon size={18} />
+              <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-error-500 ring-2 ring-white animate-ping" />
+            </button>
             <div className="text-right hidden sm:block">
               <p className="text-xs font-bold text-ink-900 leading-tight">{userName}</p>
               <p className="text-[10px] text-forest-700 font-bold uppercase tracking-wider mt-0.5 leading-none">{userRole}</p>

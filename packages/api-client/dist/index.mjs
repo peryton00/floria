@@ -244,6 +244,9 @@ var FloriaApiClient = class {
   async getAdminDashboard() {
     return this.request("/api/v1/admin/dashboard");
   }
+  async getAdminAnalytics(params) {
+    return this.request(`/api/v1/admin/analytics${buildQueryString(params)}`);
+  }
   async getAdminUsers(params) {
     return this.request(`/api/v1/admin/users${buildQueryString(params)}`);
   }

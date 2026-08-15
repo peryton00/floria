@@ -20,6 +20,7 @@ router.use(authenticateToken, requireRole("admin", "super_admin"), adminRateLimi
 // Dashboard & Health
 router.get("/health", adminController.getHealth);
 router.get("/dashboard", adminController.getDashboard);
+router.get("/analytics", adminController.getAnalytics);
 
 // Customer Management
 router.get("/users", adminController.getUsers);

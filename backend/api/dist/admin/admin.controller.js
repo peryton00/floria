@@ -15,6 +15,16 @@ class AdminController {
             next(err);
         }
     }
+    async getAnalytics(req, res, next) {
+        try {
+            const range = req.query.range;
+            const data = await admin_service_js_1.adminService.getAnalytics({ range });
+            res.json({ success: true, data });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
     async getUsers(_req, res, next) {
         try {
             const users = await admin_service_js_1.adminService.getUsers();

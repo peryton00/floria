@@ -16,6 +16,16 @@ export class AdminController {
     }
   }
 
+  async getAnalytics(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const range = req.query.range as string | undefined;
+      const data = await adminService.getAnalytics({ range });
+      res.json({ success: true, data });
+    } catch (err) {
+      next(err);
+    }
+  }
+
   async getUsers(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const users = await adminService.getUsers();

@@ -18,6 +18,7 @@ router.use(auth_js_1.authenticateToken, (0, authorization_js_1.requireRole)("adm
 // Dashboard & Health
 router.get("/health", admin_controller_js_1.adminController.getHealth);
 router.get("/dashboard", admin_controller_js_1.adminController.getDashboard);
+router.get("/analytics", admin_controller_js_1.adminController.getAnalytics);
 // Customer Management
 router.get("/users", admin_controller_js_1.adminController.getUsers);
 router.get("/users/:id", (0, validation_js_1.validateRequest)(uuidParamSchema), admin_controller_js_1.adminController.getUserById);

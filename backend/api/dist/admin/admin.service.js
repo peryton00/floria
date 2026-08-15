@@ -17,6 +17,8 @@ class AdminService {
             product_repository_js_1.productRepository.findAll(),
             order_repository_js_1.orderRepository.findAllMasterOrders(),
         ]);
+        const { settingsRepository } = await import("../database/repositories/settings.repository.js");
+        const commissionRate = await settingsRepository.getCommissionRate();
         const totalCustomers = users.filter((u) => u.role === "customer").length;
         const totalSellers = sellers.length;
         const pendingSellerApplications = sellers.filter((s) => s.status === "pending").length;
@@ -56,6 +58,7 @@ class AdminService {
                 totalItemsSold += item.quantity || 1;
             });
         });
+        const platformRevenue = Math.round(totalOrderValue * (commissionRate / 100));
         return {
             users: {
                 totalCustomers,
@@ -81,6 +84,7 @@ class AdminService {
             },
             platform: {
                 totalOrderValue,
+                platformRevenue,
                 totalItemsSold,
             },
         };
@@ -275,6 +279,62 @@ class AdminService {
             results = results.filter((l) => l.actor_user_id === filters.actorId);
         }
         return results;
+    }
+    async getAnalytics(filters) {
+        const orders = await order_repository_js_1.orderRepository.findAllMasterOrders();
+        const range = filters?.range || "30d";
+        const now = new Date();
+        const startDate = new Date();
+        if (range === "7d")
+            startDate.setDate(now.getDate() - 7);
+        else if (range === "90d")
+            startDate.setDate(now.getDate() - 90);
+        else if (range === "12m")
+            startDate.setFullYear(now.getFullYear() - 1);
+        else
+            startDate.setDate(now.getDate() - 30); // default 30d
+        const filtered = orders.filter((o) => new Date(o.created_at) >= startDate);
+        const groups = {};
+        const { settingsRepository } = await import("../database/repositories/settings.repository.js");
+        const commissionRate = await settingsRepository.getCommissionRate();
+        if (range === "12m") {
+            filtered.forEach((o) => {
+                const d = new Date(o.created_at);
+                const key = d.toLocaleString("default", { month: "short", year: "numeric" });
+                if (!groups[key])
+                    groups[key] = { gmv: 0, orders: 0, revenue: 0 };
+                const gmv = o.total_paise || o.subtotal_paise || 0;
+                groups[key].gmv += gmv;
+                groups[key].orders += 1;
+                groups[key].revenue += Math.round(gmv * (commissionRate / 100));
+            });
+        }
+        else {
+            filtered.forEach((o) => {
+                const d = new Date(o.created_at);
+                const key = d.toLocaleString("default", { day: "numeric", month: "short" });
+                if (!groups[key])
+                    groups[key] = { gmv: 0, orders: 0, revenue: 0 };
+                const gmv = o.total_paise || o.subtotal_paise || 0;
+                groups[key].gmv += gmv;
+                groups[key].orders += 1;
+                groups[key].revenue += Math.round(gmv * (commissionRate / 100));
+            });
+        }
+        // Sort chronologically by ordering the array
+        const timeSeries = Object.entries(groups)
+            .map(([label, val]) => ({
+            label,
+            gmv: val.gmv,
+            orders: val.orders,
+            revenue: val.revenue,
+        }))
+            // Reverse or order to ensure chronological flow
+            .reverse();
+        return {
+            timeSeries,
+            commissionRate,
+        };
     }
 }
 exports.AdminService = AdminService;

@@ -350,6 +350,10 @@ export class FloriaApiClient {
     return this.request<any>("/api/v1/admin/dashboard");
   }
 
+  public async getAdminAnalytics(params?: QueryParams): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/v1/admin/analytics${buildQueryString(params)}`);
+  }
+
   public async getAdminUsers(params?: QueryParams): Promise<ApiResponse<any[]>> {
     return this.request<any[]>(`/api/v1/admin/users${buildQueryString(params)}`);
   }
