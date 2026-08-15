@@ -6,19 +6,22 @@ const supabaseHostname = process.env["NEXT_PUBLIC_SUPABASE_URL"]
   ? new URL(process.env["NEXT_PUBLIC_SUPABASE_URL"]).hostname
   : "*.supabase.co";
 
+// API Backend project hostname (used in CSP)
+const apiHostname = process.env["NEXT_PUBLIC_API_URL"]
+  ? new URL(process.env["NEXT_PUBLIC_API_URL"]).hostname
+  : "*.onrender.com";
+
 // Content-Security-Policy
-// - Allows self, Supabase (API + Storage), Unsplash images, Google Fonts
-// - No inline scripts (Next.js uses nonce in production; dev uses unsafe-inline)
-// - unsafe-eval needed for Next.js dev mode only
+// - Allows self, Supabase (API + Storage), Render API, Unsplash images, Google Fonts, Vercel Live
 const isDev = process.env["NODE_ENV"] === "development";
 
 const csp = [
   `default-src 'self'`,
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
+  `script-src 'self' 'unsafe-inline' https://vercel.live https://*.vercel.app${isDev ? " 'unsafe-eval'" : ""}`,
   `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
   `font-src 'self' https://fonts.gstatic.com`,
-  `img-src 'self' data: blob: https://${supabaseHostname} https://images.unsplash.com https://plus.unsplash.com`,
-  `connect-src 'self' https://${supabaseHostname} https://nominatim.openstreetmap.org`,
+  `img-src 'self' data: blob: https://${supabaseHostname} https://*.supabase.co https://images.unsplash.com https://plus.unsplash.com`,
+  `connect-src 'self' https://${supabaseHostname} https://*.supabase.co https://${apiHostname} https://*.onrender.com https://floria-api.onrender.com https://nominatim.openstreetmap.org https://vercel.live https://*.vercel.app wss://*.vercel.app`,
   `frame-ancestors 'none'`,
   `object-src 'none'`,
   `base-uri 'self'`,
