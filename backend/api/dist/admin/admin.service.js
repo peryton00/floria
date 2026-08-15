@@ -9,6 +9,7 @@ const category_repository_js_1 = require("../database/repositories/category.repo
 const order_repository_js_1 = require("../database/repositories/order.repository.js");
 const audit_repository_js_1 = require("../database/repositories/audit.repository.js");
 const errors_js_1 = require("../utils/errors.js");
+const database_js_1 = require("../config/database.js");
 class AdminService {
     async getDashboard() {
         const [users, sellers, prods, orders] = await Promise.all([
@@ -335,6 +336,97 @@ class AdminService {
             timeSeries,
             commissionRate,
         };
+    }
+    async updateUser(adminUserId, userId, updates) {
+        const user = await user_repository_js_1.userRepository.updateProfile(userId, updates);
+        if (!user)
+            throw errors_js_1.Errors.notFound("User");
+        await audit_repository_js_1.auditRepository.log({
+            actor_user_id: adminUserId,
+            actor_role: "admin",
+            action: "USER_PROFILE_UPDATED",
+            resource_type: "user",
+            resource_id: userId,
+            metadata: updates,
+        });
+        return user;
+    }
+    async updateSeller(adminUserId, sellerId, updates) {
+        const seller = await seller_repository_js_1.sellerRepository.updateProfile(sellerId, updates);
+        if (!seller)
+            throw errors_js_1.Errors.notFound("Seller");
+        await audit_repository_js_1.auditRepository.log({
+            actor_user_id: adminUserId,
+            actor_role: "admin",
+            action: "SELLER_PROFILE_UPDATED",
+            resource_type: "seller",
+            resource_id: sellerId,
+            metadata: updates,
+        });
+        return seller;
+    }
+    async updateProduct(adminUserId, productId, updates) {
+        const existing = await product_repository_js_1.productRepository.findById(productId);
+        if (!existing)
+            throw errors_js_1.Errors.notFound("Product");
+        const db = (0, database_js_1.getAdminDb)();
+        const now = new Date().toISOString();
+        const prodPayload = { updated_at: now };
+        if (updates.name !== undefined)
+            prodPayload.name = updates.name.trim();
+        if (updates.category_id !== undefined)
+            prodPayload.category_id = updates.category_id;
+        if (updates.description !== undefined)
+            prodPayload.description = updates.description?.trim() || null;
+        if (updates.status !== undefined)
+            prodPayload.status = updates.status;
+        const { data: updatedProd, error: prodErr } = await db
+            .from("products")
+            .update(prodPayload)
+            .eq("id", productId)
+            .select()
+            .maybeSingle();
+        if (prodErr)
+            throw prodErr;
+        // Update Inventory
+        if (updates.price_paise !== undefined ||
+            updates.stock_quantity !== undefined ||
+            updates.sku !== undefined) {
+            const invPayload = { updated_at: now };
+            if (updates.price_paise !== undefined)
+                invPayload.price_paise = Math.max(0, updates.price_paise);
+            if (updates.stock_quantity !== undefined)
+                invPayload.stock_quantity = Math.max(0, updates.stock_quantity);
+            if (updates.sku !== undefined)
+                invPayload.sku = updates.sku?.trim() || null;
+            await db.from("inventory").update(invPayload).eq("product_id", productId);
+        }
+        await audit_repository_js_1.auditRepository.log({
+            actor_user_id: adminUserId,
+            actor_role: "admin",
+            action: "PRODUCT_CATALOG_UPDATED",
+            resource_type: "product",
+            resource_id: productId,
+            metadata: updates,
+        });
+        return product_repository_js_1.productRepository.findById(productId);
+    }
+    async updateOrder(adminUserId, orderId, updates) {
+        const existing = await order_repository_js_1.orderRepository.findById(orderId);
+        if (!existing)
+            throw errors_js_1.Errors.notFound("Order");
+        if (updates.status !== undefined) {
+            await order_repository_js_1.orderRepository.updateOrderStatus(orderId, updates.status);
+        }
+        await audit_repository_js_1.auditRepository.log({
+            actor_user_id: adminUserId,
+            actor_role: "admin",
+            action: "ORDER_STATUS_OVERRIDDEN",
+            resource_type: "order",
+            resource_id: orderId,
+            metadata: updates,
+        });
+        return order_repository_js_1.orderRepository.findById(orderId);
     }
 }
 exports.AdminService = AdminService;

@@ -23,6 +23,7 @@ router.get("/analytics", admin_controller_js_1.adminController.getAnalytics);
 router.get("/users", admin_controller_js_1.adminController.getUsers);
 router.get("/users/:id", (0, validation_js_1.validateRequest)(uuidParamSchema), admin_controller_js_1.adminController.getUserById);
 router.patch("/users/:id/status", (0, validation_js_1.validateRequest)(uuidParamSchema), admin_controller_js_1.adminController.updateUserStatus);
+router.patch("/users/:id", (0, validation_js_1.validateRequest)(uuidParamSchema), admin_controller_js_1.adminController.updateUser);
 // Seller Administration
 router.get("/sellers", admin_controller_js_1.adminController.getSellers);
 router.get("/sellers/:id", (0, validation_js_1.validateRequest)(uuidParamSchema), admin_controller_js_1.adminController.getSellerById);
@@ -31,6 +32,7 @@ router.post("/sellers/:id/reject", (0, validation_js_1.validateRequest)(uuidPara
 router.post("/sellers/:id/suspend", (0, validation_js_1.validateRequest)(uuidParamSchema), admin_controller_js_1.adminController.suspendSeller);
 router.post("/sellers/:id/reactivate", (0, validation_js_1.validateRequest)(uuidParamSchema), admin_controller_js_1.adminController.reactivateSeller);
 router.get("/sellers/:id/documents", (0, validation_js_1.validateRequest)(uuidParamSchema), admin_controller_js_1.adminController.getSellerDocuments);
+router.patch("/sellers/:id", (0, validation_js_1.validateRequest)(uuidParamSchema), admin_controller_js_1.adminController.updateSeller);
 // Product Moderation
 router.get("/products", admin_controller_js_1.adminController.getProducts);
 router.get("/products/:id", (0, validation_js_1.validateRequest)(uuidParamSchema), admin_controller_js_1.adminController.getProductById);
@@ -38,6 +40,7 @@ router.patch("/products/:id/status", (0, validation_js_1.validateRequest)(uuidPa
 router.patch("/products/:id/publish", (0, validation_js_1.validateRequest)(uuidParamSchema), admin_controller_js_1.adminController.publishProduct);
 router.patch("/products/:id/unpublish", (0, validation_js_1.validateRequest)(uuidParamSchema), admin_controller_js_1.adminController.unpublishProduct);
 router.patch("/products/:id/archive", (0, validation_js_1.validateRequest)(uuidParamSchema), admin_controller_js_1.adminController.archiveProduct);
+router.patch("/products/:id", (0, validation_js_1.validateRequest)(uuidParamSchema), admin_controller_js_1.adminController.updateProduct);
 // Category Management
 router.get("/categories", admin_controller_js_1.adminController.getCategories);
 router.get("/categories/:id/products-count", (0, validation_js_1.validateRequest)(uuidParamSchema), admin_controller_js_1.adminController.getCategoryProductsCount);
@@ -46,6 +49,7 @@ router.patch("/categories/:id", (0, validation_js_1.validateRequest)(uuidParamSc
 // Platform Order Oversight
 router.get("/orders", admin_controller_js_1.adminController.getOrders);
 router.get("/orders/:id", admin_controller_js_1.adminController.getOrderById);
+router.patch("/orders/:id", admin_controller_js_1.adminController.updateOrder);
 // Audit Logging Visibility
 router.get("/audit-logs", admin_controller_js_1.adminController.getAuditLogs);
 // Platform Settings & Commission Rate Management

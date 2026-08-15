@@ -26,6 +26,7 @@ router.get("/analytics", adminController.getAnalytics);
 router.get("/users", adminController.getUsers);
 router.get("/users/:id", validateRequest(uuidParamSchema), adminController.getUserById);
 router.patch("/users/:id/status", validateRequest(uuidParamSchema), adminController.updateUserStatus);
+router.patch("/users/:id", validateRequest(uuidParamSchema), adminController.updateUser);
 
 // Seller Administration
 router.get("/sellers", adminController.getSellers);
@@ -35,6 +36,7 @@ router.post("/sellers/:id/reject", validateRequest(uuidParamSchema), adminContro
 router.post("/sellers/:id/suspend", validateRequest(uuidParamSchema), adminController.suspendSeller);
 router.post("/sellers/:id/reactivate", validateRequest(uuidParamSchema), adminController.reactivateSeller);
 router.get("/sellers/:id/documents", validateRequest(uuidParamSchema), adminController.getSellerDocuments);
+router.patch("/sellers/:id", validateRequest(uuidParamSchema), adminController.updateSeller);
 
 // Product Moderation
 router.get("/products", adminController.getProducts);
@@ -43,6 +45,7 @@ router.patch("/products/:id/status", validateRequest(uuidParamSchema), adminCont
 router.patch("/products/:id/publish", validateRequest(uuidParamSchema), adminController.publishProduct);
 router.patch("/products/:id/unpublish", validateRequest(uuidParamSchema), adminController.unpublishProduct);
 router.patch("/products/:id/archive", validateRequest(uuidParamSchema), adminController.archiveProduct);
+router.patch("/products/:id", validateRequest(uuidParamSchema), adminController.updateProduct);
 
 // Category Management
 router.get("/categories", adminController.getCategories);
@@ -53,6 +56,7 @@ router.patch("/categories/:id", validateRequest(uuidParamSchema), adminControlle
 // Platform Order Oversight
 router.get("/orders", adminController.getOrders);
 router.get("/orders/:id", adminController.getOrderById);
+router.patch("/orders/:id", adminController.updateOrder);
 
 // Audit Logging Visibility
 router.get("/audit-logs", adminController.getAuditLogs);

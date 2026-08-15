@@ -12,6 +12,7 @@ export default function AdminOrdersPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchOrders = async () => {
@@ -43,6 +44,25 @@ export default function AdminOrdersPage() {
     fetchOrders();
   };
 
+  const handleUpdateStatus = async (newStatus: string) => {
+    if (!selectedOrder) return;
+    try {
+      setActionLoading(true);
+      const res = await api.updateAdminOrder(selectedOrder.id, { status: newStatus });
+      if (res.success) {
+        alert("Order status overridden successfully.");
+        await fetchOrders();
+        setSelectedOrder(null);
+      } else {
+        alert(res.error?.message || "Failed to update order status");
+      }
+    } catch (e: any) {
+      alert(e.message || "Error updating order status");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   return (
     <AdminShell>
       <div className="space-y-6">
@@ -67,7 +87,7 @@ export default function AdminOrdersPage() {
         )}
 
         {/* Filters */}
-        <form onSubmit={handleSearchSubmit} className="bg-white rounded-xl border border-ink-100 p-4 shadow-sm flex flex-col sm:flex-row gap-4 items-center justify-between">
+        <form onSubmit={handleSearchSubmit} className="bg-white rounded-xl border border-ink-100 p-4 shadow-xs flex flex-col sm:flex-row gap-4 items-center justify-between">
           <div className="w-full sm:w-80 relative">
             <input
               type="search"
@@ -105,73 +125,67 @@ export default function AdminOrdersPage() {
           </div>
         </form>
 
-        {/* Orders Table */}
-        <div className="bg-white rounded-xl border border-ink-100 shadow-sm overflow-hidden">
-          {loading ? (
-            <div className="py-12 flex justify-center">
-              <div className="w-8 h-8 border-2 border-forest-600 border-t-transparent rounded-full animate-spin" />
-            </div>
-          ) : orders.length === 0 ? (
-            <div className="p-12 text-center text-xs text-ink-400">No master orders found matching the filter criteria.</div>
-          ) : (
-            <table className="w-full border-collapse text-left text-xs">
-              <thead>
-                <tr className="bg-cream-100 text-ink-500 font-bold uppercase tracking-wider border-b border-ink-100">
-                  <th className="p-4">Master Order ID</th>
-                  <th className="p-4">Customer</th>
-                  <th className="p-4">Delivery City</th>
-                  <th className="p-4">Fulfillments</th>
-                  <th className="p-4">Status</th>
-                  <th className="p-4 text-right">Total</th>
-                  <th className="p-4 text-right">Details</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-ink-100">
-                {orders.map((o) => {
-                  const itemsCount = o.order_items?.length || 0;
-                  const fulfillmentsCount = o.seller_order_fulfillments?.length || 1;
-                  const customerName = o.delivery_address_snapshot?.full_name || "Customer";
-                  const city = o.delivery_address_snapshot?.city || "Raipur";
+        {/* Order Cards Grid */}
+        {loading ? (
+          <div className="py-12 flex justify-center">
+            <div className="w-8 h-8 border-2 border-forest-600 border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : orders.length === 0 ? (
+          <div className="p-12 text-center text-xs text-ink-400">No master orders found matching the filter criteria.</div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {orders.map((o) => {
+              const itemsCount = o.order_items?.length || 0;
+              const fulfillmentsCount = o.seller_order_fulfillments?.length || 1;
+              const customerName = o.delivery_address_snapshot?.full_name || "Customer";
+              const city = o.delivery_address_snapshot?.city || "Raipur";
+              const totalAmount = o.total_paise || o.subtotal_paise || 0;
 
-                  return (
-                    <tr key={o.id} className="hover:bg-cream-50/50">
-                      <td className="p-4 font-mono font-bold text-ink-900">{o.id}</td>
-                      <td className="p-4 font-semibold text-ink-800">{customerName}</td>
-                      <td className="p-4 text-ink-600">{city}</td>
-                      <td className="p-4 text-ink-600">
-                        {fulfillmentsCount} Nursery ({itemsCount} items)
-                      </td>
-                      <td className="p-4">
-                        <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-forest-50 text-forest-700 border border-forest-100">
-                          {o.status}
-                        </span>
-                      </td>
-                      <td className="p-4 font-bold text-forest-800 text-right">{formatINR(o.total_paise || o.subtotal_paise || 0)}</td>
-                      <td className="p-4 text-right">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedOrder(o)}
-                          className="px-3 py-1 rounded-lg border border-ink-200 hover:bg-cream-100 text-ink-700 font-bold text-[10px] uppercase tracking-wider transition-colors"
-                        >
-                          View Master Order
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
-        </div>
+              return (
+                <div
+                  key={o.id}
+                  className="bg-white rounded-xl border border-ink-100 p-5 shadow-xs flex flex-col justify-between space-y-4 hover:border-ink-200 transition-colors"
+                >
+                  <div className="flex items-start justify-between min-w-0 gap-3">
+                    <div className="min-w-0">
+                      <p className="font-mono font-bold text-ink-950 truncate">#{o.id.slice(0, 12)}...</p>
+                      <p className="text-[10px] text-ink-400 mt-0.5">{new Date(o.created_at).toLocaleDateString()}</p>
+                    </div>
+                    <span className="px-2.5 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider bg-forest-50 text-forest-700 border border-forest-100">
+                      {o.status}
+                    </span>
+                  </div>
 
-        {/* Modal: Master Order Detail View */}
+                  <div className="space-y-1 text-xs">
+                    <p className="text-ink-600 font-semibold truncate">Customer: {customerName}</p>
+                    <p className="text-ink-500">Destination: {city}</p>
+                    <p className="text-ink-400 text-[11px]">{fulfillmentsCount} Nursery ({itemsCount} items)</p>
+                  </div>
+
+                  <div className="pt-2 border-t border-ink-50 flex justify-between items-center">
+                    <span className="font-bold text-forest-800 text-sm">{formatINR(totalAmount)}</span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedOrder(o)}
+                      className="px-3 py-1 rounded-lg border border-ink-200 hover:bg-cream-100 text-ink-700 font-bold text-[9px] uppercase tracking-wider transition-colors"
+                    >
+                      View Details
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Modal: Master Order Detail View & Edit Status */}
         {selectedOrder && (
           <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl border border-ink-100 p-6 max-w-2xl w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-start border-b border-ink-100 pb-3">
                 <div>
-                  <h3 className="font-serif text-lg font-bold text-ink-900">Master Order {selectedOrder.id}</h3>
-                  <p className="text-xs text-ink-400 mt-0.5">Placed: {new Date(selectedOrder.created_at).toLocaleString()}</p>
+                  <h3 className="font-serif text-lg font-bold text-ink-900">Master Order Details</h3>
+                  <p className="text-xs text-ink-400 font-mono mt-0.5">{selectedOrder.id}</p>
                 </div>
                 <button
                   type="button"
@@ -198,10 +212,32 @@ export default function AdminOrdersPage() {
                   <p className="font-bold uppercase tracking-wider text-ink-500 mb-1">Payment & Financial Summary</p>
                   <p className="flex justify-between py-0.5"><span className="text-ink-500">Method:</span> <span className="font-bold uppercase">{selectedOrder.notes || "Online"}</span></p>
                   <p className="flex justify-between py-0.5"><span className="text-ink-500">Subtotal:</span> <span className="font-bold">{formatINR(selectedOrder.subtotal_paise || 0)}</span></p>
-                  <p className="flex justify-between py-0.5"><span className="text-ink-500">Commission (12%):</span> <span className="font-bold text-forest-700">{formatINR(selectedOrder.commission_paise || 0)}</span></p>
                   <p className="flex justify-between py-0.5 border-t border-ink-200 pt-1 mt-1 font-bold text-ink-900">
                     <span>Order Total:</span> <span>{formatINR(selectedOrder.total_paise || selectedOrder.subtotal_paise || 0)}</span>
                   </p>
+                </div>
+              </div>
+
+              {/* Order Status Override Control */}
+              <div className="border border-ink-150 rounded-xl p-4 space-y-3 bg-white">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-ink-700">Fulfillment Status Control</h4>
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="text-xs text-ink-500">Override master status:</span>
+                  <select
+                    disabled={actionLoading}
+                    value={selectedOrder.status}
+                    onChange={(e) => handleUpdateStatus(e.target.value)}
+                    className="px-3 py-2 text-xs rounded-lg border border-ink-200 focus:outline-none focus:ring-1 focus:ring-forest-700 bg-white"
+                  >
+                    <option value="order placed">Order Placed</option>
+                    <option value="preparing">Preparing</option>
+                    <option value="ready for pickup">Ready for Pickup</option>
+                    <option value="picked up">Picked Up</option>
+                    <option value="packing">Packing</option>
+                    <option value="out for delivery">Out for Delivery</option>
+                    <option value="delivered">Delivered</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
                 </div>
               </div>
 
@@ -210,7 +246,7 @@ export default function AdminOrdersPage() {
                 <h4 className="text-xs font-bold uppercase tracking-wider text-ink-700">Multi-Nursery Fulfillment Items</h4>
                 <div className="space-y-2">
                   {(selectedOrder.order_items || []).map((item: any, idx: number) => (
-                    <div key={idx} className="flex justify-between items-center p-3 border border-ink-100 rounded-xl text-xs">
+                    <div key={idx} className="flex justify-between items-center p-3 border border-ink-100 rounded-xl text-xs bg-white">
                       <div>
                         <p className="font-bold text-ink-900">{item.product_name_snapshot || item.product?.name || "Plant Product"}</p>
                         <p className="text-[10px] text-ink-400">

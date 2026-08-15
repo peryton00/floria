@@ -91,6 +91,7 @@ export function AdminShell({ children }: AdminShellProps) {
 
   const navLinks = [
     { label: "Dashboard", href: "/admin/dashboard", icon: <GridIcon size={18} /> },
+    { label: "System Diagnostics", href: "/admin/system-health", icon: <AlertIcon size={18} /> },
     { label: "Users", href: "/admin/users", icon: <UserGroupIcon size={18} /> },
     { label: "Sellers", href: "/admin/sellers", icon: <LeafIcon size={18} /> },
     { label: "Products", href: "/admin/products", icon: <SproutIcon size={18} /> },

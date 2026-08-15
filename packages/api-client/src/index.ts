@@ -354,6 +354,34 @@ export class FloriaApiClient {
     return this.request<any>(`/api/v1/admin/analytics${buildQueryString(params)}`);
   }
 
+  public async updateAdminUser(id: string, payload: any): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/v1/admin/users/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  public async updateAdminSeller(id: string, payload: any): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/v1/admin/sellers/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  public async updateAdminProduct(id: string, payload: any): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/v1/admin/products/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  public async updateAdminOrder(id: string, payload: any): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/v1/admin/orders/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    });
+  }
+
   public async getAdminUsers(params?: QueryParams): Promise<ApiResponse<any[]>> {
     return this.request<any[]>(`/api/v1/admin/users${buildQueryString(params)}`);
   }

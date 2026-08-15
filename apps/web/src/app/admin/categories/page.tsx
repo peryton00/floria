@@ -45,20 +45,45 @@ export default function AdminCategoriesPage() {
     }
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const handleOpenEdit = (cat: any) => {
+    setEditingCategory(cat);
+    setName(cat.name || "");
+    setSlug(cat.slug || "");
+    setDescription(cat.description || "");
+    setDisplayOrder(cat.display_order ?? 1);
+    setShowCreateModal(true);
+  };
+
+  const handleCreateOrUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       setActionLoading(true);
-      const res = await api.createAdminCategory({ name, slug, description, display_order: displayOrder });
+      let res;
+      if (editingCategory) {
+        res = await api.updateAdminCategory(editingCategory.id, {
+          name,
+          slug,
+          description,
+          display_order: displayOrder,
+        });
+      } else {
+        res = await api.createAdminCategory({
+          name,
+          slug,
+          description,
+          display_order: displayOrder,
+        });
+      }
+
       if (res.success) {
         await fetchCategories();
         setShowCreateModal(false);
         resetForm();
       } else {
-        alert(res.error?.message || "Failed to create category");
+        alert(res.error?.message || "Failed to save category");
       }
     } catch (e: any) {
-      alert(e.message || "Error creating category");
+      alert(e.message || "Error saving category");
     } finally {
       setActionLoading(false);
     }
@@ -66,7 +91,6 @@ export default function AdminCategoriesPage() {
 
   const handleToggleActive = async (cat: any) => {
     if (cat.is_active) {
-      // Safety check: detect assigned active products before deactivating
       const countRes = await api.getCategoryProductsCount(cat.id);
       const activeCount = countRes.data?.activeProductsCount || 0;
       if (activeCount > 0) {
@@ -121,68 +145,76 @@ export default function AdminCategoriesPage() {
           </div>
         )}
 
-        {/* Categories Table */}
-        <div className="bg-white rounded-xl border border-ink-100 shadow-sm overflow-hidden">
-          {loading ? (
-            <div className="py-12 flex justify-center">
-              <div className="w-8 h-8 border-2 border-forest-600 border-t-transparent rounded-full animate-spin" />
-            </div>
-          ) : categories.length === 0 ? (
-            <div className="p-12 text-center text-xs text-ink-400">No categories found in system.</div>
-          ) : (
-            <table className="w-full border-collapse text-left text-xs">
-              <thead>
-                <tr className="bg-cream-100 text-ink-500 font-bold uppercase tracking-wider border-b border-ink-100">
-                  <th className="p-4">Order</th>
-                  <th className="p-4">Category Name</th>
-                  <th className="p-4">URL Slug</th>
-                  <th className="p-4">Status</th>
-                  <th className="p-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-ink-100">
-                {categories.map((c) => (
-                  <tr key={c.id} className="hover:bg-cream-50/50">
-                    <td className="p-4 font-mono font-bold text-ink-900">{c.display_order ?? 0}</td>
-                    <td className="p-4 font-bold text-ink-900">{c.name}</td>
-                    <td className="p-4 font-mono text-ink-500">{c.slug}</td>
-                    <td className="p-4">
-                      <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${c.is_active ? "bg-success-50 text-success-700 border border-success-100" : "bg-ink-100 text-ink-500"}`}>
-                        {c.is_active ? "Active" : "Disabled"}
-                      </span>
-                    </td>
-                    <td className="p-4 text-right space-x-2">
-                      <button
-                        type="button"
-                        onClick={() => handleToggleActive(c)}
-                        className="px-3 py-1 rounded-lg border border-ink-200 hover:bg-cream-100 font-bold text-[10px] uppercase tracking-wider text-ink-700"
-                      >
-                        {c.is_active ? "Deactivate" : "Activate"}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+        {/* Category Cards Layout Grid */}
+        {loading ? (
+          <div className="py-12 flex justify-center">
+            <div className="w-8 h-8 border-2 border-forest-600 border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : categories.length === 0 ? (
+          <div className="p-12 text-center text-xs text-ink-400">No categories found in system.</div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {categories.map((c) => (
+              <div
+                key={c.id}
+                className="bg-white rounded-xl border border-ink-100 p-5 shadow-xs flex flex-col justify-between space-y-4 hover:border-ink-200 transition-colors"
+              >
+                <div className="flex items-start justify-between min-w-0">
+                  <div className="min-w-0">
+                    <p className="font-bold text-ink-900 leading-tight">{c.name}</p>
+                    <p className="text-[10px] text-ink-400 font-mono mt-0.5 truncate">Slug: {c.slug}</p>
+                  </div>
+                  <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider border ${c.is_active ? "bg-success-50 text-success-700 border-success-100" : "bg-ink-50 text-ink-500 border-ink-100"}`}>
+                    {c.is_active ? "Active" : "Disabled"}
+                  </span>
+                </div>
 
-        {/* Modal: Create Category */}
+                <div className="space-y-1.5 text-xs">
+                  <p className="text-ink-550 leading-relaxed min-h-[36px] line-clamp-2">{c.description || "No description provided."}</p>
+                  <div className="flex justify-between text-[10px] font-mono text-ink-400">
+                    <span>Position: {c.display_order ?? 0}</span>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-ink-50 flex gap-2 justify-end">
+                  <button
+                    type="button"
+                    onClick={() => handleToggleActive(c)}
+                    className="px-2.5 py-1 rounded-lg border border-ink-200 hover:bg-cream-100 font-bold text-[9px] uppercase tracking-wider text-ink-700 transition-colors"
+                  >
+                    {c.is_active ? "Deactivate" : "Activate"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenEdit(c)}
+                    className="px-2.5 py-1 rounded-lg bg-forest-50 text-forest-700 hover:bg-forest-100 font-bold text-[9px] uppercase tracking-wider transition-colors"
+                  >
+                    Edit Details
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Modal: Create or Edit Category */}
         {showCreateModal && (
           <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl border border-ink-100 p-6 max-w-md w-full shadow-2xl space-y-4">
               <div className="flex justify-between items-center border-b border-ink-100 pb-3">
-                <h3 className="font-serif text-lg font-bold text-ink-900">Create New Category</h3>
+                <h3 className="font-serif text-lg font-bold text-ink-900">
+                  {editingCategory ? "Edit Category Details" : "Create New Category"}
+                </h3>
                 <button
                   type="button"
-                  onClick={() => setShowCreateModal(false)}
+                  onClick={() => { setShowCreateModal(false); resetForm(); }}
                   className="text-ink-400 hover:text-ink-900 font-bold text-sm"
                 >
                   ✕
                 </button>
               </div>
 
-              <form onSubmit={handleCreate} className="space-y-3">
+              <form onSubmit={handleCreateOrUpdate} className="space-y-3">
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-ink-700 mb-1">
                     Category Name
@@ -193,7 +225,7 @@ export default function AdminCategoriesPage() {
                     value={name}
                     onChange={(e) => handleNameChange(e.target.value)}
                     placeholder="e.g. Rare Succulents"
-                    className="w-full px-3 py-2 rounded-xl border border-ink-200 text-xs focus:outline-none focus:ring-1 focus:ring-forest-700"
+                    className="w-full px-3 py-2 rounded-xl border border-ink-200 text-xs focus:outline-none focus:ring-1 focus:ring-forest-700 bg-white"
                   />
                 </div>
 
@@ -207,7 +239,7 @@ export default function AdminCategoriesPage() {
                     value={slug}
                     onChange={(e) => setSlug(e.target.value)}
                     placeholder="rare-succulents"
-                    className="w-full px-3 py-2 rounded-xl border border-ink-200 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-forest-700"
+                    className="w-full px-3 py-2 rounded-xl border border-ink-200 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-forest-700 bg-white"
                   />
                 </div>
 
@@ -220,7 +252,7 @@ export default function AdminCategoriesPage() {
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="Brief description for customer category page..."
-                    className="w-full p-3 rounded-xl border border-ink-200 text-xs focus:outline-none focus:ring-1 focus:ring-forest-700"
+                    className="w-full p-3 rounded-xl border border-ink-200 text-xs focus:outline-none focus:ring-1 focus:ring-forest-700 bg-white"
                   />
                 </div>
 
@@ -232,7 +264,7 @@ export default function AdminCategoriesPage() {
                     type="number"
                     value={displayOrder}
                     onChange={(e) => setDisplayOrder(Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-xl border border-ink-200 text-xs focus:outline-none focus:ring-1 focus:ring-forest-700"
+                    className="w-full px-3 py-2 rounded-xl border border-ink-200 text-xs focus:outline-none focus:ring-1 focus:ring-forest-700 bg-white"
                   />
                 </div>
 
@@ -246,8 +278,8 @@ export default function AdminCategoriesPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setShowCreateModal(false)}
-                    className="px-4 py-2.5 rounded-xl border border-ink-200 text-ink-600 font-bold text-xs uppercase tracking-wider"
+                    onClick={() => { setShowCreateModal(false); resetForm(); }}
+                    className="px-4 py-2.5 rounded-xl border border-ink-200 text-ink-600 font-bold text-xs uppercase tracking-wider hover:bg-cream-50"
                   >
                     Cancel
                   </button>

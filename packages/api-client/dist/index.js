@@ -271,6 +271,30 @@ var FloriaApiClient = class {
   async getAdminAnalytics(params) {
     return this.request(`/api/v1/admin/analytics${buildQueryString(params)}`);
   }
+  async updateAdminUser(id, payload) {
+    return this.request(`/api/v1/admin/users/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload)
+    });
+  }
+  async updateAdminSeller(id, payload) {
+    return this.request(`/api/v1/admin/sellers/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload)
+    });
+  }
+  async updateAdminProduct(id, payload) {
+    return this.request(`/api/v1/admin/products/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload)
+    });
+  }
+  async updateAdminOrder(id, payload) {
+    return this.request(`/api/v1/admin/orders/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload)
+    });
+  }
   async getAdminUsers(params) {
     return this.request(`/api/v1/admin/users${buildQueryString(params)}`);
   }

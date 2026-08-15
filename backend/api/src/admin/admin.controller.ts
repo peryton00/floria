@@ -1,10 +1,52 @@
 // Floria API — Admin Controller
 import { Request, Response, NextFunction } from "express";
 import { adminService } from "./admin.service.js";
+import os from "os";
+import { getAdminDb } from "../config/database.js";
 
 export class AdminController {
   async getHealth(_req: Request, res: Response): Promise<void> {
-    res.json({ success: true, data: { status: "healthy", role: _req.user!.role } });
+    try {
+      const start = Date.now();
+      const db = getAdminDb();
+      await db.from("categories").select("id").limit(1);
+      const dbPing = Date.now() - start;
+
+      const freeMem = os.freemem();
+      const totalMem = os.totalmem();
+      const usedMem = totalMem - freeMem;
+
+      res.json({
+        success: true,
+        data: {
+          status: "healthy",
+          role: _req.user!.role,
+          system: {
+            uptime: Math.round(os.uptime()),
+            processUptime: Math.round(process.uptime()),
+            platform: os.platform(),
+            arch: os.arch(),
+            cpuLoad: os.loadavg(),
+            cpuCount: os.cpus().length,
+            memory: {
+              free: Math.round(freeMem / 1024 / 1024),
+              total: Math.round(totalMem / 1024 / 1024),
+              used: Math.round(usedMem / 1024 / 1024),
+              percentage: parseFloat(((usedMem / totalMem) * 100).toFixed(1)),
+            },
+          },
+          database: {
+            status: "connected",
+            latencyMs: dbPing,
+          },
+        },
+      });
+    } catch (e: any) {
+      res.status(500).json({
+        success: false,
+        error: { message: "System health check failed: " + e.message },
+      });
+    }
   }
 
   async getDashboard(_req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -271,6 +313,42 @@ export class AdminController {
           commissionRate: updatedRate,
         },
       });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async updateUser(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const user = await adminService.updateUser(req.user!.id, req.params.id as string, req.body);
+      res.json({ success: true, data: user });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async updateSeller(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const seller = await adminService.updateSeller(req.user!.id, req.params.id as string, req.body);
+      res.json({ success: true, data: seller });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async updateProduct(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const prod = await adminService.updateProduct(req.user!.id, req.params.id as string, req.body);
+      res.json({ success: true, data: prod });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async updateOrder(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const order = await adminService.updateOrder(req.user!.id, req.params.id as string, req.body);
+      res.json({ success: true, data: order });
     } catch (err) {
       next(err);
     }

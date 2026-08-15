@@ -110,6 +110,10 @@ declare class FloriaApiClient {
     getAdminHealth(): Promise<ApiResponse<any>>;
     getAdminDashboard(): Promise<ApiResponse<any>>;
     getAdminAnalytics(params?: QueryParams): Promise<ApiResponse<any>>;
+    updateAdminUser(id: string, payload: any): Promise<ApiResponse<any>>;
+    updateAdminSeller(id: string, payload: any): Promise<ApiResponse<any>>;
+    updateAdminProduct(id: string, payload: any): Promise<ApiResponse<any>>;
+    updateAdminOrder(id: string, payload: any): Promise<ApiResponse<any>>;
     getAdminUsers(params?: QueryParams): Promise<ApiResponse<any[]>>;
     getAdminUserById(id: string): Promise<ApiResponse<any>>;
     updateAdminUserStatus(id: string, status: "active" | "suspended", rationale?: string): Promise<ApiResponse<any>>;

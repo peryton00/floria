@@ -1,10 +1,54 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.adminController = exports.AdminController = void 0;
 const admin_service_js_1 = require("./admin.service.js");
+const os_1 = __importDefault(require("os"));
+const database_js_1 = require("../config/database.js");
 class AdminController {
     async getHealth(_req, res) {
-        res.json({ success: true, data: { status: "healthy", role: _req.user.role } });
+        try {
+            const start = Date.now();
+            const db = (0, database_js_1.getAdminDb)();
+            await db.from("categories").select("id").limit(1);
+            const dbPing = Date.now() - start;
+            const freeMem = os_1.default.freemem();
+            const totalMem = os_1.default.totalmem();
+            const usedMem = totalMem - freeMem;
+            res.json({
+                success: true,
+                data: {
+                    status: "healthy",
+                    role: _req.user.role,
+                    system: {
+                        uptime: Math.round(os_1.default.uptime()),
+                        processUptime: Math.round(process.uptime()),
+                        platform: os_1.default.platform(),
+                        arch: os_1.default.arch(),
+                        cpuLoad: os_1.default.loadavg(),
+                        cpuCount: os_1.default.cpus().length,
+                        memory: {
+                            free: Math.round(freeMem / 1024 / 1024),
+                            total: Math.round(totalMem / 1024 / 1024),
+                            used: Math.round(usedMem / 1024 / 1024),
+                            percentage: parseFloat(((usedMem / totalMem) * 100).toFixed(1)),
+                        },
+                    },
+                    database: {
+                        status: "connected",
+                        latencyMs: dbPing,
+                    },
+                },
+            });
+        }
+        catch (e) {
+            res.status(500).json({
+                success: false,
+                error: { message: "System health check failed: " + e.message },
+            });
+        }
     }
     async getDashboard(_req, res, next) {
         try {
@@ -268,6 +312,42 @@ class AdminController {
                     commissionRate: updatedRate,
                 },
             });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+    async updateUser(req, res, next) {
+        try {
+            const user = await admin_service_js_1.adminService.updateUser(req.user.id, req.params.id, req.body);
+            res.json({ success: true, data: user });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+    async updateSeller(req, res, next) {
+        try {
+            const seller = await admin_service_js_1.adminService.updateSeller(req.user.id, req.params.id, req.body);
+            res.json({ success: true, data: seller });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+    async updateProduct(req, res, next) {
+        try {
+            const prod = await admin_service_js_1.adminService.updateProduct(req.user.id, req.params.id, req.body);
+            res.json({ success: true, data: prod });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+    async updateOrder(req, res, next) {
+        try {
+            const order = await admin_service_js_1.adminService.updateOrder(req.user.id, req.params.id, req.body);
+            res.json({ success: true, data: order });
         }
         catch (err) {
             next(err);
