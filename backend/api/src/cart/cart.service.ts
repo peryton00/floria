@@ -46,7 +46,7 @@ export class CartService {
     if (!cart) {
       const { data: newCart, error: cartErr } = await db
         .from("carts")
-        .insert({ user_id: userId, seller_id: product.seller_id })
+        .insert({ user_id: userId })
         .select("id")
         .single();
       if (cartErr) throw Errors.database("Failed to create cart.");
