@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { CustomerShell } from "@/components/layout/CustomerShell";
@@ -50,6 +50,7 @@ export default function CheckoutPage() {
   // Form / Validation errors
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const isPlacingOrderRef = useRef(false);
 
   // Synchronize default address selection if none selected or if selected address was deleted
   useEffect(() => {
@@ -120,21 +121,26 @@ export default function CheckoutPage() {
 
   // Final Order Submission Handler — calls secure server API
   const handlePlaceOrder = async () => {
+    if (isPlacingOrderRef.current) return;
+    isPlacingOrderRef.current = true;
     setValidationError(null);
 
     if (cartItems.length === 0) {
       setValidationError("Your cart is empty. Please add items before checking out.");
+      isPlacingOrderRef.current = false;
       return;
     }
 
     if (outOfStockItems.length > 0) {
       setValidationError("Some items in your cart are currently out of stock. Please update your cart.");
+      isPlacingOrderRef.current = false;
       return;
     }
 
     const selectedAddr = addresses.find((a) => a.id === selectedAddressId);
     if (!selectedAddr) {
       setValidationError("Please select a delivery address.");
+      isPlacingOrderRef.current = false;
       return;
     }
 
@@ -149,6 +155,7 @@ export default function CheckoutPage() {
 
       if (!res.success || !res.data) {
         setValidationError(res.error?.message || "Failed to place order. Please try again.");
+        isPlacingOrderRef.current = false;
         return;
       }
 
@@ -165,6 +172,7 @@ export default function CheckoutPage() {
       setValidationError("A network error occurred. Please check your connection and try again.");
     } finally {
       setIsPlacingOrder(false);
+      isPlacingOrderRef.current = false;
     }
   };
 
