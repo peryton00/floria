@@ -77,8 +77,8 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
           const rawItems = res.data.wishlist_items || res.data.items || [];
           const mapped = mapDbWishlistItems(rawItems);
           setWishlistItems(mapped);
-          // Keep localStorage in sync as a resilient cache
-          try { localStorage.setItem("floria_wishlist", JSON.stringify(mapped)); } catch { /* ignore */ }
+          // Keep user resilient cache in sync
+          try { localStorage.setItem("floria_wishlist_cache", JSON.stringify(mapped)); } catch { /* ignore */ }
           return;
         }
       } else {
@@ -88,8 +88,12 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
       setIsAuthenticated(false);
     }
 
+    // Fallback: restore from localStorage (guest wishlist or user cache)
     try {
-      const stored = localStorage.getItem("floria_wishlist");
+      const supabase = getSupabaseBrowserClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      const key = session?.user ? "floria_wishlist_cache" : "floria_wishlist";
+      const stored = localStorage.getItem(key);
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed)) {
@@ -117,6 +121,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         setWishlistItems([]);
         try {
           localStorage.removeItem("floria_wishlist");
+          localStorage.removeItem("floria_wishlist_cache");
         } catch {
           // Ignore
         }
@@ -128,15 +133,19 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     };
   }, [refreshWishlist]);
 
-  // Always persist wishlist to localStorage as a resilient cache (guests + authenticated)
+  // Persist wishlist to localStorage (guests -> floria_wishlist, authenticated -> floria_wishlist_cache)
   useEffect(() => {
     if (!isHydrated) return;
     try {
-      localStorage.setItem("floria_wishlist", JSON.stringify(wishlistItems));
+      if (isAuthenticated) {
+        localStorage.setItem("floria_wishlist_cache", JSON.stringify(wishlistItems));
+      } else {
+        localStorage.setItem("floria_wishlist", JSON.stringify(wishlistItems));
+      }
     } catch (e) {
       console.error("Error saving wishlist to localStorage:", e);
     }
-  }, [wishlistItems, isHydrated]);
+  }, [wishlistItems, isHydrated, isAuthenticated]);
 
   const isWishlisted = (productId: string) => {
     return wishlistItems.some((item) => item.product.id === productId);
@@ -149,7 +158,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         const rawItems = res.data.wishlist_items || res.data.items || [];
         const mapped = mapDbWishlistItems(rawItems);
         setWishlistItems(mapped);
-        try { localStorage.setItem("floria_wishlist", JSON.stringify(mapped)); } catch { /* ignore */ }
+        try { localStorage.setItem("floria_wishlist_cache", JSON.stringify(mapped)); } catch { /* ignore */ }
         return;
       }
     }

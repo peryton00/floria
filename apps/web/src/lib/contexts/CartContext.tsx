@@ -91,8 +91,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           const rawItems = res.data.cart_items || res.data.items || [];
           const mapped = mapDbCartItems(rawItems);
           setCartItems(mapped);
-          // Keep localStorage in sync as a resilient cache
-          try { localStorage.setItem("floria_cart", JSON.stringify(mapped)); } catch { /* ignore */ }
+          // Keep user resilient cache in sync
+          try { localStorage.setItem("floria_cart_cache", JSON.stringify(mapped)); } catch { /* ignore */ }
           return;
         }
       } else {
@@ -102,9 +102,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       setIsAuthenticated(false);
     }
 
-    // Fallback: restore from localStorage (works for both guests and when API is unreachable)
+    // Fallback: restore from localStorage (guest cart or user cache)
     try {
-      const stored = localStorage.getItem("floria_cart");
+      const supabase = getSupabaseBrowserClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      const key = session?.user ? "floria_cart_cache" : "floria_cart";
+      const stored = localStorage.getItem(key);
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed)) {
@@ -133,6 +136,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         setCartItems([]);
         try {
           localStorage.removeItem("floria_cart");
+          localStorage.removeItem("floria_cart_cache");
         } catch {
           // Ignore
         }
@@ -144,15 +148,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     };
   }, [refreshCart]);
 
-  // Always persist cart to localStorage as a resilient cache (guests + authenticated)
+  // Persist cart to localStorage (guests -> floria_cart, authenticated -> floria_cart_cache)
   useEffect(() => {
     if (!isHydrated) return;
     try {
-      localStorage.setItem("floria_cart", JSON.stringify(cartItems));
+      if (isAuthenticated) {
+        localStorage.setItem("floria_cart_cache", JSON.stringify(cartItems));
+      } else {
+        localStorage.setItem("floria_cart", JSON.stringify(cartItems));
+      }
     } catch (e) {
       console.error("Error saving cart to localStorage:", e);
     }
-  }, [cartItems, isHydrated]);
+  }, [cartItems, isHydrated, isAuthenticated]);
 
   const addToCart = async (listing: ProductListing, qty = 1) => {
     if (isAuthenticated) {
@@ -161,7 +169,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         const rawItems = res.data.cart_items || res.data.items || [];
         const mapped = mapDbCartItems(rawItems);
         setCartItems(mapped);
-        try { localStorage.setItem("floria_cart", JSON.stringify(mapped)); } catch { /* ignore */ }
+        try { localStorage.setItem("floria_cart_cache", JSON.stringify(mapped)); } catch { /* ignore */ }
         return;
       }
     }
