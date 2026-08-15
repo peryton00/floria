@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import type { ProductListing } from "@floria/types";
 import { api } from "@/lib/api";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
@@ -27,6 +27,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isHydrated, setIsHydrated] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const debounceTimeoutRefs = useRef<Record<string, NodeJS.Timeout>>({});
 
   // Helper to map DB API cart items to CartItem format
   const mapDbCartItems = useCallback((items: any[]): CartItem[] => {
@@ -145,6 +146,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       subscription.unsubscribe();
+      // Clean up all pending update timeouts on unmount
+      Object.values(debounceTimeoutRefs.current).forEach(clearTimeout);
     };
   }, [refreshCart]);
 
@@ -189,6 +192,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   const removeFromCart = async (productId: string) => {
+    // Cancel any pending debounced updates for this product
+    if (debounceTimeoutRefs.current[productId]) {
+      clearTimeout(debounceTimeoutRefs.current[productId]);
+      delete debounceTimeoutRefs.current[productId];
+    }
+
     if (isAuthenticated) {
       const res = await api.removeFromCart(productId);
       if (res.success && res.data) {
@@ -206,18 +215,37 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       return removeFromCart(productId);
     }
 
-    if (isAuthenticated) {
-      const res = await api.updateCartQuantity(productId, quantity);
-      if (res.success && res.data) {
-        const rawItems = res.data.cart_items || res.data.items || [];
-        setCartItems(mapDbCartItems(rawItems));
-        return;
-      }
-    }
-
+    // 1. Optimistic UI update — immediate feedback for user
     setCartItems((prev) =>
       prev.map((item) => (item.listing.product.id === productId ? { ...item, quantity } : item))
     );
+
+    // 2. Sync to backend with 500ms debounce to prevent database spamming
+    if (isAuthenticated) {
+      if (debounceTimeoutRefs.current[productId]) {
+        clearTimeout(debounceTimeoutRefs.current[productId]);
+      }
+
+      debounceTimeoutRefs.current[productId] = setTimeout(async () => {
+        try {
+          const res = await api.updateCartQuantity(productId, quantity);
+          if (res.success && res.data) {
+            const rawItems = res.data.cart_items || res.data.items || [];
+            const mapped = mapDbCartItems(rawItems);
+            setCartItems(mapped);
+            try {
+              localStorage.setItem("floria_cart_cache", JSON.stringify(mapped));
+            } catch {
+              // Ignore
+            }
+          }
+        } catch (e) {
+          console.error("Failed to sync cart quantity with server:", e);
+        } finally {
+          delete debounceTimeoutRefs.current[productId];
+        }
+      }, 500);
+    }
   };
 
   const clearCart = async () => {
