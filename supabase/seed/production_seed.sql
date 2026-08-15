@@ -84,10 +84,10 @@ ON CONFLICT (product_id) DO UPDATE SET
 -- 6. SEED PRODUCT IMAGES
 INSERT INTO product_images (product_id, url, alt_text, display_order, is_primary)
 VALUES
-  ('00000000-0000-0000-0000-000000000201', 'https://images.unsplash.com/photo-1593482892290-f54927ae1bf6?w=600&auto=format&fit=crop&q=80', 'Snake Plant (Sansevieria)', 1, TRUE),
+  ('00000000-0000-0000-0000-000000000201', 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=600&auto=format&fit=crop&q=80', 'Snake Plant (Sansevieria)', 1, TRUE),
   ('00000000-0000-0000-0000-000000000202', 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=600&auto=format&fit=crop&q=80', 'Monstera Deliciosa', 1, TRUE),
   ('00000000-0000-0000-0000-000000000203', 'https://images.unsplash.com/photo-1596547609652-9cf5d8d76921?w=600&auto=format&fit=crop&q=80', 'Aloe Vera', 1, TRUE),
-  ('00000000-0000-0000-0000-000000000204', 'https://images.unsplash.com/photo-1593691509543-c55fb32e7355?w=600&auto=format&fit=crop&q=80', 'Peace Lily (Spathiphyllum)', 1, TRUE),
+  ('00000000-0000-0000-0000-000000000204', 'https://images.unsplash.com/photo-1589393922695-ef4c2f236b67?w=600&auto=format&fit=crop&q=80', 'Peace Lily (Spathiphyllum)', 1, TRUE),
   ('00000000-0000-0000-0000-000000000205', 'https://images.unsplash.com/photo-1618164436241-4473940d1f5c?w=600&auto=format&fit=crop&q=80', 'Sweet Basil Organic Seeds', 1, TRUE),
   ('00000000-0000-0000-0000-000000000206', 'https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=600&auto=format&fit=crop&q=80', 'Terracotta Pot (Medium - 8 inch)', 1, TRUE),
   ('00000000-0000-0000-0000-000000000207', 'https://images.unsplash.com/photo-1512428559087-560fa5ceab42?w=600&auto=format&fit=crop&q=80', 'Vibrant Pink Bougainvillea', 1, TRUE),

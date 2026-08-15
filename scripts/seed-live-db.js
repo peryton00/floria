@@ -125,7 +125,7 @@ async function seedLiveDatabase() {
       status: "active",
       price_paise: 29900,
       stock_quantity: 24,
-      image_url: "https://images.unsplash.com/photo-1593482892290-f54927ae1bf6?w=600&auto=format&fit=crop&q=80",
+      image_url: "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=600&auto=format&fit=crop&q=80",
     },
     {
       seller_id: greenLeafId,
@@ -161,7 +161,7 @@ async function seedLiveDatabase() {
       status: "active",
       price_paise: 34900,
       stock_quantity: 18,
-      image_url: "https://images.unsplash.com/photo-1593691509543-c55fb32e7355?w=600&auto=format&fit=crop&q=80",
+      image_url: "https://images.unsplash.com/photo-1589393922695-ef4c2f236b67?w=600&auto=format&fit=crop&q=80",
     },
     {
       seller_id: nisargaId || greenLeafId,
