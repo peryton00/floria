@@ -134,6 +134,7 @@ declare class FloriaApiClient {
     getSellerProfile(): Promise<ApiResponse<any>>;
     updateSellerProfile(data: any): Promise<ApiResponse<any>>;
     submitSellerApplication(data: any): Promise<ApiResponse<any>>;
+    getSellerApplication(): Promise<ApiResponse<any>>;
     getSellerProducts(params?: QueryParams): Promise<ApiResponse<any[]>>;
     getSellerProductById(id: string): Promise<ApiResponse<any>>;
     createSellerProduct(data: any): Promise<ApiResponse<any>>;

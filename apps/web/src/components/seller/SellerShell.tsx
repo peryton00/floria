@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { useSeller } from "@/lib/contexts/SellerContext";
 import { SellerSidebar } from "./SellerSidebar";
 import { SellerHeader } from "./SellerHeader";
@@ -11,21 +12,19 @@ interface SellerShellProps {
   children: React.ReactNode;
 }
 
-/**
- * SellerShell — wraps all /seller/* pages.
- *
- * Routing logic:
- *   not logged in     → children are the login page (layout handles redirect)
- *   status = pending  → SellerPendingState (profile editing allowed via nav)
- *   status = suspended→ SellerSuspendedState
- *   status = approved → full sidebar + content layout
- *
- * ponytail: status derived from SellerContext which reads localStorage.
- *   Swap for Supabase auth check when backend is live.
- */
 export function SellerShell({ children }: SellerShellProps) {
   const { isLoading, isLoggedIn, isPending, isSuspended } = useSeller();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const isAuthRoute = pathname === "/seller/register" || pathname === "/seller/login";
+
+  useEffect(() => {
+    if (!isLoading && !isLoggedIn && !isAuthRoute) {
+      router.push("/seller/register?required=1");
+    }
+  }, [isLoading, isLoggedIn, isAuthRoute, router]);
 
   // Loading state — brief hydration flash prevention
   if (isLoading) {
@@ -41,6 +40,7 @@ export function SellerShell({ children }: SellerShellProps) {
 
   // Not logged in — render login/register pages without shell chrome
   if (!isLoggedIn) {
+    if (!isAuthRoute) return null;
     return <>{children}</>;
   }
 

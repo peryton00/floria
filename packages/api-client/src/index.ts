@@ -319,6 +319,10 @@ export class FloriaApiClient {
     });
   }
 
+  public async getSellerApplication(): Promise<ApiResponse<any>> {
+    return this.request<any>("/api/v1/seller/applications");
+  }
+
   public async getSellerProducts(params?: QueryParams): Promise<ApiResponse<any[]>> {
     return this.request<any[]>(`/api/v1/seller/products${buildQueryString(params)}`);
   }

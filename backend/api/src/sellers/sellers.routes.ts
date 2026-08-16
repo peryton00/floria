@@ -11,6 +11,7 @@ const router = Router();
 router.get("/profile", authenticateToken, requireRole("seller", "admin", "super_admin"), sellersController.getProfile);
 router.patch("/profile", authenticateToken, sellerFulfillmentRateLimiter, requireRole("seller", "admin", "super_admin"), sellersController.updateProfile);
 router.post("/applications", authenticateToken, sellerFulfillmentRateLimiter, requireRole("seller", "customer", "admin"), sellersController.submitApplication);
+router.get("/applications", authenticateToken, requireRole("seller", "customer", "admin"), sellersController.getApplication);
 router.get("/application", authenticateToken, requireRole("seller", "customer", "admin"), sellersController.getApplication);
 
 // Seller Dashboard KPIs

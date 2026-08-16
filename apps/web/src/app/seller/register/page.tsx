@@ -1,15 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSeller } from "@/lib/contexts/SellerContext";
 import { api } from "@/lib/api";
 
 export default function SellerRegisterPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isRequiredNotice = searchParams.get("required") === "1" || searchParams.get("incomplete") === "1";
   const { login } = useSeller();
+
   const [form, setForm] = useState({
     businessName: "",
     email: "",
@@ -19,14 +22,55 @@ export default function SellerRegisterPage() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingExisting, setIsLoadingExisting] = useState(true);
   const [apiError, setApiError] = useState<string | null>(null);
+
+  // Pre-fill form if an application or profile already exists
+  useEffect(() => {
+    async function loadExistingApplication() {
+      try {
+        setIsLoadingExisting(true);
+        const res = await api.getSellerApplication();
+        if (res.success && res.data) {
+          const app = res.data;
+          const isDummyName = app.business_name === "Nursery Partner" || app.business_name === "New Nursery";
+
+          setForm({
+            businessName: isDummyName ? "" : (app.business_name || ""),
+            email: app.contact_email || "",
+            phone: app.contact_phone || "",
+            address: app.address || "",
+            description: app.business_description || "",
+          });
+        }
+      } catch (e) {
+        // Silently handle if user is not logged in yet
+      } finally {
+        setIsLoadingExisting(false);
+      }
+    }
+    loadExistingApplication();
+  }, []);
 
   function validate() {
     const errs: Record<string, string> = {};
-    if (!form.businessName.trim()) errs.businessName = "Business name is required.";
-    if (!form.email.trim() || !form.email.includes("@")) errs.email = "Valid email is required.";
-    if (!form.phone.trim()) errs.phone = "Contact phone is required.";
-    if (!form.address.trim()) errs.address = "Nursery location is required.";
+    if (!form.businessName.trim() || form.businessName.trim() === "Nursery Partner" || form.businessName.trim() === "New Nursery") {
+      errs.businessName = "Valid nursery business name is required.";
+    }
+    if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+      errs.email = "Valid contact email address is required.";
+    }
+    if (!form.phone.trim()) {
+      errs.phone = "Contact phone number is required.";
+    } else {
+      const cleanPhone = form.phone.replace(/[\s\-+()\u00a0]/g, "").replace(/^91/, "");
+      if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
+        errs.phone = "Enter a valid 10-digit Indian phone number.";
+      }
+    }
+    if (!form.address.trim()) {
+      errs.address = "Nursery location / address is required.";
+    }
     return errs;
   }
 
@@ -79,6 +123,13 @@ export default function SellerRegisterPage() {
             <h1 className="font-serif text-xl font-bold text-ink-900">Partner Application</h1>
             <p className="text-xs text-ink-500 mt-1">Register your local nursery to list plants on Floria.</p>
           </div>
+
+          {isRequiredNotice && (
+            <div className="bg-warning-50 border border-warning-200 rounded-xl p-3.5 text-xs text-warning-900 leading-relaxed font-medium">
+              <strong className="font-bold text-warning-950 block mb-0.5">⚠️ Registration Details Required</strong>
+              Please complete all required fields below (Nursery Name, Contact Email, Phone, and Address) to activate your Seller Portal.
+            </div>
+          )}
 
           {apiError && (
             <div className="bg-error-50 border border-error-100 rounded-xl p-3 text-xs text-error-700">

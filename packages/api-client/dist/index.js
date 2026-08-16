@@ -208,6 +208,9 @@ var FloriaApiClient = class {
       body: JSON.stringify(data)
     });
   }
+  async getSellerApplication() {
+    return this.request("/api/v1/seller/applications");
+  }
   async getSellerProducts(params) {
     return this.request(`/api/v1/seller/products${buildQueryString(params)}`);
   }
