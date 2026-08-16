@@ -132,8 +132,9 @@ function mapApiOrderToRecord(o: any): OrderRecord {
     paymentMethod: o.notes?.includes("COD") ? "Cash on Delivery" : "Online Payment",
     nurseryGroups: Array.from(groupsMap.values()),
     subtotalPaise: o.subtotal_paise || 0,
-    deliveryFeePaise: o.delivery_fee_paise ?? 0,
-    totalPaise: o.total_paise ?? ((o.subtotal_paise || 0) + (o.delivery_fee_paise || 0) + (o.maintenance_fee_paise || 0)),
+    deliveryFeePaise: typeof o.delivery_fee_paise === "number" ? o.delivery_fee_paise : (o.subtotal_paise >= 49900 ? 0 : 4000),
+    maintenanceFeePaise: typeof o.maintenance_fee_paise === "number" ? o.maintenance_fee_paise : 1000,
+    totalPaise: typeof o.total_paise === "number" ? o.total_paise : ((o.subtotal_paise || 0) + (typeof o.delivery_fee_paise === "number" ? o.delivery_fee_paise : (o.subtotal_paise >= 49900 ? 0 : 4000)) + (typeof o.maintenance_fee_paise === "number" ? o.maintenance_fee_paise : 1000)),
     discountPaise: 0,
     totalItemsCount: (o.order_items || []).reduce((s: number, i: any) => s + (i.quantity || 1), 0),
   };
@@ -455,14 +456,21 @@ export default function OrderDetailPage({ params }: Props) {
 
               <div className="flex justify-between text-ink-600">
                 <span>Delivery</span>
-                <span className="font-semibold text-forest-700">
+                <span className={order.deliveryFeePaise && order.deliveryFeePaise > 0 ? "font-semibold text-ink-900" : "font-semibold text-forest-700"}>
                   {order.deliveryFeePaise && order.deliveryFeePaise > 0 ? formatINR(order.deliveryFeePaise) : "FREE"}
                 </span>
               </div>
 
+              {(order.maintenanceFeePaise ?? 0) > 0 && (
+                <div className="flex justify-between text-ink-600">
+                  <span>Platform Maintenance Fee</span>
+                  <span className="font-semibold text-ink-900">{formatINR(order.maintenanceFeePaise!)}</span>
+                </div>
+              )}
+
               <div className="flex justify-between pt-3 border-t border-ink-100 text-ink-900 font-bold text-base">
                 <span>Total Paid</span>
-                <span className="text-forest-800">{formatINR(order.totalPaise || order.subtotalPaise + (order.deliveryFeePaise || 0))}</span>
+                <span className="text-forest-800">{formatINR(order.totalPaise || order.subtotalPaise + (order.deliveryFeePaise || 0) + (order.maintenanceFeePaise || 0))}</span>
               </div>
             </div>
 

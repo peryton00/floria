@@ -162,12 +162,20 @@ export default function CheckoutPage() {
         return;
       }
 
+      const delFee = subtotalPaise >= 49900 ? 0 : 4000;
+      const maintFee = 1000;
+      const totalPaidPaise = subtotalPaise + delFee + maintFee;
+
       setConfirmedOrder({
         id: res.data.orderId,
         createdAt: new Date().toLocaleString(),
-        paymentMethod,
+        paymentMethod: paymentMethod === "cod" ? "Cash on Delivery" : "Online Payment",
         address: selectedAddr,
         nurseryGroups,
+        subtotalPaise,
+        deliveryFeePaise: delFee,
+        maintenanceFeePaise: maintFee,
+        totalPaise: totalPaidPaise,
       });
       setStep("confirmation");
       clearCart();

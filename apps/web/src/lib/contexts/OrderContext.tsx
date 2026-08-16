@@ -67,6 +67,7 @@ export interface OrderRecord {
   nurseryGroups: OrderNurseryGroup[];
   subtotalPaise: number;
   deliveryFeePaise?: number;
+  maintenanceFeePaise?: number;
   totalPaise?: number;
   discountPaise: number;
   totalItemsCount: number;
@@ -182,6 +183,9 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
         paymentMethod: o.notes?.includes("COD") ? "Cash on Delivery" : "Online Payment",
         nurseryGroups: Array.from(groupsMap.values()),
         subtotalPaise: o.subtotal_paise || 0,
+        deliveryFeePaise: typeof o.delivery_fee_paise === "number" ? o.delivery_fee_paise : (o.subtotal_paise >= 49900 ? 0 : 4000),
+        maintenanceFeePaise: typeof o.maintenance_fee_paise === "number" ? o.maintenance_fee_paise : 1000,
+        totalPaise: typeof o.total_paise === "number" ? o.total_paise : ((o.subtotal_paise || 0) + (typeof o.delivery_fee_paise === "number" ? o.delivery_fee_paise : (o.subtotal_paise >= 49900 ? 0 : 4000)) + (typeof o.maintenance_fee_paise === "number" ? o.maintenance_fee_paise : 1000)),
         discountPaise: 0,
         totalItemsCount: (o.order_items || []).reduce((s: number, i: any) => s + (i.quantity || 1), 0),
       };
