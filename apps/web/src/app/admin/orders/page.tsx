@@ -85,44 +85,47 @@ export default function AdminOrdersPage() {
   return (
     <AdminShell>
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded border border-[#E2E8F0] shadow-xs">
           <div>
-            <h1 className="font-serif text-2xl font-bold text-ink-900 leading-tight">Master Order Oversight</h1>
-            <p className="text-xs text-ink-400 mt-0.5">Platform-wide visibility across multi-nursery customer orders and fulfillment states.</p>
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <h1 className="font-sans text-xl font-bold text-[#0F172A] tracking-tight">Master Order Dispatch & Oversight</h1>
+            </div>
+            <p className="text-xs text-slate-500 mt-1">Platform-wide visibility across nationwide multi-nursery split shipments, tracking, and fulfillment.</p>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-ink-500 uppercase tracking-wider">Master Orders:</span>
-            <span className="px-3 py-1 rounded-full bg-forest-50 text-forest-700 font-bold text-xs border border-forest-100">
-              {orders.length} Total
+            <span className="font-mono text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded px-3 py-1">
+              {orders.length} Master Orders
             </span>
           </div>
         </div>
 
         {error && (
-          <div className="bg-error-50 border border-error-100 rounded-xl p-4 text-xs text-error-700">
+          <div className="bg-red-50 border border-red-200 rounded p-4 text-xs font-semibold text-red-700">
             {error}
           </div>
         )}
 
         {/* Filters */}
-        <form onSubmit={handleSearchSubmit} className="bg-white rounded-xl border border-ink-100 p-4 shadow-xs flex flex-col sm:flex-row gap-4 items-center justify-between">
-          <div className="w-full sm:w-80 relative">
+        <form onSubmit={handleSearchSubmit} className="bg-white rounded border border-[#E2E8F0] p-4 shadow-xs flex flex-col sm:flex-row gap-3 items-center justify-between">
+          <div className="w-full sm:w-96 relative">
             <input
               type="search"
-              placeholder="Search by Order ID or Customer Name..."
+              placeholder="Search by Order ID, Customer Name, or City..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-xs rounded-lg border border-ink-200 focus:outline-none focus:ring-1 focus:ring-forest-700"
+              className="w-full pl-9 pr-4 py-2 font-mono text-xs rounded border border-[#E2E8F0] focus:outline-none focus:ring-1 focus:ring-[#1B4D3E] focus:border-[#1B4D3E] bg-[#F8FAFC] placeholder:text-slate-400 font-sans"
             />
-            <SearchIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-300" />
+            <SearchIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           </div>
 
-          <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="flex items-center gap-2.5 w-full sm:w-auto">
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 text-xs rounded-lg border border-ink-200 focus:outline-none focus:ring-1 focus:ring-forest-700 bg-white"
+              className="px-3 py-2 text-xs rounded border border-[#E2E8F0] focus:outline-none focus:ring-1 focus:ring-[#1B4D3E] bg-[#F8FAFC] font-semibold text-slate-700"
             >
               <option value="all">All Fulfillment Statuses</option>
               <option value="seller_pending">Seller Pending</option>
@@ -137,7 +140,7 @@ export default function AdminOrdersPage() {
 
             <button
               type="submit"
-              className="px-4 py-2 bg-forest-700 hover:bg-forest-800 text-white font-bold text-xs uppercase tracking-wider rounded-lg transition-colors"
+              className="px-4 py-2 bg-[#1B4D3E] hover:bg-[#14392E] text-white font-bold text-xs uppercase tracking-wider rounded transition-colors shadow-xs"
             >
               Search
             </button>
@@ -148,7 +151,9 @@ export default function AdminOrdersPage() {
         {loading ? (
           <TableSkeleton rows={6} columns={6} />
         ) : orders.length === 0 ? (
-          <div className="p-12 text-center text-xs text-ink-400">No master orders found matching the filter criteria.</div>
+          <div className="p-12 text-center text-xs text-slate-500 bg-white rounded border border-[#E2E8F0]">
+            No master orders found matching the filter criteria.
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {orders.map((o) => {
@@ -161,32 +166,34 @@ export default function AdminOrdersPage() {
               return (
                 <div
                   key={o.id}
-                  className="bg-white rounded-xl border border-ink-100 p-5 shadow-xs flex flex-col justify-between space-y-4 hover:border-ink-200 transition-colors"
+                  className="bg-white rounded border border-[#E2E8F0] p-4 shadow-xs flex flex-col justify-between space-y-3 hover:border-slate-400 transition-all"
                 >
                   <div className="flex items-start justify-between min-w-0 gap-3">
                     <div className="min-w-0">
-                      <p className="font-mono font-bold text-ink-950 truncate">#{o.id.slice(0, 12)}...</p>
-                      <p className="text-[10px] text-ink-400 mt-0.5">{new Date(o.created_at).toLocaleDateString()}</p>
+                      <p className="font-mono font-bold text-[#0F172A] text-xs truncate">#{o.id.slice(0, 14)}...</p>
+                      <p className="font-mono text-[10px] text-slate-400 mt-0.5">
+                        {new Date(o.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                      </p>
                     </div>
-                    <span className="px-2.5 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider bg-forest-50 text-forest-700 border border-forest-100">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-emerald-50 text-[#1B4D3E] border border-emerald-200 whitespace-nowrap">
                       {formatOrderStatusDisplay(o.status)}
                     </span>
                   </div>
 
-                  <div className="space-y-1 text-xs">
-                    <p className="text-ink-600 font-semibold truncate">Customer: {customerName}</p>
-                    <p className="text-ink-500">Destination: {city}</p>
-                    <p className="text-ink-400 text-[11px]">{fulfillmentsCount} Nursery ({itemsCount} items)</p>
+                  <div className="space-y-1 text-xs bg-[#F8FAFC] p-2.5 rounded border border-[#E2E8F0]">
+                    <p className="text-slate-700 font-semibold truncate">Customer: {customerName}</p>
+                    <p className="text-slate-500">Destination: <span className="font-bold text-slate-700">{city}</span></p>
+                    <p className="font-mono text-[11px] text-slate-500">{fulfillmentsCount} Nursery Shipment · {itemsCount} items</p>
                   </div>
 
-                  <div className="pt-2 border-t border-ink-50 flex justify-between items-center">
-                    <span className="font-bold text-forest-800 text-sm">{formatINR(totalAmount)}</span>
+                  <div className="pt-2 border-t border-[#E2E8F0] flex justify-between items-center">
+                    <span className="font-mono font-bold text-emerald-800 text-sm">{formatINR(totalAmount)}</span>
                     <button
                       type="button"
                       onClick={() => setSelectedOrder(o)}
-                      className="px-3 py-1 rounded-lg border border-ink-200 hover:bg-cream-100 text-ink-700 font-bold text-[9px] uppercase tracking-wider transition-colors"
+                      className="px-3 py-1 rounded border border-[#E2E8F0] hover:bg-[#1B4D3E] hover:text-white text-[#0F172A] font-mono font-bold text-[10px] uppercase tracking-wider transition-colors shadow-xs"
                     >
-                      View Details
+                      Inspect Order →
                     </button>
                   </div>
                 </div>

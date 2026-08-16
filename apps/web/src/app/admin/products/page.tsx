@@ -146,46 +146,49 @@ export default function AdminProductsPage() {
   return (
     <AdminShell>
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded border border-[#E2E8F0] shadow-xs">
           <div>
-            <h1 className="font-serif text-2xl font-bold text-ink-900 leading-tight">Product Moderation</h1>
-            <p className="text-xs text-ink-400 mt-0.5">Audit catalog listings, publish approved items, or unpublish non-compliant products.</p>
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <h1 className="font-sans text-xl font-bold text-[#0F172A] tracking-tight">Marketplace Catalog &amp; Pricing Governance</h1>
+            </div>
+            <p className="text-xs text-slate-500 mt-1">Audit botanical listings, inspect financial markup structures, and manage custom product pricing overrides.</p>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-ink-500 uppercase tracking-wider">Total Listings:</span>
-            <span className="px-3 py-1 rounded-full bg-forest-50 text-forest-700 font-bold text-xs border border-forest-100">
-              {products.length} Products
+            <span className="font-mono text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded px-3 py-1">
+              {products.length} Total SKUs
             </span>
           </div>
         </div>
 
         {error && (
-          <div className="bg-error-50 border border-error-100 rounded-xl p-4 text-xs text-error-700">
+          <div className="bg-red-50 border border-red-200 rounded p-4 text-xs font-semibold text-red-700">
             {error}
           </div>
         )}
 
         {/* Filters */}
-        <form onSubmit={handleSearchSubmit} className="bg-white rounded-xl border border-ink-100 p-4 shadow-xs flex flex-col sm:flex-row gap-4 items-center justify-between">
-          <div className="w-full sm:w-72 relative">
+        <form onSubmit={handleSearchSubmit} className="bg-white rounded border border-[#E2E8F0] p-4 shadow-xs flex flex-col sm:flex-row gap-3 items-center justify-between">
+          <div className="w-full sm:w-80 relative">
             <input
               type="search"
-              placeholder="Search product..."
+              placeholder="Search product name or SKU..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-xs rounded-lg border border-ink-200 focus:outline-none focus:ring-1 focus:ring-forest-700"
+              className="w-full pl-9 pr-4 py-2 font-mono text-xs rounded border border-[#E2E8F0] focus:outline-none focus:ring-1 focus:ring-[#1B4D3E] focus:border-[#1B4D3E] bg-[#F8FAFC] placeholder:text-slate-400 font-sans"
             />
-            <SearchIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-300" />
+            <SearchIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+          <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="px-3 py-2 text-xs rounded-lg border border-ink-200 focus:outline-none focus:ring-1 focus:ring-forest-700 bg-white"
+              className="px-3 py-2 text-xs rounded border border-[#E2E8F0] focus:outline-none focus:ring-1 focus:ring-[#1B4D3E] bg-[#F8FAFC] font-semibold text-slate-700"
             >
-              <option value="all">All Categories</option>
+              <option value="all">All Botanical Categories</option>
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
@@ -194,7 +197,7 @@ export default function AdminProductsPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 text-xs rounded-lg border border-ink-200 focus:outline-none focus:ring-1 focus:ring-forest-700 bg-white"
+              className="px-3 py-2 text-xs rounded border border-[#E2E8F0] focus:outline-none focus:ring-1 focus:ring-[#1B4D3E] bg-[#F8FAFC] font-semibold text-slate-700"
             >
               <option value="all">All Statuses</option>
               <option value="active">Active (Published)</option>
@@ -205,7 +208,7 @@ export default function AdminProductsPage() {
 
             <button
               type="submit"
-              className="px-4 py-2 bg-forest-700 hover:bg-forest-800 text-white font-bold text-xs uppercase tracking-wider rounded-lg transition-colors"
+              className="px-4 py-2 bg-[#1B4D3E] hover:bg-[#14392E] text-white font-bold text-xs uppercase tracking-wider rounded transition-colors shadow-xs"
             >
               Filter
             </button>
@@ -216,11 +219,14 @@ export default function AdminProductsPage() {
         {loading ? (
           <ProductGridSkeleton count={6} />
         ) : products.length === 0 ? (
-          <div className="p-12 text-center text-xs text-ink-400">No products matching the selected criteria.</div>
+          <div className="p-12 text-center text-xs text-slate-500 bg-white rounded border border-[#E2E8F0]">
+            No products matching the selected criteria.
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {products.map((p) => {
               const pricePaise = p.inventory?.[0]?.price_paise ?? p.inventory?.price_paise ?? 0;
+              const customerPricePaise = p.pricing?.sellingPricePaise ?? p.pricing?.customerPricePaise ?? pricePaise;
               const stockQty = p.inventory?.[0]?.stock_quantity ?? p.inventory?.stock_quantity ?? 0;
               const sellerName = p.seller?.business_name || "Partner Nursery";
               const catName = p.category?.name || "Uncategorized";
@@ -228,48 +234,48 @@ export default function AdminProductsPage() {
               return (
                 <div
                   key={p.id}
-                  className="bg-white rounded-xl border border-ink-100 p-5 shadow-xs flex flex-col justify-between space-y-4 hover:border-ink-200 transition-colors"
+                  className="bg-white rounded border border-[#E2E8F0] p-4 shadow-xs flex flex-col justify-between space-y-3 hover:border-slate-400 transition-all"
                 >
                   <div className="flex items-start justify-between min-w-0 gap-3">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-9 h-9 rounded-lg bg-forest-50 text-forest-700 flex items-center justify-center flex-shrink-0">
+                      <div className="w-9 h-9 rounded bg-emerald-50 text-[#1B4D3E] flex items-center justify-center flex-shrink-0 border border-emerald-200">
                         <LeafIcon size={18} />
                       </div>
                       <div className="min-w-0">
-                        <p className="font-bold text-ink-900 leading-tight truncate">{p.name}</p>
-                        <p className="text-[9px] text-ink-400 font-mono mt-0.5 truncate">{p.id}</p>
+                        <p className="font-bold text-[#0F172A] leading-tight truncate font-sans text-sm">{p.name}</p>
+                        <p className="text-[10px] text-slate-400 font-mono mt-0.5 truncate">{p.id}</p>
                       </div>
                     </div>
-                    <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider border ${p.status === "active" ? "bg-success-50 text-success-700 border-success-100" : "bg-ink-50 text-ink-600 border-ink-100"}`}>
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider border ${p.status === "active" ? "bg-emerald-50 text-[#1B4D3E] border-emerald-200" : "bg-slate-100 text-slate-600 border-slate-200"}`}>
                       {p.status}
                     </span>
                   </div>
 
-                  <div className="space-y-1 text-xs">
-                    <p className="text-ink-500 font-medium truncate">Category: {catName}</p>
-                    <p className="text-ink-500 font-medium truncate">Nursery: {sellerName}</p>
-                    <div className="flex justify-between items-center pt-1">
-                      <span className="font-bold text-forest-800 text-[13px]">{formatINR(pricePaise)}</span>
-                      <span className={`font-semibold ${stockQty <= 0 ? "text-error-600" : "text-ink-700"}`}>
-                        {stockQty <= 0 ? "Out of Stock" : `${stockQty} units`}
+                  <div className="space-y-1 text-xs bg-[#F8FAFC] p-2.5 rounded border border-[#E2E8F0]">
+                    <p className="text-slate-600 font-medium truncate"><span className="text-slate-400">Category:</span> {catName}</p>
+                    <p className="text-slate-600 font-medium truncate"><span className="text-slate-400">Nursery:</span> {sellerName}</p>
+                    <div className="flex justify-between items-center pt-1 border-t border-slate-200 mt-1">
+                      <span className="font-mono text-xs font-bold text-emerald-800">Customer: {formatINR(customerPricePaise)}</span>
+                      <span className={`font-mono text-[11px] font-bold ${stockQty === 0 ? "text-red-600" : stockQty <= 5 ? "text-amber-600" : "text-slate-600"}`}>
+                        Stock: {stockQty} units
                       </span>
                     </div>
                   </div>
 
-                  <div className="pt-2 border-t border-ink-50 flex justify-between items-center gap-2">
+                  <div className="pt-2 border-t border-[#E2E8F0] flex justify-between items-center gap-2">
                     <button
                       type="button"
                       onClick={() => setFinancialProductId(p.id)}
-                      className="px-2.5 py-1 rounded-lg border border-emerald-300 bg-emerald-50/60 hover:bg-emerald-100 text-emerald-800 font-bold text-[9px] uppercase tracking-wider transition-colors"
+                      className="text-xs text-[#1B4D3E] font-bold hover:underline font-sans"
                     >
-                      Financials
+                      Inspect Breakdown
                     </button>
                     <button
                       type="button"
                       onClick={() => handleOpenModerate(p)}
-                      className="px-3 py-1 rounded-lg border border-ink-200 hover:bg-cream-100 text-ink-700 font-bold text-[9px] uppercase tracking-wider transition-colors"
+                      className="px-3 py-1 rounded border border-[#E2E8F0] hover:bg-[#1B4D3E] hover:text-white text-[#0F172A] font-mono font-bold text-[10px] uppercase tracking-wider transition-colors shadow-xs"
                     >
-                      Moderate &amp; Edit
+                      Moderate →
                     </button>
                   </div>
                 </div>

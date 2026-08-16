@@ -92,23 +92,26 @@ export default function AdminDashboardPage() {
     <AdminShell>
       <div className="space-y-6">
         {/* Title and date selector */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded border border-[#E2E8F0] shadow-xs">
           <div>
-            <h1 className="font-serif text-2xl font-bold text-ink-900 leading-tight">Admin Control Dashboard</h1>
-            <p className="text-xs text-ink-400 mt-0.5">Real-time marketplace metrics and platform oversight.</p>
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <h1 className="font-sans text-xl font-bold text-[#0F172A] tracking-tight">Executive Command Center</h1>
+            </div>
+            <p className="text-xs text-slate-500 mt-1">Real-time platform telemetry, nationwide nursery distribution, and GMV oversight.</p>
           </div>
 
-          <div className="flex items-center gap-2 bg-white rounded-lg border border-ink-150 p-1 shadow-xs">
+          <div className="flex items-center gap-1.5 bg-[#F8FAFC] rounded border border-[#E2E8F0] p-1 shadow-xs">
             {["7d", "30d", "90d", "12m"].map((r) => (
               <button
                 key={r}
                 type="button"
                 onClick={() => setDateRange(r)}
                 className={[
-                  "px-3 py-1 rounded text-[10px] font-bold uppercase tracking-wider transition-colors",
+                  "px-3 py-1 rounded text-[11px] font-mono font-bold uppercase tracking-wider transition-all",
                   dateRange === r
-                    ? "bg-forest-700 text-white"
-                    : "text-ink-500 hover:text-ink-900",
+                    ? "bg-[#1B4D3E] text-white shadow-xs"
+                    : "text-slate-600 hover:text-[#0F172A] hover:bg-slate-200/60",
                 ].join(" ")}
               >
                 {r}
@@ -118,7 +121,7 @@ export default function AdminDashboardPage() {
         </div>
 
         {error && (
-          <div className="bg-error-50 border border-error-100 rounded-xl p-4 text-xs text-error-700">
+          <div className="bg-red-50 border border-red-200 rounded p-4 text-xs font-semibold text-red-700">
             {error}
           </div>
         )}
@@ -126,7 +129,7 @@ export default function AdminDashboardPage() {
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-              <div key={i} className="bg-white rounded-xl border border-ink-100 p-5 h-20" />
+              <div key={i} className="bg-white rounded border border-[#E2E8F0] p-4 h-24" />
             ))}
           </div>
         ) : (
@@ -134,13 +137,13 @@ export default function AdminDashboardPage() {
             {/* KPI Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {statCards.map((stat, idx) => (
-                <div key={idx} className="bg-white rounded-xl border border-ink-100 p-5 shadow-xs flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-full ${stat.color} flex items-center justify-center flex-shrink-0`}>
-                    {stat.icon}
+                <div key={idx} className="bg-white rounded border border-[#E2E8F0] p-4 shadow-xs hover:border-slate-400 transition-all flex items-start justify-between">
+                  <div className="min-w-0 flex-1 pr-2">
+                    <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-slate-500 truncate">{stat.label}</p>
+                    <p className="font-mono text-xl font-bold text-[#0F172A] mt-1.5 tracking-tight truncate">{stat.value}</p>
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-ink-400 truncate">{stat.label}</p>
-                    <p className="text-base font-bold text-ink-900 mt-0.5 leading-tight truncate">{stat.value}</p>
+                  <div className={`w-9 h-9 rounded ${stat.color} flex items-center justify-center flex-shrink-0 shadow-xs`}>
+                    {stat.icon}
                   </div>
                 </div>
               ))}
@@ -149,74 +152,88 @@ export default function AdminDashboardPage() {
             {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Sales Trend Line Chart */}
-              <div className="lg:col-span-2 bg-white rounded-xl border border-ink-100 p-5 shadow-xs flex flex-col justify-between">
-                <div>
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-ink-900">Gross Merchandise Value (INR)</h2>
-                  <p className="text-[10px] text-ink-400 mt-0.5">Aggregate GMV processed over the selected {dateRange} period.</p>
+              <div className="lg:col-span-2 bg-white rounded border border-[#E2E8F0] p-5 shadow-xs flex flex-col justify-between">
+                <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3">
+                  <div>
+                    <h2 className="font-sans text-xs font-bold uppercase tracking-wider text-[#0F172A]">Gross Merchandise Value (GMV)</h2>
+                    <p className="text-[11px] text-slate-500 mt-0.5">Aggregated transactional value over the active {dateRange} timeframe.</p>
+                  </div>
+                  <span className="font-mono text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-2 py-0.5">
+                    Live Stream
+                  </span>
                 </div>
                 <div className="pt-6">
                   <LineChart
                     data={lineChartData}
-                    height={200}
-                    strokeColor="#15803d"
+                    height={210}
+                    strokeColor="#1B4D3E"
                     valueFormatter={(val) => `₹${val.toLocaleString()}`}
                   />
                 </div>
               </div>
 
               {/* Order Status Donut Chart */}
-              <div className="bg-white rounded-xl border border-ink-100 p-5 shadow-xs flex flex-col justify-between">
-                <div>
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-ink-900">Order Status Distribution</h2>
-                  <p className="text-[10px] text-ink-400 mt-0.5">Percentage breakdown of master orders by status.</p>
+              <div className="bg-white rounded border border-[#E2E8F0] p-5 shadow-xs flex flex-col justify-between">
+                <div className="border-b border-[#E2E8F0] pb-3">
+                  <h2 className="font-sans text-xs font-bold uppercase tracking-wider text-[#0F172A]">Fulfillment Pipeline</h2>
+                  <p className="text-[11px] text-slate-500 mt-0.5">Live distribution of orders across lifecycle states.</p>
                 </div>
                 <div className="pt-6 flex-1 flex items-center justify-center">
-                  <DonutChart data={donutChartData} size={150} />
+                  <DonutChart data={donutChartData} size={160} />
                 </div>
               </div>
             </div>
 
             {/* Recent Master Orders */}
-            <div className="space-y-4 pt-2">
-              <div className="flex justify-between items-center">
-                <h2 className="text-sm font-bold uppercase tracking-widest text-ink-900">Recent Master Orders</h2>
-                <Link href="/admin/orders" className="text-xs text-forest-700 font-bold hover:text-forest-900">
-                  View All Orders →
+            <div className="space-y-3 pt-2">
+              <div className="flex justify-between items-center px-1">
+                <div className="flex items-center gap-2">
+                  <h2 className="font-sans text-sm font-bold uppercase tracking-wider text-[#0F172A]">Live Master Order Stream</h2>
+                  <span className="font-mono text-[10px] bg-slate-100 text-slate-600 font-bold px-2 py-0.5 rounded border border-[#E2E8F0]">
+                    Top 5 Recent
+                  </span>
+                </div>
+                <Link href="/admin/orders" className="font-sans text-xs text-[#1B4D3E] font-bold hover:underline flex items-center gap-1">
+                  View Full Orders Ledger →
                 </Link>
               </div>
 
-              <div className="bg-white rounded-xl border border-ink-100 shadow-xs overflow-hidden">
+              <div className="bg-white rounded border border-[#E2E8F0] shadow-xs overflow-hidden">
                 {recentOrders.length === 0 ? (
-                  <div className="p-8 text-center text-xs text-ink-400">No master orders found in backend database.</div>
+                  <div className="p-8 text-center text-xs text-slate-500">No master orders found in backend database.</div>
                 ) : (
-                  <table className="w-full border-collapse text-left text-xs">
-                    <thead>
-                      <tr className="bg-cream-100 text-ink-500 font-bold uppercase tracking-wider border-b border-ink-100">
-                        <th className="p-4">Order ID</th>
-                        <th className="p-4">Customer</th>
-                        <th className="p-4">Items</th>
-                        <th className="p-4">Status</th>
-                        <th className="p-4 text-right">Total</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-ink-100">
-                      {recentOrders.map((order) => (
-                        <tr key={order.id} className="hover:bg-cream-50/50">
-                          <td className="p-4 font-mono font-bold text-ink-900">{order.id}</td>
-                          <td className="p-4 font-semibold text-ink-700">
-                            {order.delivery_address_snapshot?.full_name || "Customer"}
-                          </td>
-                          <td className="p-4 text-ink-500">{order.order_items?.length || 0} item(s)</td>
-                          <td className="p-4">
-                            <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-forest-50 text-forest-700 border border-forest-100">
-                              {order.status}
-                            </span>
-                          </td>
-                          <td className="p-4 font-bold text-forest-800 text-right">{formatINR(order.total_paise || order.subtotal_paise || 0)}</td>
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse text-left text-xs">
+                      <thead>
+                        <tr className="bg-slate-50 text-slate-600 font-mono text-[11px] font-bold uppercase tracking-wider border-b border-[#E2E8F0]">
+                          <th className="p-3.5">Master Order ID</th>
+                          <th className="p-3.5">Customer</th>
+                          <th className="p-3.5">Line Items</th>
+                          <th className="p-3.5">Fulfillment Status</th>
+                          <th className="p-3.5 text-right">Frozen Snapshot Total</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-[#E2E8F0]">
+                        {recentOrders.map((order) => (
+                          <tr key={order.id} className="hover:bg-[#F8FAFC] transition-colors">
+                            <td className="p-3.5 font-mono font-bold text-[#0F172A]">{order.id}</td>
+                            <td className="p-3.5 font-semibold text-slate-700">
+                              {order.delivery_address_snapshot?.full_name || "Customer"}
+                            </td>
+                            <td className="p-3.5 font-mono text-slate-500">{order.order_items?.length || 0} item(s)</td>
+                            <td className="p-3.5">
+                              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-emerald-50 text-[#1B4D3E] border border-emerald-200">
+                                {order.status}
+                              </span>
+                            </td>
+                            <td className="p-3.5 font-mono font-bold text-emerald-800 text-right text-sm">
+                              {formatINR(order.total_paise || order.subtotal_paise || 0)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
               </div>
             </div>

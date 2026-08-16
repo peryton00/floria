@@ -152,22 +152,24 @@ export function AdminShell({ children }: AdminShellProps) {
   }
 
   return (
-    <div className="min-h-screen bg-cream-50 flex font-ui">
+    <div className="min-h-screen bg-[#F8FAFC] flex font-sans antialiased text-[#0F172A]">
       {/* DESKTOP SIDEBAR */}
-      <aside className="hidden md:flex w-64 bg-[#1A2B1A] text-white/70 flex-col flex-shrink-0" aria-label="Admin panel navigation">
+      <aside className="hidden md:flex w-64 bg-[#0F172A] text-slate-400 flex-col flex-shrink-0 border-r border-slate-800" aria-label="Admin panel navigation">
         {/* Brand Header */}
-        <div className="p-6 border-b border-white/10 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2" aria-label="Admin dashboard home">
-            <Image src="/floria-logo.png" alt="Floria Logo" width={24} height={24} className="object-contain brightness-[5] opacity-80" />
+        <div className="p-5 border-b border-slate-800 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2.5" aria-label="Admin dashboard home">
+            <div className="w-8 h-8 rounded bg-[#1B4D3E] flex items-center justify-center p-1.5 flex-shrink-0">
+              <Image src="/floria-logo.png" alt="Floria Logo" width={20} height={20} className="object-contain brightness-[5]" />
+            </div>
             <div>
-              <span className="font-serif text-sm font-semibold text-white tracking-tight block leading-tight">Admin Console</span>
-              <span className="text-[9px] uppercase tracking-widest text-forest-400 font-bold block leading-none mt-0.5">Platform Operations</span>
+              <span className="font-sans text-sm font-bold text-white tracking-tight block leading-tight">Floria Console</span>
+              <span className="font-mono text-[9px] uppercase tracking-wider text-emerald-400 font-semibold block leading-none mt-0.5">Admin Cockpit v2</span>
             </div>
           </Link>
         </div>
 
         {/* Navigation Links */}
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+        <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
           {navLinks.map((link) => {
             const isActive = pathname === link.href;
             return (
@@ -175,13 +177,13 @@ export function AdminShell({ children }: AdminShellProps) {
                 key={link.href}
                 href={link.href}
                 className={[
-                  "flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors",
+                  "flex items-center gap-3 px-3 py-2 rounded text-xs font-semibold tracking-wide transition-all",
                   isActive
-                    ? "bg-forest-700 text-white shadow-sm"
-                    : "hover:bg-white/5 hover:text-white",
+                    ? "bg-[#1B4D3E] text-white font-bold shadow-xs border-l-2 border-emerald-400"
+                    : "hover:bg-slate-800/60 hover:text-slate-200",
                 ].join(" ")}
               >
-                {link.icon}
+                <span className={isActive ? "text-emerald-300" : "text-slate-400"}>{link.icon}</span>
                 <span>{link.label}</span>
               </Link>
             );
@@ -189,16 +191,16 @@ export function AdminShell({ children }: AdminShellProps) {
         </nav>
 
         {/* User Info Footer */}
-        <div className="p-4 border-t border-white/10 flex items-center justify-between">
+        <div className="p-4 border-t border-slate-800 flex items-center justify-between bg-slate-900/50">
           <div className="min-w-0 pr-2">
             <p className="text-xs font-bold text-white truncate leading-tight">{userName}</p>
-            <p className="text-[9px] uppercase tracking-widest text-forest-300 truncate mt-0.5 leading-none">{userRole}</p>
+            <p className="font-mono text-[9px] uppercase tracking-wider text-emerald-400 font-medium truncate mt-0.5 leading-none">{userRole}</p>
           </div>
           <button
             type="button"
             onClick={handleLogout}
             title="Log out"
-            className="p-2 rounded-lg hover:bg-white/10 text-white/70 hover:text-white transition-colors"
+            className="p-1.5 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
           >
             <LogoutIcon size={16} />
           </button>
@@ -208,23 +210,28 @@ export function AdminShell({ children }: AdminShellProps) {
       {/* MOBILE DRAWER OVERLAY */}
       {mobileDrawerOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs md:hidden flex">
-          <div className="w-72 bg-[#1A2B1A] text-white/70 flex flex-col h-full shadow-2xl">
-            <div className="p-5 border-b border-white/10 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Image src="/floria-logo.png" alt="Floria Logo" width={22} height={22} className="object-contain brightness-[5]" />
-                <span className="font-serif text-sm font-bold text-white">Admin Console</span>
+          <div className="w-72 bg-[#0F172A] text-slate-400 flex flex-col h-full shadow-2xl">
+            <div className="p-5 border-b border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded bg-[#1B4D3E] flex items-center justify-center p-1.5">
+                  <Image src="/floria-logo.png" alt="Floria Logo" width={20} height={20} className="object-contain brightness-[5]" />
+                </div>
+                <div>
+                  <span className="font-sans text-sm font-bold text-white">Floria Console</span>
+                  <span className="font-mono text-[9px] uppercase tracking-wider text-emerald-400 block mt-0.5">Admin Cockpit</span>
+                </div>
               </div>
               <button
                 type="button"
                 onClick={() => setMobileDrawerOpen(false)}
-                className="p-2 text-white/70 hover:text-white font-bold"
+                className="p-2 text-slate-400 hover:text-white font-bold"
                 aria-label="Close navigation drawer"
               >
                 ✕
               </button>
             </div>
 
-            <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+            <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
               {navLinks.map((link) => {
                 const isActive = pathname === link.href;
                 return (
@@ -233,28 +240,28 @@ export function AdminShell({ children }: AdminShellProps) {
                     href={link.href}
                     onClick={() => setMobileDrawerOpen(false)}
                     className={[
-                      "flex items-center gap-3 px-3.5 py-3 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors",
+                      "flex items-center gap-3 px-3 py-2.5 rounded text-xs font-semibold tracking-wide transition-all",
                       isActive
-                        ? "bg-forest-700 text-white shadow-sm"
-                        : "hover:bg-white/5 hover:text-white",
+                        ? "bg-[#1B4D3E] text-white font-bold border-l-2 border-emerald-400"
+                        : "hover:bg-slate-800/60 hover:text-slate-200",
                     ].join(" ")}
                   >
-                    {link.icon}
+                    <span className={isActive ? "text-emerald-300" : "text-slate-400"}>{link.icon}</span>
                     <span>{link.label}</span>
                   </Link>
                 );
               })}
             </nav>
 
-            <div className="p-4 border-t border-white/10 flex items-center justify-between">
+            <div className="p-4 border-t border-slate-800 flex items-center justify-between bg-slate-900/50">
               <div className="min-w-0 pr-2">
                 <p className="text-xs font-bold text-white truncate">{userName}</p>
-                <p className="text-[9px] uppercase tracking-widest text-forest-300 truncate">{userRole}</p>
+                <p className="font-mono text-[9px] uppercase tracking-wider text-emerald-400 truncate">{userRole}</p>
               </div>
               <button
                 type="button"
                 onClick={handleLogout}
-                className="p-2 rounded-lg hover:bg-white/10 text-white/70 hover:text-white"
+                className="p-1.5 rounded hover:bg-slate-800 text-slate-400 hover:text-white"
               >
                 <LogoutIcon size={16} />
               </button>
@@ -266,38 +273,38 @@ export function AdminShell({ children }: AdminShellProps) {
       )}
 
       {/* MAIN CONTENT AREA */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 bg-[#F8FAFC]">
         {/* Header */}
-        <header className="h-16 bg-white border-b border-ink-100 flex items-center justify-between px-4 sm:px-6 z-10">
+        <header className="h-14 bg-white border-b border-[#E2E8F0] flex items-center justify-between px-4 sm:px-6 z-10 sticky top-0 shadow-xs">
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setMobileDrawerOpen(true)}
-              className="md:hidden p-2 rounded-lg border border-ink-200 text-ink-700 hover:bg-cream-100"
+              className="md:hidden p-1.5 rounded border border-[#E2E8F0] text-slate-700 hover:bg-slate-100"
               aria-label="Open mobile navigation menu"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <line x1="3" y1="12" x2="21" y2="12" />
                 <line x1="3" y1="6" x2="21" y2="6" />
                 <line x1="3" y1="18" x2="21" y2="18" />
               </svg>
             </button>
             <span className={[
-              "px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider border",
+              "px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider border",
               isStaging
                 ? "bg-amber-50 text-amber-700 border-amber-200"
-                : "bg-forest-50 text-forest-700 border-forest-200"
+                : "bg-emerald-50 text-[#1B4D3E] border-emerald-200"
             ].join(" ")}>
-              {isStaging ? "Staging Sandbox" : "Production System"}
+              ● {isStaging ? "Staging Sandbox" : "Production Node"}
             </span>
           </div>
 
           {/* Search bar on desktop */}
-          <div className="hidden md:flex items-center relative w-64 max-w-xs">
+          <div className="hidden md:flex items-center relative w-72 max-w-sm">
             <input
               type="text"
-              placeholder="Search users, orders, products..."
-              className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-ink-200 focus:outline-none focus:ring-1 focus:ring-forest-700 bg-cream-50/30"
+              placeholder="Quick search orders, nurseries, SKUs..."
+              className="w-full pl-8 pr-3 py-1.5 text-xs rounded border border-[#E2E8F0] focus:outline-none focus:ring-1 focus:ring-[#1B4D3E] focus:border-[#1B4D3E] bg-[#F8FAFC] font-sans placeholder:text-slate-400"
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   const target = e.currentTarget.value.trim();
@@ -307,23 +314,24 @@ export function AdminShell({ children }: AdminShellProps) {
                 }
               }}
             />
-            <SearchIcon size={12} className="absolute left-2.5 text-ink-300" />
+            <SearchIcon size={12} className="absolute left-2.5 text-slate-400" />
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3.5">
             <NotificationBell userRole="admin" />
+            <div className="h-4 w-px bg-[#E2E8F0]" />
             <div className="text-right hidden sm:block">
-              <p className="text-xs font-bold text-ink-900 leading-tight">{userName}</p>
-              <p className="text-[10px] text-forest-700 font-bold uppercase tracking-wider mt-0.5 leading-none">{userRole}</p>
+              <p className="text-xs font-bold text-[#0F172A] leading-tight">{userName}</p>
+              <p className="font-mono text-[9px] text-[#1B4D3E] font-bold uppercase tracking-wider mt-0.5 leading-none">{userRole}</p>
             </div>
-            <div className="w-8 h-8 rounded-full bg-forest-700 text-white flex items-center justify-center font-bold text-xs">
+            <div className="w-7 h-7 rounded bg-[#1B4D3E] text-white flex items-center justify-center font-bold text-xs shadow-xs">
               {userName.charAt(0).toUpperCase()}
             </div>
           </div>
         </header>
 
         {/* Page View */}
-        <main className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-6">
+        <main className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-6 max-w-7xl w-full mx-auto">
           {children}
         </main>
       </div>

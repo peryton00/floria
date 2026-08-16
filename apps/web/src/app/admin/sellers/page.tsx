@@ -130,29 +130,38 @@ export default function AdminSellersPage() {
   return (
     <AdminShell>
       <div className="space-y-6">
-        <div>
-          <h1 className="font-serif text-2xl font-bold text-ink-900 leading-tight">Seller &amp; Nursery Management</h1>
-          <p className="text-xs text-ink-400 mt-0.5">Review seller onboarding applications, verify documents, and manage partner status.</p>
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded border border-[#E2E8F0] shadow-xs">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <h1 className="font-sans text-xl font-bold text-[#0F172A] tracking-tight">Nursery Verification & Partner Management</h1>
+            </div>
+            <p className="text-xs text-slate-500 mt-1">Audit botanical seller applications, review legal KYC certifications, and manage partnership status.</p>
+          </div>
+          <span className="font-mono text-xs font-bold text-slate-700 bg-slate-100 border border-[#E2E8F0] rounded px-3 py-1">
+            {sellers.length} Total Partners
+          </span>
         </div>
 
         {error && (
-          <div className="bg-error-50 border border-error-100 rounded-xl p-4 text-xs text-error-700">
+          <div className="bg-red-50 border border-red-200 rounded p-4 text-xs font-semibold text-red-700">
             {error}
           </div>
         )}
 
         {/* Status Tabs */}
-        <div className="flex border-b border-ink-100 space-x-4 overflow-x-auto">
+        <div className="flex border-b border-[#E2E8F0] space-x-2 overflow-x-auto bg-white p-2 rounded border shadow-xs">
           {tabs.map((tab) => (
             <button
               key={tab.key}
               type="button"
               onClick={() => setActiveTab(tab.key as any)}
               className={[
-                "pb-3 text-xs font-bold uppercase tracking-wider transition-colors border-b-2 whitespace-nowrap",
+                "px-3.5 py-1.5 text-xs font-semibold tracking-wide transition-all rounded whitespace-nowrap",
                 activeTab === tab.key
-                  ? "border-forest-700 text-forest-700"
-                  : "border-transparent text-ink-400 hover:text-ink-900",
+                  ? "bg-[#1B4D3E] text-white font-bold shadow-xs"
+                  : "text-slate-600 hover:text-[#0F172A] hover:bg-slate-100",
               ].join(" ")}
             >
               {tab.label}
@@ -164,40 +173,48 @@ export default function AdminSellersPage() {
         {loading ? (
           <NurseryGridSkeleton count={6} />
         ) : sellers.length === 0 ? (
-          <div className="p-12 text-center text-xs text-ink-400">No seller profiles found in this category.</div>
+          <div className="p-12 text-center text-xs text-slate-500 bg-white rounded border border-[#E2E8F0]">
+            No seller profiles found in this category.
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {sellers.map((s) => (
               <div
                 key={s.id}
-                className="bg-white rounded-xl border border-ink-100 p-5 shadow-xs flex flex-col justify-between space-y-4 hover:border-ink-200 transition-colors"
+                className="bg-white rounded border border-[#E2E8F0] p-4 shadow-xs flex flex-col justify-between space-y-3 hover:border-slate-400 transition-all"
               >
                 <div className="flex items-start justify-between min-w-0">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-full bg-forest-50 text-forest-700 flex items-center justify-center flex-shrink-0">
+                    <div className="w-9 h-9 rounded bg-emerald-50 text-[#1B4D3E] flex items-center justify-center flex-shrink-0 border border-emerald-200">
                       <LeafIcon size={18} />
                     </div>
                     <div className="min-w-0">
-                      <p className="font-bold text-ink-900 leading-tight truncate">{s.business_name || "Nursery Partner"}</p>
-                      <p className="text-[9px] text-ink-400 font-mono mt-0.5 truncate">{s.id}</p>
+                      <p className="font-bold text-[#0F172A] leading-tight truncate font-sans text-sm">{s.business_name || "Nursery Partner"}</p>
+                      <p className="text-[10px] text-slate-400 font-mono mt-0.5 truncate">{s.id}</p>
                     </div>
                   </div>
                   <SellerStatusBadge status={s.status || "pending"} />
                 </div>
 
-                <div className="space-y-1 text-xs">
-                  <p className="text-ink-500 font-medium truncate">Email: {s.contact_email || "N/A"}</p>
-                  <p className="text-ink-500 font-medium truncate">Phone: <span className="font-mono text-ink-700">{s.contact_phone || "N/A"}</span></p>
-                  <p className="text-ink-400 text-[11px] truncate">Address: {s.address || "N/A"}</p>
+                <div className="space-y-1 text-xs bg-[#F8FAFC] p-2.5 rounded border border-[#E2E8F0]">
+                  <p className="text-slate-600 font-medium truncate">
+                    <span className="text-slate-400">Email:</span> {s.contact_email || "N/A"}
+                  </p>
+                  <p className="text-slate-600 font-medium truncate">
+                    <span className="text-slate-400">Phone:</span> <span className="font-mono text-slate-800 font-bold">{s.contact_phone || "N/A"}</span>
+                  </p>
+                  <p className="text-slate-500 text-[11px] truncate">
+                    <span className="text-slate-400">Location:</span> {s.address || "Raipur, Chhattisgarh"}
+                  </p>
                 </div>
 
-                <div className="pt-2 border-t border-ink-50 flex justify-end">
+                <div className="pt-2 border-t border-[#E2E8F0] flex justify-end">
                   <button
                     type="button"
                     onClick={() => handleInspectSeller(s)}
-                    className="px-3 py-1 rounded-lg border border-ink-200 hover:bg-cream-100 text-ink-700 font-bold text-[9px] uppercase tracking-wider transition-colors"
+                    className="px-3 py-1.5 rounded border border-[#E2E8F0] hover:bg-[#1B4D3E] hover:text-white text-[#0F172A] font-mono font-bold text-[10px] uppercase tracking-wider transition-colors shadow-xs"
                   >
-                    Inspect &amp; Edit
+                    Inspect &amp; Verify →
                   </button>
                 </div>
               </div>
