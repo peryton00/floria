@@ -101,73 +101,93 @@ class RecalculationService {
         let processedCount = 0;
         let failedCount = 0;
         const totalBatches = Math.ceil(listings.length / batchSize) || 1;
-        for (let batchIdx = 0; batchIdx < totalBatches; batchIdx++) {
-            const start = batchIdx * batchSize;
-            const end = Math.min(start + batchSize, listings.length);
-            const batchListings = listings.slice(start, end);
-            const rowsToUpsert = [];
-            for (const item of batchListings) {
-                try {
-                    const basePaise = item.base_price_paise ?? item.price_paise ?? 0;
-                    const calc = pricing_service_js_1.pricingService.calculateProductPricingSync(basePaise, policySettings);
-                    rowsToUpsert.push({
-                        product_id: item.product_id,
-                        seller_id: item.seller_id,
-                        policy_version_id: policy.id,
-                        seller_base_price_paise: calc.sellerBasePricePaise,
-                        floria_profit_rate: calc.floriaProfitRate,
-                        floria_profit_paise: calc.floriaProfitPaise,
-                        delivery_recovery_paise: calc.deliveryRecoveryPaise,
-                        customer_product_price_paise: calc.customerProductPricePaise,
-                        is_free_delivery_eligible: calc.isFreeDeliveryEligible,
-                        seller_commission_rate: calc.sellerCommissionRate,
-                        seller_commission_paise: calc.sellerCommissionPaise,
-                        seller_net_paise: calc.sellerNetPaise,
-                        is_override: false,
-                        updated_at: new Date().toISOString(),
-                    });
-                    processedCount++;
+        try {
+            for (let batchIdx = 0; batchIdx < totalBatches; batchIdx++) {
+                const start = batchIdx * batchSize;
+                const end = Math.min(start + batchSize, listings.length);
+                const batchListings = listings.slice(start, end);
+                const rowsToUpsert = [];
+                for (const item of batchListings) {
+                    try {
+                        const basePaise = item.base_price_paise ?? item.price_paise ?? 0;
+                        const calc = pricing_service_js_1.pricingService.calculateProductPricingSync(basePaise, policySettings);
+                        rowsToUpsert.push({
+                            product_id: item.product_id,
+                            seller_id: item.seller_id,
+                            policy_version_id: policy.id,
+                            seller_base_price_paise: calc.sellerBasePricePaise,
+                            floria_profit_rate: calc.floriaProfitRate,
+                            floria_profit_paise: calc.floriaProfitPaise,
+                            delivery_recovery_paise: calc.deliveryRecoveryPaise,
+                            customer_product_price_paise: calc.customerProductPricePaise,
+                            is_free_delivery_eligible: calc.isFreeDeliveryEligible,
+                            seller_commission_rate: calc.sellerCommissionRate,
+                            seller_commission_paise: calc.sellerCommissionPaise,
+                            seller_net_paise: calc.sellerNetPaise,
+                            is_override: false,
+                            updated_at: new Date().toISOString(),
+                        });
+                        processedCount++;
+                    }
+                    catch {
+                        failedCount++;
+                    }
                 }
-                catch {
-                    failedCount++;
+                if (rowsToUpsert.length > 0) {
+                    try {
+                        await db
+                            .from("product_pricing")
+                            .upsert(rowsToUpsert, { onConflict: "policy_version_id,product_id" });
+                    }
+                    catch (e) {
+                        console.warn(`[RecalculationService] Batch ${batchIdx + 1} upsert warning:`, e?.message);
+                    }
                 }
+                // Update progress in job table
+                await db
+                    .from("pricing_recalculation_jobs")
+                    .update({
+                    processed_listings: processedCount,
+                    failed_listings: failedCount,
+                    current_batch: batchIdx + 1,
+                    updated_at: new Date().toISOString(),
+                })
+                    .eq("id", jobId);
             }
-            if (rowsToUpsert.length > 0) {
-                try {
-                    await db
-                        .from("product_pricing")
-                        .upsert(rowsToUpsert, { onConflict: "policy_version_id,product_id" });
-                }
-                catch (e) {
-                    console.warn(`[RecalculationService] Batch ${batchIdx + 1} upsert warning:`, e?.message);
-                }
-            }
-            // Update progress in job table
+            const isTotalFailure = processedCount === 0 && listings.length > 0;
+            const finalJobStatus = isTotalFailure ? "failed" : "completed";
+            const policyStatus = isTotalFailure ? "failed" : "ready";
+            const now = new Date().toISOString();
             await db
                 .from("pricing_recalculation_jobs")
                 .update({
-                processed_listings: processedCount,
-                failed_listings: failedCount,
-                current_batch: batchIdx + 1,
-                updated_at: new Date().toISOString(),
+                status: finalJobStatus,
+                error_message: failedCount > 0 ? `${failedCount} items failed during calculation` : null,
+                completed_at: now,
+                updated_at: now,
             })
                 .eq("id", jobId);
+            await db
+                .from("pricing_policy_versions")
+                .update({ status: policyStatus, updated_at: now })
+                .eq("id", policy.id);
         }
-        const finalStatus = failedCount === 0 ? "completed" : "completed";
-        const now = new Date().toISOString();
-        await db
-            .from("pricing_recalculation_jobs")
-            .update({
-            status: finalStatus,
-            completed_at: now,
-            updated_at: now,
-        })
-            .eq("id", jobId);
-        // Mark policy as 'ready'
-        await db
-            .from("pricing_policy_versions")
-            .update({ status: "ready", updated_at: now })
-            .eq("id", policy.id);
+        catch (fatalErr) {
+            const now = new Date().toISOString();
+            await db
+                .from("pricing_recalculation_jobs")
+                .update({
+                status: "failed",
+                error_message: fatalErr?.message || "Fatal error during batch recalculation",
+                completed_at: now,
+                updated_at: now,
+            })
+                .eq("id", jobId);
+            await db
+                .from("pricing_policy_versions")
+                .update({ status: "failed", updated_at: now })
+                .eq("id", policy.id);
+        }
     }
     mapDbToJob(row) {
         return {

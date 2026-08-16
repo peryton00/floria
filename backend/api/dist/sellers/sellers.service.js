@@ -4,6 +4,9 @@ exports.sellersService = exports.SellersService = void 0;
 // Floria API — Seller Portal Service
 const seller_repository_js_1 = require("../database/repositories/seller.repository.js");
 const audit_repository_js_1 = require("../database/repositories/audit.repository.js");
+const policy_service_js_1 = require("../pricing/policy.service.js");
+const pricing_service_js_1 = require("../pricing/pricing.service.js");
+const database_js_1 = require("../config/database.js");
 const errors_js_1 = require("../utils/errors.js");
 class SellersService {
     async getProfile(userId) {
@@ -234,6 +237,42 @@ class SellersService {
             resource_id: productId,
             metadata: updates,
         });
+        // Automatically recalculate product_pricing read model on seller base price updates
+        try {
+            const newBase = updates.base_price_paise ?? updates.price_paise;
+            if (typeof newBase === "number" && newBase > 0) {
+                const activePolicy = await policy_service_js_1.policyService.getActivePolicy();
+                if (activePolicy) {
+                    const calc = pricing_service_js_1.pricingService.calculateProductPricingSync(newBase, {
+                        sellerCommissionRate: activePolicy.sellerCommissionRate,
+                        floriaProfitRate: activePolicy.floriaProfitRate,
+                        platformMaintenanceFeePaise: activePolicy.platformMaintenanceFeePaise,
+                        freeDeliveryThresholdPaise: activePolicy.freeDeliveryThresholdPaise,
+                        freeDeliveryRecoveryPaise: activePolicy.freeDeliveryRecoveryPaise,
+                    });
+                    const db = (0, database_js_1.getAdminDb)();
+                    await db.from("product_pricing").upsert({
+                        product_id: productId,
+                        seller_id: sellerProfile.id,
+                        policy_version_id: activePolicy.id,
+                        seller_base_price_paise: calc.sellerBasePricePaise,
+                        floria_profit_rate: calc.floriaProfitRate,
+                        floria_profit_paise: calc.floriaProfitPaise,
+                        delivery_recovery_paise: calc.deliveryRecoveryPaise,
+                        customer_product_price_paise: calc.customerProductPricePaise,
+                        is_free_delivery_eligible: calc.isFreeDeliveryEligible,
+                        seller_commission_rate: calc.sellerCommissionRate,
+                        seller_commission_paise: calc.sellerCommissionPaise,
+                        seller_net_paise: calc.sellerNetPaise,
+                        is_override: false,
+                        updated_at: new Date().toISOString(),
+                    }, { onConflict: "policy_version_id,product_id" });
+                }
+            }
+        }
+        catch (e) {
+            console.warn("[SellersService] Read model sync warning:", e?.message);
+        }
         // Notification check for low / out of stock
         try {
             if (updates.stock_quantity !== undefined && typeof updates.stock_quantity === "number") {

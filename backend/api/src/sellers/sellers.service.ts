@@ -1,6 +1,9 @@
 // Floria API — Seller Portal Service
 import { sellerRepository } from "../database/repositories/seller.repository.js";
 import { auditRepository } from "../database/repositories/audit.repository.js";
+import { policyService } from "../pricing/policy.service.js";
+import { pricingService } from "../pricing/pricing.service.js";
+import { getAdminDb } from "../config/database.js";
 import { Errors } from "../utils/errors.js";
 import type { SellerProfile } from "@floria/types";
 
@@ -263,6 +266,43 @@ export class SellersService {
       resource_id: productId,
       metadata: updates,
     });
+
+    // Automatically recalculate product_pricing read model on seller base price updates
+    try {
+      const newBase = updates.base_price_paise ?? updates.price_paise;
+      if (typeof newBase === "number" && newBase > 0) {
+        const activePolicy = await policyService.getActivePolicy();
+        if (activePolicy) {
+          const calc = pricingService.calculateProductPricingSync(newBase, {
+            sellerCommissionRate: activePolicy.sellerCommissionRate,
+            floriaProfitRate: activePolicy.floriaProfitRate,
+            platformMaintenanceFeePaise: activePolicy.platformMaintenanceFeePaise,
+            freeDeliveryThresholdPaise: activePolicy.freeDeliveryThresholdPaise,
+            freeDeliveryRecoveryPaise: activePolicy.freeDeliveryRecoveryPaise,
+          });
+
+          const db = getAdminDb();
+          await db.from("product_pricing").upsert({
+            product_id: productId,
+            seller_id: sellerProfile.id,
+            policy_version_id: activePolicy.id,
+            seller_base_price_paise: calc.sellerBasePricePaise,
+            floria_profit_rate: calc.floriaProfitRate,
+            floria_profit_paise: calc.floriaProfitPaise,
+            delivery_recovery_paise: calc.deliveryRecoveryPaise,
+            customer_product_price_paise: calc.customerProductPricePaise,
+            is_free_delivery_eligible: calc.isFreeDeliveryEligible,
+            seller_commission_rate: calc.sellerCommissionRate,
+            seller_commission_paise: calc.sellerCommissionPaise,
+            seller_net_paise: calc.sellerNetPaise,
+            is_override: false,
+            updated_at: new Date().toISOString(),
+          }, { onConflict: "policy_version_id,product_id" });
+        }
+      }
+    } catch (e: any) {
+      console.warn("[SellersService] Read model sync warning:", e?.message);
+    }
 
     // Notification check for low / out of stock
     try {

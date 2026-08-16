@@ -1,40 +1,55 @@
 // Floria API — Products Catalog Service
 import { productRepository } from "../database/repositories/product.repository.js";
 import { pricingService } from "../pricing/pricing.service.js";
+import { getAdminDb } from "../config/database.js";
 import { Errors } from "../utils/errors.js";
 
 export class ProductsService {
-  public enrichWithDbPricing(product: any, settings: any) {
+  public enrichWithDbPricing(product: any, settings: any, overrideMap?: Map<string, any>) {
     if (!product) return product;
 
     const rawInventory = product.inventory;
     if (!rawInventory) return product;
 
-    if (Array.isArray(rawInventory)) {
-      const enriched = rawInventory.map((inv: any) => {
-        const basePrice = inv.price_paise ?? 0;
-        const calc = pricingService.calculateProductPricingSync(basePrice, settings);
-        return {
-          ...inv,
-          base_price_paise: basePrice,
-          price_paise: calc.customerProductPricePaise,
-          customer_price_paise: calc.customerProductPricePaise,
-          seller_net_paise: calc.sellerNetPaise,
-        };
-      });
-      return { ...product, inventory: enriched };
-    } else {
-      const basePrice = rawInventory.price_paise ?? 0;
+    const override = overrideMap?.get(product.id);
+
+    const enrichSingle = (inv: any) => {
+      const basePrice = inv.base_price_paise ?? inv.price_paise ?? 0;
       const calc = pricingService.calculateProductPricingSync(basePrice, settings);
+
+      const customerPrice = override?.custom_customer_price_paise ?? calc.customerProductPricePaise;
+      const originalPrice = inv.original_price_paise && inv.original_price_paise > customerPrice ? inv.original_price_paise : null;
+      const discountAmount = originalPrice ? originalPrice - customerPrice : 0;
+      const discountPercent = originalPrice ? Math.round((discountAmount / originalPrice) * 100) : 0;
+
+      return {
+        ...inv,
+        base_price_paise: basePrice,
+        price_paise: customerPrice,
+        customer_price_paise: customerPrice,
+        seller_net_paise: calc.sellerNetPaise,
+        pricing: {
+          sellingPricePaise: customerPrice,
+          originalPricePaise: originalPrice,
+          discountAmountPaise: discountAmount,
+          discountPercentage: discountPercent,
+          isDiscounted: discountAmount > 0,
+          isFreeDelivery: calc.isFreeDeliveryEligible,
+          isOverride: Boolean(override),
+        },
+      };
+    };
+
+    if (Array.isArray(rawInventory)) {
+      const enriched = rawInventory.map(enrichSingle);
+      const primaryPricing = enriched[0]?.pricing;
+      return { ...product, inventory: enriched, pricing: primaryPricing };
+    } else {
+      const enriched = enrichSingle(rawInventory);
       return {
         ...product,
-        inventory: {
-          ...rawInventory,
-          base_price_paise: basePrice,
-          price_paise: calc.customerProductPricePaise,
-          customer_price_paise: calc.customerProductPricePaise,
-          seller_net_paise: calc.sellerNetPaise,
-        },
+        inventory: enriched,
+        pricing: enriched.pricing,
       };
     }
   }
@@ -42,14 +57,34 @@ export class ProductsService {
   async getProducts(categoryId?: string, search?: string) {
     const settings = await pricingService.getFinancialSettings();
     const products = await productRepository.findActiveCatalog(categoryId, search);
-    return products.map((p) => this.enrichWithDbPricing(p, settings));
+    
+    // Check for active overrides in parallel
+    const overrideMap = await this.getActiveOverridesMap();
+    return products.map((p) => this.enrichWithDbPricing(p, settings, overrideMap));
   }
 
   async getProductBySlug(slug: string) {
     const settings = await pricingService.getFinancialSettings();
     const product = await productRepository.findBySlug(slug);
     if (!product) throw Errors.notFound("Product");
-    return this.enrichWithDbPricing(product, settings);
+
+    const overrideMap = await this.getActiveOverridesMap();
+    return this.enrichWithDbPricing(product, settings, overrideMap);
+  }
+
+  private async getActiveOverridesMap(): Promise<Map<string, any>> {
+    try {
+      const db = getAdminDb();
+      const { data } = await db
+        .from("product_pricing_overrides")
+        .select("product_id, custom_customer_price_paise, reason")
+        .eq("is_active", true);
+
+      if (!data) return new Map();
+      return new Map(data.map((o: any) => [o.product_id, o]));
+    } catch {
+      return new Map();
+    }
   }
 }
 

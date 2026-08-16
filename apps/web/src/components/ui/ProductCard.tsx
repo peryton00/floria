@@ -36,7 +36,7 @@ export function ProductCard({
 
   // Server price or inventory price
   const sellingPricePaise = pricing?.sellingPricePaise ?? inventory.price_paise;
-  const isFreeDelivery = pricing?.isFreeDelivery ?? (sellingPricePaise >= 49900);
+  const isFreeDelivery = pricing?.isFreeDelivery ?? (sellingPricePaise >= 59900);
 
   // Badge priority logic (Max 2 badges total to prevent badge overload)
   const badges: Array<{ key: string; label: string; className: string }> = [];

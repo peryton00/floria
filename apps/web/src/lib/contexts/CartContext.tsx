@@ -65,7 +65,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             discountAmountPaise,
             discountPercentage,
             isDiscounted: discountAmountPaise > 0,
-            isFreeDelivery: customerPrice >= 49900,
+            isFreeDelivery: customerPrice >= 59900,
           },
         },
         quantity: ci.quantity,
