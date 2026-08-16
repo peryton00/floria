@@ -37,7 +37,19 @@ function createApp() {
     // 2. Request Parsing
     app.use(express_1.default.json({ limit: "2mb" }));
     app.use(express_1.default.urlencoded({ extended: true }));
-    // 3. Health & Readiness Endpoints
+    // 3. Root & Health Check Endpoints
+    app.get("/", (_req, res) => {
+        res.json({
+            service: "floria-api",
+            status: "online",
+            version: "v1",
+            health: "/health",
+            api: "/api/v1",
+        });
+    });
+    app.head("/", (_req, res) => {
+        res.status(200).end();
+    });
     app.get("/health", (_req, res) => {
         res.json({
             status: "healthy",
