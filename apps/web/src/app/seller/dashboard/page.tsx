@@ -6,6 +6,7 @@ import { api, type SellerDashboardData } from "@/lib/api";
 import { formatINR } from "@/lib/format";
 import { SellerStatusBadge } from "@/components/seller/SellerStatusBadge";
 import { useToast } from "@/lib/contexts/ToastContext";
+import { SellerDashboardSkeleton } from "@/components/ui/loading";
 import {
   GridIcon,
   OrderIcon,
@@ -72,28 +73,7 @@ export default function SellerDashboardPage() {
   };
 
   if (loading) {
-    return (
-      <div className="max-w-5xl mx-auto space-y-6 animate-pulse" aria-label="Loading Seller Dashboard">
-        {/* Banner Skeleton */}
-        <div className="h-44 bg-ink-100/70 rounded-2xl w-full" />
-
-        {/* Action Skeleton */}
-        <div className="h-16 bg-ink-100/70 rounded-xl w-full" />
-
-        {/* KPI Skeleton Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {[...Array(8)].map((_, i) => (
-            <div key={i} className="h-28 bg-ink-100/70 rounded-xl w-full" />
-          ))}
-        </div>
-
-        {/* Content Skeleton */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="h-64 bg-ink-100/70 rounded-2xl w-full" />
-          <div className="h-64 bg-ink-100/70 rounded-2xl w-full" />
-        </div>
-      </div>
-    );
+    return <SellerDashboardSkeleton />;
   }
 
   if (error || !data) {

@@ -7,6 +7,7 @@ import { formatINR } from "@/lib/format";
 import { SearchIcon } from "@/components/ui/Icons";
 import { OrderFinancialBreakdown } from "@/components/admin/OrderFinancialBreakdown";
 import { useToast } from "@/lib/contexts/ToastContext";
+import { TableSkeleton } from "@/components/ui/loading";
 
 function formatOrderStatusDisplay(status: string): string {
   if (!status) return "Order Placed";
@@ -145,9 +146,7 @@ export default function AdminOrdersPage() {
 
         {/* Order Cards Grid */}
         {loading ? (
-          <div className="py-12 flex justify-center">
-            <div className="w-8 h-8 border-2 border-forest-600 border-t-transparent rounded-full animate-spin" />
-          </div>
+          <TableSkeleton rows={6} columns={6} />
         ) : orders.length === 0 ? (
           <div className="p-12 text-center text-xs text-ink-400">No master orders found matching the filter criteria.</div>
         ) : (

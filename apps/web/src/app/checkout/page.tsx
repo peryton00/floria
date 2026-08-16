@@ -16,6 +16,7 @@ import { useCart } from "@/lib/contexts/CartContext";
 import type { CartItem } from "@/lib/contexts/CartContext";
 import { AddressModal, AddressItem } from "@/components/ui/AddressModal";
 import { api } from "@/lib/api";
+import { CheckoutLoader } from "@/components/ui/loading";
 
 /** Group cart items by seller ID */
 function groupBySeller(items: CartItem[]) {
@@ -327,6 +328,7 @@ export default function CheckoutPage() {
   // ── 3. MAIN CHECKOUT PAGE VIEW ─────────────────────────────────────────────
   return (
     <CustomerShell>
+      <CheckoutLoader step={isPlacingOrder ? (paymentMethod === "online" ? "processing-payment" : "creating-order") : "idle"} />
       {/* Breadcrumb */}
       <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-ink-400 mb-6">
         <Link href="/" className="hover:text-forest-700 transition-colors">Home</Link>

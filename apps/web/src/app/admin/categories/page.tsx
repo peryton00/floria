@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { api } from "@/lib/api";
 import { useToast } from "@/lib/contexts/ToastContext";
+import { TableSkeleton } from "@/components/ui/loading";
 
 export default function AdminCategoriesPage() {
   const { toast } = useToast();
@@ -157,9 +158,7 @@ export default function AdminCategoriesPage() {
 
         {/* Category Cards Layout Grid */}
         {loading ? (
-          <div className="py-12 flex justify-center">
-            <div className="w-8 h-8 border-2 border-forest-600 border-t-transparent rounded-full animate-spin" />
-          </div>
+          <TableSkeleton rows={5} columns={4} />
         ) : categories.length === 0 ? (
           <div className="p-12 text-center text-xs text-ink-400">No categories found in system.</div>
         ) : (

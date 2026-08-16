@@ -6,6 +6,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { LineChart, DonutChart } from "@/components/admin/SvgCharts";
 import { api } from "@/lib/api";
 import { formatINR } from "@/lib/format";
+import { AdminDashboardSkeleton } from "@/components/ui/loading";
 import {
   GridIcon,
   OrderIcon,
@@ -54,6 +55,14 @@ export default function AdminDashboardPage() {
     }
     loadDashboard();
   }, [dateRange]);
+
+  if (loading) {
+    return (
+      <AdminShell>
+        <AdminDashboardSkeleton />
+      </AdminShell>
+    );
+  }
 
   // Transform timeSeries data for SvgCharts
   const lineChartData = (analytics?.timeSeries || []).map((pt: any) => ({

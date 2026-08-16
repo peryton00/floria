@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { OperationsShell } from "@/components/operations/OperationsShell";
 import { api } from "@/lib/api";
 import { useToast } from "@/lib/contexts/ToastContext";
+import { TableSkeleton } from "@/components/ui/loading";
 
 export default function OperationsDeliveriesPage() {
   const { toast } = useToast();
@@ -116,50 +117,50 @@ export default function OperationsDeliveriesPage() {
         </div>
 
         {/* Deliveries Table */}
-        <div className="bg-white rounded-xl border border-ink-100 shadow-sm overflow-hidden">
-          {loading ? (
-            <div className="py-12 flex justify-center">
-              <div className="w-8 h-8 border-2 border-forest-600 border-t-transparent rounded-full animate-spin" />
-            </div>
-          ) : deliveries.length === 0 ? (
-            <div className="p-12 text-center text-xs text-ink-400">No delivery assignments in this category.</div>
-          ) : (
-            <table className="w-full border-collapse text-left text-xs">
-              <thead>
-                <tr className="bg-cream-100 text-ink-500 font-bold uppercase tracking-wider border-b border-ink-100">
-                  <th className="p-4">Delivery ID</th>
-                  <th className="p-4">Order ID</th>
-                  <th className="p-4">Assigned Operator</th>
-                  <th className="p-4">Status</th>
-                  <th className="p-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-ink-100">
-                {deliveries.map((d) => (
-                  <tr key={d.id} className="hover:bg-cream-50/50">
-                    <td className="p-4 font-mono font-bold text-ink-900">{d.id}</td>
-                    <td className="p-4 font-mono text-ink-600">{d.order_id}</td>
-                    <td className="p-4 font-bold text-ink-800">{d.assigned_to || "Unassigned"}</td>
-                    <td className="p-4">
-                      <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-forest-50 text-forest-700 border border-forest-100">
-                        {d.status}
-                      </span>
-                    </td>
-                    <td className="p-4 text-right">
-                      <button
-                        type="button"
-                        onClick={() => { setSelectedDelivery(d); setAssignee(d.assigned_to || ""); }}
-                        className="px-3 py-1 rounded-lg border border-ink-200 hover:bg-cream-100 text-ink-700 font-bold text-[10px] uppercase tracking-wider transition-colors"
-                      >
-                        Manage Delivery
-                      </button>
-                    </td>
+        {loading ? (
+          <TableSkeleton rows={5} columns={6} />
+        ) : (
+          <div className="bg-white rounded-xl border border-ink-100 shadow-sm overflow-hidden">
+            {deliveries.length === 0 ? (
+              <div className="p-12 text-center text-xs text-ink-400">No delivery assignments in this category.</div>
+            ) : (
+              <table className="w-full border-collapse text-left text-xs">
+                <thead>
+                  <tr className="bg-cream-100 text-ink-500 font-bold uppercase tracking-wider border-b border-ink-100">
+                    <th className="p-4">Delivery ID</th>
+                    <th className="p-4">Order ID</th>
+                    <th className="p-4">Assigned Operator</th>
+                    <th className="p-4">Status</th>
+                    <th className="p-4 text-right">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+                </thead>
+                <tbody className="divide-y divide-ink-100">
+                  {deliveries.map((d) => (
+                    <tr key={d.id} className="hover:bg-cream-50/50">
+                      <td className="p-4 font-mono font-bold text-ink-900">{d.id}</td>
+                      <td className="p-4 font-mono text-ink-600">{d.order_id}</td>
+                      <td className="p-4 font-bold text-ink-800">{d.assigned_to || "Unassigned"}</td>
+                      <td className="p-4">
+                        <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-forest-50 text-forest-700 border border-forest-100">
+                          {d.status}
+                        </span>
+                      </td>
+                      <td className="p-4 text-right">
+                        <button
+                          type="button"
+                          onClick={() => { setSelectedDelivery(d); setAssignee(d.assigned_to || ""); }}
+                          className="px-3 py-1 rounded-lg border border-ink-200 hover:bg-cream-100 text-ink-700 font-bold text-[10px] uppercase tracking-wider transition-colors"
+                        >
+                          Manage Delivery
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
 
         {/* Modal: Delivery Assignment & Status Drawer */}
         {selectedDelivery && (

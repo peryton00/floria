@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { SellerStatusBadge } from "@/components/seller/SellerStatusBadge";
 import { LeafIcon } from "@/components/ui/Icons";
 import { useToast } from "@/lib/contexts/ToastContext";
+import { NurseryGridSkeleton } from "@/components/ui/loading";
 
 export default function AdminSellersPage() {
   const { toast } = useToast();
@@ -161,9 +162,7 @@ export default function AdminSellersPage() {
 
         {/* Nursery Cards Grid */}
         {loading ? (
-          <div className="py-12 flex justify-center">
-            <div className="w-8 h-8 border-2 border-forest-600 border-t-transparent rounded-full animate-spin" />
-          </div>
+          <NurseryGridSkeleton count={6} />
         ) : sellers.length === 0 ? (
           <div className="p-12 text-center text-xs text-ink-400">No seller profiles found in this category.</div>
         ) : (

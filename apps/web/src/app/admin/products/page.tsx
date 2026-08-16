@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { formatINR } from "@/lib/format";
 import { SearchIcon, LeafIcon } from "@/components/ui/Icons";
 import { useToast } from "@/lib/contexts/ToastContext";
+import { ProductGridSkeleton } from "@/components/ui/loading";
 
 import { ProductFinancialBreakdown } from "@/components/admin/ProductFinancialBreakdown";
 
@@ -213,9 +214,7 @@ export default function AdminProductsPage() {
 
         {/* Product Cards Grid */}
         {loading ? (
-          <div className="py-12 flex justify-center">
-            <div className="w-8 h-8 border-2 border-forest-600 border-t-transparent rounded-full animate-spin" />
-          </div>
+          <ProductGridSkeleton count={6} />
         ) : products.length === 0 ? (
           <div className="p-12 text-center text-xs text-ink-400">No products matching the selected criteria.</div>
         ) : (

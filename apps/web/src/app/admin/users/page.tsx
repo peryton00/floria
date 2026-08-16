@@ -5,6 +5,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { api } from "@/lib/api";
 import { SearchIcon } from "@/components/ui/Icons";
 import { useToast } from "@/lib/contexts/ToastContext";
+import { TableSkeleton } from "@/components/ui/loading";
 
 export default function AdminUsersPage() {
   const { toast } = useToast();
@@ -169,9 +170,7 @@ export default function AdminUsersPage() {
 
         {/* User Card Layout Grid */}
         {loading ? (
-          <div className="py-12 flex justify-center">
-            <div className="w-8 h-8 border-2 border-forest-600 border-t-transparent rounded-full animate-spin" />
-          </div>
+          <TableSkeleton rows={6} columns={5} />
         ) : filteredUsers.length === 0 ? (
           <div className="p-12 text-center text-xs text-ink-400">No matching user accounts found.</div>
         ) : (

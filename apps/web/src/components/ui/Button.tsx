@@ -64,10 +64,10 @@ export function Button({
         .join(" ")}
     >
       {loading ? (
-        <>
-          <span className="sr-only">Loading…</span>
+        <span className="inline-flex items-center justify-center gap-2">
           <Spinner size="sm" />
-        </>
+          <span>{children}</span>
+        </span>
       ) : (
         children
       )}

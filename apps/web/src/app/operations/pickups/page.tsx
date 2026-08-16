@@ -5,6 +5,7 @@ import { OperationsShell } from "@/components/operations/OperationsShell";
 import { api } from "@/lib/api";
 import { LeafIcon } from "@/components/ui/Icons";
 import { useToast } from "@/lib/contexts/ToastContext";
+import { TableSkeleton } from "@/components/ui/loading";
 
 export default function OperationsPickupsPage() {
   const { toast } = useToast();
@@ -69,57 +70,57 @@ export default function OperationsPickupsPage() {
         )}
 
         {/* Pickup Queue Board */}
-        <div className="bg-white rounded-xl border border-ink-100 shadow-sm overflow-hidden">
-          {loading ? (
-            <div className="py-12 flex justify-center">
-              <div className="w-8 h-8 border-2 border-forest-600 border-t-transparent rounded-full animate-spin" />
-            </div>
-          ) : pickups.length === 0 ? (
-            <div className="p-12 text-center text-xs text-ink-400">No pickups currently waiting in queue.</div>
-          ) : (
-            <table className="w-full border-collapse text-left text-xs">
-              <thead>
-                <tr className="bg-cream-100 text-ink-500 font-bold uppercase tracking-wider border-b border-ink-100">
-                  <th className="p-4">Order ID</th>
-                  <th className="p-4">Partner Nursery</th>
-                  <th className="p-4">Pickup Location</th>
-                  <th className="p-4">Items Qty</th>
-                  <th className="p-4">Status</th>
-                  <th className="p-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-ink-100">
-                {pickups.map((p) => (
-                  <tr key={p.orderId} className="hover:bg-cream-50/50">
-                    <td className="p-4 font-mono font-bold text-ink-900">{p.orderId}</td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-2">
-                        <LeafIcon size={14} className="text-forest-700" />
-                        <span className="font-bold text-ink-800">{p.sellerName}</span>
-                      </div>
-                    </td>
-                    <td className="p-4 text-ink-600">{p.pickupAddress}</td>
-                    <td className="p-4 font-bold text-ink-900">{p.itemsCount} units</td>
-                    <td className="p-4">
-                      <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-forest-50 text-forest-700 border border-forest-100">
-                        {p.status}
-                      </span>
-                    </td>
-                    <td className="p-4 text-right">
-                      <button
-                        type="button"
-                        onClick={() => setSelectedPickup(p)}
-                        className="px-3 py-1 rounded-lg border border-ink-200 hover:bg-cream-100 text-ink-700 font-bold text-[10px] uppercase tracking-wider transition-colors"
-                      >
-                        Update Pickup
-                      </button>
-                    </td>
+        {loading ? (
+          <TableSkeleton rows={5} columns={5} />
+        ) : (
+          <div className="bg-white rounded-xl border border-ink-100 shadow-sm overflow-hidden">
+            {pickups.length === 0 ? (
+              <div className="p-12 text-center text-xs text-ink-400">No pickups currently waiting in queue.</div>
+            ) : (
+              <table className="w-full border-collapse text-left text-xs">
+                <thead>
+                  <tr className="bg-cream-100 text-ink-500 font-bold uppercase tracking-wider border-b border-ink-100">
+                    <th className="p-4">Order ID</th>
+                    <th className="p-4">Partner Nursery</th>
+                    <th className="p-4">Pickup Location</th>
+                    <th className="p-4">Items Qty</th>
+                    <th className="p-4">Status</th>
+                    <th className="p-4 text-right">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+                </thead>
+                <tbody className="divide-y divide-ink-100">
+                  {pickups.map((p) => (
+                    <tr key={p.orderId} className="hover:bg-cream-50/50">
+                      <td className="p-4 font-mono font-bold text-ink-900">{p.orderId}</td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          <LeafIcon size={14} className="text-forest-700" />
+                          <span className="font-bold text-ink-800">{p.sellerName}</span>
+                        </div>
+                      </td>
+                      <td className="p-4 text-ink-600">{p.pickupAddress}</td>
+                      <td className="p-4 font-bold text-ink-900">{p.itemsCount} units</td>
+                      <td className="p-4">
+                        <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-forest-50 text-forest-700 border border-forest-100">
+                          {p.status}
+                        </span>
+                      </td>
+                      <td className="p-4 text-right">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedPickup(p)}
+                          className="px-3 py-1 rounded-lg border border-ink-200 hover:bg-cream-100 text-ink-700 font-bold text-[10px] uppercase tracking-wider transition-colors"
+                        >
+                          Update Pickup
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
 
         {/* Modal: Pickup Action Drawer */}
         {selectedPickup && (

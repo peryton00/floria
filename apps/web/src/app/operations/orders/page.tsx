@@ -5,6 +5,7 @@ import { OperationsShell } from "@/components/operations/OperationsShell";
 import { api } from "@/lib/api";
 import { SearchIcon } from "@/components/ui/Icons";
 import { useToast } from "@/lib/contexts/ToastContext";
+import { TableSkeleton } from "@/components/ui/loading";
 
 export default function OperationsOrdersPage() {
   const { toast } = useToast();
@@ -100,50 +101,50 @@ export default function OperationsOrdersPage() {
         </div>
 
         {/* Orders Table */}
-        <div className="bg-white rounded-xl border border-ink-100 shadow-sm overflow-hidden">
-          {loading ? (
-            <div className="py-12 flex justify-center">
-              <div className="w-8 h-8 border-2 border-forest-600 border-t-transparent rounded-full animate-spin" />
-            </div>
-          ) : orders.length === 0 ? (
-            <div className="p-12 text-center text-xs text-ink-400">No operational orders matching filter.</div>
-          ) : (
-            <table className="w-full border-collapse text-left text-xs">
-              <thead>
-                <tr className="bg-cream-100 text-ink-500 font-bold uppercase tracking-wider border-b border-ink-100">
-                  <th className="p-4">Order ID</th>
-                  <th className="p-4">Customer</th>
-                  <th className="p-4">Items</th>
-                  <th className="p-4">Current Status</th>
-                  <th className="p-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-ink-100">
-                {orders.map((o) => (
-                  <tr key={o.id} className="hover:bg-cream-50/50">
-                    <td className="p-4 font-mono font-bold text-ink-900">{o.id}</td>
-                    <td className="p-4 font-semibold text-ink-800">{o.delivery_address_snapshot?.full_name || "Customer"}</td>
-                    <td className="p-4 text-ink-600">{o.order_items?.length || 0} items</td>
-                    <td className="p-4">
-                      <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-forest-50 text-forest-700 border border-forest-100">
-                        {o.status}
-                      </span>
-                    </td>
-                    <td className="p-4 text-right">
-                      <button
-                        type="button"
-                        onClick={() => setSelectedOrder(o)}
-                        className="px-3 py-1 rounded-lg border border-ink-200 hover:bg-cream-100 text-ink-700 font-bold text-[10px] uppercase tracking-wider transition-colors"
-                      >
-                        Inspect & Advance
-                      </button>
-                    </td>
+        {loading ? (
+          <TableSkeleton rows={6} columns={5} />
+        ) : (
+          <div className="bg-white rounded-xl border border-ink-100 shadow-sm overflow-hidden">
+            {orders.length === 0 ? (
+              <div className="p-12 text-center text-xs text-ink-400">No operational orders matching filter.</div>
+            ) : (
+              <table className="w-full border-collapse text-left text-xs">
+                <thead>
+                  <tr className="bg-cream-100 text-ink-500 font-bold uppercase tracking-wider border-b border-ink-100">
+                    <th className="p-4">Order ID</th>
+                    <th className="p-4">Customer</th>
+                    <th className="p-4">Items</th>
+                    <th className="p-4">Current Status</th>
+                    <th className="p-4 text-right">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+                </thead>
+                <tbody className="divide-y divide-ink-100">
+                  {orders.map((o) => (
+                    <tr key={o.id} className="hover:bg-cream-50/50">
+                      <td className="p-4 font-mono font-bold text-ink-900">{o.id}</td>
+                      <td className="p-4 font-semibold text-ink-800">{o.delivery_address_snapshot?.full_name || "Customer"}</td>
+                      <td className="p-4 text-ink-600">{o.order_items?.length || 0} items</td>
+                      <td className="p-4">
+                        <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-forest-50 text-forest-700 border border-forest-100">
+                          {o.status}
+                        </span>
+                      </td>
+                      <td className="p-4 text-right">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedOrder(o)}
+                          className="px-3 py-1 rounded-lg border border-ink-200 hover:bg-cream-100 text-ink-700 font-bold text-[10px] uppercase tracking-wider transition-colors"
+                        >
+                          Inspect & Advance
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
 
         {/* Modal: Order Fulfillment Transition Drawer */}
         {selectedOrder && (
