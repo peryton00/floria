@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useSeller } from "@/lib/contexts/SellerContext";
 import { api } from "@/lib/api";
-import { formatINR } from "@/lib/format";
+import { formatINR, calculateSellerNetEarningsPaise } from "@/lib/format";
 import { OrderIcon, SearchIcon, AlertIcon, LeafIcon } from "@/components/ui/Icons";
 import { useToast } from "@/lib/contexts/ToastContext";
 
@@ -216,37 +216,53 @@ function OrdersContent() {
 
             return (
               <div key={order.masterOrderId} className="bg-white rounded-2xl border border-ink-100 p-5 shadow-xs space-y-4">
-                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-ink-100 pb-3">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono font-bold text-ink-900 text-sm">{order.masterOrderId}</span>
-                      <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border ${getStatusBadgeStyle(order.status)}`}>
-                        {order.status}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-ink-400 mt-0.5">
-                      Placed by <strong className="text-ink-800">{order.customer?.name || "Customer"}</strong> on {order.createdAt}
-                    </p>
-                  </div>
+                {(() => {
+                  const netOrderTotal = (order.items || []).reduce(
+                    (sum: number, it: any) => sum + calculateSellerNetEarningsPaise(it.pricePaise) * it.quantity,
+                    0
+                  ) || calculateSellerNetEarningsPaise(order.subtotalPaise);
 
-                  <div className="text-left sm:text-right">
-                    <p className="font-serif font-bold text-sm text-forest-800">{formatINR(order.subtotalPaise)}</p>
-                    <p className="text-[10px] text-ink-400">{order.paymentMethod || "Online Payment"}</p>
-                  </div>
-                </div>
+                  return (
+                    <>
+                      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-ink-100 pb-3">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-bold text-ink-900 text-sm">{order.masterOrderId}</span>
+                            <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border ${getStatusBadgeStyle(order.status)}`}>
+                              {order.status}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-ink-400 mt-0.5">
+                            Placed by <strong className="text-ink-800">{order.customer?.name || "Customer"}</strong> on {order.createdAt}
+                          </p>
+                        </div>
 
-                {/* Items List */}
-                <div className="space-y-2">
-                  {(order.items || []).map((item: any, i: number) => (
-                    <div key={i} className="flex justify-between items-center bg-cream-50 p-3 rounded-xl text-xs">
-                      <div>
-                        <p className="font-bold text-ink-900">{item.product?.name || "Plant Product"}</p>
-                        <p className="text-[10px] text-ink-500 font-mono">Qty: {item.quantity}</p>
+                        <div className="text-left sm:text-right">
+                          <p className="font-serif font-bold text-sm text-forest-800">{formatINR(netOrderTotal)}</p>
+                          <p className="text-[10px] text-amber-700 font-semibold">Net Payout (15% Commission Cut)</p>
+                        </div>
                       </div>
-                      <span className="font-bold text-forest-800">{formatINR(item.pricePaise * item.quantity)}</span>
-                    </div>
-                  ))}
-                </div>
+
+                      {/* Items List */}
+                      <div className="space-y-2">
+                        {(order.items || []).map((item: any, i: number) => {
+                          const itemNetPrice = calculateSellerNetEarningsPaise(item.pricePaise);
+                          return (
+                            <div key={i} className="flex justify-between items-center bg-cream-50 p-3 rounded-xl text-xs">
+                              <div>
+                                <p className="font-bold text-ink-900">{item.product?.name || "Plant Product"}</p>
+                                <p className="text-[10px] text-ink-500 font-mono">
+                                  Qty: {item.quantity} · {formatINR(itemNetPrice)}/unit after 15% cut
+                                </p>
+                              </div>
+                              <span className="font-bold text-forest-800">{formatINR(itemNetPrice * item.quantity)}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
+                  );
+                })()}
 
                 {/* Seller Action Control */}
                 {actionLabel && (

@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useSeller } from "@/lib/contexts/SellerContext";
 import { api } from "@/lib/api";
-import { formatINR } from "@/lib/format";
+import { formatINR, calculateSellerNetEarningsPaise } from "@/lib/format";
 import { GridIcon, SearchIcon, AlertIcon } from "@/components/ui/Icons";
 import { useToast } from "@/lib/contexts/ToastContext";
 
@@ -249,7 +249,14 @@ export default function SellerProductsPage() {
 
                       <td className="p-4 text-ink-600 font-semibold">{l.category?.name || "Uncategorized"}</td>
 
-                      <td className="p-4 font-bold text-forest-800">{formatINR(pricePaise)}</td>
+                      <td className="p-4 font-mono">
+                        <p className="font-bold text-forest-800">
+                          {formatINR(calculateSellerNetEarningsPaise(pricePaise))}
+                        </p>
+                        <p className="text-[10px] text-ink-400">
+                          (Base: {formatINR(pricePaise)})
+                        </p>
+                      </td>
 
                       <td className="p-4">
                         {isEditingStock ? (

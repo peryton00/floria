@@ -213,6 +213,40 @@ export class PricingService {
       freeDeliveryThresholdPaise: settings.freeDeliveryThresholdPaise,
     };
   }
+
+  /**
+   * Synchronous variant using pre-fetched database financial settings.
+   */
+  calculateProductPricingSync(
+    sellerBasePricePaise: number,
+    settings: FinancialSettings
+  ): ProductPricingCalculation {
+    const validBasePrice = typeof sellerBasePricePaise === "number" && sellerBasePricePaise > 0 ? sellerBasePricePaise : 0;
+
+    const sellerCommissionPaise = Math.round(validBasePrice * (settings.sellerCommissionRate / 100.0));
+    const sellerNetPaise = validBasePrice - sellerCommissionPaise;
+
+    const floriaProfitPaise = Math.round(validBasePrice * (settings.floriaProfitRate / 100.0));
+    const preRecoveryPricePaise = validBasePrice + floriaProfitPaise;
+
+    const isFreeDeliveryEligible = preRecoveryPricePaise >= settings.freeDeliveryThresholdPaise;
+    const deliveryRecoveryPaise = isFreeDeliveryEligible ? settings.freeDeliveryRecoveryPaise : 0;
+
+    const customerProductPricePaise = preRecoveryPricePaise + deliveryRecoveryPaise;
+
+    return {
+      sellerBasePricePaise: validBasePrice,
+      sellerCommissionRate: settings.sellerCommissionRate,
+      sellerCommissionPaise,
+      sellerNetPaise,
+      floriaProfitRate: settings.floriaProfitRate,
+      floriaProfitPaise,
+      deliveryRecoveryPaise,
+      customerProductPricePaise,
+      isFreeDeliveryEligible,
+      freeDeliveryThresholdPaise: settings.freeDeliveryThresholdPaise,
+    };
+  }
 }
 
 export const pricingService = new PricingService();

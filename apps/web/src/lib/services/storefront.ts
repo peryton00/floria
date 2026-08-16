@@ -57,6 +57,8 @@ const MOCK_IMAGES: Record<string, ProductImage[]> = {
   "p-12": [{ id: "img-12-1", product_id: "p-12", url: "/floria-logo.png", alt_text: "Areca Palm Plant",           display_order: 1, is_primary: true, created_at: "" }],
 };
 
+import { calculateCustomerProductPricePaise } from "@/lib/format";
+
 function buildMockListing(p: Product): ProductListing {
   const inv = MOCK_INVENTORY[p.id] ?? { id: "", product_id: p.id, seller_id: p.seller_id, price_paise: 0, stock_quantity: 0, low_stock_threshold: 0, sku: null, updated_at: "" };
   const imgs = MOCK_IMAGES[p.id] ?? [];
@@ -65,7 +67,10 @@ function buildMockListing(p: Product): ProductListing {
   const cat = MOCK_CATEGORIES.find(c => c.id === p.category_id) ?? null;
   return {
     product: p,
-    inventory: inv,
+    inventory: {
+      ...inv,
+      price_paise: calculateCustomerProductPricePaise(inv.price_paise),
+    },
     primary_image: primary,
     seller,
     category: cat ? { id: cat.id, name: cat.name, slug: cat.slug } : null,
@@ -95,7 +100,7 @@ function mapRow(row: Record<string, unknown>): ProductListing {
       id: inv.id ?? "",
       product_id: row["id"] as string,
       seller_id: row["seller_id"] as string,
-      price_paise: inv.price_paise ?? 0,
+      price_paise: calculateCustomerProductPricePaise(inv.price_paise ?? 0),
       stock_quantity: inv.stock_quantity ?? 0,
       low_stock_threshold: inv.low_stock_threshold ?? 5,
       sku: inv.sku ?? null,
