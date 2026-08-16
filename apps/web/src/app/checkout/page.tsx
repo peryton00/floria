@@ -31,10 +31,12 @@ function groupBySeller(items: CartItem[]) {
 }
 
 import { useCustomer } from "@/lib/contexts/CustomerContext";
+import { useOrders } from "@/lib/contexts/OrderContext";
 
 export default function CheckoutPage() {
   const { cartItems, clearCart } = useCart();
   const { addresses, saveAddress, deleteAddress, setDefaultAddress, getDefaultAddress } = useCustomer();
+  const { refreshOrders } = useOrders();
 
   // State----
   const defaultAddr = getDefaultAddress();
@@ -168,6 +170,7 @@ export default function CheckoutPage() {
       });
       setStep("confirmation");
       clearCart();
+      refreshOrders().catch((err) => console.warn("[Checkout] refreshOrders error:", err));
     } catch {
       setValidationError("A network error occurred. Please check your connection and try again.");
     } finally {

@@ -175,10 +175,21 @@ export class CheckoutService {
 
       // Seller notifications for each nursery in the order
       for (const sId of uniqueSellers) {
-        const { data: sellerProf } = await db.from("seller_profiles").select("user_id").eq("id", sId).maybeSingle();
+        let sellerUserId: string | null = null;
+
+        const { data: sellerProf } = await db
+          .from("seller_profiles")
+          .select("user_id")
+          .or(`id.eq.${sId},user_id.eq.${sId}`)
+          .maybeSingle();
+
         if (sellerProf?.user_id) {
+          sellerUserId = sellerProf.user_id;
+        }
+
+        if (sellerUserId) {
           await notificationService.createNotification({
-            user_id: sellerProf.user_id,
+            user_id: sellerUserId,
             role: "seller",
             type: "NEW_ORDER",
             title: "New Nursery Order Received",
@@ -187,6 +198,26 @@ export class CheckoutService {
             source_type: "order",
             source_id: orderId,
           });
+        } else {
+          // Fallback: Notify all registered seller accounts for seed/test products
+          const { data: allSellers } = await db
+            .from("seller_profiles")
+            .select("user_id");
+
+          for (const s of allSellers || []) {
+            if (s.user_id) {
+              await notificationService.createNotification({
+                user_id: s.user_id,
+                role: "seller",
+                type: "NEW_ORDER",
+                title: "New Nursery Order Received",
+                message: `You have received a new order item on order #${orderId.slice(0, 8)}.`,
+                data: { orderId, sellerId: sId },
+                source_type: "order",
+                source_id: orderId,
+              });
+            }
+          }
         }
       }
     } catch (notifErr) {

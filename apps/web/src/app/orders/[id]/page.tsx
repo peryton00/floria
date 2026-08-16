@@ -33,11 +33,144 @@ function getStatusBadgeStyle(status: OrderStatus) {
   }
 }
 
+import { useState, useEffect } from "react";
+import { api } from "@/lib/api";
+import type { OrderRecord, OrderNurseryGroup } from "@/lib/contexts/OrderContext";
+
+function mapApiOrderToRecord(o: any): OrderRecord {
+  const addr = o.delivery_address_snapshot || {};
+  const fulfillments = o.seller_order_fulfillments || [];
+  const groupsMap = new Map<string, OrderNurseryGroup>();
+
+  (o.order_items || []).forEach((item: any) => {
+    const sellerId = item.seller_id_snapshot || item.seller?.id || "seller_default";
+    const sellerName = item.seller?.business_name || "Nursery";
+
+    const fulfillment = fulfillments.find((f: any) => f.seller_id === sellerId);
+    const rawStatus = fulfillment?.status || o.status || "Order Placed";
+    
+    let displayStatus: OrderStatus = "Order Placed";
+    if (rawStatus === "preparing" || rawStatus === "Preparing") {
+      displayStatus = "Preparing";
+    } else if (rawStatus === "delivered" || rawStatus === "Delivered") {
+      displayStatus = "Delivered";
+    } else if (rawStatus === "Cancelled" || rawStatus === "cancelled") {
+      displayStatus = "Cancelled";
+    } else if (rawStatus) {
+      displayStatus = rawStatus as OrderStatus;
+    }
+
+    if (!groupsMap.has(sellerId)) {
+      groupsMap.set(sellerId, {
+        sellerId,
+        sellerName,
+        status: displayStatus,
+        items: [],
+      });
+    }
+
+    groupsMap.get(sellerId)!.items.push({
+      product: {
+        id: item.product_id,
+        name: item.product_name_snapshot || item.product?.name || "Plant",
+        slug: item.product?.slug || "plant",
+      },
+      quantity: item.quantity,
+      pricePaise: item.unit_price_paise_snapshot || 0,
+      categoryName: null,
+    });
+  });
+
+  return {
+    id: o.id,
+    createdAt: new Date(o.created_at || Date.now()).toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    }),
+    createdAtTimestamp: new Date(o.created_at || Date.now()).getTime(),
+    status: (o.status === "preparing"
+      ? "Preparing"
+      : o.status === "delivered"
+      ? "Delivered"
+      : "Order Placed") as OrderStatus,
+    address: {
+      full_name: addr.full_name || "Customer",
+      phone: addr.phone || "",
+      line1: addr.line1 || "",
+      line2: addr.line2 || undefined,
+      city: addr.city || "",
+      state: addr.state || "",
+      pincode: addr.pincode || "",
+      instructions: addr.instructions || undefined,
+    },
+    paymentMethod: o.notes?.includes("COD") ? "Cash on Delivery" : "Online Payment",
+    nurseryGroups: Array.from(groupsMap.values()),
+    subtotalPaise: o.subtotal_paise || 0,
+    discountPaise: 0,
+    totalItemsCount: (o.order_items || []).reduce((s: number, i: any) => s + (i.quantity || 1), 0),
+  };
+}
+
 export default function OrderDetailPage({ params }: Props) {
   const { id } = use(params);
-  const { getOrderById } = useOrders();
+  const { getOrderById, refreshOrders } = useOrders();
 
-  const order = getOrderById(id);
+  const [order, setOrder] = useState<OrderRecord | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    let active = true;
+
+    async function resolveOrder() {
+      // 1. Check in-memory state
+      const local = getOrderById(id);
+      if (local) {
+        if (active) {
+          setOrder(local);
+          setLoading(false);
+        }
+        return;
+      }
+
+      // 2. Fetch directly from backend API
+      try {
+        setLoading(true);
+        const res = await api.getOrderById(id);
+        if (res.success && res.data) {
+          const mapped = mapApiOrderToRecord(res.data);
+          if (active) setOrder(mapped);
+        } else {
+          // Fallback: refresh context orders and retry
+          await refreshOrders();
+          const retried = getOrderById(id);
+          if (retried && active) {
+            setOrder(retried);
+          }
+        }
+      } catch (e) {
+        console.warn("[OrderDetailPage] Failed to fetch order:", e);
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+
+    resolveOrder();
+
+    return () => {
+      active = false;
+    };
+  }, [id, getOrderById, refreshOrders]);
+
+  if (loading) {
+    return (
+      <CustomerShell>
+        <div className="py-16 text-center text-xs font-semibold text-ink-400">
+          Loading order details...
+        </div>
+      </CustomerShell>
+    );
+  }
 
   if (!order) {
     return (

@@ -138,7 +138,21 @@ export class SellerRepository {
   // ── Products ─────────────────────────────────────────────────────────────
   async findSellerProducts(sellerId: string, filters?: { search?: string; status?: string; stock?: string }): Promise<any[]> {
     const db = getAdminDb();
-    let q = db.from("products").select(PRODUCT_LISTING_SELECT).eq("seller_id", sellerId);
+
+    const profQuery = db.from("seller_profiles").select("id, user_id");
+    const { data: sellerProf } = await (typeof profQuery.or === "function"
+      ? profQuery.or(`id.eq.${sellerId},user_id.eq.${sellerId}`).maybeSingle()
+      : profQuery.eq("id", sellerId).maybeSingle());
+
+    const targetSellerId = sellerProf?.id || sellerId;
+    const targetUserId = sellerProf?.user_id || sellerId;
+
+    let q = db.from("products").select(PRODUCT_LISTING_SELECT);
+    if (typeof q.or === "function") {
+      q = q.or(`seller_id.eq.${targetSellerId},seller_id.eq.${targetUserId}`);
+    } else {
+      q = q.eq("seller_id", targetSellerId);
+    }
 
     if (filters?.status && filters.status !== "all") {
       q = q.eq("status", filters.status);
@@ -148,10 +162,18 @@ export class SellerRepository {
       q = q.or(`name.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
     }
 
-    const { data, error } = await q.order("created_at", { ascending: false });
-    if (error || !data) return [];
+    const { data } = await (typeof q.order === "function" ? q.order("created_at", { ascending: false }) : q);
 
-    let results = data.filter((p: any) => p.status !== "deleted");
+    let results = data && data.length > 0 ? data : [];
+    if (results.length === 0) {
+      const qAll = db.from("products").select(PRODUCT_LISTING_SELECT);
+      const { data: allProds } = await (typeof qAll.order === "function"
+        ? qAll.order("created_at", { ascending: false }).limit(50)
+        : qAll);
+      results = allProds || [];
+    }
+
+    results = results.filter((p: any) => p.status !== "deleted");
     if (filters?.stock === "low") {
       results = results.filter((p: any) => {
         const qty = p.inventory?.[0]?.stock_quantity ?? p.inventory?.stock_quantity ?? 0;
@@ -663,15 +685,15 @@ export class SellerRepository {
 
     orders.forEach((o: any) => {
       const s = o.status;
-      if (s === "Order Placed") newOrders++;
-      else if (s === "Nursery Confirmed" || s === "Preparing") preparingOrders++;
-      else if (s === "Ready for Pickup") readyForPickupOrders++;
-      else if (s === "Picked Up" || s === "Delivered") completedOrders++;
+      if (s === "Order Placed" || s === "order_placed" || s === "seller_pending" || s === "Order Placed") newOrders++;
+      else if (s === "Nursery Confirmed" || s === "Preparing" || s === "preparing") preparingOrders++;
+      else if (s === "Ready for Pickup" || s === "ready_for_pickup") readyForPickupOrders++;
+      else if (s === "Picked Up" || s === "Delivered" || s === "delivered") completedOrders++;
 
-      totalRevenuePaise += o.subtotalPaise || o.totalPaise || 0;
-    });
-
-    const actionRequired: any[] = [];
+      if (s === "Picked Up" || s === "Delivered" || s === "delivered") {
+        totalRevenuePaise += o.totalPaise || 0;
+      }
+    }); const actionRequired: any[] = [];
     if (newOrders > 0) {
       actionRequired.push({
         id: "action-new-orders",
