@@ -5,6 +5,7 @@ import { StarRating } from "@/components/ui/StarRating";
 import type { ProductReview, ReviewSummary } from "@/lib/api";
 import { api } from "@/lib/api";
 import { ThumbsUp, ShieldCheck } from "lucide-react";
+import { useToast } from "@/lib/contexts/ToastContext";
 
 interface ReviewListProps {
   reviews: ProductReview[];
@@ -18,14 +19,16 @@ interface ReviewListProps {
 const PAGE_SIZE = 10;
 
 export function ReviewList({ reviews, total, summary, productId, page, onPageChange }: ReviewListProps) {
+  const { toast } = useToast();
   const [helpfulVotes, setHelpfulVotes] = useState<Record<string, boolean>>({});
 
   const handleHelpful = useCallback(async (reviewId: string) => {
     try {
       await api.markReviewHelpful(productId, reviewId);
       setHelpfulVotes((v) => ({ ...v, [reviewId]: !v[reviewId] }));
+      toast.info("Feedback recorded", "Thank you for marking this review as helpful.");
     } catch { /* silent */ }
-  }, [productId]);
+  }, [productId, toast]);
 
   if (!reviews.length && !summary?.review_count) {
     return (

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { StarIcon } from "@/components/ui/Icons";
 import { api } from "@/lib/api";
+import { useToast } from "@/lib/contexts/ToastContext";
 
 interface ReviewFormProps {
   productId: string;
@@ -10,6 +11,7 @@ interface ReviewFormProps {
 }
 
 export function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
+  const { toast } = useToast();
   const [rating, setRating] = useState(0);
   const [hovered, setHovered] = useState(0);
   const [title, setTitle] = useState("");
@@ -38,6 +40,7 @@ export function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
         return;
       }
       setSubmitted(true);
+      toast.success("Review submitted", "Thank you for your feedback! Your review will appear after moderation.");
       onSuccess?.();
     } catch {
       setError("Network error. Please try again.");

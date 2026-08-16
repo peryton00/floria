@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { api } from "@/lib/api";
+import { useToast } from "@/lib/contexts/ToastContext";
 
 export default function AdminCategoriesPage() {
+  const { toast } = useToast();
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -76,14 +78,18 @@ export default function AdminCategoriesPage() {
       }
 
       if (res.success) {
+        toast.success(
+          editingCategory ? "Category updated" : "Category created",
+          `Category '${name}' was saved successfully.`
+        );
         await fetchCategories();
         setShowCreateModal(false);
         resetForm();
       } else {
-        alert(res.error?.message || "Failed to save category");
+        toast.error("Failed to save category", res.error?.message || "Operation failed");
       }
     } catch (e: any) {
-      alert(e.message || "Error saving category");
+      toast.error("Failed to save category", e.message || "Error saving category");
     } finally {
       setActionLoading(false);
     }
@@ -104,12 +110,16 @@ export default function AdminCategoriesPage() {
     try {
       const res = await api.updateAdminCategory(cat.id, { is_active: !cat.is_active });
       if (res.success) {
+        toast.success(
+          cat.is_active ? "Category deactivated" : "Category activated",
+          `Category '${cat.name}' status was updated.`
+        );
         await fetchCategories();
       } else {
-        alert(res.error?.message || "Failed to update category status");
+        toast.error("Failed to update status", res.error?.message || "Operation failed");
       }
     } catch (e: any) {
-      alert(e.message || "Error updating category");
+      toast.error("Failed to update status", e.message || "Error updating category");
     }
   };
 

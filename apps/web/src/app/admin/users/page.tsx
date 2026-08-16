@@ -4,8 +4,10 @@ import { useState, useEffect } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { api } from "@/lib/api";
 import { SearchIcon } from "@/components/ui/Icons";
+import { useToast } from "@/lib/contexts/ToastContext";
 
 export default function AdminUsersPage() {
+  const { toast } = useToast();
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -55,14 +57,15 @@ export default function AdminUsersPage() {
       setActionLoading(true);
       const res = await api.updateAdminUserStatus(user.id, newStatus, rationale);
       if (res.success) {
+        toast.success("User status updated", `User status updated to ${newStatus}.`);
         await fetchUsers();
         setSelectedUser(null);
         setRationale("");
       } else {
-        alert(res.error?.message || "Failed to update user status");
+        toast.error("Status update failed", res.error?.message || "Failed to update user status");
       }
     } catch (e: any) {
-      alert(e.message || "Error performing action");
+      toast.error("Status update failed", e.message || "Error performing action");
     } finally {
       setActionLoading(false);
     }
@@ -78,14 +81,14 @@ export default function AdminUsersPage() {
         role: editRole,
       });
       if (res.success) {
-        alert("User details updated successfully.");
+        toast.success("User details saved", "User information updated successfully.");
         await fetchUsers();
         setSelectedUser(null);
       } else {
-        alert(res.error?.message || "Failed to update user details");
+        toast.error("Update failed", res.error?.message || "Failed to update user details");
       }
-    } catch (e: any) {
-      alert(e.message || "Error performing updates");
+    } catch (err: any) {
+      toast.error("Update failed", err.message || "Error performing update");
     } finally {
       setActionLoading(false);
     }

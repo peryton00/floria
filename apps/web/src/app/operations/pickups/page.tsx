@@ -4,8 +4,10 @@ import { useState, useEffect } from "react";
 import { OperationsShell } from "@/components/operations/OperationsShell";
 import { api } from "@/lib/api";
 import { LeafIcon } from "@/components/ui/Icons";
+import { useToast } from "@/lib/contexts/ToastContext";
 
 export default function OperationsPickupsPage() {
+  const { toast } = useToast();
   const [pickups, setPickups] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPickup, setSelectedPickup] = useState<any | null>(null);
@@ -38,14 +40,15 @@ export default function OperationsPickupsPage() {
       setActionLoading(true);
       const res = await api.updatePickupStatus(orderId, newStatus, notes);
       if (res.success) {
+        toast.success("Pickup updated", `Pickup marked as ${newStatus}.`);
         await fetchPickups();
         setSelectedPickup(null);
         setNotes("");
       } else {
-        alert(res.error?.message || "Failed to update pickup status");
+        toast.error("Update failed", res.error?.message || "Failed to update pickup status");
       }
     } catch (e: any) {
-      alert(e.message || "Error processing pickup update");
+      toast.error("Update failed", e.message || "Error processing pickup update");
     } finally {
       setActionLoading(false);
     }

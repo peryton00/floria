@@ -4,14 +4,15 @@ import { useState, useEffect } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { api } from "@/lib/api";
 import { PayoutIcon, ShieldIcon, CheckIcon, AlertIcon } from "@/components/ui/Icons";
+import { useToast } from "@/lib/contexts/ToastContext";
 import type { FinancialSettings } from "@floria/types";
 
 export default function AdminSettingsPage() {
+  const { toast } = useToast();
   const [finSettings, setFinSettings] = useState<FinancialSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Edit Pricing Policy Modal State
   const [editingPricingPolicy, setEditingPricingPolicy] = useState(false);
@@ -52,7 +53,6 @@ export default function AdminSettingsPage() {
     }
     setEditingPricingPolicy(true);
     setError(null);
-    setSuccessMessage(null);
   };
 
   const handleSavePricingPolicy = async (e: React.FormEvent) => {
@@ -98,12 +98,16 @@ export default function AdminSettingsPage() {
       if (res.success && res.data) {
         setFinSettings(res.data);
         setEditingPricingPolicy(false);
-        setSuccessMessage("Floria pricing policy updated successfully in database and audit logged.");
+        toast.success("Pricing policy updated", "Changes saved successfully in database and audit logged.");
       } else {
-        setError(res.error?.message || "Failed to update pricing policy");
+        const errMsg = res.error?.message || "Failed to update pricing policy";
+        setError(errMsg);
+        toast.error("Unable to update pricing policy", errMsg);
       }
     } catch (e: any) {
-      setError(e.message || "Error saving pricing policy");
+      const errMsg = e.message || "Error saving pricing policy";
+      setError(errMsg);
+      toast.error("Unable to update pricing policy", errMsg);
     } finally {
       setSaving(false);
     }
@@ -125,13 +129,6 @@ export default function AdminSettingsPage() {
           <div className="bg-error-50 border border-error-100 rounded-xl p-4 text-xs text-error-700 flex items-start gap-2">
             <AlertIcon size={16} className="text-error-600 flex-shrink-0 mt-0.5" />
             <span>{error}</span>
-          </div>
-        )}
-
-        {successMessage && (
-          <div className="bg-success-50 border border-success-100 rounded-xl p-4 text-xs text-success-700 flex items-start gap-2">
-            <CheckIcon size={16} className="text-success-600 flex-shrink-0 mt-0.5" />
-            <span>{successMessage}</span>
           </div>
         )}
 

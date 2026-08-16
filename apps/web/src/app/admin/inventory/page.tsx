@@ -5,8 +5,10 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { api } from "@/lib/api";
 import { formatINR } from "@/lib/format";
 import { SearchIcon } from "@/components/ui/Icons";
+import { useToast } from "@/lib/contexts/ToastContext";
 
 export default function AdminInventoryPage() {
+  const { toast } = useToast();
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [sellers, setSellers] = useState<any[]>([]);
@@ -72,7 +74,7 @@ export default function AdminInventoryPage() {
     const parsedPrice = Math.round(parseFloat(editPriceINR) * 100);
     const parsedStock = parseInt(editStock);
     if (isNaN(parsedPrice) || parsedPrice < 0 || isNaN(parsedStock) || parsedStock < 0) {
-      alert("Please enter valid price and stock quantity values.");
+      toast.error("Invalid values", "Please enter valid price and stock quantity values.");
       return;
     }
 
@@ -85,14 +87,14 @@ export default function AdminInventoryPage() {
       });
 
       if (res.success) {
-        alert("Stock values adjusted successfully.");
+        toast.success("Stock updated", "Stock values adjusted successfully.");
         await loadData();
         setSelectedProduct(null);
       } else {
-        alert(res.error?.message || "Failed to adjust stock quantities");
+        toast.error("Adjustment failed", res.error?.message || "Failed to adjust stock");
       }
     } catch (err: any) {
-      alert(err.message || "Error performing updates");
+      toast.error("Adjustment failed", err.message || "Error adjusting stock");
     } finally {
       setUpdating(false);
     }

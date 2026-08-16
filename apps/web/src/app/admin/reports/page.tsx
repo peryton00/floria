@@ -4,8 +4,10 @@ import { useState } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { api } from "@/lib/api";
 import { AlertIcon } from "@/components/ui/Icons";
+import { useToast } from "@/lib/contexts/ToastContext";
 
 export default function AdminReportsPage() {
+  const { toast } = useToast();
   const [reportType, setReportType] = useState<string>("orders");
   const [loading, setLoading] = useState(false);
 
@@ -19,6 +21,7 @@ export default function AdminReportsPage() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    toast.success("Report downloaded", `Downloaded ${filename}`);
   };
 
   const handleGenerateReport = async () => {
@@ -38,7 +41,7 @@ export default function AdminReportsPage() {
           const csvContent = [headers.join(","), ...rows.map((r) => r.map(val => `"${val}"`).join(","))].join("\n");
           downloadCSV("orders_report.csv", csvContent);
         } else {
-          alert("Failed to load orders for report generation.");
+          toast.error("Export failed", "Failed to load orders for report generation.");
         }
       } else if (reportType === "users") {
         const res = await api.getAdminUsers();
@@ -55,7 +58,7 @@ export default function AdminReportsPage() {
           const csvContent = [headers.join(","), ...rows.map((r) => r.map(val => `"${val}"`).join(","))].join("\n");
           downloadCSV("users_report.csv", csvContent);
         } else {
-          alert("Failed to load users for report generation.");
+          toast.error("Export failed", "Failed to load users for report generation.");
         }
       } else if (reportType === "products") {
         const res = await api.getAdminProducts();
@@ -76,13 +79,13 @@ export default function AdminReportsPage() {
           const csvContent = [headers.join(","), ...rows.map((r) => r.map(val => `"${val}"`).join(","))].join("\n");
           downloadCSV("products_report.csv", csvContent);
         } else {
-          alert("Failed to load products for report generation.");
+          toast.error("Export failed", "Failed to load products for report generation.");
         }
       } else {
-        alert("Report type not supported for instant generation.");
+        toast.error("Report unsupported", "Report type not supported for instant generation.");
       }
     } catch (e: any) {
-      alert("Error generating report: " + e.message);
+      toast.error("Generation error", "Error generating report: " + e.message);
     } finally {
       setLoading(false);
     }

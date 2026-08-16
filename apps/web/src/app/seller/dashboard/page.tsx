@@ -5,6 +5,7 @@ import Link from "next/link";
 import { api, type SellerDashboardData } from "@/lib/api";
 import { formatINR } from "@/lib/format";
 import { SellerStatusBadge } from "@/components/seller/SellerStatusBadge";
+import { useToast } from "@/lib/contexts/ToastContext";
 import {
   GridIcon,
   OrderIcon,
@@ -16,6 +17,7 @@ import {
 } from "@/components/ui/Icons";
 
 export default function SellerDashboardPage() {
+  const { toast } = useToast();
   const [data, setData] = useState<SellerDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -56,13 +58,14 @@ export default function SellerDashboardPage() {
       });
 
       if (res.success) {
+        toast.success("Stock updated", `Inventory for '${editingStockItem.name}' updated.`);
         setEditingStockItem(null);
         await fetchDashboard();
       } else {
-        alert(res.error?.message || "Failed to update stock quantity");
+        toast.error("Stock update failed", res.error?.message || "Failed to update stock quantity");
       }
     } catch (err: any) {
-      alert(err.message || "Error updating stock");
+      toast.error("Stock update failed", err.message || "Error updating stock");
     } finally {
       setStockUpdating(false);
     }

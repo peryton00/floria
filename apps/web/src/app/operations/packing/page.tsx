@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react";
 import { OperationsShell } from "@/components/operations/OperationsShell";
 import { api } from "@/lib/api";
+import { useToast } from "@/lib/contexts/ToastContext";
 
 export default function OperationsPackingPage() {
+  const { toast } = useToast();
   const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTask, setSelectedTask] = useState<any | null>(null);
@@ -36,13 +38,14 @@ export default function OperationsPackingPage() {
       setActionLoading(true);
       const res = await api.updatePackingTask(orderId, status, selectedTask?.items?.length || 1);
       if (res.success) {
+        toast.success("Packing status updated", `Packing task updated to ${status}.`);
         await fetchTasks();
         setSelectedTask(null);
       } else {
-        alert(res.error?.message || "Failed to update packing task");
+        toast.error("Update failed", res.error?.message || "Failed to update packing task");
       }
     } catch (e: any) {
-      alert(e.message || "Error updating packing task");
+      toast.error("Update failed", e.message || "Error updating packing task");
     } finally {
       setActionLoading(false);
     }

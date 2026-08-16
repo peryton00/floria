@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { api } from "@/lib/api";
 import { formatINR } from "@/lib/format";
 import { useSeller } from "@/lib/contexts/SellerContext";
+import { useToast } from "@/lib/contexts/ToastContext";
 import {
   Boxes,
   Search,
@@ -16,6 +17,7 @@ import {
 } from "lucide-react";
 
 export default function SellerInventoryPage() {
+  const { toast } = useToast();
   const { isApproved } = useSeller();
   const [inventory, setInventory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,7 +64,7 @@ export default function SellerInventoryPage() {
 
   const handleSave = async (productId: string) => {
     if (stockInput < 0 || thresholdInput < 0 || priceInput < 0) {
-      alert("Values cannot be negative");
+      toast.error("Invalid values", "Values cannot be negative.");
       return;
     }
 
@@ -76,13 +78,14 @@ export default function SellerInventoryPage() {
       });
 
       if (res.success) {
+        toast.success("Inventory updated", "Product inventory and pricing saved.");
         setEditingId(null);
         await fetchInventory();
       } else {
-        alert(res.error?.message || "Failed to update inventory details");
+        toast.error("Update failed", res.error?.message || "Failed to update inventory details");
       }
     } catch (err: any) {
-      alert(err.message || "Error saving inventory");
+      toast.error("Update failed", err.message || "Error saving inventory");
     } finally {
       setActionLoading(false);
     }

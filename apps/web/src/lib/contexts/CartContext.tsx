@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import type { ProductListing } from "@floria/types";
 import { api } from "@/lib/api";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { useToast } from "@/lib/contexts/ToastContext";
 
 export interface CartItem {
   listing: ProductListing;
@@ -24,6 +25,7 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
+  const { toast } = useToast();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isHydrated, setIsHydrated] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -166,6 +168,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [cartItems, isHydrated, isAuthenticated]);
 
   const addToCart = async (listing: ProductListing, qty = 1) => {
+    toast.success("Added to cart", `${listing.product.name} was added to your cart.`);
+
     if (isAuthenticated) {
       const res = await api.addToCart(listing.product.id, qty);
       if (res.success && res.data) {
@@ -192,6 +196,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   const removeFromCart = async (productId: string) => {
+    toast.info("Removed from cart", "Item was removed from your cart.");
+
     // Cancel any pending debounced updates for this product
     if (debounceTimeoutRefs.current[productId]) {
       clearTimeout(debounceTimeoutRefs.current[productId]);

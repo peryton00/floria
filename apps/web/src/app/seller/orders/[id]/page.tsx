@@ -6,6 +6,7 @@ import { useSeller } from "@/lib/contexts/SellerContext";
 import { api } from "@/lib/api";
 import { formatINR } from "@/lib/format";
 import { AlertIcon, OrderIcon, CheckIcon } from "@/components/ui/Icons";
+import { useToast } from "@/lib/contexts/ToastContext";
 
 const SELLER_TIMELINE = [
   "Order Placed",
@@ -77,6 +78,7 @@ export default function SellerOrderDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const { toast } = useToast();
   const resolvedParams = use(params);
   const masterOrderId = resolvedParams.id;
 
@@ -116,12 +118,13 @@ export default function SellerOrderDetailPage({
       setIsUpdating(true);
       const res = await api.updateFulfillmentStatus(masterOrderId, nextStatus);
       if (res.success) {
+        toast.success("Order status updated", `Order marked as ${nextStatus}.`);
         await fetchOrder();
       } else {
-        alert(res.error?.message || `Failed to advance status to ${nextStatus}`);
+        toast.error("Status update failed", res.error?.message || `Failed to advance status to ${nextStatus}`);
       }
     } catch (err: any) {
-      alert(err.message || "Error updating fulfillment status");
+      toast.error("Status update failed", err.message || "Error updating fulfillment status");
     } finally {
       setIsUpdating(false);
     }

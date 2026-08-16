@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { formatINR } from "@/lib/format";
 import { SearchIcon } from "@/components/ui/Icons";
 import { OrderFinancialBreakdown } from "@/components/admin/OrderFinancialBreakdown";
+import { useToast } from "@/lib/contexts/ToastContext";
 
 function formatOrderStatusDisplay(status: string): string {
   if (!status) return "Order Placed";
@@ -23,6 +24,7 @@ function formatOrderStatusDisplay(status: string): string {
 }
 
 export default function AdminOrdersPage() {
+  const { toast } = useToast();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -66,14 +68,14 @@ export default function AdminOrdersPage() {
       setActionLoading(true);
       const res = await api.updateAdminOrder(selectedOrder.id, { status: newStatus });
       if (res.success) {
-        alert("Order status overridden successfully.");
+        toast.success("Order status updated", `Order status updated to ${newStatus}.`);
         await fetchOrders();
         setSelectedOrder(null);
       } else {
-        alert(res.error?.message || "Failed to update order status");
+        toast.error("Update failed", res.error?.message || "Failed to update order status");
       }
     } catch (e: any) {
-      alert(e.message || "Error updating order status");
+      toast.error("Update failed", e.message || "Error updating order status");
     } finally {
       setActionLoading(false);
     }

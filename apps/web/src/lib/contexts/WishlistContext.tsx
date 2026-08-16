@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import type { ProductListing } from "@floria/types";
 import { api } from "@/lib/api";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { useToast } from "@/lib/contexts/ToastContext";
 
 interface WishlistContextType {
   wishlistItems: ProductListing[];
@@ -17,6 +18,7 @@ interface WishlistContextType {
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
 
 export function WishlistProvider({ children }: { children: React.ReactNode }) {
+  const { toast } = useToast();
   const [wishlistItems, setWishlistItems] = useState<ProductListing[]>([]);
   const [isHydrated, setIsHydrated] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -152,6 +154,8 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addToWishlist = async (listing: ProductListing) => {
+    toast.success("Saved to wishlist", `${listing.product.name} was added to your wishlist.`);
+
     if (isAuthenticated) {
       const res = await api.addToWishlist(listing.product.id);
       if (res.success && res.data) {
@@ -172,6 +176,8 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   };
 
   const removeFromWishlist = async (productId: string) => {
+    toast.info("Removed from wishlist", "Item was removed from your wishlist.");
+
     if (isAuthenticated) {
       const res = await api.removeFromWishlist(productId);
       if (res.success && res.data) {

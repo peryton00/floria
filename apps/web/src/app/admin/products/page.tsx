@@ -5,10 +5,12 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { api } from "@/lib/api";
 import { formatINR } from "@/lib/format";
 import { SearchIcon, LeafIcon } from "@/components/ui/Icons";
+import { useToast } from "@/lib/contexts/ToastContext";
 
 import { ProductFinancialBreakdown } from "@/components/admin/ProductFinancialBreakdown";
 
 export default function AdminProductsPage() {
+  const { toast } = useToast();
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,7 +62,7 @@ export default function AdminProductsPage() {
 
   useEffect(() => {
     fetchProducts();
-  }, [statusFilter, categoryFilter]);
+  }, [search, statusFilter, categoryFilter]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,19 +88,20 @@ export default function AdminProductsPage() {
     if (!selectedProduct) return;
     try {
       setActionLoading(true);
-      let res;
+      let res: any;
       if (action === "publish") res = await api.publishProduct(selectedProduct.id);
       else if (action === "unpublish") res = await api.unpublishProduct(selectedProduct.id);
       else if (action === "archive") res = await api.archiveProduct(selectedProduct.id);
 
       if (res?.success) {
+        toast.success("Product updated", `Product was ${action}ed successfully.`);
         await fetchProducts();
         setSelectedProduct(null);
       } else {
-        alert(res?.error?.message || `Failed to ${action} product`);
+        toast.error("Action failed", res?.error?.message || `Failed to ${action} product`);
       }
     } catch (e: any) {
-      alert(e.message || "Error moderating product");
+      toast.error("Action failed", e.message || "Error moderating product");
     } finally {
       setActionLoading(false);
     }
@@ -109,7 +112,7 @@ export default function AdminProductsPage() {
     const parsedPrice = Math.round(parseFloat(editPriceINR) * 100);
     const parsedStock = parseInt(editStock);
     if (isNaN(parsedPrice) || parsedPrice < 0 || isNaN(parsedStock) || parsedStock < 0) {
-      alert("Please enter valid price and stock quantity values.");
+      toast.error("Invalid values", "Please enter valid price and stock quantity values.");
       return;
     }
 
@@ -126,14 +129,14 @@ export default function AdminProductsPage() {
       });
 
       if (res.success) {
-        alert("Product and inventory updated successfully.");
+        toast.success("Product updated", "Product and inventory updated successfully.");
         await fetchProducts();
         setSelectedProduct(null);
       } else {
-        alert(res.error?.message || "Failed to update product details");
+        toast.error("Update failed", res.error?.message || "Failed to update product details");
       }
     } catch (err: any) {
-      alert(err.message || "Error performing updates");
+      toast.error("Update failed", err.message || "Error performing updates");
     } finally {
       setActionLoading(false);
     }

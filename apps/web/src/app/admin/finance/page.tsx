@@ -4,8 +4,10 @@ import { useState, useEffect } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { api } from "@/lib/api";
 import { formatINR } from "@/lib/format";
+import { useToast } from "@/lib/contexts/ToastContext";
 
 export default function AdminFinancePage() {
+  const { toast } = useToast();
   const [stats, setStats] = useState<any>(null);
   const [commissionRate, setCommissionRate] = useState<number>(12.0);
   const [newRate, setNewRate] = useState<string>("12.0");
@@ -51,7 +53,7 @@ export default function AdminFinancePage() {
     e.preventDefault();
     const parsedRate = parseFloat(newRate);
     if (isNaN(parsedRate) || parsedRate < 0 || parsedRate > 50) {
-      alert("Please enter a valid commission rate percentage between 0.0% and 50.0%.");
+      toast.error("Invalid commission rate", "Please enter a rate between 0.0% and 50.0%.");
       return;
     }
 
@@ -59,13 +61,13 @@ export default function AdminFinancePage() {
       setUpdating(true);
       const res = await api.updateFinancialSettings({ sellerCommissionRate: parsedRate });
       if (res.success) {
-        alert("Platform commission rate updated successfully.");
+        toast.success("Commission rate updated", `Platform rate updated to ${parsedRate}%.`);
         await loadData();
       } else {
-        alert(res.error?.message || "Failed to update commission rate");
+        toast.error("Unable to update rate", res.error?.message || "Failed to update commission rate.");
       }
     } catch (err: any) {
-      alert(err.message || "An error occurred");
+      toast.error("Error updating rate", err.message || "An unexpected error occurred.");
     } finally {
       setUpdating(false);
     }

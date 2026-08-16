@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { CustomerShell } from "@/components/layout/CustomerShell";
 import { SearchIcon, ShieldIcon, LeafIcon, TruckIcon } from "@/components/ui/Icons";
+import { useToast } from "@/lib/contexts/ToastContext";
 
 const HELP_FAQS = [
   {
@@ -45,6 +46,7 @@ const HELP_FAQS = [
 ];
 
 export default function HelpPage() {
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
   const [activeCategory, setActiveCategory] = useState<string>("All");
@@ -188,7 +190,7 @@ export default function HelpPage() {
 
             <button
               type="button"
-              onClick={() => alert("Floria Live Chat (Demo): Support agents available Mon-Sat 9 AM - 7 PM")}
+              onClick={() => toast.info("Floria Live Chat", "Support agents available Mon-Sat 9 AM - 7 PM.")}
               className="w-full py-3 bg-forest-700 hover:bg-forest-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-700"
             >
               Start Live Chat

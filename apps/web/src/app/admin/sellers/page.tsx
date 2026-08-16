@@ -5,8 +5,10 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { api } from "@/lib/api";
 import { SellerStatusBadge } from "@/components/seller/SellerStatusBadge";
 import { LeafIcon } from "@/components/ui/Icons";
+import { useToast } from "@/lib/contexts/ToastContext";
 
 export default function AdminSellersPage() {
+  const { toast } = useToast();
   const [sellers, setSellers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"all" | "pending" | "approved" | "suspended" | "rejected">("all");
@@ -70,20 +72,21 @@ export default function AdminSellersPage() {
     if (!selectedSeller) return;
     try {
       setActionLoading(true);
-      let res;
+      let res: any;
       if (action === "approve") res = await api.approveSeller(selectedSeller.id);
       else if (action === "reject") res = await api.rejectSeller(selectedSeller.id);
       else if (action === "suspend") res = await api.suspendSeller(selectedSeller.id);
       else if (action === "reactivate") res = await api.reactivateSeller(selectedSeller.id);
 
       if (res?.success) {
+        toast.success("Seller status updated", `Seller '${selectedSeller.business_name}' status updated to ${action}.`);
         await fetchSellers(activeTab);
         setSelectedSeller(null);
       } else {
-        alert(res?.error?.message || `Failed to ${action} seller`);
+        toast.error("Action failed", res?.error?.message || `Failed to ${action} seller`);
       }
     } catch (e: any) {
-      alert(e.message || "Error executing action");
+      toast.error("Action failed", e.message || "Error executing action");
     } finally {
       setActionLoading(false);
     }
@@ -102,14 +105,14 @@ export default function AdminSellersPage() {
         status: editStatus,
       });
       if (res.success) {
-        alert("Seller profile updated successfully.");
+        toast.success("Seller profile saved", "Seller details updated successfully.");
         await fetchSellers(activeTab);
         setSelectedSeller(null);
       } else {
-        alert(res.error?.message || "Failed to update seller profile");
+        toast.error("Update failed", res.error?.message || "Failed to update seller details");
       }
-    } catch (err: any) {
-      alert(err.message || "Error performing updates");
+    } catch (e: any) {
+      toast.error("Update failed", e.message || "Error updating seller details");
     } finally {
       setActionLoading(false);
     }

@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react";
 import { OperationsShell } from "@/components/operations/OperationsShell";
 import { api } from "@/lib/api";
+import { useToast } from "@/lib/contexts/ToastContext";
 
 export default function OperationsDeliveriesPage() {
+  const { toast } = useToast();
   const [deliveries, setDeliveries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeStatus, setActiveStatus] = useState<string>("all");
@@ -39,14 +41,15 @@ export default function OperationsDeliveriesPage() {
       setActionLoading(true);
       const res = await api.assignDelivery(selectedDelivery.order_id, { assignedTo: assignee.trim() });
       if (res.success) {
+        toast.success("Delivery assigned", `Delivery assigned to ${assignee.trim()}.`);
         await fetchDeliveries();
         setSelectedDelivery(null);
         setAssignee("");
       } else {
-        alert(res.error?.message || "Failed to assign delivery");
+        toast.error("Assignment failed", res.error?.message || "Failed to assign delivery");
       }
     } catch (e: any) {
-      alert(e.message || "Error assigning delivery");
+      toast.error("Assignment failed", e.message || "Error assigning delivery");
     } finally {
       setActionLoading(false);
     }
@@ -58,13 +61,14 @@ export default function OperationsDeliveriesPage() {
       setActionLoading(true);
       const res = await api.updateDeliveryStatus(selectedDelivery.id, status);
       if (res.success) {
+        toast.success("Delivery status updated", `Delivery marked as ${status.replace(/_/g, " ")}.`);
         await fetchDeliveries();
         setSelectedDelivery(null);
       } else {
-        alert(res.error?.message || "Failed to update delivery status");
+        toast.error("Update failed", res.error?.message || "Failed to update delivery status");
       }
     } catch (e: any) {
-      alert(e.message || "Error updating delivery status");
+      toast.error("Update failed", e.message || "Error updating status");
     } finally {
       setActionLoading(false);
     }

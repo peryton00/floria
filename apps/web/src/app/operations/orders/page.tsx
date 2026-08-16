@@ -4,8 +4,10 @@ import { useState, useEffect } from "react";
 import { OperationsShell } from "@/components/operations/OperationsShell";
 import { api } from "@/lib/api";
 import { SearchIcon } from "@/components/ui/Icons";
+import { useToast } from "@/lib/contexts/ToastContext";
 
 export default function OperationsOrdersPage() {
+  const { toast } = useToast();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -43,13 +45,14 @@ export default function OperationsOrdersPage() {
       setActionLoading(true);
       const res = await api.updateOperationsOrderStatus(orderId, newStatus);
       if (res.success) {
+        toast.success("Order status updated", `Order marked as ${newStatus}.`);
         await fetchOrders();
         setSelectedOrder(null);
       } else {
-        alert(res.error?.message || "Invalid status transition");
+        toast.error("Transition failed", res.error?.message || "Invalid status transition");
       }
     } catch (e: any) {
-      alert(e.message || "Error updating order status");
+      toast.error("Transition failed", e.message || "Error updating order status");
     } finally {
       setActionLoading(false);
     }

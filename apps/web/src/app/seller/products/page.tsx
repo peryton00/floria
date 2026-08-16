@@ -7,10 +7,12 @@ import { useSeller } from "@/lib/contexts/SellerContext";
 import { api } from "@/lib/api";
 import { formatINR } from "@/lib/format";
 import { GridIcon, SearchIcon, AlertIcon } from "@/components/ui/Icons";
+import { useToast } from "@/lib/contexts/ToastContext";
 
 type FilterTab = "all" | "active" | "draft" | "low_stock" | "out_of_stock";
 
 export default function SellerProductsPage() {
+  const { toast } = useToast();
   const { isApproved } = useSeller();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -83,12 +85,13 @@ export default function SellerProductsPage() {
       setActionLoading(true);
       const res = await api.updateSellerProductStatus(productId, nextStatus);
       if (res.success) {
+        toast.success("Status updated", `Product listing set to ${nextStatus}.`);
         await fetchProducts();
       } else {
-        alert(res.error?.message || `Failed to change status to ${nextStatus}`);
+        toast.error("Status update failed", res.error?.message || `Failed to change status to ${nextStatus}`);
       }
     } catch (err: any) {
-      alert(err.message || "Error updating status");
+      toast.error("Status update failed", err.message || "Error updating status");
     } finally {
       setActionLoading(false);
     }
@@ -99,13 +102,14 @@ export default function SellerProductsPage() {
       setActionLoading(true);
       const res = await api.updateSellerInventory(productId, { stock_quantity: Math.max(0, stockInput) });
       if (res.success) {
+        toast.success("Stock updated", "Stock quantity saved successfully.");
         setEditingStockId(null);
         await fetchProducts();
       } else {
-        alert(res.error?.message || "Failed to update stock");
+        toast.error("Stock update failed", res.error?.message || "Failed to update stock");
       }
     } catch (err: any) {
-      alert(err.message || "Error updating stock");
+      toast.error("Stock update failed", err.message || "Error updating stock");
     } finally {
       setActionLoading(false);
     }
@@ -116,13 +120,14 @@ export default function SellerProductsPage() {
       setActionLoading(true);
       const res = await api.deleteSellerProduct(productId);
       if (res.success) {
+        toast.success("Product archived", "Product listing archived successfully.");
         setDeleteConfirmId(null);
         await fetchProducts();
       } else {
-        alert(res.error?.message || "Failed to archive product");
+        toast.error("Archive failed", res.error?.message || "Failed to archive product");
       }
     } catch (err: any) {
-      alert(err.message || "Error deleting product");
+      toast.error("Archive failed", err.message || "Error deleting product");
     } finally {
       setActionLoading(false);
     }

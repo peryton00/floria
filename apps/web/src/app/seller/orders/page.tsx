@@ -8,6 +8,7 @@ import { useSeller } from "@/lib/contexts/SellerContext";
 import { api } from "@/lib/api";
 import { formatINR } from "@/lib/format";
 import { OrderIcon, SearchIcon, AlertIcon, LeafIcon } from "@/components/ui/Icons";
+import { useToast } from "@/lib/contexts/ToastContext";
 
 function getStatusBadgeStyle(status: string) {
   switch (status) {
@@ -60,6 +61,7 @@ function getSellerActionLabel(currentStatus: string): string | null {
 }
 
 function OrdersContent() {
+  const { toast } = useToast();
   const searchParams = useSearchParams();
   const router = useRouter();
   const { isApproved } = useSeller();
@@ -125,12 +127,13 @@ function OrdersContent() {
       setUpdatingId(orderId);
       const res = await api.updateFulfillmentStatus(orderId, nextStatus);
       if (res.success) {
+        toast.success("Order status updated", `Order marked as ${nextStatus}.`);
         await fetchOrders();
       } else {
-        alert(res.error?.message || `Failed to update status to ${nextStatus}`);
+        toast.error("Status update failed", res.error?.message || `Failed to update status to ${nextStatus}`);
       }
     } catch (err: any) {
-      alert(err.message || "Error updating status");
+      toast.error("Status update failed", err.message || "Error updating status");
     } finally {
       setUpdatingId(null);
     }
