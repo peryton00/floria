@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { CustomerShell } from "@/components/layout/CustomerShell";
-import { formatINR } from "@/lib/format";
+import { formatINR, calculateCustomerProductPricePaise } from "@/lib/format";
 import {
   ShieldIcon,
   CheckCircleIcon,
@@ -493,7 +493,8 @@ export default function CheckoutPage() {
                   <div className="p-3.5 divide-y divide-ink-50">
                     {group.items.map((item) => {
                       const { listing, quantity } = item;
-                      const { product, inventory, primary_image } = listing;
+                      const { product, inventory, primary_image, pricing } = listing;
+                      const itemUnitPricePaise = pricing?.sellingPricePaise ?? calculateCustomerProductPricePaise((inventory as any)?.base_price_paise ?? inventory.price_paise ?? 0);
                       return (
                         <div key={product.id} className="py-2.5 first:pt-0 last:pb-0 flex items-center gap-3">
                           <div className="relative w-12 h-12 rounded-lg bg-cream-50 overflow-hidden flex-shrink-0 border border-ink-100">
@@ -508,12 +509,12 @@ export default function CheckoutPage() {
 
                           <div className="flex-1 min-w-0">
                             <p className="text-xs font-bold text-ink-900 line-clamp-1">{product.name}</p>
-                            <p className="text-[11px] text-ink-400">Qty: {quantity} &bull; {formatINR(inventory.price_paise)} each</p>
+                            <p className="text-[11px] text-ink-400">Qty: {quantity} &bull; {formatINR(itemUnitPricePaise)} each</p>
                           </div>
 
                           <div className="text-right">
                             <p className="text-xs font-bold text-ink-900">
-                              {formatINR(inventory.price_paise * quantity)}
+                              {formatINR(itemUnitPricePaise * quantity)}
                             </p>
                           </div>
                         </div>

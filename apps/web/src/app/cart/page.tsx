@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { CustomerShell } from "@/components/layout/CustomerShell";
-import { formatINR } from "@/lib/format";
+import { formatINR, calculateCustomerProductPricePaise } from "@/lib/format";
 import { BagIcon, WishlistIcon, LeafIcon } from "@/components/ui/Icons";
 import { useCart } from "@/lib/contexts/CartContext";
 import { useWishlist } from "@/lib/contexts/WishlistContext";
@@ -32,14 +32,23 @@ export default function CartPage() {
   const { cartItems, updateQuantity, removeFromCart, cartCount } = useCart();
   const { addToWishlist, isWishlisted } = useWishlist();
 
+  const getItemPrice = (item: CartItem) => {
+    const listing = item.listing;
+    if (listing.pricing?.sellingPricePaise) {
+      return listing.pricing.sellingPricePaise;
+    }
+    const rawBase = (listing.inventory as any)?.base_price_paise ?? listing.inventory?.price_paise ?? 0;
+    return calculateCustomerProductPricePaise(rawBase);
+  };
+
   // ── Calculations ────────────────────────────────────────────────────────────
   const subtotalPaise = cartItems.reduce(
-    (sum, item) => sum + (item.listing?.inventory?.price_paise ?? 0) * item.quantity,
+    (sum, item) => sum + getItemPrice(item) * item.quantity,
     0
   );
   // Mock 20% discount off original (original = price / 0.8 = price * 1.25)
   const discountPaise = cartItems.reduce((sum, item) => {
-    const price = item.listing?.inventory?.price_paise ?? 0;
+    const price = getItemPrice(item);
     const original = Math.round(price * 1.25);
     return sum + (original - price) * item.quantity;
   }, 0);
@@ -129,8 +138,9 @@ export default function CartPage() {
                   const status = stockStatus(inventory.stock_quantity, inventory.low_stock_threshold);
                   const isOOS = status === "out";
                   const isLow = status === "low";
-                  const originalPricePaise = Math.round(inventory.price_paise * 1.25);
-                  const discountPct = Math.round((1 - inventory.price_paise / originalPricePaise) * 100);
+                  const customerUnitPricePaise = getItemPrice(item);
+                  const originalPricePaise = Math.round(customerUnitPricePaise * 1.25);
+                  const discountPct = Math.round((1 - customerUnitPricePaise / originalPricePaise) * 100);
 
                   return (
                     <div
@@ -242,7 +252,7 @@ export default function CartPage() {
                             )}
                             <div className="text-right">
                               <p className="text-sm font-bold text-ink-900">
-                                {formatINR(inventory.price_paise * quantity)}
+                                {formatINR(customerUnitPricePaise * quantity)}
                               </p>
                               <p className="text-[11px] text-ink-300 line-through">
                                 {formatINR(originalPricePaise * quantity)}
@@ -321,17 +331,6 @@ export default function CartPage() {
         </div>
       </div>
 
-      {/* ── Mobile Sticky CTA ──────────────────────────────────────────────── */}
-      <div className="fixed bottom-16 left-0 right-0 z-30 px-4 pb-2 lg:hidden">
-        <Link
-          href="/checkout"
-          aria-label="Proceed to checkout"
-          className="w-full flex items-center justify-between py-3.5 px-5 bg-forest-700 hover:bg-forest-800 text-white font-bold text-sm rounded-xl transition-colors shadow-lg focus:outline-none focus:ring-2 focus:ring-forest-700"
-        >
-          <span>Proceed to Checkout</span>
-          <span className="font-semibold text-forest-200">{formatINR(subtotalPaise)}</span>
-        </Link>
-      </div>
     </CustomerShell>
   );
 }

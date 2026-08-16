@@ -6,6 +6,8 @@ import { api } from "@/lib/api";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { useToast } from "@/lib/contexts/ToastContext";
 
+import { calculateCustomerProductPricePaise } from "@/lib/format";
+
 export interface CartItem {
   listing: ProductListing;
   quantity: number;
@@ -31,7 +33,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const debounceTimeoutRefs = useRef<Record<string, NodeJS.Timeout>>({});
 
-  // Helper to map DB API cart items to CartItem format
+  // Helper to map DB API cart items to CartItem format with Customer Selling Price
   const mapDbCartItems = useCallback((items: any[]): CartItem[] => {
     return items.map((ci: any) => {
       const p = ci.product || {};
@@ -41,13 +43,28 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const seller = Array.isArray(p.seller) ? p.seller[0] : p.seller || { id: p.seller_id, business_name: "Nursery" };
       const cat = Array.isArray(p.category) ? p.category[0] : p.category || null;
 
+      const rawBasePrice = ci.unit_price_paise_snapshot ?? inv.price_paise ?? 0;
+      const customerPrice = calculateCustomerProductPricePaise(rawBasePrice);
+      const originalPricePaise = Math.round(customerPrice * 1.25);
+
       return {
         listing: {
           product: p,
-          inventory: inv,
+          inventory: {
+            ...inv,
+            price_paise: customerPrice,
+          },
           primary_image: primary,
           seller,
           category: cat,
+          pricing: {
+            sellingPricePaise: customerPrice,
+            originalPricePaise,
+            discountAmountPaise: originalPricePaise - customerPrice,
+            discountPercentage: 20,
+            isDiscounted: true,
+            isFreeDelivery: customerPrice >= 49900,
+          },
         },
         quantity: ci.quantity,
       };

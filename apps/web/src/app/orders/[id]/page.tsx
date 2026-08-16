@@ -132,6 +132,8 @@ function mapApiOrderToRecord(o: any): OrderRecord {
     paymentMethod: o.notes?.includes("COD") ? "Cash on Delivery" : "Online Payment",
     nurseryGroups: Array.from(groupsMap.values()),
     subtotalPaise: o.subtotal_paise || 0,
+    deliveryFeePaise: o.delivery_fee_paise ?? 0,
+    totalPaise: o.total_paise ?? ((o.subtotal_paise || 0) + (o.delivery_fee_paise || 0) + (o.maintenance_fee_paise || 0)),
     discountPaise: 0,
     totalItemsCount: (o.order_items || []).reduce((s: number, i: any) => s + (i.quantity || 1), 0),
   };
@@ -453,12 +455,14 @@ export default function OrderDetailPage({ params }: Props) {
 
               <div className="flex justify-between text-ink-600">
                 <span>Delivery</span>
-                <span className="text-ink-400 font-medium italic text-xs">Calculated at checkout</span>
+                <span className="font-semibold text-forest-700">
+                  {order.deliveryFeePaise && order.deliveryFeePaise > 0 ? formatINR(order.deliveryFeePaise) : "FREE"}
+                </span>
               </div>
 
               <div className="flex justify-between pt-3 border-t border-ink-100 text-ink-900 font-bold text-base">
                 <span>Total Paid</span>
-                <span className="text-forest-800">{formatINR(order.subtotalPaise)}</span>
+                <span className="text-forest-800">{formatINR(order.totalPaise || order.subtotalPaise + (order.deliveryFeePaise || 0))}</span>
               </div>
             </div>
 

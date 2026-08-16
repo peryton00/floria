@@ -66,6 +66,8 @@ export interface OrderRecord {
   paymentMethod: string;
   nurseryGroups: OrderNurseryGroup[];
   subtotalPaise: number;
+  deliveryFeePaise?: number;
+  totalPaise?: number;
   discountPaise: number;
   totalItemsCount: number;
 }

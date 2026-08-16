@@ -149,11 +149,11 @@ export function Header() {
             <UserIcon />
           </Link>
 
-          {/* Cart */}
+          {/* Cart (Desktop only, mobile uses bottom nav) */}
           <Link
             href="/cart"
             aria-label={`Cart${cartCount > 0 ? ` — ${cartCount} item${cartCount === 1 ? "" : "s"}` : ""}`}
-            className={["relative", iconLinkClass].join(" ")}
+            className={["relative hidden md:inline-flex", iconLinkClass].join(" ")}
           >
             <BagIcon />
             <CountBadge count={cartCount} />
