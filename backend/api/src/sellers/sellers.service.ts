@@ -164,13 +164,18 @@ export class SellersService {
   }
 
   async getProducts(sellerId: string, filters?: { search?: string; status?: string; stock?: string }) {
-    return sellerRepository.findSellerProducts(sellerId, filters);
+    const products = await sellerRepository.findSellerProducts(sellerId, filters);
+    const { productsService } = await import("../products/products.service.js");
+    const settings = await pricingService.getFinancialSettings();
+    return products.map((p) => productsService.enrichWithDbPricing(p, settings));
   }
 
   async getProductById(sellerId: string, productId: string) {
     const prod = await sellerRepository.findSellerProductById(sellerId, productId);
     if (!prod) throw Errors.notFound("Product");
-    return prod;
+    const { productsService } = await import("../products/products.service.js");
+    const settings = await pricingService.getFinancialSettings();
+    return productsService.enrichWithDbPricing(prod, settings);
   }
 
   async createProduct(sellerProfile: SellerProfile, productData: any) {

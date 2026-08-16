@@ -146,13 +146,18 @@ class SellersService {
         return profile;
     }
     async getProducts(sellerId, filters) {
-        return seller_repository_js_1.sellerRepository.findSellerProducts(sellerId, filters);
+        const products = await seller_repository_js_1.sellerRepository.findSellerProducts(sellerId, filters);
+        const { productsService } = await import("../products/products.service.js");
+        const settings = await pricing_service_js_1.pricingService.getFinancialSettings();
+        return products.map((p) => productsService.enrichWithDbPricing(p, settings));
     }
     async getProductById(sellerId, productId) {
         const prod = await seller_repository_js_1.sellerRepository.findSellerProductById(sellerId, productId);
         if (!prod)
             throw errors_js_1.Errors.notFound("Product");
-        return prod;
+        const { productsService } = await import("../products/products.service.js");
+        const settings = await pricing_service_js_1.pricingService.getFinancialSettings();
+        return productsService.enrichWithDbPricing(prod, settings);
     }
     async createProduct(sellerProfile, productData) {
         if (sellerProfile.status !== "approved") {
