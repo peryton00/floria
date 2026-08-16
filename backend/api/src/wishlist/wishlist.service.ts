@@ -1,5 +1,6 @@
-// Floria API — Wishlist Service
 import { getAdminDb } from "../config/database.js";
+import { productsService } from "../products/products.service.js";
+import { pricingService } from "../pricing/pricing.service.js";
 import { Errors } from "../utils/errors.js";
 
 export class WishlistService {
@@ -11,7 +12,21 @@ export class WishlistService {
       .eq("user_id", userId)
       .maybeSingle();
 
-    return wishlist || { user_id: userId, wishlist_items: [] };
+    if (!wishlist) {
+      return { user_id: userId, wishlist_items: [] };
+    }
+
+    const settings = await pricingService.getFinancialSettings();
+    if (wishlist.wishlist_items && Array.isArray(wishlist.wishlist_items)) {
+      wishlist.wishlist_items = wishlist.wishlist_items.map((wi: any) => {
+        if (wi.product) {
+          wi.product = productsService.enrichWithDbPricing(wi.product, settings);
+        }
+        return wi;
+      });
+    }
+
+    return wishlist;
   }
 
   async addItem(userId: string, productId: string) {

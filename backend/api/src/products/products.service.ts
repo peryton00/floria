@@ -4,7 +4,7 @@ import { pricingService } from "../pricing/pricing.service.js";
 import { Errors } from "../utils/errors.js";
 
 export class ProductsService {
-  private enrichWithDbPricing(product: any, settings: any) {
+  public enrichWithDbPricing(product: any, settings: any) {
     if (!product) return product;
 
     const rawInventory = product.inventory;
