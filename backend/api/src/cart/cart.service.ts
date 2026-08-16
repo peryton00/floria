@@ -1,6 +1,8 @@
 // Floria API — Cart Service
 import { getAdminDb } from "../config/database.js";
 import { Errors } from "../utils/errors.js";
+import { productsService } from "../products/products.service.js";
+import { pricingService } from "../pricing/pricing.service.js";
 
 export class CartService {
   async getCart(userId: string) {
@@ -11,7 +13,32 @@ export class CartService {
       .eq("user_id", userId)
       .maybeSingle();
 
-    return cart || { user_id: userId, cart_items: [] };
+    if (!cart) {
+      return { user_id: userId, cart_items: [] };
+    }
+
+    const settings = await pricingService.getFinancialSettings();
+    let overrideMap = new Map<string, any>();
+    try {
+      const { data: overrides } = await db
+        .from("product_pricing_overrides")
+        .select("product_id, custom_customer_price_paise")
+        .eq("is_active", true);
+      if (overrides) {
+        overrideMap = new Map(overrides.map((o: any) => [o.product_id, o]));
+      }
+    } catch {}
+
+    if (cart.cart_items && Array.isArray(cart.cart_items)) {
+      cart.cart_items = cart.cart_items.map((ci: any) => {
+        if (ci.product) {
+          ci.product = productsService.enrichWithDbPricing(ci.product, settings, overrideMap);
+        }
+        return ci;
+      });
+    }
+
+    return cart;
   }
 
   async addItem(userId: string, productId: string, quantity: number) {

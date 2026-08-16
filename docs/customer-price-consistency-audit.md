@@ -89,9 +89,13 @@ All customer-facing product prices originate authoritatively from the centralize
    - **Remediation**: Enhanced `CartContext.tsx` `refreshCart()` to compare previous cart unit prices against newly fetched backend prices. If a price change is detected, the cart updates automatically and emits a user-friendly toast:
      > *"Price updated: The price of [Product] changed from ₹599 to ₹629."*
 
-5. **Server-Side Checkout Price Overrides Alignment**:
-   - **Vulnerability**: `CheckoutService` calculated line totals from base inventory without applying custom price overrides from `product_pricing_overrides`.
-   - **Remediation**: Updated `CheckoutService.processCheckout` to look up active overrides from `product_pricing_overrides` and apply the effective customer price to line items and order totals.
+5. **Unenriched Cart Database Endpoint (`GET /api/v1/cart`)**:
+   - **Vulnerability**: `CartService.getCart` in `backend/api/src/cart/cart.service.ts` was returning raw inventory records from the database without enriching each item's product through `productsService.enrichWithDbPricing(...)`. This caused the customer price on `/cart` to fall back to the un-enriched base price (e.g. ₹122) while `/shop` and `/products/[slug]` showed the canonical active pricing policy price.
+   - **Remediation**: Updated `CartService.getCart` to query the active pricing policy and active price overrides, enriching every cart line item with `productsService.enrichWithDbPricing(...)`.
+
+6. **Server-Side Checkout Price Overrides Alignment**:
+   - **Vulnerability**: `CheckoutService` and web checkout route calculated line totals from base inventory without applying custom price overrides from `product_pricing_overrides`.
+   - **Remediation**: Updated `CheckoutService.processCheckout` and `/api/checkout` route to look up active overrides from `product_pricing_overrides` and apply the effective customer price to line items and order totals.
 
 ---
 

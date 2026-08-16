@@ -4,6 +4,8 @@ exports.cartService = exports.CartService = void 0;
 // Floria API — Cart Service
 const database_js_1 = require("../config/database.js");
 const errors_js_1 = require("../utils/errors.js");
+const products_service_js_1 = require("../products/products.service.js");
+const pricing_service_js_1 = require("../pricing/pricing.service.js");
 class CartService {
     async getCart(userId) {
         const db = (0, database_js_1.getAdminDb)();
@@ -12,7 +14,30 @@ class CartService {
             .select("*, cart_items(*, product:products(*, inventory(*), images:product_images(*)))")
             .eq("user_id", userId)
             .maybeSingle();
-        return cart || { user_id: userId, cart_items: [] };
+        if (!cart) {
+            return { user_id: userId, cart_items: [] };
+        }
+        const settings = await pricing_service_js_1.pricingService.getFinancialSettings();
+        let overrideMap = new Map();
+        try {
+            const { data: overrides } = await db
+                .from("product_pricing_overrides")
+                .select("product_id, custom_customer_price_paise")
+                .eq("is_active", true);
+            if (overrides) {
+                overrideMap = new Map(overrides.map((o) => [o.product_id, o]));
+            }
+        }
+        catch { }
+        if (cart.cart_items && Array.isArray(cart.cart_items)) {
+            cart.cart_items = cart.cart_items.map((ci) => {
+                if (ci.product) {
+                    ci.product = products_service_js_1.productsService.enrichWithDbPricing(ci.product, settings, overrideMap);
+                }
+                return ci;
+            });
+        }
+        return cart;
     }
     async addItem(userId, productId, quantity) {
         const db = (0, database_js_1.getAdminDb)();

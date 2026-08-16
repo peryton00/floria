@@ -145,6 +145,21 @@ export async function POST(req: NextRequest) {
       (inventories ?? []).map((i) => [i.product_id as string, i])
     );
 
+    // Query active policy and overrides for server-authoritative line pricing
+    const { data: activePolicy } = await supabase
+      .from("pricing_policy_versions")
+      .select("floria_profit_rate, free_delivery_threshold_paise, free_delivery_recovery_paise")
+      .eq("status", "active")
+      .maybeSingle();
+
+    const { data: overrides } = await supabase
+      .from("product_pricing_overrides")
+      .select("product_id, custom_customer_price_paise")
+      .in("product_id", productIds)
+      .eq("is_active", true);
+
+    const overrideMap = new Map((overrides || []).map((o: any) => [o.product_id, o.custom_customer_price_paise]));
+
     // 6. Validate stock + compute server-authoritative totals
     const lineItems: Array<{
       product_id: string;
@@ -166,13 +181,25 @@ export async function POST(req: NextRequest) {
         throw Errors.outOfStock(product.name as string);
       }
 
+      const basePrice = Number((inventory as any).base_price_paise ?? inventory.price_paise ?? 0);
+      const profitRate = Number(activePolicy?.floria_profit_rate ?? 0);
+      const profitPaise = Math.round(basePrice * (profitRate / 100.0));
+      const preRecovery = basePrice + profitPaise;
+      const thresholdPaise = Number(activePolicy?.free_delivery_threshold_paise ?? 0);
+      const recoveryFee = Number(activePolicy?.free_delivery_recovery_paise ?? 0);
+      const deliveryRecovery = (thresholdPaise > 0 && preRecovery >= thresholdPaise) ? recoveryFee : 0;
+      const calculatedCustomerPrice = preRecovery + deliveryRecovery;
+
+      const overridePrice = overrideMap.get(pid);
+      const unitPrice = typeof overridePrice === "number" ? overridePrice : (calculatedCustomerPrice > 0 ? calculatedCustomerPrice : Number(inventory.price_paise ?? 0));
+
       lineItems.push({
         product_id: pid,
         product_name_snapshot: product.name as string,
         seller_id_snapshot: product.seller_id as string,
-        unit_price_paise_snapshot: inventory.price_paise as number,
+        unit_price_paise_snapshot: unitPrice,
         quantity: cartItem.quantity as number,
-        line_total_paise: (inventory.price_paise as number) * (cartItem.quantity as number),
+        line_total_paise: unitPrice * (cartItem.quantity as number),
       });
     }
 
