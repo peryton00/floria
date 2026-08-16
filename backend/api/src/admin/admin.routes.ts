@@ -72,4 +72,8 @@ router.post("/delivery/preview", adminController.previewDeliveryFee);
 router.get("/settings/financials", adminController.getFinancialSettings);
 router.patch("/settings/financials", adminController.updateFinancialSettings);
 
+// Versioned Pricing Policies (Phase 3.23)
+import pricingPolicyRoutes from "./pricing-policy.routes.js";
+router.use("/pricing-policies", pricingPolicyRoutes);
+
 export default router;

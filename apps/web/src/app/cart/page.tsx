@@ -41,15 +41,29 @@ export default function CartPage() {
     return calculateCustomerProductPricePaise(rawBase);
   };
 
+  const getOriginalPrice = (item: CartItem) => {
+    const listing = item.listing;
+    const itemPrice = getItemPrice(item);
+    if (listing.pricing?.originalPricePaise && listing.pricing.originalPricePaise > itemPrice) {
+      return listing.pricing.originalPricePaise;
+    }
+    const rawOriginal = (listing.inventory as any)?.original_price_paise;
+    if (typeof rawOriginal === "number" && rawOriginal > itemPrice) {
+      return rawOriginal;
+    }
+    return null;
+  };
+
   // ── Calculations ────────────────────────────────────────────────────────────
   const subtotalPaise = cartItems.reduce(
     (sum, item) => sum + getItemPrice(item) * item.quantity,
     0
   );
-  // Mock 20% discount off original (original = price / 0.8 = price * 1.25)
+  // Real MRP discount
   const discountPaise = cartItems.reduce((sum, item) => {
     const price = getItemPrice(item);
-    const original = Math.round(price * 1.25);
+    const original = getOriginalPrice(item);
+    if (!original) return sum;
     return sum + (original - price) * item.quantity;
   }, 0);
 
@@ -139,8 +153,10 @@ export default function CartPage() {
                   const isOOS = status === "out";
                   const isLow = status === "low";
                   const customerUnitPricePaise = getItemPrice(item);
-                  const originalPricePaise = Math.round(customerUnitPricePaise * 1.25);
-                  const discountPct = Math.round((1 - customerUnitPricePaise / originalPricePaise) * 100);
+                  const originalPricePaise = getOriginalPrice(item);
+                  const discountPct = (originalPricePaise && originalPricePaise > customerUnitPricePaise)
+                    ? Math.round(((originalPricePaise - customerUnitPricePaise) / originalPricePaise) * 100)
+                    : 0;
 
                   return (
                     <div
@@ -254,9 +270,11 @@ export default function CartPage() {
                               <p className="text-sm font-bold text-ink-900">
                                 {formatINR(customerUnitPricePaise * quantity)}
                               </p>
-                              <p className="text-[11px] text-ink-300 line-through">
-                                {formatINR(originalPricePaise * quantity)}
-                              </p>
+                              {originalPricePaise && originalPricePaise > customerUnitPricePaise ? (
+                                <p className="text-[11px] text-ink-300 line-through">
+                                  {formatINR(originalPricePaise * quantity)}
+                                </p>
+                              ) : null}
                             </div>
                           </div>
                         </div>
@@ -282,12 +300,16 @@ export default function CartPage() {
             <div className="space-y-3 text-sm">
               <div className="flex justify-between text-ink-600">
                 <span>Price ({cartItems.reduce((s, i) => s + i.quantity, 0)} items)</span>
-                <span className="font-semibold text-ink-900">{formatINR(subtotalPaise + discountPaise)}</span>
+                <span className="font-semibold text-ink-900">
+                  {formatINR(subtotalPaise + discountPaise)}
+                </span>
               </div>
-              <div className="flex justify-between text-forest-700">
-                <span>Discount</span>
-                <span className="font-semibold">−{formatINR(discountPaise)}</span>
-              </div>
+              {discountPaise > 0 && (
+                <div className="flex justify-between text-forest-700">
+                  <span>Discount</span>
+                  <span className="font-semibold">−{formatINR(discountPaise)}</span>
+                </div>
+              )}
               <div className="flex justify-between text-ink-600">
                 <span>Delivery</span>
                 <span className="text-ink-400 font-medium italic text-xs">Calculated at checkout</span>

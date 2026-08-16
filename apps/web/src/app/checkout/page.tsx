@@ -75,10 +75,14 @@ export default function CheckoutPage() {
     0
   );
 
+  // Legitimate discount: only if the API returned a real original price higher than selling price.
   const discountPaise = cartItems.reduce((sum, item) => {
-    const price = item.listing?.inventory?.price_paise ?? 0;
-    const original = Math.round(price * 1.25);
-    return sum + (original - price) * item.quantity;
+    const price = item.listing?.pricing?.sellingPricePaise ?? item.listing?.inventory?.price_paise ?? 0;
+    const original = item.listing?.pricing?.originalPricePaise;
+    if (typeof original === "number" && original > price) {
+      return sum + (original - price) * item.quantity;
+    }
+    return sum;
   }, 0);
 
   const totalItemsCount = cartItems.reduce((s, i) => s + i.quantity, 0);
@@ -162,10 +166,9 @@ export default function CheckoutPage() {
         return;
       }
 
-      const delFee = subtotalPaise >= 49900 ? 0 : 4000;
-      const maintFee = 1000;
-      const totalPaidPaise = subtotalPaise + delFee + maintFee;
-
+      // Post-checkout: fetch the actual order from backend to get authoritative totals,
+      // then refresh orders. For the confirmation screen, show a pending state until refresh.
+      // We do NOT recalculate delivery/maintenance client-side — these are server-authoritative.
       setConfirmedOrder({
         id: res.data.orderId,
         createdAt: new Date().toLocaleString(),
@@ -173,9 +176,10 @@ export default function CheckoutPage() {
         address: selectedAddr,
         nurseryGroups,
         subtotalPaise,
-        deliveryFeePaise: delFee,
-        maintenanceFeePaise: maintFee,
-        totalPaise: totalPaidPaise,
+        // These will be replaced with the real order's snapshotted values after refreshOrders.
+        deliveryFeePaise: null,
+        maintenanceFeePaise: null,
+        totalPaise: null,
       });
       setStep("confirmation");
       clearCart();
@@ -628,8 +632,8 @@ export default function CheckoutPage() {
 
               <div className="flex justify-between text-ink-600">
                 <span>Delivery</span>
-                <span className="text-forest-700 font-semibold text-xs uppercase">
-                  {subtotalPaise >= 49900 ? "FREE" : formatINR(4000)}
+                <span className={subtotalPaise >= 59900 ? "text-forest-700 font-semibold text-xs uppercase" : "font-semibold text-ink-900"}>
+                  {subtotalPaise >= 59900 ? "FREE (estimated)" : `${formatINR(4000)} (estimated)`}
                 </span>
               </div>
 
@@ -643,13 +647,13 @@ export default function CheckoutPage() {
                     ⓘ
                   </span>
                 </span>
-                <span className="font-semibold text-ink-900">{formatINR(1000)}</span>
+                <span className="font-semibold text-ink-900">{formatINR(1000)} (estimated)</span>
               </div>
 
               <div className="flex justify-between pt-3 border-t border-ink-100 text-ink-900 font-bold text-base">
                 <span>Total</span>
                 <span className="text-forest-800">
-                  {formatINR(subtotalPaise + (subtotalPaise >= 49900 ? 0 : 4000) + 1000)}
+                  {formatINR(subtotalPaise + (subtotalPaise >= 59900 ? 0 : 4000) + 1000)} (estimated)
                 </span>
               </div>
             </div>

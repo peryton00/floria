@@ -26,7 +26,7 @@ export function formatINR(paise: number): string {
 export function calculateCustomerProductPricePaise(
   sellerBasePricePaise: number,
   settingsOrProfitRate?: number | FinancialSettingsInput,
-  freeDeliveryThresholdPaise = 49900,
+  freeDeliveryThresholdPaise = 59900,
   freeDeliveryRecoveryPaise = 2000
 ): number {
   if (!sellerBasePricePaise || sellerBasePricePaise <= 0) return 0;
@@ -60,7 +60,7 @@ export function calculateSellerNetEarningsPaise(
 ): number {
   if (!sellerBasePricePaise || sellerBasePricePaise <= 0) return 0;
 
-  let commissionRate = 15.0;
+  let commissionRate = 12.0;
   if (typeof settingsOrCommissionRate === "object" && settingsOrCommissionRate !== null) {
     if (typeof settingsOrCommissionRate.sellerCommissionRate === "number") {
       commissionRate = settingsOrCommissionRate.sellerCommissionRate;

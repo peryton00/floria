@@ -922,4 +922,96 @@ export class FloriaApiClient {
       }
     );
   }
+
+  // ── VERSIONED PRICING POLICIES (PHASE 3.23) ───────────────────────────────
+
+  public async getPricingPolicies(): Promise<
+    ApiResponse<{ policies: import("@floria/types").PricingPolicyVersion[] }>
+  > {
+    return this.request<{ policies: import("@floria/types").PricingPolicyVersion[] }>(
+      "/api/v1/admin/pricing-policies"
+    );
+  }
+
+  public async getActivePricingPolicy(): Promise<
+    ApiResponse<import("@floria/types").PricingPolicyVersion | null>
+  > {
+    return this.request<import("@floria/types").PricingPolicyVersion | null>(
+      "/api/v1/admin/pricing-policies/active"
+    );
+  }
+
+  public async createPricingPolicyDraft(params: {
+    sellerCommissionRate: number;
+    floriaProfitRate: number;
+    platformMaintenanceFeePaise: number;
+    freeDeliveryThresholdPaise: number;
+    freeDeliveryRecoveryPaise: number;
+    notes?: string;
+  }): Promise<ApiResponse<import("@floria/types").PricingPolicyVersion>> {
+    return this.request<import("@floria/types").PricingPolicyVersion>(
+      "/api/v1/admin/pricing-policies",
+      {
+        method: "POST",
+        body: JSON.stringify(params),
+      }
+    );
+  }
+
+  public async previewPricingPolicyImpact(
+    policyId: string
+  ): Promise<ApiResponse<import("@floria/types").PolicyImpactPreview>> {
+    return this.request<import("@floria/types").PolicyImpactPreview>(
+      `/api/v1/admin/pricing-policies/${policyId}/preview`
+    );
+  }
+
+  public async startPricingRecalculation(
+    policyId: string
+  ): Promise<ApiResponse<import("@floria/types").PricingRecalculationJob>> {
+    return this.request<import("@floria/types").PricingRecalculationJob>(
+      `/api/v1/admin/pricing-policies/${policyId}/recalculate`,
+      { method: "POST" }
+    );
+  }
+
+  public async getPricingRecalculationStatus(
+    policyId: string
+  ): Promise<ApiResponse<import("@floria/types").PricingRecalculationJob | null>> {
+    return this.request<import("@floria/types").PricingRecalculationJob | null>(
+      `/api/v1/admin/pricing-policies/${policyId}/recalculation-status`
+    );
+  }
+
+  public async activatePricingPolicy(
+    policyId: string
+  ): Promise<ApiResponse<import("@floria/types").PricingPolicyVersion>> {
+    return this.request<import("@floria/types").PricingPolicyVersion>(
+      `/api/v1/admin/pricing-policies/${policyId}/activate`,
+      { method: "POST" }
+    );
+  }
+
+  public async setPricingOverride(params: {
+    productId: string;
+    customCustomerPricePaise: number;
+    reason: string;
+  }): Promise<ApiResponse<import("@floria/types").ProductPricingOverride>> {
+    return this.request<import("@floria/types").ProductPricingOverride>(
+      "/api/v1/admin/pricing-policies/overrides",
+      {
+        method: "POST",
+        body: JSON.stringify(params),
+      }
+    );
+  }
+
+  public async removePricingOverride(
+    productId: string
+  ): Promise<ApiResponse<{ removed: boolean }>> {
+    return this.request<{ removed: boolean }>(
+      `/api/v1/admin/pricing-policies/overrides/${productId}`,
+      { method: "DELETE" }
+    );
+  }
 }

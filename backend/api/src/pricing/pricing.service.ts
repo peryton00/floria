@@ -8,20 +8,55 @@ export class PricingService {
   /**
    * Retrieves database-configured financial parameters from platform_settings.
    */
+  /**
+   * Retrieves database-configured financial parameters from active pricing policy version or platform_settings.
+   */
   async getFinancialSettings(): Promise<FinancialSettings> {
     const db = getAdminDb();
-    const { data: rows } = await db
-      .from("platform_settings")
-      .select("key, value")
-      .in("key", [
-        "seller_commission_rate",
-        "floria_profit_rate",
-        "platform_maintenance_fee_paise",
-        "free_delivery_threshold_paise",
-        "free_delivery_recovery_paise",
-      ]);
 
-    const map = new Map((rows || []).map((r) => [r.key, r.value]));
+    // 1. Try active pricing policy version
+    try {
+      const { data: activeVersion } = await db
+        .from("pricing_policy_versions")
+        .select("*")
+        .eq("status", "active")
+        .maybeSingle();
+
+      if (activeVersion) {
+        return {
+          sellerCommissionRate: Number(activeVersion.seller_commission_rate),
+          floriaProfitRate: Number(activeVersion.floria_profit_rate),
+          platformMaintenanceFeePaise: Number(activeVersion.platform_maintenance_fee_paise),
+          freeDeliveryThresholdPaise: Number(activeVersion.free_delivery_threshold_paise),
+          freeDeliveryRecoveryPaise: Number(activeVersion.free_delivery_recovery_paise),
+        };
+      }
+    } catch {
+      // Fallback if table doesn't exist yet or in unit tests
+    }
+
+    // 2. Fallback to platform_settings
+    let rows: any[] = [];
+    try {
+      const q = db.from("platform_settings").select("key, value");
+      if (typeof (q as any)?.in === "function") {
+        const res = await (q as any).in("key", [
+          "seller_commission_rate",
+          "floria_profit_rate",
+          "platform_maintenance_fee_paise",
+          "free_delivery_threshold_paise",
+          "free_delivery_recovery_paise",
+        ]);
+        rows = res?.data || [];
+      } else if (typeof (q as any)?.then === "function") {
+        const res = await q;
+        rows = res?.data || [];
+      }
+    } catch {
+      rows = [];
+    }
+
+    const map = new Map((rows || []).map((r: any) => [r.key, r.value]));
 
     const sellerCommissionRate = map.has("seller_commission_rate")
       ? Number(map.get("seller_commission_rate"))

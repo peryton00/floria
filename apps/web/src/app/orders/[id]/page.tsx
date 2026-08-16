@@ -132,9 +132,10 @@ function mapApiOrderToRecord(o: any): OrderRecord {
     paymentMethod: o.notes?.includes("COD") ? "Cash on Delivery" : "Online Payment",
     nurseryGroups: Array.from(groupsMap.values()),
     subtotalPaise: o.subtotal_paise || 0,
-    deliveryFeePaise: typeof o.delivery_fee_paise === "number" ? o.delivery_fee_paise : (o.subtotal_paise >= 49900 ? 0 : 4000),
-    maintenanceFeePaise: typeof o.maintenance_fee_paise === "number" ? o.maintenance_fee_paise : 1000,
-    totalPaise: typeof o.total_paise === "number" ? o.total_paise : ((o.subtotal_paise || 0) + (typeof o.delivery_fee_paise === "number" ? o.delivery_fee_paise : (o.subtotal_paise >= 49900 ? 0 : 4000)) + (typeof o.maintenance_fee_paise === "number" ? o.maintenance_fee_paise : 1000)),
+    // Immutable snapshot: use DB value as-is. 0 is valid (free delivery).
+    deliveryFeePaise: typeof o.delivery_fee_paise === "number" ? o.delivery_fee_paise : 0,
+    maintenanceFeePaise: typeof o.maintenance_fee_paise === "number" ? o.maintenance_fee_paise : 0,
+    totalPaise: typeof o.total_paise === "number" ? o.total_paise : (o.subtotal_paise || 0),
     discountPaise: 0,
     totalItemsCount: (o.order_items || []).reduce((s: number, i: any) => s + (i.quantity || 1), 0),
   };

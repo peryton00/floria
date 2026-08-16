@@ -803,7 +803,9 @@ export class SellerRepository {
       uniqueOrders.add(order.id);
 
       const gross = (item.unit_price_paise_snapshot || 0) * item.quantity;
-      const rate = order.commission_rate || 0.12;
+      // commission_rate is an immutable snapshot stored at order creation time.
+      // Never fall back to a hardcoded rate — use the snapshotted value from the order row.
+      const rate = order.commission_rate ?? 0;
       const commission = Math.round(gross * rate);
 
       totalGross += gross;

@@ -416,6 +416,91 @@ export interface ProductPricingCalculation {
 }
 
 // ------------------------------------------------------------------
+// Versioned Pricing Policy & Recalculation Engine (Phase 3.23)
+// ------------------------------------------------------------------
+
+export type PricingPolicyStatus = "draft" | "preparing" | "ready" | "active" | "archived" | "failed";
+
+export interface PricingPolicyVersion {
+  id: string;
+  versionNumber: number;
+  sellerCommissionRate: number; // e.g. 12.0 for 12%
+  floriaProfitRate: number; // e.g. 2.0 for 2%
+  platformMaintenanceFeePaise: number; // e.g. 1000 for ₹10.00
+  freeDeliveryThresholdPaise: number; // e.g. 59900 for ₹599.00
+  freeDeliveryRecoveryPaise: number; // e.g. 2000 for ₹20.00
+  status: PricingPolicyStatus;
+  notes?: string | null;
+  createdBy?: string | null;
+  activatedAt?: Timestamp | null;
+  archivedAt?: Timestamp | null;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export type RecalculationJobStatus = "queued" | "in_progress" | "completed" | "failed" | "cancelled";
+
+export interface PricingRecalculationJob {
+  id: string;
+  policyVersionId: string;
+  status: RecalculationJobStatus;
+  totalListings: number;
+  processedListings: number;
+  failedListings: number;
+  batchSize: number;
+  currentBatch: number;
+  totalBatches: number;
+  errorMessage?: string | null;
+  createdBy?: string | null;
+  startedAt?: Timestamp | null;
+  completedAt?: Timestamp | null;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export interface ProductPricingReadModel {
+  id: string;
+  productId: string;
+  sellerId: string;
+  policyVersionId: string;
+  sellerBasePricePaise: number;
+  floriaProfitRate: number;
+  floriaProfitPaise: number;
+  deliveryRecoveryPaise: number;
+  customerProductPricePaise: number;
+  isFreeDeliveryEligible: boolean;
+  sellerCommissionRate: number;
+  sellerCommissionPaise: number;
+  sellerNetPaise: number;
+  isOverride: boolean;
+  overrideReason?: string | null;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export interface ProductPricingOverride {
+  id: string;
+  productId: string;
+  policyVersionId?: string | null;
+  customCustomerPricePaise: number;
+  reason: string;
+  createdBy?: string | null;
+  isActive: boolean;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export interface PolicyImpactPreview {
+  policyVersionId?: string;
+  affectedListingsCount: number;
+  averageCustomerPriceChangePaise: number;
+  freeDeliveryEligibleListingsCount: number;
+  priceIncreaseCount: number;
+  priceDecreaseCount: number;
+  priceUnchangedCount: number;
+}
+
+// ------------------------------------------------------------------
 // Delivery Fee Engine & Policy Interfaces (Phase 3.17.2)
 // ------------------------------------------------------------------
 

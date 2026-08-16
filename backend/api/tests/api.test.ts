@@ -114,12 +114,22 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
         return {
           select: () => ({
             eq: () => ({
-              maybeSingle: async () => ({ data: { key: "platform_commission_rate", value: 12.0 }, error: null }),
+              maybeSingle: async () => ({ data: { key: "seller_commission_rate", value: 12.0 }, error: null }),
+            }),
+            in: async () => ({
+              data: [
+                { key: "seller_commission_rate", value: 12.0 },
+                { key: "floria_profit_rate", value: 2.0 },
+                { key: "platform_maintenance_fee_paise", value: 1000 },
+                { key: "free_delivery_threshold_paise", value: 59900 },
+                { key: "free_delivery_recovery_paise", value: 2000 },
+              ],
+              error: null,
             }),
           }),
           upsert: (_payload: any) => ({
             select: () => ({
-              single: async () => ({ data: { key: "platform_commission_rate", value: _payload?.value ?? 15.0 }, error: null }),
+              single: async () => ({ data: { key: "seller_commission_rate", value: _payload?.value ?? 12.0 }, error: null }),
             }),
           }),
         };
@@ -399,7 +409,11 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
           return { insert: async () => ({ error: null }) };
         }
         return {
-          select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null }) }) }),
+          select: () => ({
+            eq: () => ({ maybeSingle: async () => ({ data: null }) }),
+            in: async () => ({ data: [] }),
+            maybeSingle: async () => ({ data: null }),
+          }),
           insert: async () => ({ error: null }),
           delete: () => ({ eq: async () => ({ error: null }) }),
         };

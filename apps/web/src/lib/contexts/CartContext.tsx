@@ -45,7 +45,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
       const rawBasePrice = ci.unit_price_paise_snapshot ?? inv.price_paise ?? 0;
       const customerPrice = calculateCustomerProductPricePaise(rawBasePrice);
-      const originalPricePaise = Math.round(customerPrice * 1.25);
+      const originalPricePaise = inv.original_price_paise && inv.original_price_paise > customerPrice ? inv.original_price_paise : null;
+      const discountAmountPaise = originalPricePaise ? originalPricePaise - customerPrice : 0;
+      const discountPercentage = originalPricePaise ? Math.round((discountAmountPaise / originalPricePaise) * 100) : 0;
 
       return {
         listing: {
@@ -60,9 +62,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           pricing: {
             sellingPricePaise: customerPrice,
             originalPricePaise,
-            discountAmountPaise: originalPricePaise - customerPrice,
-            discountPercentage: 20,
-            isDiscounted: true,
+            discountAmountPaise,
+            discountPercentage,
+            isDiscounted: discountAmountPaise > 0,
             isFreeDelivery: customerPrice >= 49900,
           },
         },
