@@ -13,6 +13,8 @@
    Design Tokens — CSS Custom Properties
    ============================================================ */
 :root {
+  color-scheme: light;
+
   /* --- Color: Primary — Deep Forest Green --- */
   --color-forest-50:  #f0f7ec;
   --color-forest-100: #d9edcf;
@@ -209,6 +211,7 @@
 }
 
 html {
+  color-scheme: light;
   font-family: var(--font-sans);
   background-color: var(--color-cream-100);
   color: var(--color-ink-700);

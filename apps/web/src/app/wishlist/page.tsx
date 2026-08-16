@@ -5,13 +5,13 @@ import Link from "next/link";
 import { CustomerShell } from "@/components/layout/CustomerShell";
 import { useWishlist } from "@/lib/contexts/WishlistContext";
 import { useCart } from "@/lib/contexts/CartContext";
-import { formatINR } from "@/lib/format";
-import { WishlistIcon, LeafIcon, StarIcon } from "@/components/ui/Icons";
-import { Badge } from "@/components/ui/Badge";
+import { WishlistIcon } from "@/components/ui/Icons";
+import { StarRating } from "@/components/ui/StarRating";
+import { ProductPriceBlock } from "@/components/ui/ProductPriceBlock";
 
 export default function WishlistPage() {
   const { wishlistItems, removeFromWishlist } = useWishlist();
-  const { addToCart, cartItems } = useCart();
+  const { addToCart } = useCart();
 
   const handleMoveToCart = (item: any) => {
     // Add to cart (handles duplicates inside CartContext)
@@ -57,16 +57,17 @@ export default function WishlistPage() {
         // Wishlist Grid
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
           {wishlistItems.map((item) => {
-            const { product, inventory, primary_image, seller, category } = item;
+            const { product, inventory, primary_image, seller, category, rating_summary, pricing } = item;
             const isOutOfStock = inventory.stock_quantity === 0;
 
-            // Mock rating logic matching ProductCard.tsx
-            const mockRating = parseFloat((4.3 + (product.name.charCodeAt(0) % 10) * 0.05).toFixed(1));
-            const mockCount = 40 + (product.name.length * 7);
+            const reviewCount = rating_summary?.review_count ?? 0;
+            const avgRating = rating_summary?.avg_rating ?? 0;
 
-            // Mock discount matching ProductCard.tsx (assume 20% if discount not specified)
-            const discountPercent = 20;
-            const originalPrice = Math.round(inventory.price_paise / (1 - discountPercent / 100) / 100) * 100;
+            const sellingPricePaise = pricing?.sellingPricePaise ?? inventory.price_paise;
+            const originalPricePaise = pricing?.originalPricePaise;
+            const discountPercent = (originalPricePaise && originalPricePaise > sellingPricePaise)
+              ? Math.round(((originalPricePaise - sellingPricePaise) / originalPricePaise) * 100)
+              : 0;
 
             return (
               <div
@@ -89,11 +90,11 @@ export default function WishlistPage() {
                       <span className="px-2 py-0.5 text-[9px] font-bold text-white rounded bg-ink-500">
                         OUT OF STOCK
                       </span>
-                    ) : (
+                    ) : discountPercent > 0 ? (
                       <span className="px-2 py-0.5 text-[9px] font-bold text-white rounded bg-forest-700">
                         {discountPercent}% OFF
                       </span>
-                    )}
+                    ) : null}
                   </div>
 
                   {/* Remove Button */}
@@ -110,22 +111,19 @@ export default function WishlistPage() {
                 {/* Details Section */}
                 <div className="p-3.5 flex flex-col flex-1">
                   {/* Category */}
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-forest-700 mb-1">
-                    {category?.name || "Indoor Plant"}
-                  </span>
+                  {category?.name && (
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-forest-700 mb-1">
+                      {category.name}
+                    </span>
+                  )}
 
                   {/* Rating */}
-                  <div className="flex items-center gap-1 mb-2">
-                    <div className="flex">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <StarIcon
-                          key={i}
-                          size={11}
-                          className={i < Math.floor(mockRating) ? "text-amber-400 fill-amber-400" : "text-ink-100"}
-                        />
-                      ))}
-                    </div>
-                    <span className="text-[10px] text-ink-300">({mockCount})</span>
+                  <div className="mb-2 min-h-[18px]">
+                    {reviewCount > 0 ? (
+                      <StarRating rating={avgRating} count={reviewCount} size="sm" />
+                    ) : (
+                      <span className="text-[11px] text-ink-400 font-ui">No reviews yet</span>
+                    )}
                   </div>
 
                   {/* Name */}
@@ -136,35 +134,35 @@ export default function WishlistPage() {
                   {/* Seller */}
                   <p className="text-[11px] text-ink-400 mb-3 font-ui">{seller.business_name}</p>
 
-                  {/* Price */}
+                  {/* Price & Move to Cart CTA */}
                   <div className="mt-auto">
-                    <div className="flex items-baseline gap-1.5 mb-3">
-                      <span className="text-sm font-bold text-ink-900">
-                        {formatINR(inventory.price_paise)}
-                      </span>
-                      <span className="text-[11px] text-ink-300 line-through">
-                        {formatINR(originalPrice * 100)}
-                      </span>
-                    </div>
+                    <ProductPriceBlock
+                      sellingPricePaise={sellingPricePaise}
+                      originalPricePaise={originalPricePaise}
+                      discountPercentage={discountPercent}
+                      size="sm"
+                      showSavings={false}
+                    />
 
-                    {/* Move to Cart CTA */}
-                    {isOutOfStock ? (
-                      <button
-                        disabled
-                        aria-label={`${product.name} is out of stock`}
-                        className="w-full py-2 bg-ink-100 text-ink-400 text-xs font-bold uppercase rounded-lg cursor-not-allowed border border-transparent"
-                      >
-                        Out of Stock
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handleMoveToCart(item)}
-                        aria-label={`Move ${product.name} to cart`}
-                        className="w-full py-2 bg-forest-700 hover:bg-forest-800 text-white text-xs font-bold uppercase rounded-lg transition-colors border border-transparent focus:outline-none focus:ring-2 focus:ring-forest-600 focus:ring-offset-1"
-                      >
-                        Move to Cart
-                      </button>
-                    )}
+                    <div className="mt-3">
+                      {isOutOfStock ? (
+                        <button
+                          disabled
+                          aria-label={`${product.name} is out of stock`}
+                          className="w-full py-2 bg-ink-100 text-ink-400 text-xs font-bold uppercase rounded-lg cursor-not-allowed border border-transparent"
+                        >
+                          Out of Stock
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleMoveToCart(item)}
+                          aria-label={`Move ${product.name} to cart`}
+                          className="w-full py-2 bg-forest-700 hover:bg-forest-800 text-white text-xs font-bold uppercase rounded-lg transition-colors border border-transparent focus:outline-none focus:ring-2 focus:ring-forest-600 focus:ring-offset-1"
+                        >
+                          Move to Cart
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

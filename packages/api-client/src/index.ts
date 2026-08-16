@@ -215,16 +215,16 @@ export class FloriaApiClient {
   }
 
   // Public Catalog API (/api/v1/catalog)
-  public async getProducts(params?: QueryParams): Promise<ApiResponse<any[]>> {
-    return this.request<any[]>(`/api/v1/catalog/products${buildQueryString(params)}`);
+  public async getProducts(params?: QueryParams, options: RequestInit = {}): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>(`/api/v1/catalog/products${buildQueryString(params)}`, options);
   }
 
-  public async getProductBySlug(slug: string): Promise<ApiResponse<any>> {
-    return this.request<any>(`/api/v1/catalog/products/${slug}`);
+  public async getProductBySlug(slug: string, options: RequestInit = {}): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/v1/catalog/products/${slug}`, options);
   }
 
-  public async getCategories(): Promise<ApiResponse<any[]>> {
-    return this.request<any[]>("/api/v1/catalog/categories");
+  public async getCategories(options: RequestInit = {}): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>("/api/v1/catalog/categories", options);
   }
 
   // Customer Cart API (/api/v1/customer/cart)
@@ -832,19 +832,21 @@ export class FloriaApiClient {
   // ── CATALOG: TRENDING, RELATED, RANKED NURSERIES ─────────────────────────
 
   public async getTrendingProducts(
-    params?: { limit?: number }
+    params?: { limit?: number },
+    options: RequestInit = {}
   ): Promise<ApiResponse<any[]>> {
     return this.request<any[]>(
-      `/api/v1/catalog/products/trending${buildQueryString(params)}`
+      `/api/v1/catalog/products/trending${buildQueryString(params)}`,
+      options
     );
   }
 
-  public async getRelatedProducts(slug: string): Promise<ApiResponse<any[]>> {
-    return this.request<any[]>(`/api/v1/catalog/products/${slug}/related`);
+  public async getRelatedProducts(slug: string, options: RequestInit = {}): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>(`/api/v1/catalog/products/${slug}/related`, options);
   }
 
-  public async getRankedNurseries(): Promise<ApiResponse<NurserySummary[]>> {
-    return this.request<NurserySummary[]>(`/api/v1/catalog/sellers`);
+  public async getRankedNurseries(options: RequestInit = {}): Promise<ApiResponse<NurserySummary[]>> {
+    return this.request<NurserySummary[]>(`/api/v1/catalog/sellers`, options);
   }
 
   // ── ADMIN FINANCIAL TRANSPARENCY ─────────────────────────────────────────

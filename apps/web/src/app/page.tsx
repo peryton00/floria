@@ -75,9 +75,11 @@ async function fetchRankedNurseries(): Promise<NurserySummary[]> {
 import { FadeUp, AnimatedSection, BotanicalAmbient } from "@/components/ui/motion";
 
 export default async function HomePage() {
-  const allListings = await getProductListings();
+  const [allListings, nurseries] = await Promise.all([
+    getProductListings(),
+    fetchRankedNurseries(),
+  ]);
   const bestSellers = allListings.slice(0, 5);
-  const nurseries = await fetchRankedNurseries();
 
   return (
     <CustomerShell fullWidth>

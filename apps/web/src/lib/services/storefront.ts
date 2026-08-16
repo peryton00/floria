@@ -202,7 +202,7 @@ export function filterAndSortListings(
 
 export async function getActiveCategories(): Promise<Category[]> {
   try {
-    const res = await api.getCategories();
+    const res = await api.getCategories({ next: { revalidate: 300 } });
     if (res.success && res.data && res.data.length > 0) {
       return res.data;
     }
@@ -226,7 +226,7 @@ export async function getProductListings(
     if (categoryId) params["category_id"] = categoryId;
     if (options.searchQuery) params["search"] = options.searchQuery;
 
-    const res = await api.getProducts(params);
+    const res = await api.getProducts(params, { next: { revalidate: 180 } });
     if (res.success && res.data && res.data.length > 0) {
       const rows = res.data as Record<string, unknown>[];
       const listings = rows.map(mapRow);
@@ -262,7 +262,7 @@ export interface ProductDetailListing extends ProductListing {
 
 export async function getProductListingBySlug(slug: string): Promise<ProductDetailListing | null> {
   try {
-    const res = await api.getProductBySlug(slug);
+    const res = await api.getProductBySlug(slug, { next: { revalidate: 180 } });
     if (res.success && res.data) {
       const row = res.data as Record<string, unknown>;
       return { ...mapRow(row), images: (row["images"] as ProductImage[]) ?? [] };
@@ -287,7 +287,7 @@ export async function searchProductListings(
 
 export async function getTrendingListings(limit = 10): Promise<ProductListing[]> {
   try {
-    const res = await api.getTrendingProducts({ limit });
+    const res = await api.getTrendingProducts({ limit }, { next: { revalidate: 120 } });
     if (res.success && res.data && res.data.length > 0) {
       return (res.data as Record<string, unknown>[]).map(mapRow);
     }
@@ -299,7 +299,7 @@ export async function getTrendingListings(limit = 10): Promise<ProductListing[]>
 
 export async function getRelatedListings(slug: string): Promise<ProductListing[]> {
   try {
-    const res = await api.getRelatedProducts(slug);
+    const res = await api.getRelatedProducts(slug, { next: { revalidate: 180 } });
     if (res.success && res.data && res.data.length > 0) {
       return (res.data as Record<string, unknown>[]).map(mapRow);
     }

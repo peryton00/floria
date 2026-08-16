@@ -77,14 +77,14 @@ var FloriaApiClient = class {
     return this.request("/ready");
   }
   // Public Catalog API (/api/v1/catalog)
-  async getProducts(params) {
-    return this.request(`/api/v1/catalog/products${buildQueryString(params)}`);
+  async getProducts(params, options = {}) {
+    return this.request(`/api/v1/catalog/products${buildQueryString(params)}`, options);
   }
-  async getProductBySlug(slug) {
-    return this.request(`/api/v1/catalog/products/${slug}`);
+  async getProductBySlug(slug, options = {}) {
+    return this.request(`/api/v1/catalog/products/${slug}`, options);
   }
-  async getCategories() {
-    return this.request("/api/v1/catalog/categories");
+  async getCategories(options = {}) {
+    return this.request("/api/v1/catalog/categories", options);
   }
   // Customer Cart API (/api/v1/customer/cart)
   async getCart() {
@@ -554,16 +554,17 @@ var FloriaApiClient = class {
     });
   }
   // ── CATALOG: TRENDING, RELATED, RANKED NURSERIES ─────────────────────────
-  async getTrendingProducts(params) {
+  async getTrendingProducts(params, options = {}) {
     return this.request(
-      `/api/v1/catalog/products/trending${buildQueryString(params)}`
+      `/api/v1/catalog/products/trending${buildQueryString(params)}`,
+      options
     );
   }
-  async getRelatedProducts(slug) {
-    return this.request(`/api/v1/catalog/products/${slug}/related`);
+  async getRelatedProducts(slug, options = {}) {
+    return this.request(`/api/v1/catalog/products/${slug}/related`, options);
   }
-  async getRankedNurseries() {
-    return this.request(`/api/v1/catalog/sellers`);
+  async getRankedNurseries(options = {}) {
+    return this.request(`/api/v1/catalog/sellers`, options);
   }
   // ── ADMIN FINANCIAL TRANSPARENCY ─────────────────────────────────────────
   async getAdminProductFinancialCalculation(productId) {

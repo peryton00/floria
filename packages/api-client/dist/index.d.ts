@@ -155,9 +155,9 @@ declare class FloriaApiClient {
         status: string;
         database: string;
     }>>;
-    getProducts(params?: QueryParams): Promise<ApiResponse<any[]>>;
-    getProductBySlug(slug: string): Promise<ApiResponse<any>>;
-    getCategories(): Promise<ApiResponse<any[]>>;
+    getProducts(params?: QueryParams, options?: RequestInit): Promise<ApiResponse<any[]>>;
+    getProductBySlug(slug: string, options?: RequestInit): Promise<ApiResponse<any>>;
+    getCategories(options?: RequestInit): Promise<ApiResponse<any[]>>;
     getCart(): Promise<ApiResponse<any>>;
     addToCart(productId: string, quantity: number): Promise<ApiResponse<any>>;
     updateCartQuantity(productId: string, quantity: number): Promise<ApiResponse<any>>;
@@ -326,9 +326,9 @@ declare class FloriaApiClient {
     }>>;
     getTrendingProducts(params?: {
         limit?: number;
-    }): Promise<ApiResponse<any[]>>;
-    getRelatedProducts(slug: string): Promise<ApiResponse<any[]>>;
-    getRankedNurseries(): Promise<ApiResponse<NurserySummary[]>>;
+    }, options?: RequestInit): Promise<ApiResponse<any[]>>;
+    getRelatedProducts(slug: string, options?: RequestInit): Promise<ApiResponse<any[]>>;
+    getRankedNurseries(options?: RequestInit): Promise<ApiResponse<NurserySummary[]>>;
     getAdminProductFinancialCalculation(productId: string): Promise<ApiResponse<_floria_types.AdminProductFinancialCalculation>>;
     getAdminOrderFinancialBreakdown(orderId: string): Promise<ApiResponse<_floria_types.AdminOrderFinancialBreakdown>>;
     getDeliverySettings(): Promise<ApiResponse<_floria_types.DeliverySettings>>;

@@ -164,7 +164,7 @@ class CheckoutService {
             const paymentIntent = await provider.createPaymentIntent({
                 masterOrderId: orderId,
                 customerId: input.userId,
-                amountPaise: subtotalPaise,
+                amountPaise: finalTotalPaise,
             });
             // Insert Payments Record
             const { data: paymentRow } = await db.from("payments").insert({
@@ -173,7 +173,7 @@ class CheckoutService {
                 payment_reference: paymentIntent.paymentReference,
                 provider: input.paymentMethod,
                 currency: "INR",
-                amount_paise: subtotalPaise,
+                amount_paise: finalTotalPaise,
                 status: paymentIntent.status,
                 raw_provider_response: paymentIntent.rawProviderResponse,
             }).select().maybeSingle();

@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "pnpm --filter @floria/web dev",
     "dev:backend": "pnpm --filter @floria/api dev",
-    "build": "pnpm --filter @floria/web build && pnpm --filter @floria/api build",
+    "build": "pnpm --filter @floria/api-client build && pnpm --filter @floria/web build && pnpm --filter @floria/api build",
     "build:backend": "pnpm --filter @floria/api build",
     "lint": "pnpm --filter @floria/web lint",
     "typecheck": "pnpm --filter @floria/web typecheck && pnpm --filter @floria/api typecheck",
