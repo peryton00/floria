@@ -302,25 +302,86 @@ export class SellerRepository {
   async findSellerOrders(sellerId: string, filters?: { status?: string; search?: string }): Promise<any[]> {
     const db = getAdminDb();
 
-    // Query order_items where seller_id_snapshot = sellerId OR product seller_id = sellerId
-    const { data: items, error: itemsErr } = await db
+    // Retrieve seller profile to get both seller profile ID and user_id
+    const profQuery = db.from("seller_profiles").select("id, user_id, business_name");
+    const { data: sellerProf } = await (typeof profQuery.or === "function"
+      ? profQuery.or(`id.eq.${sellerId},user_id.eq.${sellerId}`).maybeSingle()
+      : profQuery.eq("id", sellerId).maybeSingle());
+
+    const targetSellerId = sellerProf?.id || sellerId;
+    const targetUserId = sellerProf?.user_id || sellerId;
+    const sellerName = sellerProf?.business_name || "Nursery";
+
+    // 1. Fetch order_items where seller_id_snapshot matches seller profile ID OR user ID
+    const itemsQuery = db
       .from("order_items")
-      .select("*, order:orders(*), product:products(name,slug), seller:seller_profiles(id,business_name)")
-      .eq("seller_id_snapshot", sellerId);
+      .select("*, order:orders(*), product:products(name,slug,seller_id), seller:seller_profiles(id,business_name)");
+    const { data: items } = await (typeof itemsQuery.or === "function"
+      ? itemsQuery.or(`seller_id_snapshot.eq.${targetSellerId},seller_id_snapshot.eq.${targetUserId}`)
+      : itemsQuery.eq("seller_id_snapshot", sellerId));
 
-    if (itemsErr || !items || items.length === 0) return [];
+    // 2. Fetch orders where order.seller_id matches targetSellerId or targetUserId
+    const ordersQuery = db
+      .from("orders")
+      .select("*, order_items(*, product:products(name,slug,seller_id), seller:seller_profiles(id,business_name))");
+    const { data: masterOrders } = await (typeof ordersQuery.or === "function"
+      ? ordersQuery.or(`seller_id.eq.${targetSellerId},seller_id.eq.${targetUserId}`)
+      : ordersQuery.eq("seller_id", sellerId));
 
-    // Group items by order
     const orderMap = new Map<string, any>();
-    items.forEach((item: any) => {
+
+    // Process master orders first
+    (masterOrders || []).forEach((order: any) => {
+      const lineItems = (order.order_items || []).map((item: any) => {
+        const pricePaise = item.unit_price_paise_snapshot || 0;
+        return {
+          product: {
+            id: item.product_id,
+            name: item.product_name_snapshot || item.product?.name || "Plant",
+            slug: item.product?.slug || "plant",
+          },
+          quantity: item.quantity,
+          pricePaise,
+        };
+      });
+
+      const subtotalPaise = lineItems.reduce((sum: number, it: any) => sum + it.pricePaise * it.quantity, 0) || order.subtotal_paise || 0;
+
+      orderMap.set(order.id, {
+        masterOrderId: order.id,
+        sellerId: targetSellerId,
+        sellerName,
+        customer: {
+          name: order.delivery_address_snapshot?.full_name || "Customer",
+          phone: order.delivery_address_snapshot?.phone || "",
+          address: order.delivery_address_snapshot || {},
+        },
+        items: lineItems,
+        subtotalPaise,
+        discountPaise: 0,
+        totalPaise: subtotalPaise,
+        status: order.status === "preparing" ? "Preparing" : "Order Placed",
+        masterStatus: order.status,
+        paymentMethod: order.notes?.includes("COD") ? "Cash on Delivery" : "Online Payment",
+        createdAt: new Date(order.created_at || Date.now()).toLocaleDateString("en-IN", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        }),
+        createdAtTimestamp: new Date(order.created_at || Date.now()).getTime(),
+      });
+    });
+
+    // Process order items to catch any items assigned to this seller across split orders
+    (items || []).forEach((item: any) => {
       const order = item.order;
       if (!order) return;
 
       if (!orderMap.has(order.id)) {
         orderMap.set(order.id, {
           masterOrderId: order.id,
-          sellerId,
-          sellerName: item.seller?.business_name || "Nursery",
+          sellerId: targetSellerId,
+          sellerName: item.seller?.business_name || sellerName,
           customer: {
             name: order.delivery_address_snapshot?.full_name || "Customer",
             phone: order.delivery_address_snapshot?.phone || "",
@@ -343,26 +404,28 @@ export class SellerRepository {
       }
 
       const entry = orderMap.get(order.id);
-      const pricePaise = item.unit_price_paise_snapshot || 0;
-      entry.items.push({
-        product: {
-          id: item.product_id,
-          name: item.product_name_snapshot || item.product?.name || "Plant",
-          slug: item.product?.slug || "plant",
-        },
-        quantity: item.quantity,
-        pricePaise,
-      });
-
-      entry.subtotalPaise += pricePaise * item.quantity;
-      entry.totalPaise = entry.subtotalPaise;
+      const exists = entry.items.some((it: any) => it.product.id === item.product_id);
+      if (!exists) {
+        const pricePaise = item.unit_price_paise_snapshot || 0;
+        entry.items.push({
+          product: {
+            id: item.product_id,
+            name: item.product_name_snapshot || item.product?.name || "Plant",
+            slug: item.product?.slug || "plant",
+          },
+          quantity: item.quantity,
+          pricePaise,
+        });
+        entry.subtotalPaise += pricePaise * item.quantity;
+        entry.totalPaise = entry.subtotalPaise;
+      }
     });
 
-    // Check seller_order_fulfillments table for status overrides
-    const { data: fulfillments } = await db
-      .from("seller_order_fulfillments")
-      .select("*")
-      .eq("seller_id", sellerId);
+    // Apply status overrides from seller_order_fulfillments table
+    const fulQuery = db.from("seller_order_fulfillments").select("*");
+    const { data: fulfillments } = await (typeof fulQuery.or === "function"
+      ? fulQuery.or(`seller_id.eq.${targetSellerId},seller_id.eq.${targetUserId}`)
+      : fulQuery.eq("seller_id", sellerId));
 
     if (fulfillments) {
       const fulMap = new Map<string, string>();
@@ -388,12 +451,89 @@ export class SellerRepository {
       );
     }
 
+    // Sort by newest first
+    results.sort((a, b) => b.createdAtTimestamp - a.createdAtTimestamp);
+
     return results;
   }
 
   async findSellerOrderById(sellerId: string, orderId: string): Promise<any | null> {
+    // 1. Check in memory list first
     const orders = await this.findSellerOrders(sellerId);
-    return orders.find((o) => o.masterOrderId.toLowerCase() === orderId.toLowerCase()) || null;
+    const inList = orders.find((o) => o.masterOrderId.toLowerCase() === orderId.toLowerCase());
+    if (inList) return inList;
+
+    // 2. If not found in list, query master order directly by orderId
+    const db = getAdminDb();
+    const { data: order } = await db
+      .from("orders")
+      .select("*, order_items(*, product:products(name,slug,seller_id), seller:seller_profiles(id,business_name)), seller_order_fulfillments(*)")
+      .eq("id", orderId)
+      .maybeSingle();
+
+    if (!order) return null;
+
+    const profQuery = db.from("seller_profiles").select("id, user_id, business_name");
+    const { data: sellerProf } = await (typeof profQuery.or === "function"
+      ? profQuery.or(`id.eq.${sellerId},user_id.eq.${sellerId}`).maybeSingle()
+      : profQuery.eq("id", sellerId).maybeSingle());
+
+    const targetSellerId = sellerProf?.id || sellerId;
+    const targetUserId = sellerProf?.user_id || sellerId;
+    const sellerName = sellerProf?.business_name || "Nursery";
+
+    const belongsToSeller =
+      order.seller_id === targetSellerId ||
+      order.seller_id === targetUserId ||
+      (order.order_items || []).some(
+        (li: any) =>
+          li.seller_id_snapshot === targetSellerId ||
+          li.seller_id_snapshot === targetUserId ||
+          li.product?.seller_id === targetSellerId ||
+          li.product?.seller_id === targetUserId
+      );
+
+    if (!belongsToSeller) return null;
+
+    const items = order.order_items || [];
+    const fuls = order.seller_order_fulfillments || [];
+    const fulMatch = fuls.find((f: any) => f.seller_id === targetSellerId || f.seller_id === targetUserId);
+
+    const lineItems = items.map((it: any) => ({
+      product: {
+        id: it.product_id,
+        name: it.product_name_snapshot || it.product?.name || "Plant",
+        slug: it.product?.slug || "plant",
+      },
+      quantity: it.quantity,
+      pricePaise: it.unit_price_paise_snapshot || 0,
+    }));
+
+    const subtotalPaise = lineItems.reduce((sum: number, it: any) => sum + it.pricePaise * it.quantity, 0) || order.subtotal_paise || 0;
+
+    return {
+      masterOrderId: order.id,
+      sellerId: targetSellerId,
+      sellerName,
+      customer: {
+        name: order.delivery_address_snapshot?.full_name || "Customer",
+        phone: order.delivery_address_snapshot?.phone || "",
+        address: order.delivery_address_snapshot || {},
+      },
+      items: lineItems,
+      subtotalPaise,
+      discountPaise: 0,
+      totalPaise: subtotalPaise,
+      status: fulMatch?.status || (order.status === "preparing" ? "Preparing" : "Order Placed"),
+      masterStatus: order.status,
+      paymentMethod: order.notes?.includes("COD") ? "Cash on Delivery" : "Online Payment",
+      createdAt: new Date(order.created_at || Date.now()).toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      }),
+      createdAtTimestamp: new Date(order.created_at || Date.now()).getTime(),
+    };
   }
 
   async updateFulfillmentStatus(sellerId: string, masterOrderId: string, newStatus: string): Promise<any> {
