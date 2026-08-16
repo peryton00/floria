@@ -518,6 +518,12 @@ var FloriaApiClient = class {
       body: JSON.stringify(payload)
     });
   }
+  async updateMyReview(reviewId, payload) {
+    return this.request(`/api/v1/customer/reviews/${reviewId}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload)
+    });
+  }
   async markReviewHelpful(productId, reviewId) {
     return this.request(`/api/v1/catalog/products/${productId}/reviews/${reviewId}/helpful`, {
       method: "POST"

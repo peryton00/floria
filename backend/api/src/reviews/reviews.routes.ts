@@ -48,6 +48,12 @@ router.get(
   reviewsController.getMyReviews
 );
 
+router.patch(
+  "/customer/reviews/:id",
+  authenticateToken,
+  reviewsController.updateMyReview
+);
+
 // ── SELLER: list reviews for seller's products ────────────────────────────
 router.get(
   "/seller/reviews",

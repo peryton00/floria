@@ -145,6 +145,50 @@ export class ReviewRepository {
     return null;
   }
 
+  // ── USER EXISTING REVIEW CHECK ────────────────────────────────────────────
+  async findUserReviewForProduct(customerId: string, productId: string) {
+    const db = getAdminDb();
+    const { data } = await db
+      .from("product_reviews")
+      .select("id, rating, title, body, status, created_at, updated_at")
+      .eq("customer_id", customerId)
+      .eq("product_id", productId)
+      .maybeSingle();
+    return data ?? null;
+  }
+
+  // ── UPDATE CUSTOMER REVIEW ────────────────────────────────────────────────
+  async updateCustomerReview(
+    reviewId: string,
+    customerId: string,
+    payload: { rating?: number; title?: string; body?: string }
+  ) {
+    const db = getAdminDb();
+    const updateData: Record<string, any> = {
+      updated_at: new Date().toISOString(),
+    };
+    if (typeof payload.rating === "number") updateData.rating = payload.rating;
+    if (typeof payload.title === "string") updateData.title = payload.title.trim() || null;
+    if (typeof payload.body === "string") updateData.body = payload.body.trim() || null;
+
+    const { data, error } = await db
+      .from("product_reviews")
+      .update(updateData)
+      .eq("id", reviewId)
+      .eq("customer_id", customerId)
+      .select("id, product_id, rating, title, body, status, created_at, updated_at, product:products(seller_id)")
+      .maybeSingle();
+
+    if (error || !data) return null;
+
+    const sellerId = Array.isArray(data.product)
+      ? data.product[0]?.seller_id
+      : (data.product as any)?.seller_id;
+
+    await this.refreshRatings(data.product_id, sellerId);
+    return data;
+  }
+
   // ── SUBMIT REVIEW ─────────────────────────────────────────────────────────
   async create(payload: {
     product_id: string;

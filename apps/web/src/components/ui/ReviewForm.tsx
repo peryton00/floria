@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { StarIcon } from "@/components/ui/Icons";
-import { api } from "@/lib/api";
+import { StarRating } from "@/components/ui/StarRating";
+import { api, type ProductReview } from "@/lib/api";
 import { useToast } from "@/lib/contexts/ToastContext";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { useOrders } from "@/lib/contexts/OrderContext";
@@ -26,6 +28,7 @@ export function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
 
   const [checking, setChecking] = useState(true);
   const [isEligible, setIsEligible] = useState(false);
+  const [userReview, setUserReview] = useState<ProductReview | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -33,7 +36,7 @@ export function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
     async function checkEligibility() {
       setChecking(true);
 
-      // Check local order state first (instant)
+      // Check local order state first
       const hasLocalDeliveredOrder = orders.some(
         (o) =>
           ["delivered", "picked_up", "order placed", "nursery confirmed", "preparing", "ready for pickup", "out for delivery"].includes(
@@ -46,15 +49,6 @@ export function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
           )
       );
 
-      if (hasLocalDeliveredOrder) {
-        if (isMounted) {
-          setIsEligible(true);
-          setChecking(false);
-        }
-        return;
-      }
-
-      // Check remote API backend
       try {
         const supabase = getSupabaseBrowserClient();
         const {
@@ -63,7 +57,7 @@ export function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
 
         if (!session) {
           if (isMounted) {
-            setIsEligible(false);
+            setIsEligible(hasLocalDeliveredOrder);
             setChecking(false);
           }
           return;
@@ -71,7 +65,14 @@ export function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
 
         const res = await api.getReviewEligibility(productId);
         if (isMounted) {
-          setIsEligible(Boolean(res.success && res.data?.canReview));
+          if (res.data?.userReview) {
+            setUserReview(res.data.userReview);
+            setIsEligible(false);
+          } else if (res.success && res.data?.canReview) {
+            setIsEligible(true);
+          } else {
+            setIsEligible(hasLocalDeliveredOrder);
+          }
           setChecking(false);
         }
       } catch {
@@ -117,6 +118,16 @@ export function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
       }
 
       setSubmitted(true);
+      setUserReview({
+        id: res.data?.id || "new",
+        product_id: productId,
+        rating,
+        title: title.trim() || undefined,
+        body: body.trim() || undefined,
+        is_verified_purchase: true,
+        helpful_count: 0,
+        created_at: new Date().toISOString(),
+      });
       toast.success(
         "Review submitted",
         "Thank you for your feedback! Your review will appear after moderation."
@@ -134,12 +145,34 @@ export function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
     return null;
   }
 
-  // After successful submission
-  if (submitted) {
+  // Read-only card showing the user's submitted rating & review on product page (NO edit button here)
+  if (userReview || submitted) {
+    const rev = userReview || { rating, title, body };
     return (
-      <div className="rounded-xl bg-forest-50 border border-forest-200 p-4 text-center space-y-1 font-ui">
-        <p className="text-sm font-semibold text-forest-800">Review submitted!</p>
-        <p className="text-xs text-forest-600">Thank you. Your review will appear after moderation.</p>
+      <div className="rounded-xl bg-cream-50/80 border border-ink-100 p-4 space-y-2 font-ui">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold text-forest-800 uppercase tracking-wider">
+            Your Rating for this Product
+          </span>
+          <span className="text-[10px] font-bold text-forest-700 bg-forest-50 px-2 py-0.5 rounded border border-forest-200">
+            Verified Purchase
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <StarRating rating={rev.rating || rating} size="sm" />
+          <span className="text-xs font-bold text-ink-900">{rev.rating || rating} out of 5 stars</span>
+        </div>
+
+        {rev.title && <p className="text-xs font-bold text-ink-900">{rev.title}</p>}
+        {rev.body && <p className="text-xs text-ink-600 leading-relaxed">{rev.body}</p>}
+
+        <p className="text-[11px] text-ink-400 pt-1">
+          To edit your review, please visit your{" "}
+          <Link href="/account" className="text-forest-700 font-semibold underline hover:text-forest-900">
+            Account Dashboard
+          </Link>.
+        </p>
       </div>
     );
   }
@@ -154,7 +187,7 @@ export function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
     );
   }
 
-  // Render review form block ONLY for verified buyers who received the item
+  // Render review form block ONLY for verified buyers who received the item and haven't reviewed it yet
   return (
     <form onSubmit={handleSubmit} className="space-y-4 bg-cream-50 rounded-xl border border-ink-100 p-4">
       <p className="text-xs font-bold uppercase tracking-wider text-ink-600">Write a Review</p>

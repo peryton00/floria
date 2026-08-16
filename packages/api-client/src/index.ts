@@ -755,8 +755,8 @@ export class FloriaApiClient {
 
   public async getReviewEligibility(
     productId: string
-  ): Promise<ApiResponse<{ canReview: boolean; reason?: string }>> {
-    return this.request<{ canReview: boolean; reason?: string }>(
+  ): Promise<ApiResponse<{ canReview: boolean; reason?: string; userReview?: ProductReview | null }>> {
+    return this.request<{ canReview: boolean; reason?: string; userReview?: ProductReview | null }>(
       `/api/v1/catalog/products/${productId}/review-eligibility`
     );
   }
@@ -767,6 +767,16 @@ export class FloriaApiClient {
   ): Promise<ApiResponse<{ id: string; status: string; created_at: string }>> {
     return this.request(`/api/v1/catalog/products/${productId}/reviews`, {
       method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  public async updateMyReview(
+    reviewId: string,
+    payload: { rating?: number; title?: string; body?: string }
+  ): Promise<ApiResponse<ProductReview>> {
+    return this.request<ProductReview>(`/api/v1/customer/reviews/${reviewId}`, {
+      method: "PATCH",
       body: JSON.stringify(payload),
     });
   }

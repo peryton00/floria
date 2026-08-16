@@ -287,6 +287,7 @@ declare class FloriaApiClient {
     getReviewEligibility(productId: string): Promise<ApiResponse<{
         canReview: boolean;
         reason?: string;
+        userReview?: ProductReview | null;
     }>>;
     submitReview(productId: string, payload: {
         rating: number;
@@ -297,6 +298,11 @@ declare class FloriaApiClient {
         status: string;
         created_at: string;
     }>>;
+    updateMyReview(reviewId: string, payload: {
+        rating?: number;
+        title?: string;
+        body?: string;
+    }): Promise<ApiResponse<ProductReview>>;
     markReviewHelpful(productId: string, reviewId: string): Promise<ApiResponse<{
         action: "added" | "removed";
     }>>;

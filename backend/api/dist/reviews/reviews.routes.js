@@ -22,6 +22,7 @@ router.post("/catalog/products/:id/reviews", auth_js_1.authenticateToken, review
 router.post("/catalog/products/:id/reviews/:rid/helpful", auth_js_1.authenticateToken, reviews_controller_js_1.reviewsController.markHelpful);
 // ── CUSTOMER: own reviews ─────────────────────────────────────────────────
 router.get("/customer/reviews", auth_js_1.authenticateToken, reviews_controller_js_1.reviewsController.getMyReviews);
+router.patch("/customer/reviews/:id", auth_js_1.authenticateToken, reviews_controller_js_1.reviewsController.updateMyReview);
 // ── SELLER: list reviews for seller's products ────────────────────────────
 router.get("/seller/reviews", auth_js_1.authenticateToken, authorization_js_1.requireApprovedSeller, reviews_controller_js_1.reviewsController.getSellerReviews);
 // ── SELLER: flag a review ─────────────────────────────────────────────────

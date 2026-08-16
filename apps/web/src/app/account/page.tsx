@@ -12,6 +12,7 @@ import { useCustomer } from "@/lib/contexts/CustomerContext";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { GoogleOAuthButton } from "@/components/auth/GoogleOAuthButton";
 import { api } from "@/lib/api";
+import { StarRating } from "@/components/ui/StarRating";
 import {
   WishlistIcon,
   BagIcon,
@@ -20,6 +21,7 @@ import {
   UserIcon,
   CheckIcon,
   AlertIcon,
+  StarIcon,
 } from "@/components/ui/Icons";
 
 export default function AccountPage() {
@@ -40,6 +42,14 @@ export default function AccountPage() {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [editingAddress, setEditingAddress] = useState<AddressItem | null>(null);
+
+  // Reviews State
+  const [myReviews, setMyReviews] = useState<any[]>([]);
+  const [editingReview, setEditingReview] = useState<any | null>(null);
+  const [editRating, setEditRating] = useState(5);
+  const [editTitle, setEditTitle] = useState("");
+  const [editBody, setEditBody] = useState("");
+  const [savingReview, setSavingReview] = useState(false);
 
   // Toast / Feedback State
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
@@ -78,8 +88,46 @@ export default function AccountPage() {
         console.error("Provider check error:", e);
       }
     }
+
+    async function loadReviews() {
+      try {
+        const res = await api.getMyReviews();
+        if (res.data?.reviews) {
+          setMyReviews(res.data.reviews);
+        }
+      } catch (e) {
+        console.error("Error loading reviews:", e);
+      }
+    }
+
     checkProvider();
+    loadReviews();
   }, []);
+
+  const handleSaveReview = async () => {
+    if (!editingReview) return;
+    setSavingReview(true);
+    try {
+      const res = await api.updateMyReview(editingReview.id, {
+        rating: editRating,
+        title: editTitle.trim() || undefined,
+        body: editBody.trim() || undefined,
+      });
+
+      if (res.success) {
+        showToast("success", "Review updated successfully.");
+        setEditingReview(null);
+        const revRes = await api.getMyReviews();
+        if (revRes.data?.reviews) setMyReviews(revRes.data.reviews);
+      } else {
+        showToast("error", res.error?.message ?? "Failed to update review.");
+      }
+    } catch {
+      showToast("error", "Error updating review.");
+    } finally {
+      setSavingReview(false);
+    }
+  };
 
   // Password Modal State
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -535,6 +583,61 @@ export default function AccountPage() {
               </Link>
             </div>
           </div>
+
+          {/* 4. MY PRODUCT REVIEWS SECTION (Edit Reviews from Account) */}
+          <section aria-labelledby="section-reviews" className="bg-white rounded-2xl border border-ink-100 p-6 shadow-sm">
+            <div className="flex items-center justify-between pb-4 border-b border-ink-100 mb-4">
+              <h2 id="section-reviews" className="font-serif text-lg font-bold text-ink-900">
+                My Product Reviews &amp; Ratings ({myReviews.length})
+              </h2>
+            </div>
+
+            {myReviews.length === 0 ? (
+              <div className="p-5 text-center bg-cream-50 rounded-xl border border-dashed border-ink-200 space-y-1 font-ui">
+                <p className="text-xs font-bold text-ink-700">No product reviews yet</p>
+                <p className="text-[11px] text-ink-400">Reviews for delivered products will appear here. You can edit them anytime.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {myReviews.map((rev) => (
+                  <div key={rev.id} className="p-4 rounded-xl border border-ink-100 bg-white hover:border-forest-200 transition-all font-ui space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <Link
+                          href={`/products/${rev.product?.slug || rev.product_id}`}
+                          className="font-sans text-sm font-bold text-ink-900 hover:text-forest-700 transition-colors"
+                        >
+                          {rev.product?.name || "Product"}
+                        </Link>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <StarRating rating={rev.rating} size="sm" />
+                          <span className="text-xs font-bold text-ink-800">{rev.rating}/5</span>
+                          <span className="text-[10px] text-forest-700 bg-forest-50 px-1.5 py-0.5 rounded border border-forest-200 font-semibold ml-1">
+                            Verified Purchase
+                          </span>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingReview(rev);
+                          setEditRating(rev.rating);
+                          setEditTitle(rev.title || "");
+                          setEditBody(rev.body || "");
+                        }}
+                        className="px-3 py-1.5 text-xs font-bold text-forest-700 hover:text-forest-900 bg-forest-50 hover:bg-forest-100 rounded-lg transition-colors border border-forest-200 flex-shrink-0"
+                      >
+                        Edit Review
+                      </button>
+                    </div>
+
+                    {rev.title && <p className="text-xs font-bold text-ink-800">{rev.title}</p>}
+                    {rev.body && <p className="text-xs text-ink-600 leading-relaxed">{rev.body}</p>}
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
         </div>
 
         {/* ── RIGHT COLUMN: Settings, Help & Logout ──────────────────────────── */}
@@ -829,6 +932,87 @@ export default function AccountPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Review Modal */}
+      {editingReview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-900/60 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl border border-ink-100 shadow-xl max-w-md w-full p-6 space-y-4 font-ui">
+            <div className="flex items-center justify-between pb-3 border-b border-ink-100">
+              <h3 className="font-serif font-bold text-lg text-ink-900">Edit Your Review</h3>
+              <button
+                type="button"
+                onClick={() => setEditingReview(null)}
+                className="text-ink-400 hover:text-ink-700 font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-xs font-bold text-ink-800">{editingReview.product?.name || "Product"}</p>
+
+              <div>
+                <label className="block text-xs font-bold uppercase text-ink-600 mb-1">Rating</label>
+                <div className="flex gap-1" role="radiogroup" aria-label="Star rating">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setEditRating(star)}
+                      className="transition-transform hover:scale-110 focus:outline-none rounded"
+                    >
+                      <StarIcon
+                        size={24}
+                        className={star <= editRating ? "text-amber-400 fill-amber-400" : "text-ink-200"}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase text-ink-600 mb-1">Title (optional)</label>
+                <input
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  maxLength={120}
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-ink-200 focus:outline-none focus:ring-2 focus:ring-forest-500 text-ink-900"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase text-ink-600 mb-1">Review Body (optional)</label>
+                <textarea
+                  value={editBody}
+                  onChange={(e) => setEditBody(e.target.value)}
+                  maxLength={2000}
+                  rows={3}
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-ink-200 focus:outline-none focus:ring-2 focus:ring-forest-500 text-ink-900 resize-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-ink-100">
+              <button
+                type="button"
+                onClick={() => setEditingReview(null)}
+                className="px-4 py-2 text-xs font-semibold text-ink-600 hover:text-ink-900"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={savingReview}
+                onClick={handleSaveReview}
+                className="px-4 py-2 text-xs font-bold bg-forest-700 hover:bg-forest-800 text-white rounded-lg transition-colors shadow-sm disabled:opacity-50"
+              >
+                {savingReview ? "Saving…" : "Save Changes"}
+              </button>
+            </div>
           </div>
         </div>
       )}

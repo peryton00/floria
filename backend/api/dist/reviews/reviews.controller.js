@@ -29,8 +29,29 @@ class ReviewsController {
                 res.json({ success: true, data: { canReview: true, orderItemId: eligible.order_item_id } });
             }
             else {
-                res.json({ success: true, data: { canReview: false, reason: "NOT_ELIGIBLE" } });
+                const userReview = await review_repository_js_1.reviewRepository.findUserReviewForProduct(customerId, String(req.params.id));
+                if (userReview) {
+                    res.json({ success: true, data: { canReview: false, reason: "ALREADY_REVIEWED", userReview } });
+                }
+                else {
+                    res.json({ success: true, data: { canReview: false, reason: "NOT_ELIGIBLE" } });
+                }
             }
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+    // PATCH /api/v1/customer/reviews/:id
+    async updateMyReview(req, res, next) {
+        try {
+            const { rating, title, body } = req.body;
+            const updated = await review_repository_js_1.reviewRepository.updateCustomerReview(String(req.params.id), req.user.id, { rating: rating ? Number(rating) : undefined, title, body });
+            if (!updated) {
+                res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Review not found or not owned by user." } });
+                return;
+            }
+            res.json({ success: true, data: updated });
         }
         catch (err) {
             next(err);
