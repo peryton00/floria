@@ -36,8 +36,14 @@ export function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
       // Check local order state first (instant)
       const hasLocalDeliveredOrder = orders.some(
         (o) =>
-          (o.status === "Delivered" || o.status === "Picked Up") &&
-          o.nurseryGroups.some((g) => g.items.some((i) => i.product.id === productId))
+          ["delivered", "picked_up", "order placed", "nursery confirmed", "preparing", "ready for pickup", "out for delivery"].includes(
+            (o.status || "").toLowerCase()
+          ) &&
+          o.nurseryGroups.some((g) =>
+            g.items.some(
+              (i) => i.product?.id === productId || i.product?.slug === productId
+            )
+          )
       );
 
       if (hasLocalDeliveredOrder) {

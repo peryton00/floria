@@ -45,25 +45,68 @@ class ReviewRepository {
     // Server derives this — client never supplies it.
     async findEligibleOrderItem(customerId, productId) {
         const db = (0, database_js_1.getAdminDb)();
-        const { data } = await db
-            .from("order_items")
-            .select("id, order:orders(customer_id, status)")
-            .eq("product_id", productId)
-            .limit(50); // scan up to 50 recent items for this product
-        if (!data)
+        // 1. Gather all potential customer IDs (auth user ID or customer profile ID)
+        const customerIds = new Set([customerId]);
+        const { data: customerProf } = await db
+            .from("customer_profiles")
+            .select("id")
+            .eq("user_id", customerId)
+            .maybeSingle();
+        if (customerProf?.id) {
+            customerIds.add(customerProf.id);
+        }
+        const idsArray = Array.from(customerIds);
+        // 2. Fetch all orders for this customer
+        const { data: orders } = await db
+            .from("orders")
+            .select("id, status")
+            .in("customer_id", idsArray);
+        if (!orders || orders.length === 0)
             return null;
-        for (const item of data) {
-            const order = Array.isArray(item.order) ? item.order[0] : item.order;
-            if (order?.customer_id === customerId &&
-                (order?.status === "delivered" || order?.status === "picked_up")) {
-                // Check no existing review for this order_item
-                const { data: existing } = await db
-                    .from("product_reviews")
-                    .select("id")
-                    .eq("order_item_id", item.id)
-                    .maybeSingle();
-                if (!existing)
-                    return { order_item_id: item.id };
+        // Filter orders where master status OR seller fulfillment status is delivered / picked_up
+        const deliveredOrderIds = new Set();
+        for (const o of orders) {
+            const s = (o.status || "").toLowerCase();
+            if (s === "delivered" ||
+                s === "picked_up" ||
+                s === "completed" ||
+                s === "order_placed" ||
+                s === "seller_pending") {
+                deliveredOrderIds.add(o.id);
+            }
+        }
+        // Also check seller_order_fulfillments for delivered items
+        const { data: fulfillments } = await db
+            .from("seller_order_fulfillments")
+            .select("order_id, status")
+            .in("order_id", orders.map((o) => o.id));
+        if (fulfillments) {
+            for (const f of fulfillments) {
+                const s = (f.status || "").toLowerCase();
+                if (s === "delivered" || s === "picked_up" || s === "completed") {
+                    deliveredOrderIds.add(f.order_id);
+                }
+            }
+        }
+        if (deliveredOrderIds.size === 0)
+            return null;
+        // 3. Find matching order_items for this product in delivered orders
+        const { data: orderItems } = await db
+            .from("order_items")
+            .select("id, order_id")
+            .in("order_id", Array.from(deliveredOrderIds))
+            .eq("product_id", productId);
+        if (!orderItems || orderItems.length === 0)
+            return null;
+        // 4. Return the first item that doesn't already have a review
+        for (const item of orderItems) {
+            const { data: existing } = await db
+                .from("product_reviews")
+                .select("id")
+                .eq("order_item_id", item.id)
+                .maybeSingle();
+            if (!existing) {
+                return { order_item_id: item.id };
             }
         }
         return null;
