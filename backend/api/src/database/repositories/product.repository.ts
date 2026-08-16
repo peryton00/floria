@@ -57,17 +57,35 @@ export class ProductRepository {
     return !error;
   }
 
-  async findBySlug(slug: string): Promise<any | null> {
+  async findBySlug(slugOrId: string): Promise<any | null> {
     const db = getAdminDb();
-    const { data, error } = await db
+
+    const { data: bySlug } = await db
       .from("products")
       .select(PRODUCT_LISTING_SELECT)
-      .eq("slug", slug)
-      .eq("status", "active")
+      .eq("slug", slugOrId)
+      .neq("status", "deleted")
       .maybeSingle();
 
-    if (error || !data) return null;
-    return data;
+    if (bySlug) return bySlug;
+
+    const { data: byId } = await db
+      .from("products")
+      .select(PRODUCT_LISTING_SELECT)
+      .eq("id", slugOrId)
+      .neq("status", "deleted")
+      .maybeSingle();
+
+    if (byId) return byId;
+
+    const { data: fallbackList } = await db
+      .from("products")
+      .select(PRODUCT_LISTING_SELECT)
+      .ilike("slug", `%${slugOrId}%`)
+      .neq("status", "deleted")
+      .limit(1);
+
+    return fallbackList?.[0] || null;
   }
 
   async findById(productId: string): Promise<Product | null> {

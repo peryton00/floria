@@ -6,7 +6,7 @@ export class OrderRepository {
     const db = getAdminDb();
     const { data, error } = await db
       .from("orders")
-      .select("*, order_items(*), seller_order_fulfillments(*)")
+      .select("*, order_items(*, product:products(id,name,slug)), seller_order_fulfillments(*)")
       .eq("customer_id", customerId)
       .order("created_at", { ascending: false });
 
@@ -18,7 +18,7 @@ export class OrderRepository {
     const db = getAdminDb();
     const { data, error } = await db
       .from("orders")
-      .select("*, order_items(*), seller_order_fulfillments(*)")
+      .select("*, order_items(*, product:products(id,name,slug)), seller_order_fulfillments(*)")
       .eq("id", orderId)
       .maybeSingle();
 
