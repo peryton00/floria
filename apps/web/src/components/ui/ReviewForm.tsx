@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { StarIcon } from "@/components/ui/Icons";
+import { api } from "@/lib/api";
 
 interface ReviewFormProps {
   productId: string;
@@ -24,17 +25,16 @@ export function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
     setError(null);
 
     try {
-      const res = await fetch(`/api/v1/catalog/products/${productId}/reviews`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rating, title: title.trim() || undefined, body: body.trim() || undefined }),
-        credentials: "include",
+      const res = await api.submitReview(productId, {
+        rating,
+        title: title.trim() || undefined,
+        body: body.trim() || undefined,
       });
-      const json = await res.json();
-      if (!res.ok) {
-        if (json.error?.code === "ALREADY_REVIEWED") setError("You have already reviewed this product.");
-        else if (json.error?.code === "NOT_ELIGIBLE") setError("You can only review products you have purchased and received.");
-        else setError(json.error?.message ?? "Something went wrong. Please try again.");
+
+      if (!res.success) {
+        if (res.error?.code === "ALREADY_REVIEWED") setError("You have already reviewed this product.");
+        else if (res.error?.code === "NOT_ELIGIBLE") setError("You can only review products you have purchased and received.");
+        else setError(res.error?.message ?? "Something went wrong. Please try again.");
         return;
       }
       setSubmitted(true);

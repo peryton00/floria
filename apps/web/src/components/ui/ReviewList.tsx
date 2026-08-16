@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { StarRating } from "@/components/ui/StarRating";
 import type { ProductReview, ReviewSummary } from "@/lib/api";
+import { api } from "@/lib/api";
 import { ThumbsUp, ShieldCheck } from "lucide-react";
 
 interface ReviewListProps {
@@ -21,10 +22,7 @@ export function ReviewList({ reviews, total, summary, productId, page, onPageCha
 
   const handleHelpful = useCallback(async (reviewId: string) => {
     try {
-      await fetch(`/api/v1/catalog/products/${productId}/reviews/${reviewId}/helpful`, {
-        method: "POST",
-        credentials: "include",
-      });
+      await api.markReviewHelpful(productId, reviewId);
       setHelpfulVotes((v) => ({ ...v, [reviewId]: !v[reviewId] }));
     } catch { /* silent */ }
   }, [productId]);
