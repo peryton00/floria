@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { api, NotificationItem } from "@/lib/api";
 import {
@@ -31,6 +32,11 @@ export function NotificationDrawer({
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const fetchNotifications = async () => {
     try {
@@ -112,10 +118,10 @@ export function NotificationDrawer({
     return <Info size={16} className="text-ink-500" />;
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 overflow-hidden bg-black/40 backdrop-blur-xs flex justify-end">
+  return createPortal(
+    <div className="fixed inset-0 z-[99999] overflow-hidden bg-black/40 backdrop-blur-xs flex justify-end">
       <div className="w-full max-w-sm bg-white h-full shadow-2xl flex flex-col justify-between animate-in slide-in-from-right duration-200">
         {/* Header */}
         <div className="p-4 border-b border-ink-100 flex justify-between items-center bg-cream-50/50">
@@ -214,6 +220,7 @@ export function NotificationDrawer({
           <span>Floria Notification Dispatch Engine</span>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
