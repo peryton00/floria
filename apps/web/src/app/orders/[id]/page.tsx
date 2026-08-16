@@ -151,36 +151,28 @@ export default function OrderDetailPage({ params }: Props) {
     let active = true;
 
     async function resolveOrder() {
-      // 1. Check in-memory state
-      const local = getOrderById(id);
-      if (local) {
-        if (active) {
-          setOrder(local);
-          setLoading(false);
-        }
-        return;
-      }
-
-      // 2. Fetch directly from backend API
+      // 1. Fetch directly from backend API for server-authoritative financial breakdown
       try {
         setLoading(true);
         const res = await api.getOrderById(id);
         if (res.success && res.data) {
           const mapped = mapApiOrderToRecord(res.data);
-          if (active) setOrder(mapped);
-        } else {
-          // Fallback: refresh context orders and retry
-          await refreshOrders();
-          const retried = getOrderById(id);
-          if (retried && active) {
-            setOrder(retried);
+          if (active) {
+            setOrder(mapped);
+            setLoading(false);
           }
+          return;
         }
       } catch (e) {
-        console.warn("[OrderDetailPage] Failed to fetch order:", e);
-      } finally {
-        if (active) setLoading(false);
+        console.warn("[OrderDetailPage] Failed to fetch order from backend API:", e);
       }
+
+      // 2. Fallback to in-memory context state if offline
+      const local = getOrderById(id);
+      if (local && active) {
+        setOrder(local);
+      }
+      if (active) setLoading(false);
     }
 
     resolveOrder();
