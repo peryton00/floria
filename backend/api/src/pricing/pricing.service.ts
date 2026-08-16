@@ -60,23 +60,23 @@ export class PricingService {
 
     const sellerCommissionRate = map.has("seller_commission_rate")
       ? Number(map.get("seller_commission_rate"))
-      : 12.0;
+      : 0;
 
     const floriaProfitRate = map.has("floria_profit_rate")
       ? Number(map.get("floria_profit_rate"))
-      : 2.0;
+      : 0;
 
     const platformMaintenanceFeePaise = map.has("platform_maintenance_fee_paise")
       ? Number(map.get("platform_maintenance_fee_paise"))
-      : 1000; // ₹10.00
+      : 0;
 
     const freeDeliveryThresholdPaise = map.has("free_delivery_threshold_paise")
       ? Number(map.get("free_delivery_threshold_paise"))
-      : 59900; // ₹599.00
+      : 0;
 
     const freeDeliveryRecoveryPaise = map.has("free_delivery_recovery_paise")
       ? Number(map.get("free_delivery_recovery_paise"))
-      : 2000; // ₹20.00
+      : 0;
 
     return {
       sellerCommissionRate,
@@ -228,7 +228,7 @@ export class PricingService {
     const preRecoveryPricePaise = sellerBasePricePaise + floriaProfitPaise;
 
     // 3. Product-Level Free Delivery Eligibility & Recovery
-    // A product qualifies if its pre-recovery customer price >= threshold (e.g. ₹599.00 = 59900 paise)
+    // A product qualifies if its pre-recovery customer price >= dynamic threshold from active policy
     const isFreeDeliveryEligible = preRecoveryPricePaise >= settings.freeDeliveryThresholdPaise;
     const deliveryRecoveryPaise = isFreeDeliveryEligible ? settings.freeDeliveryRecoveryPaise : 0;
 

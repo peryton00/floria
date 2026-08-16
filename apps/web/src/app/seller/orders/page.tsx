@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useSeller } from "@/lib/contexts/SellerContext";
 import { api } from "@/lib/api";
-import { formatINR, calculateSellerNetEarningsPaise } from "@/lib/format";
+import { formatINR } from "@/lib/format";
 import { OrderIcon, SearchIcon, AlertIcon, LeafIcon } from "@/components/ui/Icons";
 import { useToast } from "@/lib/contexts/ToastContext";
 
@@ -218,9 +218,9 @@ function OrdersContent() {
               <div key={order.masterOrderId} className="bg-white rounded-2xl border border-ink-100 p-5 shadow-xs space-y-4">
                 {(() => {
                   const netOrderTotal = (order.items || []).reduce(
-                    (sum: number, it: any) => sum + calculateSellerNetEarningsPaise(it.pricePaise) * it.quantity,
+                    (sum: number, it: any) => sum + (it.seller_net_paise ?? it.pricePaise ?? 0) * it.quantity,
                     0
-                  ) || calculateSellerNetEarningsPaise(order.subtotalPaise);
+                  ) || order.seller_payout_paise || order.subtotalPaise;
 
                   return (
                     <>
@@ -239,20 +239,20 @@ function OrdersContent() {
 
                         <div className="text-left sm:text-right">
                           <p className="font-serif font-bold text-sm text-forest-800">{formatINR(netOrderTotal)}</p>
-                          <p className="text-[10px] text-amber-700 font-semibold">Net Payout (15% Commission Cut)</p>
+                          <p className="text-[10px] text-amber-700 font-semibold">Net Payout</p>
                         </div>
                       </div>
 
                       {/* Items List */}
                       <div className="space-y-2">
                         {(order.items || []).map((item: any, i: number) => {
-                          const itemNetPrice = calculateSellerNetEarningsPaise(item.pricePaise);
+                          const itemNetPrice = item.seller_net_paise ?? item.pricePaise ?? 0;
                           return (
                             <div key={i} className="flex justify-between items-center bg-cream-50 p-3 rounded-xl text-xs">
                               <div>
                                 <p className="font-bold text-ink-900">{item.product?.name || "Plant Product"}</p>
                                 <p className="text-[10px] text-ink-500 font-mono">
-                                  Qty: {item.quantity} · {formatINR(itemNetPrice)}/unit after 15% cut
+                                  Qty: {item.quantity} · {formatINR(itemNetPrice)}/unit net
                                 </p>
                               </div>
                               <span className="font-bold text-forest-800">{formatINR(itemNetPrice * item.quantity)}</span>

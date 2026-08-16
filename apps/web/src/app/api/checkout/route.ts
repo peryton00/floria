@@ -26,10 +26,23 @@ import { getSupabaseServerClient, getSupabaseServiceClient } from "@/lib/supabas
 
 async function getCommissionRate(supabase: any): Promise<number> {
   try {
+    const { data: policy } = await supabase
+      .from("pricing_policy_versions")
+      .select("seller_commission_rate")
+      .eq("status", "active")
+      .maybeSingle();
+
+    if (policy && policy.seller_commission_rate !== undefined && policy.seller_commission_rate !== null) {
+      const ratePct = Number(policy.seller_commission_rate);
+      if (!isNaN(ratePct) && ratePct >= 0) {
+        return ratePct / 100.0;
+      }
+    }
+
     const { data } = await supabase
       .from("platform_settings")
       .select("value")
-      .eq("key", "platform_commission_rate")
+      .eq("key", "seller_commission_rate")
       .maybeSingle();
 
     if (data && data.value !== undefined && data.value !== null) {
@@ -39,9 +52,9 @@ async function getCommissionRate(supabase: any): Promise<number> {
       }
     }
   } catch (e) {
-    console.warn("[checkout] Failed to fetch commission rate from DB, using 0.12 default:", e);
+    console.warn("[checkout] Failed to fetch commission rate from DB:", e);
   }
-  return 0.12;
+  return 0;
 }
 
 export async function POST(req: NextRequest) {

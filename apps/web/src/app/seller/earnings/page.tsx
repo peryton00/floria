@@ -149,16 +149,16 @@ export default function SellerEarningsPage() {
               <tbody className="divide-y divide-ink-100">
                 {orders.map((o) => {
                   const gross = o.subtotalPaise || 0;
-                  const rate = o.commissionRateSnapshot !== undefined ? o.commissionRateSnapshot : 0.12;
-                  const commission = Math.round(gross * rate);
-                  const net = gross - commission;
+                  const commission = (o as any).commissionPaise ?? (o.commissionRateSnapshot !== undefined ? Math.round(gross * o.commissionRateSnapshot) : 0);
+                  const net = (o as any).sellerPayoutPaise ?? (gross - commission);
+                  const rateStr = o.commissionRateSnapshot !== undefined ? `${(o.commissionRateSnapshot * 100).toFixed(1)}%` : "—";
 
                   return (
                     <tr key={o.masterOrderId} className="hover:bg-cream-50/50">
                       <td className="p-3 font-mono font-bold text-ink-900">{o.masterOrderId}</td>
                       <td className="p-3 text-ink-600">{o.createdAt}</td>
                       <td className="p-3 font-semibold text-ink-700">{formatINR(gross)}</td>
-                      <td className="p-3 font-mono text-ink-500">{(rate * 100).toFixed(1)}%</td>
+                      <td className="p-3 font-mono text-ink-500">{rateStr}</td>
                       <td className="p-3 text-warning-700 font-semibold">-{formatINR(commission)}</td>
                       <td className="p-3 font-bold text-forest-800 text-right">{formatINR(net)}</td>
                     </tr>

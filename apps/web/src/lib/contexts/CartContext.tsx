@@ -6,8 +6,6 @@ import { api } from "@/lib/api";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { useToast } from "@/lib/contexts/ToastContext";
 
-import { calculateCustomerProductPricePaise } from "@/lib/format";
-
 export interface CartItem {
   listing: ProductListing;
   quantity: number;
@@ -43,8 +41,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const seller = Array.isArray(p.seller) ? p.seller[0] : p.seller || { id: p.seller_id, business_name: "Nursery" };
       const cat = Array.isArray(p.category) ? p.category[0] : p.category || null;
 
-      const rawBasePrice = ci.unit_price_paise_snapshot ?? inv.price_paise ?? 0;
-      const customerPrice = calculateCustomerProductPricePaise(rawBasePrice);
+      const customerPrice = p.pricing?.sellingPricePaise ?? inv.price_paise ?? ci.unit_price_paise_snapshot ?? 0;
       const originalPricePaise = inv.original_price_paise && inv.original_price_paise > customerPrice ? inv.original_price_paise : null;
       const discountAmountPaise = originalPricePaise ? originalPricePaise - customerPrice : 0;
       const discountPercentage = originalPricePaise ? Math.round((discountAmountPaise / originalPricePaise) * 100) : 0;
@@ -59,13 +56,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           primary_image: primary,
           seller,
           category: cat,
-          pricing: {
+          pricing: p.pricing || {
             sellingPricePaise: customerPrice,
             originalPricePaise,
             discountAmountPaise,
             discountPercentage,
             isDiscounted: discountAmountPaise > 0,
-            isFreeDelivery: customerPrice >= 59900,
+            isFreeDelivery: Boolean(p.pricing?.isFreeDelivery),
           },
         },
         quantity: ci.quantity,

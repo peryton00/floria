@@ -140,7 +140,7 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
   };
 
   const pricing = listing.pricing;
-  const isFreeDelivery = pricing?.isFreeDelivery ?? (inventory.price_paise >= 59900);
+  const isFreeDelivery = Boolean(pricing?.isFreeDelivery);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-2 lg:gap-12">

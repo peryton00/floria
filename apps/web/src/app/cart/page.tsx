@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { CustomerShell } from "@/components/layout/CustomerShell";
-import { formatINR, calculateCustomerProductPricePaise } from "@/lib/format";
+import { formatINR } from "@/lib/format";
 import { BagIcon, WishlistIcon, LeafIcon } from "@/components/ui/Icons";
 import { useCart } from "@/lib/contexts/CartContext";
 import { useWishlist } from "@/lib/contexts/WishlistContext";
@@ -34,11 +34,7 @@ export default function CartPage() {
 
   const getItemPrice = (item: CartItem) => {
     const listing = item.listing;
-    if (listing.pricing?.sellingPricePaise) {
-      return listing.pricing.sellingPricePaise;
-    }
-    const rawBase = (listing.inventory as any)?.base_price_paise ?? listing.inventory?.price_paise ?? 0;
-    return calculateCustomerProductPricePaise(rawBase);
+    return listing.pricing?.sellingPricePaise ?? listing.inventory?.price_paise ?? 0;
   };
 
   const getOriginalPrice = (item: CartItem) => {

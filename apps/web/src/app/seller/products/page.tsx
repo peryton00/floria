@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useSeller } from "@/lib/contexts/SellerContext";
 import { api } from "@/lib/api";
-import { formatINR, calculateSellerNetEarningsPaise } from "@/lib/format";
+import { formatINR } from "@/lib/format";
 import { GridIcon, SearchIcon, AlertIcon } from "@/components/ui/Icons";
 import { useToast } from "@/lib/contexts/ToastContext";
 
@@ -227,9 +227,11 @@ export default function SellerProductsPage() {
               </thead>
               <tbody className="divide-y divide-ink-100">
                 {filteredListings.map((l) => {
-                  const qty = l.inventory?.[0]?.stock_quantity ?? l.inventory?.stock_quantity ?? 0;
-                  const thresh = l.inventory?.[0]?.low_stock_threshold ?? l.inventory?.low_stock_threshold ?? 5;
-                  const pricePaise = l.inventory?.[0]?.price_paise ?? l.inventory?.price_paise ?? 0;
+                  const inv = Array.isArray(l.inventory) ? l.inventory[0] : l.inventory;
+                  const qty = inv?.stock_quantity ?? 0;
+                  const thresh = inv?.low_stock_threshold ?? 5;
+                  const pricePaise = inv?.base_price_paise ?? inv?.price_paise ?? 0;
+                  const sellerNetPaise = inv?.seller_net_paise ?? pricePaise;
                   const imgUrl = l.images?.[0]?.url || l.primary_image?.url || "/floria-logo.png";
                   const isEditingStock = editingStockId === l.id;
 
@@ -251,7 +253,7 @@ export default function SellerProductsPage() {
 
                       <td className="p-4 font-mono">
                         <p className="font-bold text-forest-800">
-                          {formatINR(calculateSellerNetEarningsPaise(pricePaise))}
+                          {formatINR(sellerNetPaise)}
                         </p>
                         <p className="text-[10px] text-ink-400">
                           (Base: {formatINR(pricePaise)})

@@ -26,11 +26,11 @@ export default function AdminSettingsPage() {
   const [activeJob, setActiveJob] = useState<PricingRecalculationJob | null>(null);
 
   // New Draft Form State
-  const [draftCommissionRate, setDraftCommissionRate] = useState("12.0");
-  const [draftProfitRate, setDraftProfitRate] = useState("2.0");
-  const [draftMaintenanceFeeINR, setDraftMaintenanceFeeINR] = useState("10.00");
-  const [draftThresholdINR, setDraftThresholdINR] = useState("599.00");
-  const [draftRecoveryINR, setDraftRecoveryINR] = useState("20.00");
+  const [draftCommissionRate, setDraftCommissionRate] = useState("");
+  const [draftProfitRate, setDraftProfitRate] = useState("");
+  const [draftMaintenanceFeeINR, setDraftMaintenanceFeeINR] = useState("");
+  const [draftThresholdINR, setDraftThresholdINR] = useState("");
+  const [draftRecoveryINR, setDraftRecoveryINR] = useState("");
   const [draftNotes, setDraftNotes] = useState("");
 
   const fetchData = useCallback(async () => {
@@ -293,31 +293,31 @@ export default function AdminSettingsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
               <div className="bg-cream-50/70 p-3.5 rounded-xl border border-ink-50 space-y-1">
                 <p className="font-bold text-ink-500 uppercase tracking-wider text-[10px]">Seller Commission</p>
-                <p className="text-xl font-mono font-bold text-amber-700">{finSettings?.sellerCommissionRate ?? 12}%</p>
+                <p className="text-xl font-mono font-bold text-amber-700">{finSettings ? `${finSettings.sellerCommissionRate}%` : "—"}</p>
                 <p className="text-[10px] text-ink-400">Deducted from seller base price</p>
               </div>
 
               <div className="bg-cream-50/70 p-3.5 rounded-xl border border-ink-50 space-y-1">
                 <p className="font-bold text-ink-500 uppercase tracking-wider text-[10px]">Floria Profit Margin</p>
-                <p className="text-xl font-mono font-bold text-forest-700">{finSettings?.floriaProfitRate ?? 2}%</p>
+                <p className="text-xl font-mono font-bold text-forest-700">{finSettings ? `${finSettings.floriaProfitRate}%` : "—"}</p>
                 <p className="text-[10px] text-ink-400">Internal margin on products</p>
               </div>
 
               <div className="bg-cream-50/70 p-3.5 rounded-xl border border-ink-50 space-y-1">
                 <p className="font-bold text-ink-500 uppercase tracking-wider text-[10px]">Maintenance Fee</p>
-                <p className="text-xl font-mono font-bold text-ink-900">{formatINR(finSettings?.platformMaintenanceFeePaise ?? 1000)}</p>
+                <p className="text-xl font-mono font-bold text-ink-900">{finSettings ? formatINR(finSettings.platformMaintenanceFeePaise) : "—"}</p>
                 <p className="text-[10px] text-ink-400">Charged once per checkout</p>
               </div>
 
               <div className="bg-cream-50/70 p-3.5 rounded-xl border border-ink-50 space-y-1">
                 <p className="font-bold text-ink-500 uppercase tracking-wider text-[10px]">Free Delivery Threshold</p>
-                <p className="text-xl font-mono font-bold text-emerald-700">{formatINR(finSettings?.freeDeliveryThresholdPaise ?? 59900)}</p>
+                <p className="text-xl font-mono font-bold text-emerald-700">{finSettings ? formatINR(finSettings.freeDeliveryThresholdPaise) : "—"}</p>
                 <p className="text-[10px] text-ink-400">Pre-recovery product threshold</p>
               </div>
 
               <div className="bg-cream-50/70 p-3.5 rounded-xl border border-ink-50 space-y-1">
                 <p className="font-bold text-ink-500 uppercase tracking-wider text-[10px]">Delivery Recovery</p>
-                <p className="text-xl font-mono font-bold text-emerald-700">{formatINR(finSettings?.freeDeliveryRecoveryPaise ?? 2000)}</p>
+                <p className="text-xl font-mono font-bold text-emerald-700">{finSettings ? formatINR(finSettings.freeDeliveryRecoveryPaise) : "—"}</p>
                 <p className="text-[10px] text-ink-400">Recovery added to free items</p>
               </div>
             </div>

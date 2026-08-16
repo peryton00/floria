@@ -4,18 +4,23 @@ import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { CustomerShell } from "@/components/layout/CustomerShell";
-import { formatINR, calculateCustomerProductPricePaise } from "@/lib/format";
+import { formatINR } from "@/lib/format";
 import {
-  ShieldIcon,
-  CheckCircleIcon,
   CreditCardIcon,
   LeafIcon,
+  TruckIcon,
+  ShieldIcon,
+  AlertIcon,
+  CheckCircleIcon,
   WishlistIcon,
 } from "@/components/ui/Icons";
 import { useCart } from "@/lib/contexts/CartContext";
 import type { CartItem } from "@/lib/contexts/CartContext";
 import { AddressModal, AddressItem } from "@/components/ui/AddressModal";
+import { useToast } from "@/lib/contexts/ToastContext";
 import { api } from "@/lib/api";
+import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
+import type { FinancialSettings, DeliverySettings } from "@floria/types";
 import { CheckoutLoader } from "@/components/ui/loading";
 
 /** Group cart items by seller ID */
@@ -55,6 +60,20 @@ export default function CheckoutPage() {
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const isPlacingOrderRef = useRef(false);
 
+  // Dynamically loaded platform financial and delivery settings
+  const [finSettings, setFinSettings] = useState<FinancialSettings | null>(null);
+  const [delSettings, setDelSettings] = useState<DeliverySettings | null>(null);
+
+  useEffect(() => {
+    Promise.all([
+      api.getFinancialSettings().catch(() => null),
+      api.getDeliverySettings().catch(() => null),
+    ]).then(([fRes, dRes]) => {
+      if (fRes?.success && fRes.data) setFinSettings(fRes.data);
+      if (dRes?.success && dRes.data) setDelSettings(dRes.data);
+    });
+  }, []);
+
   // Synchronize default address selection if none selected or if selected address was deleted
   useEffect(() => {
     if (addresses.length > 0) {
@@ -71,9 +90,16 @@ export default function CheckoutPage() {
 
   // Calculations
   const subtotalPaise = cartItems.reduce(
-    (sum, item) => sum + (item.listing?.inventory?.price_paise ?? 0) * item.quantity,
+    (sum, item) => sum + (item.listing?.pricing?.sellingPricePaise ?? item.listing?.inventory?.price_paise ?? 0) * item.quantity,
     0
   );
+
+  const allItemsFreeDelivery = cartItems.length > 0 && cartItems.every((item) => Boolean(item.listing?.pricing?.isFreeDelivery));
+  const estimatedDeliveryFeePaise = (delSettings?.freeDeliveryEnabled && allItemsFreeDelivery)
+    ? 0
+    : (delSettings?.baseDeliveryFeePaise ?? 0);
+  const estimatedMaintenanceFeePaise = finSettings?.platformMaintenanceFeePaise ?? 0;
+  const estimatedTotalPaise = subtotalPaise + estimatedDeliveryFeePaise + estimatedMaintenanceFeePaise;
 
   // Legitimate discount: only if the API returned a real original price higher than selling price.
   const discountPaise = cartItems.reduce((sum, item) => {
@@ -506,7 +532,7 @@ export default function CheckoutPage() {
                     {group.items.map((item) => {
                       const { listing, quantity } = item;
                       const { product, inventory, primary_image, pricing } = listing;
-                      const itemUnitPricePaise = pricing?.sellingPricePaise ?? calculateCustomerProductPricePaise((inventory as any)?.base_price_paise ?? inventory.price_paise ?? 0);
+                      const itemUnitPricePaise = pricing?.sellingPricePaise ?? inventory.price_paise ?? 0;
                       return (
                         <div key={product.id} className="py-2.5 first:pt-0 last:pb-0 flex items-center gap-3">
                           <div className="relative w-12 h-12 rounded-lg bg-cream-50 overflow-hidden flex-shrink-0 border border-ink-100">
@@ -632,28 +658,30 @@ export default function CheckoutPage() {
 
               <div className="flex justify-between text-ink-600">
                 <span>Delivery</span>
-                <span className={subtotalPaise >= 59900 ? "text-forest-700 font-semibold text-xs uppercase" : "font-semibold text-ink-900"}>
-                  {subtotalPaise >= 59900 ? "FREE (estimated)" : `${formatINR(4000)} (estimated)`}
+                <span className={estimatedDeliveryFeePaise === 0 ? "text-forest-700 font-semibold text-xs uppercase" : "font-semibold text-ink-900"}>
+                  {estimatedDeliveryFeePaise === 0 ? "FREE (estimated)" : `${formatINR(estimatedDeliveryFeePaise)} (estimated)`}
                 </span>
               </div>
 
-              <div className="flex justify-between text-ink-600">
-                <span className="flex items-center gap-1">
-                  <span>Platform Maintenance Fee</span>
-                  <span
-                    className="text-[11px] text-forest-700 font-bold cursor-help"
-                    title="Helps us operate the Floria marketplace and services."
-                  >
-                    ⓘ
+              {estimatedMaintenanceFeePaise > 0 && (
+                <div className="flex justify-between text-ink-600">
+                  <span className="flex items-center gap-1">
+                    <span>Platform Maintenance Fee</span>
+                    <span
+                      className="text-[11px] text-forest-700 font-bold cursor-help"
+                      title="Helps us operate the Floria marketplace and services."
+                    >
+                      ⓘ
+                    </span>
                   </span>
-                </span>
-                <span className="font-semibold text-ink-900">{formatINR(1000)} (estimated)</span>
-              </div>
+                  <span className="font-semibold text-ink-900">{formatINR(estimatedMaintenanceFeePaise)} (estimated)</span>
+                </div>
+              )}
 
               <div className="flex justify-between pt-3 border-t border-ink-100 text-ink-900 font-bold text-base">
                 <span>Total</span>
                 <span className="text-forest-800">
-                  {formatINR(subtotalPaise + (subtotalPaise >= 59900 ? 0 : 4000) + 1000)} (estimated)
+                  {formatINR(estimatedTotalPaise)} (estimated)
                 </span>
               </div>
             </div>
