@@ -65,6 +65,13 @@ function getSellerActionLabel(currentStatus: string): string | null {
   }
 }
 
+function formatCustomerAddress(addr: any): string {
+  if (!addr) return "Raipur, Chhattisgarh";
+  if (typeof addr === "string") return addr;
+  const parts = [addr.line1, addr.line2, addr.city, addr.state, addr.pincode].filter(Boolean);
+  return parts.length > 0 ? parts.join(", ") : "Raipur, Chhattisgarh";
+}
+
 export default function SellerOrderDetailPage({
   params,
 }: {
@@ -122,7 +129,7 @@ export default function SellerOrderDetailPage({
 
   if (loading) {
     return (
-      <div className="max-w-3xl mx-auto py-12 flex justify-center">
+      <div className="py-20 flex justify-center">
         <div className="w-8 h-8 border-2 border-forest-600 border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -130,16 +137,18 @@ export default function SellerOrderDetailPage({
 
   if (error || !orderView) {
     return (
-      <div className="max-w-md mx-auto py-16 text-center space-y-4 bg-white rounded-2xl border border-ink-100 p-8 shadow-xs">
-        <AlertIcon size={24} className="text-error-600 mx-auto" />
-        <h1 className="font-serif text-xl font-bold text-ink-900">Order Unavailable</h1>
-        <p className="text-xs text-ink-500">{error || "The requested order was not found or is unavailable for your nursery portal."}</p>
-        <Link
-          href="/seller/orders"
-          className="inline-block px-5 py-2.5 rounded-xl bg-forest-700 hover:bg-forest-800 text-white font-bold text-xs uppercase tracking-wider transition-colors"
-        >
-          Back to Orders
-        </Link>
+      <div className="space-y-4 max-w-xl mx-auto py-12">
+        <div className="bg-error-50 border border-error-100 rounded-2xl p-6 text-center text-xs text-error-700 space-y-3">
+          <AlertIcon size={28} className="mx-auto text-error-500" />
+          <p className="font-bold">{error || "Order not found"}</p>
+          <p className="text-[11px] text-error-600">The order ID #{masterOrderId} could not be retrieved.</p>
+          <Link
+            href="/seller/orders"
+            className="inline-block px-4 py-2 rounded-xl bg-forest-700 text-white font-bold text-xs uppercase tracking-wider"
+          >
+            Return to Order Queue
+          </Link>
+        </div>
       </div>
     );
   }
@@ -149,19 +158,36 @@ export default function SellerOrderDetailPage({
   const currentStepIdx = SELLER_TIMELINE.indexOf(orderView.status);
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 pb-12">
-      <div className="flex items-center justify-between">
-        <Link href="/seller/orders" className="text-xs font-bold text-forest-700 hover:text-forest-900">
-          ← Back to Orders Queue
-        </Link>
-        <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border ${getStatusBadgeStyle(orderView.status)}`}>
-          {orderView.status}
-        </span>
-      </div>
+    <div className="space-y-6 max-w-4xl mx-auto pb-12">
+      {/* Header & Back Nav */}
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-ink-100 pb-4">
+        <div>
+          <Link href="/seller/orders" className="text-xs text-forest-700 font-bold hover:underline mb-1 inline-block">
+            ← Back to Orders Queue
+          </Link>
+          <div className="flex items-center gap-3">
+            <h1 className="font-serif text-xl sm:text-2xl font-bold text-ink-900">
+              Master Order #{orderView.masterOrderId}
+            </h1>
+            <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border ${getStatusBadgeStyle(orderView.status)}`}>
+              {orderView.status}
+            </span>
+          </div>
+          <p className="text-xs text-ink-400 mt-1">Placed on {orderView.createdAt}</p>
+        </div>
 
-      <div>
-        <h1 className="font-serif text-2xl font-bold text-ink-900 leading-tight">Master Order {orderView.masterOrderId}</h1>
-        <p className="text-xs text-ink-400 mt-0.5">Placed on {orderView.createdAt}</p>
+        {actionLabel && (
+          <div>
+            <button
+              type="button"
+              disabled={!isApproved || isUpdating}
+              onClick={handleAdvanceStatus}
+              className="px-5 py-2.5 rounded-xl bg-forest-700 hover:bg-forest-800 text-white font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-40"
+            >
+              {isUpdating ? "Updating..." : actionLabel}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Fulfillment Progress Timeline */}

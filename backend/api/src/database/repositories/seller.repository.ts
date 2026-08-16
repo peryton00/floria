@@ -486,7 +486,10 @@ export class SellerRepository {
           customer: {
             name: order.delivery_address_snapshot?.full_name || "Customer",
             phone: order.delivery_address_snapshot?.phone || "",
-            address: order.delivery_address_snapshot || {},
+            address: typeof order.delivery_address_snapshot === "string" 
+              ? order.delivery_address_snapshot 
+              : [order.delivery_address_snapshot?.line1, order.delivery_address_snapshot?.line2, order.delivery_address_snapshot?.city, order.delivery_address_snapshot?.state, order.delivery_address_snapshot?.pincode].filter(Boolean).join(", ") || "Raipur, Chhattisgarh",
+            addressSnapshot: order.delivery_address_snapshot || {},
           },
           items: lineItems,
           subtotalPaise,
@@ -573,7 +576,10 @@ export class SellerRepository {
       customer: {
         name: order.delivery_address_snapshot?.full_name || "Customer",
         phone: order.delivery_address_snapshot?.phone || "",
-        address: order.delivery_address_snapshot || {},
+        address: typeof order.delivery_address_snapshot === "string"
+          ? order.delivery_address_snapshot
+          : [order.delivery_address_snapshot?.line1, order.delivery_address_snapshot?.line2, order.delivery_address_snapshot?.city, order.delivery_address_snapshot?.state, order.delivery_address_snapshot?.pincode].filter(Boolean).join(", ") || "Raipur, Chhattisgarh",
+        addressSnapshot: order.delivery_address_snapshot || {},
       },
       items: lineItems,
       subtotalPaise,
