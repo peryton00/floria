@@ -17,10 +17,21 @@ export class WishlistService {
     }
 
     const settings = await pricingService.getFinancialSettings();
+    let overrideMap = new Map<string, any>();
+    try {
+      const { data: overrides } = await db
+        .from("product_pricing_overrides")
+        .select("product_id, custom_customer_price_paise")
+        .eq("is_active", true);
+      if (overrides) {
+        overrideMap = new Map(overrides.map((o: any) => [o.product_id, o]));
+      }
+    } catch {}
+
     if (wishlist.wishlist_items && Array.isArray(wishlist.wishlist_items)) {
       wishlist.wishlist_items = wishlist.wishlist_items.map((wi: any) => {
         if (wi.product) {
-          wi.product = productsService.enrichWithDbPricing(wi.product, settings);
+          wi.product = productsService.enrichWithDbPricing(wi.product, settings, overrideMap);
         }
         return wi;
       });

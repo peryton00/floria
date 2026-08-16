@@ -28,8 +28,10 @@ class ProductsService {
                 customer_price_paise: customerPrice,
                 seller_net_paise: calc.sellerNetPaise,
                 pricing: {
+                    customerPricePaise: customerPrice,
                     sellingPricePaise: customerPrice,
                     originalPricePaise: originalPrice,
+                    compareAtPricePaise: originalPrice,
                     discountAmountPaise: discountAmount,
                     discountPercentage: discountPercent,
                     isDiscounted: discountAmount > 0,
@@ -66,6 +68,18 @@ class ProductsService {
             throw errors_js_1.Errors.notFound("Product");
         const overrideMap = await this.getActiveOverridesMap();
         return this.enrichWithDbPricing(product, settings, overrideMap);
+    }
+    async getRelated(productId, categoryId, limit = 6) {
+        const settings = await pricing_service_js_1.pricingService.getFinancialSettings();
+        const products = await product_repository_js_1.productRepository.findRelated(productId, categoryId, limit);
+        const overrideMap = await this.getActiveOverridesMap();
+        return products.map((p) => this.enrichWithDbPricing(p, settings, overrideMap));
+    }
+    async getTrending(limit = 12) {
+        const settings = await pricing_service_js_1.pricingService.getFinancialSettings();
+        const products = await product_repository_js_1.productRepository.findTrending(limit);
+        const overrideMap = await this.getActiveOverridesMap();
+        return products.map((p) => this.enrichWithDbPricing(p, settings, overrideMap));
     }
     async getActiveOverridesMap() {
         try {

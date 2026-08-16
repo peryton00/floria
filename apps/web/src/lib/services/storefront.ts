@@ -77,9 +77,16 @@ function buildMockListing(p: Product): ProductListing {
 
 function mapRow(row: Record<string, unknown>): ProductListing {
   const images = (row["images"] as ProductImage[]) ?? [];
-  const inv = (row["inventory"] as Partial<Inventory>) ?? {};
+  const rawInv = row["inventory"];
+  const inv = (Array.isArray(rawInv) ? rawInv[0] : rawInv) as Partial<Inventory> ?? {};
   const rawRs = row["rating_summary"];
   const rs = Array.isArray(rawRs) ? rawRs[0] : rawRs;
+  const rawPricing = (row["pricing"] as any) ?? (inv as any)?.pricing;
+
+  const customerPrice = rawPricing?.customerPricePaise ?? rawPricing?.sellingPricePaise ?? inv.price_paise ?? 0;
+  const rawOriginalPrice = (inv as any)?.original_price_paise;
+  const compareAtPrice = rawPricing?.compareAtPricePaise ?? rawPricing?.originalPricePaise ?? (typeof rawOriginalPrice === "number" && rawOriginalPrice > customerPrice ? rawOriginalPrice : null);
+  const isFreeDelivery = Boolean(rawPricing?.isFreeDelivery);
 
   return {
     product: {
@@ -98,7 +105,7 @@ function mapRow(row: Record<string, unknown>): ProductListing {
       id: inv.id ?? "",
       product_id: row["id"] as string,
       seller_id: row["seller_id"] as string,
-      price_paise: inv.price_paise ?? 0,
+      price_paise: customerPrice,
       stock_quantity: inv.stock_quantity ?? 0,
       low_stock_threshold: inv.low_stock_threshold ?? 5,
       sku: inv.sku ?? null,
@@ -117,6 +124,17 @@ function mapRow(row: Record<string, unknown>): ProductListing {
       bayesian_rating: Number(rs.bayesian_rating ?? 0),
       wilson_lower_bound: Number(rs.wilson_lower_bound ?? 0),
     } : null,
+    pricing: {
+      customerPricePaise: customerPrice,
+      sellingPricePaise: customerPrice,
+      originalPricePaise: compareAtPrice,
+      compareAtPricePaise: compareAtPrice,
+      discountAmountPaise: rawPricing?.discountAmountPaise ?? (compareAtPrice ? compareAtPrice - customerPrice : 0),
+      discountPercentage: rawPricing?.discountPercentage ?? (compareAtPrice ? Math.round(((compareAtPrice - customerPrice) / compareAtPrice) * 100) : 0),
+      isDiscounted: Boolean(rawPricing?.isDiscounted || (compareAtPrice && compareAtPrice > customerPrice)),
+      isFreeDelivery,
+      isOverride: Boolean(rawPricing?.isOverride),
+    },
   };
 }
 

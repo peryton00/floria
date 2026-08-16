@@ -32,7 +32,7 @@ class ProductsController {
                 res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Product not found." } });
                 return;
             }
-            const related = await product_repository_js_1.productRepository.findRelated(product.product?.id ?? product.id, product.product?.category_id ?? product.category_id);
+            const related = await products_service_js_1.productsService.getRelated(product.product?.id ?? product.id, product.product?.category_id ?? product.category_id);
             res.json({ success: true, data: related });
         }
         catch (err) {
@@ -42,7 +42,7 @@ class ProductsController {
     async getTrending(req, res, next) {
         try {
             const limit = Math.min(20, Number(req.query.limit) || 12);
-            const products = await product_repository_js_1.productRepository.findTrending(limit);
+            const products = await products_service_js_1.productsService.getTrending(limit);
             res.json({ success: true, data: products });
         }
         catch (err) {

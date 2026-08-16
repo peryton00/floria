@@ -28,7 +28,7 @@ export class ProductsController {
     try {
       const product = await productRepository.findBySlug(String(req.params.slug));
       if (!product) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Product not found." } }); return; }
-      const related = await productRepository.findRelated(product.product?.id ?? product.id, product.product?.category_id ?? product.category_id);
+      const related = await productsService.getRelated(product.product?.id ?? product.id, product.product?.category_id ?? product.category_id);
       res.json({ success: true, data: related });
     } catch (err) { next(err); }
   }
@@ -36,7 +36,7 @@ export class ProductsController {
   async getTrending(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const limit = Math.min(20, Number(req.query.limit) || 12);
-      const products = await productRepository.findTrending(limit);
+      const products = await productsService.getTrending(limit);
       res.json({ success: true, data: products });
     } catch (err) { next(err); }
   }

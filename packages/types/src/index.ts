@@ -149,12 +149,16 @@ export interface Inventory {
 }
 
 export interface CustomerProductPricingDTO {
+  customerPricePaise: number;
   sellingPricePaise: number;
   originalPricePaise?: number | null;
+  compareAtPricePaise?: number | null;
   discountAmountPaise?: number | null;
   discountPercentage?: number | null;
   isDiscounted: boolean;
   isFreeDelivery: boolean;
+  isOverride?: boolean;
+  pricingPolicyVersion?: number;
   deliverySavingsPaise?: number | null;
 }
 

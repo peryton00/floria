@@ -81,6 +81,19 @@ export class CheckoutService {
     const { pricingService } = await import("../pricing/pricing.service.js");
     const finSettings = await pricingService.getFinancialSettings();
 
+    // Check active overrides
+    let overrideMap = new Map<string, number>();
+    try {
+      const { data: overrides } = await db
+        .from("product_pricing_overrides")
+        .select("product_id, custom_customer_price_paise")
+        .in("product_id", productIds)
+        .eq("is_active", true);
+      if (overrides) {
+        overrideMap = new Map(overrides.map((o: any) => [o.product_id, o.custom_customer_price_paise]));
+      }
+    } catch {}
+
     const lineItems: any[] = [];
     let allItemsFreeDeliveryEligible = true;
 
@@ -98,6 +111,9 @@ export class CheckoutService {
         allItemsFreeDeliveryEligible = false;
       }
 
+      const overridePrice = overrideMap.get(p.id);
+      const effectiveCustomerPrice = typeof overridePrice === "number" ? overridePrice : calc.customerProductPricePaise;
+
       lineItems.push({
         product_id: p.id,
         product_name_snapshot: p.name,
@@ -106,11 +122,11 @@ export class CheckoutService {
         floria_profit_rate_snapshot: calc.floriaProfitRate / 100.0,
         floria_profit_paise_snapshot: calc.floriaProfitPaise,
         delivery_recovery_paise_snapshot: calc.deliveryRecoveryPaise,
-        customer_price_paise_snapshot: calc.customerProductPricePaise,
+        customer_price_paise_snapshot: effectiveCustomerPrice,
         is_free_delivery_eligible_snapshot: calc.isFreeDeliveryEligible,
-        unit_price_paise_snapshot: calc.customerProductPricePaise,
+        unit_price_paise_snapshot: effectiveCustomerPrice,
         quantity: item.quantity,
-        line_total_paise: calc.customerProductPricePaise * item.quantity,
+        line_total_paise: effectiveCustomerPrice * item.quantity,
         commission_rate_snapshot: calc.sellerCommissionRate / 100.0,
         commission_paise_snapshot: calc.sellerCommissionPaise,
       });

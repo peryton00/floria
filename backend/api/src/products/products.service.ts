@@ -29,8 +29,10 @@ export class ProductsService {
         customer_price_paise: customerPrice,
         seller_net_paise: calc.sellerNetPaise,
         pricing: {
+          customerPricePaise: customerPrice,
           sellingPricePaise: customerPrice,
           originalPricePaise: originalPrice,
+          compareAtPricePaise: originalPrice,
           discountAmountPaise: discountAmount,
           discountPercentage: discountPercent,
           isDiscounted: discountAmount > 0,
@@ -70,6 +72,20 @@ export class ProductsService {
 
     const overrideMap = await this.getActiveOverridesMap();
     return this.enrichWithDbPricing(product, settings, overrideMap);
+  }
+
+  async getRelated(productId: string, categoryId: string | null, limit = 6) {
+    const settings = await pricingService.getFinancialSettings();
+    const products = await productRepository.findRelated(productId, categoryId, limit);
+    const overrideMap = await this.getActiveOverridesMap();
+    return products.map((p) => this.enrichWithDbPricing(p, settings, overrideMap));
+  }
+
+  async getTrending(limit = 12) {
+    const settings = await pricingService.getFinancialSettings();
+    const products = await productRepository.findTrending(limit);
+    const overrideMap = await this.getActiveOverridesMap();
+    return products.map((p) => this.enrichWithDbPricing(p, settings, overrideMap));
   }
 
   private async getActiveOverridesMap(): Promise<Map<string, any>> {

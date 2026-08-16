@@ -5,6 +5,7 @@ import type { ProductListing } from "@floria/types";
 import { api } from "@/lib/api";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { useToast } from "@/lib/contexts/ToastContext";
+import { formatINR } from "@/lib/format";
 
 export interface CartItem {
   listing: ProductListing;
@@ -57,8 +58,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           seller,
           category: cat,
           pricing: p.pricing || {
+            customerPricePaise: customerPrice,
             sellingPricePaise: customerPrice,
             originalPricePaise,
+            compareAtPricePaise: originalPricePaise,
             discountAmountPaise,
             discountPercentage,
             isDiscounted: discountAmountPaise > 0,
@@ -109,7 +112,31 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         if (res.success && res.data) {
           const rawItems = res.data.cart_items || res.data.items || [];
           const mapped = mapDbCartItems(rawItems);
-          setCartItems(mapped);
+
+          // Revalidate price changes against previous cart state
+          setCartItems((prevItems) => {
+            if (prevItems.length > 0) {
+              const prevPriceMap = new Map(
+                prevItems.map((item) => [
+                  item.listing.product.id,
+                  item.listing.pricing?.sellingPricePaise ?? item.listing.inventory?.price_paise ?? 0,
+                ])
+              );
+              for (const newItem of mapped) {
+                const oldPrice = prevPriceMap.get(newItem.listing.product.id);
+                const newPrice =
+                  newItem.listing.pricing?.sellingPricePaise ?? newItem.listing.inventory?.price_paise ?? 0;
+                if (typeof oldPrice === "number" && oldPrice > 0 && newPrice > 0 && oldPrice !== newPrice) {
+                  toast.info(
+                    "Price updated",
+                    `The price of "${newItem.listing.product.name}" changed from ${formatINR(oldPrice)} to ${formatINR(newPrice)}.`
+                  );
+                }
+              }
+            }
+            return mapped;
+          });
+
           // Keep user resilient cache in sync
           try { localStorage.setItem("floria_cart_cache", JSON.stringify(mapped)); } catch { /* ignore */ }
           return;
@@ -134,12 +161,60 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             (item: any) => item && typeof item === "object" && item.listing && item.listing.inventory
           );
           setCartItems(validItems);
+
+          // Asynchronously revalidate guest items against live catalog
+          if (validItems.length > 0) {
+            api.getProducts().then((res) => {
+              if (res.success && res.data && res.data.length > 0) {
+                const catalogMap = new Map((res.data as any[]).map((p: any) => [p.id, p]));
+                setCartItems((currentItems) => {
+                  let changed = false;
+                  const updated = currentItems.map((item) => {
+                    const live = catalogMap.get(item.listing.product.id);
+                    if (!live) return item;
+                    const livePricing = live.pricing || (Array.isArray(live.inventory) ? live.inventory[0]?.pricing : live.inventory?.pricing);
+                    const newPrice = livePricing?.sellingPricePaise ?? livePricing?.customerPricePaise ?? (Array.isArray(live.inventory) ? live.inventory[0]?.price_paise : live.inventory?.price_paise);
+                    const oldPrice = item.listing.pricing?.sellingPricePaise ?? item.listing.inventory?.price_paise ?? 0;
+
+                    if (typeof newPrice === "number" && newPrice > 0 && oldPrice > 0 && newPrice !== oldPrice) {
+                      changed = true;
+                      toast.info(
+                        "Price updated",
+                        `The price of "${item.listing.product.name}" changed from ${formatINR(oldPrice)} to ${formatINR(newPrice)}.`
+                      );
+                      return {
+                        ...item,
+                        listing: {
+                          ...item.listing,
+                          inventory: {
+                            ...item.listing.inventory,
+                            price_paise: newPrice,
+                          },
+                          pricing: livePricing ? {
+                            ...livePricing,
+                            sellingPricePaise: newPrice,
+                            customerPricePaise: newPrice,
+                          } : {
+                            ...item.listing.pricing,
+                            sellingPricePaise: newPrice,
+                            customerPricePaise: newPrice,
+                          },
+                        },
+                      };
+                    }
+                    return item;
+                  });
+                  return changed ? updated : currentItems;
+                });
+              }
+            }).catch(() => {});
+          }
         }
       }
     } catch {
       // Ignore
     }
-  }, [mapDbCartItems]);
+  }, [mapDbCartItems, toast]);
 
   // Initial hydration & auth listener for guest cart merge
   useEffect(() => {

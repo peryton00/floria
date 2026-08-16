@@ -32,12 +32,15 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
       const seller = Array.isArray(p.seller) ? p.seller[0] : p.seller || { id: p.seller_id, business_name: "Nursery" };
       const cat = Array.isArray(p.category) ? p.category[0] : p.category || null;
 
+      const pricing = p.pricing || (inv as any)?.pricing;
+
       return {
         product: p,
         inventory: inv,
         primary_image: primary,
         seller,
         category: cat,
+        pricing: pricing ?? null,
       };
     });
   }, []);
