@@ -72,6 +72,8 @@ async function fetchRankedNurseries(): Promise<NurserySummary[]> {
   }
 }
 
+import { FadeUp, AnimatedSection, BotanicalAmbient } from "@/components/ui/motion";
+
 export default async function HomePage() {
   const allListings = await getProductListings();
   const bestSellers = allListings.slice(0, 5);
@@ -90,62 +92,70 @@ export default async function HomePage() {
           <div className="max-w-screen-xl mx-auto w-full px-4 md:px-6 lg:px-8 pt-16 pb-8 md:py-12 relative z-10">
             <div className="w-[58%] md:w-[50%] lg:w-[48%] flex flex-col">
               {/* Pill badge */}
-              <div
-                className="inline-flex self-start items-center gap-1.5 px-2 py-0.5 mb-2 text-[10px] font-bold uppercase tracking-widest rounded"
-                style={{
-                  color: "#4A6B43",
-                  borderColor: "#D5DEC8",
-                  backgroundColor: "#F0F5EB",
-                }}
-              >
-                <LeafIcon
-                  size={11}
-                  className="text-[#4A6B43] fill-[#4A6B43]/20"
-                />
-                <span>PURE. ORGANIC. SUSTAINABLE.</span>
-              </div>
+              <FadeUp delay={0}>
+                <div
+                  className="inline-flex self-start items-center gap-1.5 px-2 py-0.5 mb-2 text-[10px] font-bold uppercase tracking-widest rounded"
+                  style={{
+                    color: "#4A6B43",
+                    borderColor: "#D5DEC8",
+                    backgroundColor: "#F0F5EB",
+                  }}
+                >
+                  <LeafIcon
+                    size={11}
+                    className="text-[#4A6B43] fill-[#4A6B43]/20"
+                  />
+                  <span>PURE. ORGANIC. SUSTAINABLE.</span>
+                </div>
+              </FadeUp>
 
               {/* Headline */}
-              <h1
-                id="hero-heading"
-                className="font-serif font-bold leading-[1.05] text-forest-700 mb-5"
-                style={{
-                  fontSize: "clamp(2.4rem, 5vw, 3.75rem)",
-                  letterSpacing: "-0.02em",
-                }}
-              >
-                Discover.
-                <br />
-                Choose. Grow.
-              </h1>
-
-              <p className="text-xs md:text-base text-ink-500 leading-relaxed mb-6 max-w-sm font-medium">
-                Plants &amp; gardening essentials from trusted nurseries,
-                delivered to your door.
-              </p>
-
-              <div className="flex flex-wrap gap-3 mt-10.5">
-                <Link
-                  href="/categories"
-                  className="inline-flex items-center justify-center gap-1.5 px-5 py-3 md:px-6 md:py-3.5 text-xs font-bold rounded transition-all hover:bg-[#152B1B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-700 focus-visible:ring-offset-2 shadow-sm"
-                  style={{ backgroundColor: "#1E3E26", color: "#ffffff" }}
+              <FadeUp delay={60}>
+                <h1
+                  id="hero-heading"
+                  className="font-serif font-bold leading-[1.05] text-forest-700 mb-5"
+                  style={{
+                    fontSize: "clamp(2.4rem, 5vw, 3.75rem)",
+                    letterSpacing: "-0.02em",
+                  }}
                 >
-                  <span>Explore Plants</span>
-                  <span className="text-[13px] leading-none mb-0.5">→</span>
-                </Link>
-                <Link
-                  href="/search"
-                  className="hidden sm:inline-flex items-center justify-center px-6 py-3.5 text-xs font-bold uppercase tracking-wider rounded border transition-all hover:bg-[#1E3E26]/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-700"
-                  style={{ borderColor: "#1E3E26", color: "#1E3E26" }}
-                >
-                  SHOP GARDENING
-                </Link>
-              </div>
+                  Discover.
+                  <br />
+                  Choose. Grow.
+                </h1>
+              </FadeUp>
+
+              <FadeUp delay={120}>
+                <p className="text-xs md:text-base text-ink-500 leading-relaxed mb-6 max-w-sm font-medium">
+                  Plants &amp; gardening essentials from trusted nurseries,
+                  delivered to your door.
+                </p>
+              </FadeUp>
+
+              <FadeUp delay={180}>
+                <div className="flex flex-wrap gap-3 mt-10.5">
+                  <Link
+                    href="/categories"
+                    className="inline-flex items-center justify-center gap-1.5 px-5 py-3 md:px-6 md:py-3.5 text-xs font-bold rounded transition-all hover:bg-[#152B1B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-700 focus-visible:ring-offset-2 shadow-sm hover:scale-[1.01] active:scale-[0.99]"
+                    style={{ backgroundColor: "#1E3E26", color: "#ffffff" }}
+                  >
+                    <span>Explore Plants</span>
+                    <span className="text-[13px] leading-none mb-0.5 group-hover:translate-x-0.5 transition-transform">→</span>
+                  </Link>
+                  <Link
+                    href="/search"
+                    className="hidden sm:inline-flex items-center justify-center px-6 py-3.5 text-xs font-bold uppercase tracking-wider rounded border transition-all hover:bg-[#1E3E26]/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-700"
+                    style={{ borderColor: "#1E3E26", color: "#1E3E26" }}
+                  >
+                    SHOP GARDENING
+                  </Link>
+                </div>
+              </FadeUp>
             </div>
           </div>
 
-          {/* Right Side Image (always visible, floats to the right edge) */}
-          <div className="absolute right-0 top-0 bottom-0 w-[60%] md:w-[50%] lg:w-[52%] h-full z-0">
+          {/* Right Side Image with Botanical Ambient Sway */}
+          <div className="absolute right-0 top-0 bottom-0 w-[60%] md:w-[50%] lg:w-[52%] h-full z-0 overflow-hidden">
             {/* Smooth left-edge fade overlay */}
             <div
               className="absolute left-0 top-0 bottom-0 w-20 md:w-32 z-10 bg-gradient-to-r pointer-events-none"
@@ -154,14 +164,16 @@ export default async function HomePage() {
                   "linear-gradient(to right, #F7F4EF 0%, rgba(247, 244, 239, 0.8) 30%, rgba(247, 244, 239, 0) 100%)",
               }}
             />
-            {/* Main image */}
-            <Image
-              src="/hero-plants.png"
-              alt="Plants from Floria nurseries"
-              fill
-              priority
-              className="object-cover object-left md:object-left"
-            />
+            {/* Main image wrapped in subtle botanical float */}
+            <BotanicalAmbient className="w-full h-full relative">
+              <Image
+                src="/hero-plants.png"
+                alt="Plants from Floria nurseries"
+                fill
+                priority
+                className="object-cover object-left md:object-left"
+              />
+            </BotanicalAmbient>
           </div>
         </div>
 

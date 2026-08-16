@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 
 type BadgeVariant = "default" | "success" | "warning" | "error" | "info" | "forest";
 
@@ -34,6 +34,17 @@ export function Badge({ variant = "default", children, className = "" }: BadgePr
 
 /** Numeric count badge for cart/notification icons */
 export function CountBadge({ count, max = 99 }: { count: number; max?: number }) {
+  const [pulse, setPulse] = useState(false);
+
+  useEffect(() => {
+    if (count > 0) {
+      setPulse(true);
+      const timer = setTimeout(() => setPulse(false), 200);
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, [count]);
+
   if (count <= 0) return null;
   const label = count > max ? `${max}+` : String(count);
   return (
@@ -46,6 +57,8 @@ export function CountBadge({ count, max = 99 }: { count: number; max?: number })
         "text-[10px] font-bold text-white",
         "bg-glow-400 rounded-full",
         "ring-2 ring-cream-100",
+        "transition-transform duration-200",
+        pulse ? "animate-badge-pulse scale-110" : "scale-100",
       ].join(" ")}
     >
       {label}

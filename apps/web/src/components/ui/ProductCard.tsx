@@ -11,6 +11,8 @@ import { WishlistIcon, BagIcon } from "@/components/ui/Icons";
 import { useWishlist } from "@/lib/contexts/WishlistContext";
 import { useCart } from "@/lib/contexts/CartContext";
 
+import { WishlistHeartButton } from "@/components/ui/motion";
+
 interface ProductCardProps {
   listing: ProductListing;
   showBestSeller?: boolean;
@@ -32,16 +34,16 @@ export function ProductCard({ listing, showBestSeller, discountPercent }: Produc
     : null;
 
   return (
-    <div className="group flex flex-col bg-white rounded-xl overflow-hidden border border-ink-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 focus-within:ring-2 focus-within:ring-forest-700">
+    <div className="group flex flex-col bg-white rounded-xl overflow-hidden border border-ink-100 shadow-xs hover:shadow-md hover:border-forest-200 transition-all duration-250 ease-out focus-within:ring-2 focus-within:ring-forest-700">
       {/* Image */}
       <Link href={`/products/${product.slug}`} className="focus-visible:outline-none">
-        <div className="relative" style={{ paddingBottom: "100%" }}>
+        <div className="relative overflow-hidden" style={{ paddingBottom: "100%" }}>
           <Image
             src={primary_image?.url || "/floria-logo.png"}
             alt={primary_image?.alt_text || product.name}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+            className="object-cover group-hover:scale-[1.025] transition-transform duration-300 ease-out"
           />
           {/* Badges */}
           <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5 font-ui">
@@ -65,17 +67,13 @@ export function ProductCard({ listing, showBestSeller, discountPercent }: Produc
             )}
           </div>
           {/* Wishlist heart */}
-          <button
-            type="button"
-            aria-label={wishlisted ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleWishlist(listing); }}
-            className={[
-              "absolute top-2.5 right-2.5 w-7 h-7 flex items-center justify-center rounded-full transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-700",
-              wishlisted ? "bg-red-50 text-red-600 hover:bg-red-100/70" : "bg-white/90 text-ink-300 hover:text-red-600",
-            ].join(" ")}
-          >
-            <WishlistIcon size={14} className={wishlisted ? "fill-red-600" : ""} />
-          </button>
+          <div className="absolute top-1.5 right-1.5 z-10">
+            <WishlistHeartButton
+              active={wishlisted}
+              size={14}
+              onToggle={() => toggleWishlist(listing)}
+            />
+          </div>
         </div>
       </Link>
 
