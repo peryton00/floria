@@ -693,5 +693,133 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
     });
+
+    it("Seller Documents -> Valid PDF upload returns 200 OK with pending status", async () => {
+      setupAuthUser("seller-1", "seller");
+      mockFrom.mockImplementation((table: string) => {
+        if (table === "user_profiles") {
+          return {
+            select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { id: "seller-1", role: "seller" }, error: null }) }) }),
+          };
+        }
+        if (table === "seller_profiles") {
+          return {
+            select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { id: "sel-prof-1", user_id: "seller-1", business_name: "Green Nursery", status: "approved" }, error: null }) }) }),
+          };
+        }
+        if (table === "seller_documents") {
+          return {
+            insert: () => ({
+              select: () => ({
+                single: async () => ({
+                  data: {
+                    id: "doc-1",
+                    seller_id: "sel-prof-1",
+                    document_type: "gstin",
+                    file_name: "gstin.pdf",
+                    file_url: "https://storage.floria.in/gstin.pdf",
+                    file_size_bytes: 100000,
+                    mime_type: "application/pdf",
+                    status: "pending",
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                  },
+                  error: null,
+                }),
+              }),
+            }),
+          };
+        }
+        return {};
+      });
+
+      const res = await request(app)
+        .post("/api/v1/seller/documents")
+        .set("Authorization", "Bearer seller_token")
+        .send({
+          documentType: "gstin",
+          fileName: "gstin.pdf",
+          fileUrl: "https://storage.floria.in/gstin.pdf",
+          fileSize: 100000,
+          mimeType: "application/pdf",
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.status).toBe("pending");
+    });
+
+    it("Seller Documents -> Rejects invalid MIME type (exe file) with 422 VALIDATION_ERROR", async () => {
+      setupAuthUser("seller-1", "seller");
+      mockFrom.mockImplementation((table: string) => {
+        if (table === "user_profiles") {
+          return {
+            select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { id: "seller-1", role: "seller" }, error: null }) }) }),
+          };
+        }
+        if (table === "seller_profiles") {
+          return {
+            select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { id: "sel-prof-1", user_id: "seller-1", business_name: "Green Nursery", status: "approved" }, error: null }) }) }),
+          };
+        }
+        return {};
+      });
+
+      const res = await request(app)
+        .post("/api/v1/seller/documents")
+        .set("Authorization", "Bearer seller_token")
+        .send({
+          documentType: "gstin",
+          fileName: "virus.exe",
+          fileUrl: "https://storage.floria.in/virus.exe",
+          fileSize: 1000,
+          mimeType: "application/x-msdownload",
+        });
+
+      expect(res.status).toBe(422);
+      expect(res.body.error.message).toContain("Invalid document file type");
+    });
+
+    it("Seller Settings -> GET /api/v1/seller/settings/notifications returns settings", async () => {
+      setupAuthUser("seller-1", "seller");
+      mockFrom.mockImplementation((table: string) => {
+        if (table === "user_profiles") {
+          return {
+            select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { id: "seller-1", role: "seller" }, error: null }) }) }),
+          };
+        }
+        if (table === "seller_profiles") {
+          return {
+            select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { id: "sel-prof-1", user_id: "seller-1", status: "approved" }, error: null }) }) }),
+          };
+        }
+        if (table === "seller_settings") {
+          return {
+            select: () => ({
+              eq: () => ({
+                maybeSingle: async () => ({
+                  data: {
+                    seller_id: "sel-prof-1",
+                    new_order_notifications: true,
+                    low_stock_notifications: true,
+                    email_notifications: true,
+                  },
+                  error: null,
+                }),
+              }),
+            }),
+          };
+        }
+        return {};
+      });
+
+      const res = await request(app)
+        .get("/api/v1/seller/settings/notifications")
+        .set("Authorization", "Bearer seller_token");
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.new_order_notifications).toBe(true);
+    });
   });
 });

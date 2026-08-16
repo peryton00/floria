@@ -292,6 +292,72 @@ export class SellersService {
   async getAnalytics(sellerId: string, range: string) {
     return sellerRepository.getAnalytics(sellerId, range);
   }
+
+  // ── Documents ────────────────────────────────────────────────────────────
+  async getDocuments(sellerId: string) {
+    return sellerRepository.findSellerDocuments(sellerId);
+  }
+
+  async uploadDocument(sellerId: string, payload: {
+    documentType?: string;
+    fileName?: string;
+    fileUrl?: string;
+    fileSize?: number;
+    mimeType?: string;
+  }) {
+    if (!payload.documentType || !payload.fileName || !payload.fileUrl) {
+      throw Errors.validation("documentType, fileName, and fileUrl are required");
+    }
+
+    const ALLOWED_MIME_TYPES = ["application/pdf", "image/jpeg", "image/jpg", "image/png", "image/webp"];
+    const mime = (payload.mimeType || "").toLowerCase();
+    if (mime && !ALLOWED_MIME_TYPES.includes(mime)) {
+      throw Errors.validation("Invalid document file type. Allowed: PDF, JPG, PNG, WebP.");
+    }
+
+    const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+    if (payload.fileSize && payload.fileSize > MAX_SIZE_BYTES) {
+      throw Errors.validation("File size exceeds maximum limit of 5 MB");
+    }
+
+    const doc = await sellerRepository.insertSellerDocument({
+      seller_id: sellerId,
+      document_type: payload.documentType,
+      file_name: payload.fileName,
+      file_url: payload.fileUrl,
+      file_size_bytes: payload.fileSize || 0,
+      mime_type: mime || "application/pdf",
+    });
+
+    await auditRepository.log({
+      actor_user_id: sellerId,
+      actor_role: "seller",
+      action: "SELLER_DOCUMENT_UPLOADED",
+      resource_type: "seller_document",
+      resource_id: doc.id,
+      metadata: { documentType: payload.documentType, fileName: payload.fileName },
+    });
+
+    return doc;
+  }
+
+  // ── Settings ─────────────────────────────────────────────────────────────
+  async getNotificationSettings(sellerId: string) {
+    return sellerRepository.findSellerSettings(sellerId);
+  }
+
+  async updateNotificationSettings(sellerId: string, updates: any) {
+    const updated = await sellerRepository.updateSellerSettings(sellerId, updates);
+    await auditRepository.log({
+      actor_user_id: sellerId,
+      actor_role: "seller",
+      action: "SELLER_NOTIFICATION_SETTINGS_UPDATED",
+      resource_type: "seller_settings",
+      resource_id: sellerId,
+      metadata: updates,
+    });
+    return updated;
+  }
 }
 
 export const sellersService = new SellersService();

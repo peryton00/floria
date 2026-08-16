@@ -55,9 +55,9 @@ export default function AdminSellersPage() {
     setIsEditing(false);
 
     try {
-      const res = await api.getSellerDocuments(seller.id);
-      if (res.success && res.data?.documents) {
-        setSellerDocs(res.data.documents);
+      const res = await api.getAdminSellerDocuments(seller.id);
+      if (res.success && res.data) {
+        setSellerDocs(Array.isArray(res.data) ? res.data : res.data.documents || []);
       } else {
         setSellerDocs([]);
       }

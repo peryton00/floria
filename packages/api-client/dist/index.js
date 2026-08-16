@@ -270,6 +270,24 @@ var FloriaApiClient = class {
   async getSellerAnalytics(params) {
     return this.request(`/api/v1/seller/analytics${buildQueryString(params)}`);
   }
+  async getSellerDocuments() {
+    return this.request("/api/v1/seller/documents");
+  }
+  async uploadSellerDocument(data) {
+    return this.request("/api/v1/seller/documents", {
+      method: "POST",
+      body: JSON.stringify(data)
+    });
+  }
+  async getSellerNotificationSettings() {
+    return this.request("/api/v1/seller/settings/notifications");
+  }
+  async updateSellerNotificationSettings(settings) {
+    return this.request("/api/v1/seller/settings/notifications", {
+      method: "PATCH",
+      body: JSON.stringify(settings)
+    });
+  }
   // ── Notifications API (/api/v1/notifications) ─────────────────────────────
   async getNotifications(params) {
     return this.request(`/api/v1/notifications${buildQueryString(params)}`);
@@ -359,7 +377,7 @@ var FloriaApiClient = class {
       method: "POST"
     });
   }
-  async getSellerDocuments(id) {
+  async getAdminSellerDocuments(id) {
     return this.request(`/api/v1/admin/sellers/${id}/documents`);
   }
   async getAdminProducts(params) {

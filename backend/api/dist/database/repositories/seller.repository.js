@@ -80,6 +80,35 @@ class SellerRepository {
     }
     async findAll(status) {
         const db = (0, database_js_1.getAdminDb)();
+        // 1. Ensure any user with role = 'seller' in user_profiles has a seller_profiles row
+        try {
+            const { data: sellerUsers } = await db
+                .from("user_profiles")
+                .select("id, full_name, email")
+                .eq("role", "seller");
+            if (sellerUsers && sellerUsers.length > 0) {
+                for (const u of sellerUsers) {
+                    const { data: existing } = await db
+                        .from("seller_profiles")
+                        .select("id")
+                        .eq("user_id", u.id)
+                        .maybeSingle();
+                    if (!existing) {
+                        await this.submitApplication(u.id, {
+                            business_name: u.full_name || "Nursery Partner",
+                            contact_email: u.email || "",
+                            contact_phone: "",
+                            address: "",
+                            business_description: "Registered seller account.",
+                        });
+                    }
+                }
+            }
+        }
+        catch (e) {
+            console.error("[SellerRepository] auto-sync seller profiles error:", e);
+        }
+        // 2. Query all seller profiles
         let query = db.from("seller_profiles").select("*");
         if (status) {
             query = query.eq("status", status);
@@ -632,6 +661,87 @@ class SellerRepository {
             topProducts,
             categories
         };
+    }
+    // ── Documents ────────────────────────────────────────────────────────────
+    async findSellerDocuments(sellerId) {
+        const db = (0, database_js_1.getAdminDb)();
+        const { data, error } = await db
+            .from("seller_documents")
+            .select("*")
+            .eq("seller_id", sellerId)
+            .order("created_at", { ascending: false });
+        if (error || !data)
+            return [];
+        return data;
+    }
+    async insertSellerDocument(doc) {
+        const db = (0, database_js_1.getAdminDb)();
+        const { data, error } = await db
+            .from("seller_documents")
+            .insert({
+            ...doc,
+            status: "pending",
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+        })
+            .select()
+            .single();
+        if (error)
+            throw error;
+        return data;
+    }
+    async updateSellerDocumentStatus(docId, status, reviewNotes) {
+        const db = (0, database_js_1.getAdminDb)();
+        const { data, error } = await db
+            .from("seller_documents")
+            .update({
+            status,
+            review_notes: reviewNotes || null,
+            updated_at: new Date().toISOString(),
+        })
+            .eq("id", docId)
+            .select()
+            .single();
+        if (error)
+            throw error;
+        return data;
+    }
+    // ── Settings ─────────────────────────────────────────────────────────────
+    async findSellerSettings(sellerId) {
+        const db = (0, database_js_1.getAdminDb)();
+        const { data } = await db
+            .from("seller_settings")
+            .select("*")
+            .eq("seller_id", sellerId)
+            .maybeSingle();
+        if (data)
+            return data;
+        // Default settings if not created yet
+        return {
+            seller_id: sellerId,
+            new_order_notifications: true,
+            low_stock_notifications: true,
+            email_notifications: true,
+        };
+    }
+    async updateSellerSettings(sellerId, updates) {
+        const db = (0, database_js_1.getAdminDb)();
+        const existing = await this.findSellerSettings(sellerId);
+        const payload = {
+            seller_id: sellerId,
+            new_order_notifications: updates.new_order_notifications ?? existing.new_order_notifications ?? true,
+            low_stock_notifications: updates.low_stock_notifications ?? existing.low_stock_notifications ?? true,
+            email_notifications: updates.email_notifications ?? existing.email_notifications ?? true,
+            updated_at: new Date().toISOString(),
+        };
+        const { data, error } = await db
+            .from("seller_settings")
+            .upsert(payload, { onConflict: "seller_id" })
+            .select()
+            .single();
+        if (error)
+            throw error;
+        return data;
     }
 }
 exports.SellerRepository = SellerRepository;

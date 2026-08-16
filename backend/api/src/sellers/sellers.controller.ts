@@ -199,6 +199,46 @@ export class SellersController {
       next(err);
     }
   }
+
+  async getDocuments(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const profile = await sellersService.getProfile(req.user!.id);
+      const docs = await sellersService.getDocuments(profile.id);
+      res.json({ success: true, data: docs });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async uploadDocument(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const profile = await sellersService.getProfile(req.user!.id);
+      const doc = await sellersService.uploadDocument(profile.id, req.body);
+      res.json({ success: true, data: doc });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async getNotificationSettings(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const profile = await sellersService.getProfile(req.user!.id);
+      const settings = await sellersService.getNotificationSettings(profile.id);
+      res.json({ success: true, data: settings });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async updateNotificationSettings(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const profile = await sellersService.getProfile(req.user!.id);
+      const updated = await sellersService.updateNotificationSettings(profile.id, req.body);
+      res.json({ success: true, data: updated });
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 export const sellersController = new SellersController();

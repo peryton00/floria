@@ -7,7 +7,27 @@ const audit_repository_js_1 = require("../database/repositories/audit.repository
 const errors_js_1 = require("../utils/errors.js");
 class SellersService {
     async getProfile(userId) {
-        const profile = await seller_repository_js_1.sellerRepository.findByUserId(userId);
+        let profile = await seller_repository_js_1.sellerRepository.findByUserId(userId);
+        if (!profile) {
+            // Auto-provision seller profile if user exists in user_profiles
+            try {
+                const { getAdminDb } = await import("../config/database.js");
+                const db = getAdminDb();
+                const { data: userProf } = await db.from("user_profiles").select("id, full_name, email, role").eq("id", userId).maybeSingle();
+                if (userProf) {
+                    profile = await seller_repository_js_1.sellerRepository.submitApplication(userId, {
+                        business_name: userProf.full_name || "Nursery Partner",
+                        contact_email: userProf.email || "",
+                        contact_phone: "",
+                        address: "",
+                        business_description: "Registered seller account.",
+                    });
+                }
+            }
+            catch (e) {
+                console.error("[SellersService] Auto-provision seller profile error:", e);
+            }
+        }
         if (!profile)
             throw errors_js_1.Errors.notFound("Seller profile");
         return profile;
@@ -246,6 +266,57 @@ class SellersService {
     }
     async getAnalytics(sellerId, range) {
         return seller_repository_js_1.sellerRepository.getAnalytics(sellerId, range);
+    }
+    // ── Documents ────────────────────────────────────────────────────────────
+    async getDocuments(sellerId) {
+        return seller_repository_js_1.sellerRepository.findSellerDocuments(sellerId);
+    }
+    async uploadDocument(sellerId, payload) {
+        if (!payload.documentType || !payload.fileName || !payload.fileUrl) {
+            throw errors_js_1.Errors.validation("documentType, fileName, and fileUrl are required");
+        }
+        const ALLOWED_MIME_TYPES = ["application/pdf", "image/jpeg", "image/jpg", "image/png", "image/webp"];
+        const mime = (payload.mimeType || "").toLowerCase();
+        if (mime && !ALLOWED_MIME_TYPES.includes(mime)) {
+            throw errors_js_1.Errors.validation("Invalid document file type. Allowed: PDF, JPG, PNG, WebP.");
+        }
+        const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+        if (payload.fileSize && payload.fileSize > MAX_SIZE_BYTES) {
+            throw errors_js_1.Errors.validation("File size exceeds maximum limit of 5 MB");
+        }
+        const doc = await seller_repository_js_1.sellerRepository.insertSellerDocument({
+            seller_id: sellerId,
+            document_type: payload.documentType,
+            file_name: payload.fileName,
+            file_url: payload.fileUrl,
+            file_size_bytes: payload.fileSize || 0,
+            mime_type: mime || "application/pdf",
+        });
+        await audit_repository_js_1.auditRepository.log({
+            actor_user_id: sellerId,
+            actor_role: "seller",
+            action: "SELLER_DOCUMENT_UPLOADED",
+            resource_type: "seller_document",
+            resource_id: doc.id,
+            metadata: { documentType: payload.documentType, fileName: payload.fileName },
+        });
+        return doc;
+    }
+    // ── Settings ─────────────────────────────────────────────────────────────
+    async getNotificationSettings(sellerId) {
+        return seller_repository_js_1.sellerRepository.findSellerSettings(sellerId);
+    }
+    async updateNotificationSettings(sellerId, updates) {
+        const updated = await seller_repository_js_1.sellerRepository.updateSellerSettings(sellerId, updates);
+        await audit_repository_js_1.auditRepository.log({
+            actor_user_id: sellerId,
+            actor_role: "seller",
+            action: "SELLER_NOTIFICATION_SETTINGS_UPDATED",
+            resource_type: "seller_settings",
+            resource_id: sellerId,
+            metadata: updates,
+        });
+        return updated;
     }
 }
 exports.SellersService = SellersService;

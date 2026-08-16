@@ -197,6 +197,46 @@ class SellersController {
             next(err);
         }
     }
+    async getDocuments(req, res, next) {
+        try {
+            const profile = await sellers_service_js_1.sellersService.getProfile(req.user.id);
+            const docs = await sellers_service_js_1.sellersService.getDocuments(profile.id);
+            res.json({ success: true, data: docs });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+    async uploadDocument(req, res, next) {
+        try {
+            const profile = await sellers_service_js_1.sellersService.getProfile(req.user.id);
+            const doc = await sellers_service_js_1.sellersService.uploadDocument(profile.id, req.body);
+            res.json({ success: true, data: doc });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+    async getNotificationSettings(req, res, next) {
+        try {
+            const profile = await sellers_service_js_1.sellersService.getProfile(req.user.id);
+            const settings = await sellers_service_js_1.sellersService.getNotificationSettings(profile.id);
+            res.json({ success: true, data: settings });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+    async updateNotificationSettings(req, res, next) {
+        try {
+            const profile = await sellers_service_js_1.sellersService.getProfile(req.user.id);
+            const updated = await sellers_service_js_1.sellersService.updateNotificationSettings(profile.id, req.body);
+            res.json({ success: true, data: updated });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
 }
 exports.SellersController = SellersController;
 exports.sellersController = new SellersController();

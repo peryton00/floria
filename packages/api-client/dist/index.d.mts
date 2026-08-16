@@ -63,6 +63,27 @@ interface NotificationListResponse {
     total: number;
     unreadCount: number;
 }
+interface SellerDocument {
+    id: string;
+    seller_id: string;
+    document_type: string;
+    file_name: string;
+    file_url: string;
+    file_size_bytes: number;
+    mime_type: string;
+    status: "pending" | "under_review" | "approved" | "rejected";
+    review_notes?: string | null;
+    created_at: string;
+    updated_at: string;
+}
+interface SellerNotificationSettings {
+    seller_id: string;
+    new_order_notifications: boolean;
+    low_stock_notifications: boolean;
+    email_notifications: boolean;
+    created_at?: string;
+    updated_at?: string;
+}
 declare class FloriaApiClient {
     private baseUrl;
     private getAccessToken?;
@@ -128,6 +149,16 @@ declare class FloriaApiClient {
     getSellerEarnings(): Promise<ApiResponse<any>>;
     getSellerPayouts(): Promise<ApiResponse<any>>;
     getSellerAnalytics(params?: QueryParams): Promise<ApiResponse<any>>;
+    getSellerDocuments(): Promise<ApiResponse<SellerDocument[]>>;
+    uploadSellerDocument(data: {
+        documentType: string;
+        fileName: string;
+        fileUrl: string;
+        fileSize: number;
+        mimeType: string;
+    }): Promise<ApiResponse<SellerDocument>>;
+    getSellerNotificationSettings(): Promise<ApiResponse<SellerNotificationSettings>>;
+    updateSellerNotificationSettings(settings: Partial<SellerNotificationSettings>): Promise<ApiResponse<SellerNotificationSettings>>;
     getNotifications(params?: QueryParams): Promise<ApiResponse<NotificationListResponse>>;
     getUnreadNotificationCount(): Promise<ApiResponse<{
         unreadCount: number;
@@ -150,7 +181,7 @@ declare class FloriaApiClient {
     rejectSeller(id: string): Promise<ApiResponse<any>>;
     suspendSeller(id: string): Promise<ApiResponse<any>>;
     reactivateSeller(id: string): Promise<ApiResponse<any>>;
-    getSellerDocuments(id: string): Promise<ApiResponse<any>>;
+    getAdminSellerDocuments(id: string): Promise<ApiResponse<any>>;
     getAdminProducts(params?: QueryParams): Promise<ApiResponse<any[]>>;
     getAdminProductById(id: string): Promise<ApiResponse<any>>;
     updateAdminProductStatus(id: string, status: string): Promise<ApiResponse<any>>;
@@ -193,4 +224,4 @@ declare class FloriaApiClient {
     updateDeliveryStatus(id: string, status: string): Promise<ApiResponse<any>>;
 }
 
-export { type ApiClientConfig, type ApiResponse, FloriaApiClient, type NotificationItem, type NotificationListResponse, type QueryParams, type SellerDashboardData };
+export { type ApiClientConfig, type ApiResponse, FloriaApiClient, type NotificationItem, type NotificationListResponse, type QueryParams, type SellerDashboardData, type SellerDocument, type SellerNotificationSettings };

@@ -29,8 +29,9 @@ router.get("/orders", auth_js_1.authenticateToken, (0, authorization_js_1.requir
 router.get("/orders/:id", auth_js_1.authenticateToken, (0, authorization_js_1.requireRole)("seller", "admin"), sellers_controller_js_1.sellersController.getOrderById);
 router.post("/fulfillment", auth_js_1.authenticateToken, rateLimit_js_1.sellerFulfillmentRateLimiter, authorization_js_1.requireApprovedSeller, sellers_controller_js_1.sellersController.updateFulfillment);
 router.post("/fulfillment/:orderId/status", auth_js_1.authenticateToken, rateLimit_js_1.sellerFulfillmentRateLimiter, authorization_js_1.requireApprovedSeller, sellers_controller_js_1.sellersController.updateFulfillment);
-// Earnings & Payouts & Analytics
-router.get("/earnings", auth_js_1.authenticateToken, authorization_js_1.requireApprovedSeller, sellers_controller_js_1.sellersController.getEarnings);
-router.get("/payouts", auth_js_1.authenticateToken, authorization_js_1.requireApprovedSeller, sellers_controller_js_1.sellersController.getPayouts);
-router.get("/analytics", auth_js_1.authenticateToken, authorization_js_1.requireApprovedSeller, sellers_controller_js_1.sellersController.getAnalytics);
+// Documents & Settings
+router.get("/documents", auth_js_1.authenticateToken, (0, authorization_js_1.requireRole)("seller", "admin"), sellers_controller_js_1.sellersController.getDocuments);
+router.post("/documents", auth_js_1.authenticateToken, rateLimit_js_1.sellerFulfillmentRateLimiter, (0, authorization_js_1.requireRole)("seller", "admin"), sellers_controller_js_1.sellersController.uploadDocument);
+router.get("/settings/notifications", auth_js_1.authenticateToken, (0, authorization_js_1.requireRole)("seller", "admin"), sellers_controller_js_1.sellersController.getNotificationSettings);
+router.patch("/settings/notifications", auth_js_1.authenticateToken, rateLimit_js_1.sellerFulfillmentRateLimiter, (0, authorization_js_1.requireRole)("seller", "admin"), sellers_controller_js_1.sellersController.updateNotificationSettings);
 exports.default = router;

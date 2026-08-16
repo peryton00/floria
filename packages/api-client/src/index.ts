@@ -72,6 +72,29 @@ export interface NotificationListResponse {
   unreadCount: number;
 }
 
+export interface SellerDocument {
+  id: string;
+  seller_id: string;
+  document_type: string;
+  file_name: string;
+  file_url: string;
+  file_size_bytes: number;
+  mime_type: string;
+  status: "pending" | "under_review" | "approved" | "rejected";
+  review_notes?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SellerNotificationSettings {
+  seller_id: string;
+  new_order_notifications: boolean;
+  low_stock_notifications: boolean;
+  email_notifications: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 function buildQueryString(params?: QueryParams): string {
   if (!params) return "";
   const cleanEntries = Object.entries(params).filter(([_, v]) => v !== undefined && v !== "");
@@ -373,6 +396,34 @@ export class FloriaApiClient {
     return this.request<any>(`/api/v1/seller/analytics${buildQueryString(params)}`);
   }
 
+  public async getSellerDocuments(): Promise<ApiResponse<SellerDocument[]>> {
+    return this.request<SellerDocument[]>("/api/v1/seller/documents");
+  }
+
+  public async uploadSellerDocument(data: {
+    documentType: string;
+    fileName: string;
+    fileUrl: string;
+    fileSize: number;
+    mimeType: string;
+  }): Promise<ApiResponse<SellerDocument>> {
+    return this.request<SellerDocument>("/api/v1/seller/documents", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  public async getSellerNotificationSettings(): Promise<ApiResponse<SellerNotificationSettings>> {
+    return this.request<SellerNotificationSettings>("/api/v1/seller/settings/notifications");
+  }
+
+  public async updateSellerNotificationSettings(settings: Partial<SellerNotificationSettings>): Promise<ApiResponse<SellerNotificationSettings>> {
+    return this.request<SellerNotificationSettings>("/api/v1/seller/settings/notifications", {
+      method: "PATCH",
+      body: JSON.stringify(settings),
+    });
+  }
+
   // ── Notifications API (/api/v1/notifications) ─────────────────────────────
   public async getNotifications(params?: QueryParams): Promise<ApiResponse<NotificationListResponse>> {
     return this.request<NotificationListResponse>(`/api/v1/notifications${buildQueryString(params)}`);
@@ -482,7 +533,7 @@ export class FloriaApiClient {
     });
   }
 
-  public async getSellerDocuments(id: string): Promise<ApiResponse<any>> {
+  public async getAdminSellerDocuments(id: string): Promise<ApiResponse<any>> {
     return this.request<any>(`/api/v1/admin/sellers/${id}/documents`);
   }
 

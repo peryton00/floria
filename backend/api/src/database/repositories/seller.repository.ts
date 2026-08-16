@@ -718,6 +718,102 @@ export class SellerRepository {
       categories
     };
   }
+
+  // ── Documents ────────────────────────────────────────────────────────────
+  async findSellerDocuments(sellerId: string) {
+    const db = getAdminDb();
+    const { data, error } = await db
+      .from("seller_documents")
+      .select("*")
+      .eq("seller_id", sellerId)
+      .order("created_at", { ascending: false });
+
+    if (error || !data) return [];
+    return data;
+  }
+
+  async insertSellerDocument(doc: {
+    seller_id: string;
+    document_type: string;
+    file_name: string;
+    file_url: string;
+    file_size_bytes: number;
+    mime_type: string;
+  }) {
+    const db = getAdminDb();
+    const { data, error } = await db
+      .from("seller_documents")
+      .insert({
+        ...doc,
+        status: "pending",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  async updateSellerDocumentStatus(docId: string, status: string, reviewNotes?: string) {
+    const db = getAdminDb();
+    const { data, error } = await db
+      .from("seller_documents")
+      .update({
+        status,
+        review_notes: reviewNotes || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", docId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  // ── Settings ─────────────────────────────────────────────────────────────
+  async findSellerSettings(sellerId: string) {
+    const db = getAdminDb();
+    const { data } = await db
+      .from("seller_settings")
+      .select("*")
+      .eq("seller_id", sellerId)
+      .maybeSingle();
+
+    if (data) return data;
+
+    // Default settings if not created yet
+    return {
+      seller_id: sellerId,
+      new_order_notifications: true,
+      low_stock_notifications: true,
+      email_notifications: true,
+    };
+  }
+
+  async updateSellerSettings(sellerId: string, updates: any) {
+    const db = getAdminDb();
+    const existing = await this.findSellerSettings(sellerId);
+
+    const payload = {
+      seller_id: sellerId,
+      new_order_notifications: updates.new_order_notifications ?? existing.new_order_notifications ?? true,
+      low_stock_notifications: updates.low_stock_notifications ?? existing.low_stock_notifications ?? true,
+      email_notifications: updates.email_notifications ?? existing.email_notifications ?? true,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { data, error } = await db
+      .from("seller_settings")
+      .upsert(payload, { onConflict: "seller_id" })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
 }
 
 export const sellerRepository = new SellerRepository();
