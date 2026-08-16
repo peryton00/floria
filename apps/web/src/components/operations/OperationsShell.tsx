@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import {
   GridIcon,
@@ -255,6 +256,7 @@ export function OperationsShell({ children }: OperationsShellProps) {
           </div>
 
           <div className="flex items-center gap-3">
+            <NotificationBell userRole="operations" />
             <div className="text-right hidden sm:block">
               <p className="text-xs font-bold text-ink-900 leading-tight">{userName}</p>
               <p className="text-[10px] text-forest-700 font-bold uppercase tracking-wider mt-0.5 leading-none">{userRole}</p>

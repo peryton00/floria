@@ -157,6 +157,42 @@ export class CheckoutService {
       metadata: { subtotalPaise, sellerCount: uniqueSellers.length, paymentMethod: input.paymentMethod },
     });
 
+    // 8. Notifications Integration
+    try {
+      const { notificationService } = await import("../notifications/notification.service.js");
+
+      // Customer notification
+      await notificationService.createNotification({
+        user_id: input.userId,
+        role: "customer",
+        type: "ORDER_PLACED",
+        title: "Order Placed Successfully",
+        message: `Your order #${orderId.slice(0, 8)} has been placed and routed to nursery partners.`,
+        data: { orderId },
+        source_type: "order",
+        source_id: orderId,
+      });
+
+      // Seller notifications for each nursery in the order
+      for (const sId of uniqueSellers) {
+        const { data: sellerProf } = await db.from("seller_profiles").select("user_id").eq("id", sId).maybeSingle();
+        if (sellerProf?.user_id) {
+          await notificationService.createNotification({
+            user_id: sellerProf.user_id,
+            role: "seller",
+            type: "NEW_ORDER",
+            title: "New Nursery Order Received",
+            message: `You have received a new order item on order #${orderId.slice(0, 8)}.`,
+            data: { orderId, sellerId: sId },
+            source_type: "order",
+            source_id: orderId,
+          });
+        }
+      }
+    } catch (notifErr) {
+      console.error("[CheckoutService] Notification trigger error:", notifErr);
+    }
+
     return { orderId };
   }
 }

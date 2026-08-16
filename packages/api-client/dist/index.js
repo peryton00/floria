@@ -270,6 +270,23 @@ var FloriaApiClient = class {
   async getSellerAnalytics(params) {
     return this.request(`/api/v1/seller/analytics${buildQueryString(params)}`);
   }
+  // ── Notifications API (/api/v1/notifications) ─────────────────────────────
+  async getNotifications(params) {
+    return this.request(`/api/v1/notifications${buildQueryString(params)}`);
+  }
+  async getUnreadNotificationCount() {
+    return this.request("/api/v1/notifications/unread-count");
+  }
+  async markNotificationRead(id) {
+    return this.request(`/api/v1/notifications/${id}/read`, {
+      method: "PATCH"
+    });
+  }
+  async markAllNotificationsRead() {
+    return this.request("/api/v1/notifications/read-all", {
+      method: "PATCH"
+    });
+  }
   // ── Admin API (/api/v1/admin) ─────────────────────────────────────────────
   async getAdminHealth() {
     return this.request("/api/v1/admin/health");

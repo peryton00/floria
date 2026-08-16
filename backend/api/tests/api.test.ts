@@ -549,4 +549,149 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
       expect(res.body.error.message).toContain("cannot exceed maximum");
     });
   });
+
+  describe("Phase 3.12.1 — Seller Profile Persistence & Notifications Audit", () => {
+    it("Unauthenticated GET /api/v1/seller/profile = 401 UNAUTHORIZED", async () => {
+      const res = await request(app).get("/api/v1/seller/profile");
+      expect(res.status).toBe(401);
+    });
+
+    it("Customer -> GET /api/v1/seller/profile = 403 FORBIDDEN", async () => {
+      setupAuthUser("cust-1", "customer");
+      const res = await request(app)
+        .get("/api/v1/seller/profile")
+        .set("Authorization", "Bearer cust_token");
+      expect(res.status).toBe(403);
+    });
+
+    it("Seller -> PATCH invalid phone = 400 BAD REQUEST", async () => {
+      setupAuthUser("seller-1", "seller");
+      mockFrom.mockImplementation((table: string) => {
+        if (table === "user_profiles") {
+          return {
+            select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { id: "seller-1", role: "seller" }, error: null }) }) }),
+          };
+        }
+        if (table === "seller_profiles") {
+          return {
+            select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { id: "sel-prof-1", user_id: "seller-1", business_name: "Green Nursery", status: "approved" }, error: null }) }) }),
+          };
+        }
+        return {};
+      });
+
+      const res = await request(app)
+        .patch("/api/v1/seller/profile")
+        .set("Authorization", "Bearer seller_token")
+        .send({ contact_phone: "123" });
+
+      expect(res.status).toBe(422);
+      expect(res.body.error.message).toContain("Invalid phone number");
+    });
+
+    it("Unauthenticated GET /api/v1/notifications = 401 UNAUTHORIZED", async () => {
+      const res = await request(app).get("/api/v1/notifications");
+      expect(res.status).toBe(401);
+    });
+
+    it("Authenticated User -> GET /api/v1/notifications = 200 OK", async () => {
+      setupAuthUser("user-1", "customer");
+      mockFrom.mockImplementation((table: string) => {
+        if (table === "user_profiles") {
+          return {
+            select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { id: "user-1", role: "customer" }, error: null }) }) }),
+          };
+        }
+        if (table === "notifications") {
+          return {
+            select: () => ({
+              eq: () => ({
+                order: () => ({
+                  is: () => ({
+                    range: async () => ({
+                      data: [{ id: "notif-1", user_id: "user-1", title: "Test", message: "Hello", read_at: null, created_at: new Date().toISOString() }],
+                      count: 1,
+                      error: null,
+                    }),
+                  }),
+                  range: async () => ({
+                    data: [{ id: "notif-1", user_id: "user-1", title: "Test", message: "Hello", read_at: null, created_at: new Date().toISOString() }],
+                    count: 1,
+                    error: null,
+                  }),
+                }),
+                is: async () => ({ count: 1, error: null }),
+              }),
+            }),
+          };
+        }
+        return {};
+      });
+
+      const res = await request(app)
+        .get("/api/v1/notifications")
+        .set("Authorization", "Bearer user_token");
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.notifications).toBeDefined();
+    });
+
+    it("Authenticated User -> GET /api/v1/notifications/unread-count = 200 OK", async () => {
+      setupAuthUser("user-1", "customer");
+      mockFrom.mockImplementation((table: string) => {
+        if (table === "user_profiles") {
+          return {
+            select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { id: "user-1", role: "customer" }, error: null }) }) }),
+          };
+        }
+        if (table === "notifications") {
+          return {
+            select: () => ({
+              eq: () => ({
+                is: async () => ({ count: 3, error: null }),
+              }),
+            }),
+          };
+        }
+        return {};
+      });
+
+      const res = await request(app)
+        .get("/api/v1/notifications/unread-count")
+        .set("Authorization", "Bearer user_token");
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.unreadCount).toBe(3);
+    });
+
+    it("Authenticated User -> PATCH /api/v1/notifications/read-all = 200 OK", async () => {
+      setupAuthUser("user-1", "customer");
+      mockFrom.mockImplementation((table: string) => {
+        if (table === "user_profiles") {
+          return {
+            select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { id: "user-1", role: "customer" }, error: null }) }) }),
+          };
+        }
+        if (table === "notifications") {
+          return {
+            update: () => ({
+              eq: () => ({
+                is: async () => ({ error: null }),
+              }),
+            }),
+          };
+        }
+        return {};
+      });
+
+      const res = await request(app)
+        .patch("/api/v1/notifications/read-all")
+        .set("Authorization", "Bearer user_token");
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+    });
+  });
 });

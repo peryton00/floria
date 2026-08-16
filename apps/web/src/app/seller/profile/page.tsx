@@ -285,23 +285,29 @@ export default function SellerProfilePage() {
     return Object.keys(errs).length === 0;
   }
 
+  const [serverError, setServerError] = useState<string | null>(null);
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     if (!validate()) return;
     setSaving(true);
-    // Simulate brief async (swap for Supabase UPDATE when live)
-    await new Promise((r) => setTimeout(r, 400));
-    updateProfile({
-      business_name: businessName.trim(),
-      business_description: description.trim() || null,
-      contact_phone: phone.trim(),
-      contact_email: email.trim(),
-      logo_url: logoUrl,
-      address: serialiseAddress({ line1, locality, city, state, pincode }),
-    });
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+    setServerError(null);
+    try {
+      await updateProfile({
+        business_name: businessName.trim(),
+        business_description: description.trim() || null,
+        contact_phone: phone.trim(),
+        contact_email: email.trim(),
+        logo_url: logoUrl,
+        address: serialiseAddress({ line1, locality, city, state, pincode }),
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err: any) {
+      setServerError(err.message || "Failed to update profile on server");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -316,6 +322,12 @@ export default function SellerProfilePage() {
         </div>
         {sellerStatus && <SellerStatusBadge status={sellerStatus} size="md" />}
       </div>
+
+      {serverError && (
+        <div className="bg-error-50 border border-error-100 text-error-700 rounded-xl p-4 text-xs font-medium">
+          {serverError}
+        </div>
+      )}
 
       <form onSubmit={handleSave} noValidate className="space-y-6">
         {/* Business Information */}

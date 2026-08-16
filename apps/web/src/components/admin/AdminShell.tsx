@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import {
   GridIcon,
@@ -310,14 +311,7 @@ export function AdminShell({ children }: AdminShellProps) {
           </div>
 
           <div className="flex items-center gap-4">
-            <button
-              type="button"
-              className="relative p-1.5 text-ink-400 hover:text-ink-950 transition-colors"
-              onClick={() => alert("Notification center: No new alerts.")}
-            >
-              <BellIcon size={18} />
-              <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-error-500 ring-2 ring-white animate-ping" />
-            </button>
+            <NotificationBell userRole="admin" />
             <div className="text-right hidden sm:block">
               <p className="text-xs font-bold text-ink-900 leading-tight">{userName}</p>
               <p className="text-[10px] text-forest-700 font-bold uppercase tracking-wider mt-0.5 leading-none">{userRole}</p>

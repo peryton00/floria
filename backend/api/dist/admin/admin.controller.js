@@ -12,11 +12,24 @@ class AdminController {
         try {
             const start = Date.now();
             const db = (0, database_js_1.getAdminDb)();
-            await db.from("categories").select("id").limit(1);
+            // Ping DB and execute table count aggregations in parallel
+            const [_, { count: productCount }, { count: orderCount }, { count: sellerCount }, { count: userCount }, { count: categoryCount }, { count: auditLogCount }, { count: pendingSellersCount }, { count: preparingOrdersCount }, { count: lowStockCount },] = await Promise.all([
+                db.from("categories").select("id").limit(1),
+                db.from("products").select("*", { count: "exact", head: true }),
+                db.from("orders").select("*", { count: "exact", head: true }),
+                db.from("seller_profiles").select("*", { count: "exact", head: true }),
+                db.from("user_profiles").select("*", { count: "exact", head: true }),
+                db.from("categories").select("*", { count: "exact", head: true }),
+                db.from("audit_logs").select("*", { count: "exact", head: true }),
+                db.from("seller_profiles").select("*", { count: "exact", head: true }).eq("status", "pending"),
+                db.from("seller_order_fulfillments").select("*", { count: "exact", head: true }).eq("status", "preparing"),
+                db.from("inventory").select("*", { count: "exact", head: true }).lte("stock_quantity", 5),
+            ]);
             const dbPing = Date.now() - start;
             const freeMem = os_1.default.freemem();
             const totalMem = os_1.default.totalmem();
             const usedMem = totalMem - freeMem;
+            const memUsage = process.memoryUsage();
             res.json({
                 success: true,
                 data: {
@@ -35,10 +48,29 @@ class AdminController {
                             used: Math.round(usedMem / 1024 / 1024),
                             percentage: parseFloat(((usedMem / totalMem) * 100).toFixed(1)),
                         },
+                        processMemory: {
+                            rssMb: parseFloat((memUsage.rss / 1024 / 1024).toFixed(1)),
+                            heapTotalMb: parseFloat((memUsage.heapTotal / 1024 / 1024).toFixed(1)),
+                            heapUsedMb: parseFloat((memUsage.heapUsed / 1024 / 1024).toFixed(1)),
+                            externalMb: parseFloat((memUsage.external / 1024 / 1024).toFixed(1)),
+                        },
                     },
                     database: {
                         status: "connected",
                         latencyMs: dbPing,
+                        records: {
+                            products: productCount ?? 0,
+                            orders: orderCount ?? 0,
+                            sellers: sellerCount ?? 0,
+                            users: userCount ?? 0,
+                            categories: categoryCount ?? 0,
+                            auditLogs: auditLogCount ?? 0,
+                        },
+                    },
+                    operationalQueues: {
+                        pendingApplications: pendingSellersCount ?? 0,
+                        preparingOrders: preparingOrdersCount ?? 0,
+                        lowStockAlerts: lowStockCount ?? 0,
                     },
                 },
             });

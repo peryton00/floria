@@ -52,6 +52,26 @@ export interface SellerDashboardData {
   }>;
 }
 
+export interface NotificationItem {
+  id: string;
+  user_id: string;
+  role: "customer" | "seller" | "operations" | "admin";
+  type: string;
+  title: string;
+  message: string;
+  data?: Record<string, any>;
+  source_type?: string;
+  source_id?: string;
+  read_at?: string | null;
+  created_at: string;
+}
+
+export interface NotificationListResponse {
+  notifications: NotificationItem[];
+  total: number;
+  unreadCount: number;
+}
+
 function buildQueryString(params?: QueryParams): string {
   if (!params) return "";
   const cleanEntries = Object.entries(params).filter(([_, v]) => v !== undefined && v !== "");
@@ -351,6 +371,27 @@ export class FloriaApiClient {
 
   public async getSellerAnalytics(params?: QueryParams): Promise<ApiResponse<any>> {
     return this.request<any>(`/api/v1/seller/analytics${buildQueryString(params)}`);
+  }
+
+  // ── Notifications API (/api/v1/notifications) ─────────────────────────────
+  public async getNotifications(params?: QueryParams): Promise<ApiResponse<NotificationListResponse>> {
+    return this.request<NotificationListResponse>(`/api/v1/notifications${buildQueryString(params)}`);
+  }
+
+  public async getUnreadNotificationCount(): Promise<ApiResponse<{ unreadCount: number }>> {
+    return this.request<{ unreadCount: number }>("/api/v1/notifications/unread-count");
+  }
+
+  public async markNotificationRead(id: string): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/v1/notifications/${id}/read`, {
+      method: "PATCH",
+    });
+  }
+
+  public async markAllNotificationsRead(): Promise<ApiResponse<any>> {
+    return this.request<any>("/api/v1/notifications/read-all", {
+      method: "PATCH",
+    });
   }
 
   // ── Admin API (/api/v1/admin) ─────────────────────────────────────────────

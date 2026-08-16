@@ -13,6 +13,23 @@ export class SellersService {
 
   async updateProfile(userId: string, updates: Partial<SellerProfile>): Promise<SellerProfile> {
     const profile = await this.getProfile(userId);
+
+    // Server-side validation
+    if (updates.business_name !== undefined && updates.business_name !== null && !updates.business_name.trim()) {
+      throw Errors.validation("Business name is required");
+    }
+    if (updates.contact_phone !== undefined && updates.contact_phone !== null) {
+      const cleanPhone = updates.contact_phone.replace(/[\s\-+()\u00a0]/g, "").replace(/^91/, "");
+      if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
+        throw Errors.validation("Invalid phone number format");
+      }
+    }
+    if (updates.contact_email !== undefined && updates.contact_email !== null) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(updates.contact_email.trim())) {
+        throw Errors.validation("Invalid email address format");
+      }
+    }
+
     const updated = await sellerRepository.updateProfile(profile.id, updates);
     if (!updated) throw Errors.notFound("Seller profile");
 
@@ -148,6 +165,40 @@ export class SellersService {
       metadata: updates,
     });
 
+    // Notification check for low / out of stock
+    try {
+      if (updates.stock_quantity !== undefined && typeof updates.stock_quantity === "number") {
+        const threshold = updated.low_stock_threshold ?? 5;
+        const { notificationService } = await import("../notifications/notification.service.js");
+
+        if (updates.stock_quantity <= 0) {
+          await notificationService.createNotification({
+            user_id: sellerProfile.user_id,
+            role: "seller",
+            type: "OUT_OF_STOCK",
+            title: "Item Out of Stock",
+            message: `Your product "${updated.name}" is now completely out of stock.`,
+            data: { productId, stockQuantity: 0 },
+            source_type: "inventory",
+            source_id: `${productId}_out_of_stock`,
+          });
+        } else if (updates.stock_quantity <= threshold) {
+          await notificationService.createNotification({
+            user_id: sellerProfile.user_id,
+            role: "seller",
+            type: "LOW_STOCK",
+            title: "Low Stock Alert",
+            message: `Your product "${updated.name}" stock (${updates.stock_quantity}) has reached low threshold.`,
+            data: { productId, stockQuantity: updates.stock_quantity },
+            source_type: "inventory",
+            source_id: `${productId}_low_stock`,
+          });
+        }
+      }
+    } catch (notifErr) {
+      console.error("[SellersService] Inventory notification error:", notifErr);
+    }
+
     return updated;
   }
 
@@ -175,6 +226,30 @@ export class SellersService {
         resource_id: masterOrderId,
         metadata: { status: newStatus },
       });
+
+      // Notification trigger for order fulfillment update
+      try {
+        const { notificationService } = await import("../notifications/notification.service.js");
+        const { getAdminDb } = await import("../config/database.js");
+        const db = getAdminDb();
+        const { data: order } = await db.from("orders").select("customer_id").eq("id", masterOrderId).maybeSingle();
+
+        if (order?.customer_id) {
+          await notificationService.createNotification({
+            user_id: order.customer_id,
+            role: "customer",
+            type: `ORDER_${newStatus.toUpperCase()}`,
+            title: `Order Update: ${newStatus.replace(/_/g, " ").toUpperCase()}`,
+            message: `Your nursery item status has been updated to "${newStatus.replace(/_/g, " ")}".`,
+            data: { orderId: masterOrderId, status: newStatus },
+            source_type: "fulfillment",
+            source_id: `${masterOrderId}_${newStatus}`,
+          });
+        }
+      } catch (notifErr) {
+        console.error("[SellersService] Fulfillment notification error:", notifErr);
+      }
+
       return result;
     } catch (e: any) {
       throw Errors.validation(e.message || "Invalid status transition");

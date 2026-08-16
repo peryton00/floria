@@ -5,6 +5,7 @@
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import Image from "next/image";
 import { CountBadge } from "@/components/ui/Badge";
 import { SearchIcon, UserIcon, BagIcon, BellIcon, WishlistIcon } from "@/components/ui/Icons";
@@ -136,14 +137,8 @@ export function Header() {
             <CountBadge count={wishlistCount} />
           </Link>
 
-          {/* Bell (Mobile only) */}
-          <Link
-            href="/account"
-            aria-label="Notifications"
-            className={[iconLinkClass, "md:hidden"].join(" ")}
-          >
-            <BellIcon />
-          </Link>
+          {/* Notifications */}
+          <NotificationBell userRole="customer" />
 
           {/* Account (Desktop only) */}
           <Link

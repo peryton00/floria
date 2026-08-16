@@ -45,6 +45,24 @@ interface SellerDashboardData {
         href: string;
     }>;
 }
+interface NotificationItem {
+    id: string;
+    user_id: string;
+    role: "customer" | "seller" | "operations" | "admin";
+    type: string;
+    title: string;
+    message: string;
+    data?: Record<string, any>;
+    source_type?: string;
+    source_id?: string;
+    read_at?: string | null;
+    created_at: string;
+}
+interface NotificationListResponse {
+    notifications: NotificationItem[];
+    total: number;
+    unreadCount: number;
+}
 declare class FloriaApiClient {
     private baseUrl;
     private getAccessToken?;
@@ -110,6 +128,12 @@ declare class FloriaApiClient {
     getSellerEarnings(): Promise<ApiResponse<any>>;
     getSellerPayouts(): Promise<ApiResponse<any>>;
     getSellerAnalytics(params?: QueryParams): Promise<ApiResponse<any>>;
+    getNotifications(params?: QueryParams): Promise<ApiResponse<NotificationListResponse>>;
+    getUnreadNotificationCount(): Promise<ApiResponse<{
+        unreadCount: number;
+    }>>;
+    markNotificationRead(id: string): Promise<ApiResponse<any>>;
+    markAllNotificationsRead(): Promise<ApiResponse<any>>;
     getAdminHealth(): Promise<ApiResponse<any>>;
     getAdminDashboard(): Promise<ApiResponse<any>>;
     getAdminAnalytics(params?: QueryParams): Promise<ApiResponse<any>>;
@@ -169,4 +193,4 @@ declare class FloriaApiClient {
     updateDeliveryStatus(id: string, status: string): Promise<ApiResponse<any>>;
 }
 
-export { type ApiClientConfig, type ApiResponse, FloriaApiClient, type QueryParams, type SellerDashboardData };
+export { type ApiClientConfig, type ApiResponse, FloriaApiClient, type NotificationItem, type NotificationListResponse, type QueryParams, type SellerDashboardData };

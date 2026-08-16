@@ -18,4 +18,4 @@ export const api = new FloriaApiClient({
   },
 });
 
-export type { SellerDashboardData, ApiResponse } from "@floria/api-client";
+export type { SellerDashboardData, ApiResponse, NotificationItem, NotificationListResponse } from "@floria/api-client";

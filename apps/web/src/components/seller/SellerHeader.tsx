@@ -2,7 +2,7 @@
 
 import { useSeller } from "@/lib/contexts/SellerContext";
 import { SellerStatusBadge } from "./SellerStatusBadge";
-import { BellIcon } from "@/components/ui/Icons";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 interface SellerHeaderProps {
   onMenuToggle: () => void;
@@ -32,15 +32,7 @@ export function SellerHeader({ onMenuToggle }: SellerHeaderProps) {
 
       {/* Right actions */}
       <div className="flex items-center gap-3 ml-auto">
-        {/* Notification placeholder */}
-        <button
-          type="button"
-          className="relative text-ink-400 hover:text-ink-700 p-1.5 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-forest-700"
-          aria-label="Notifications (coming soon)"
-          title="Notifications (coming soon)"
-        >
-          <BellIcon size={18} />
-        </button>
+        <NotificationBell userRole="seller" />
 
         {/* Nursery info + status */}
         {sellerProfile && (
