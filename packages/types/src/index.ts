@@ -148,12 +148,22 @@ export interface Inventory {
   updated_at: Timestamp;
 }
 
+export interface CustomerProductPricingDTO {
+  sellingPricePaise: number;
+  originalPricePaise?: number | null;
+  discountAmountPaise?: number | null;
+  discountPercentage?: number | null;
+  isDiscounted: boolean;
+  isFreeDelivery: boolean;
+  deliverySavingsPaise?: number | null;
+}
+
 /** Convenience type joining Product + primary image + inventory */
 export interface ProductListing {
   product: Product;
   inventory: Inventory;
   primary_image: ProductImage | null;
-  seller: Pick<SellerProfile, "id" | "business_name">;
+  seller: Pick<SellerProfile, "id" | "business_name"> & { is_verified?: boolean; rating?: number; review_count?: number };
   category: Pick<Category, "id" | "name" | "slug"> | null;
   rating_summary?: {
     review_count: number;
@@ -161,6 +171,7 @@ export interface ProductListing {
     bayesian_rating: number;
     wilson_lower_bound: number;
   } | null;
+  pricing?: CustomerProductPricingDTO | null;
 }
 
 // ------------------------------------------------------------------

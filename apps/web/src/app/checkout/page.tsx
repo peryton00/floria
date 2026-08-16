@@ -619,12 +619,29 @@ export default function CheckoutPage() {
 
               <div className="flex justify-between text-ink-600">
                 <span>Delivery</span>
-                <span className="text-ink-400 font-medium italic text-xs">Calculated at checkout</span>
+                <span className="text-forest-700 font-semibold text-xs uppercase">
+                  {subtotalPaise >= 49900 ? "FREE" : formatINR(4000)}
+                </span>
+              </div>
+
+              <div className="flex justify-between text-ink-600">
+                <span className="flex items-center gap-1">
+                  <span>Platform Maintenance Fee</span>
+                  <span
+                    className="text-[11px] text-forest-700 font-bold cursor-help"
+                    title="Helps us operate the Floria marketplace and services."
+                  >
+                    ⓘ
+                  </span>
+                </span>
+                <span className="font-semibold text-ink-900">{formatINR(1000)}</span>
               </div>
 
               <div className="flex justify-between pt-3 border-t border-ink-100 text-ink-900 font-bold text-base">
-                <span>Subtotal</span>
-                <span className="text-forest-800">{formatINR(subtotalPaise)}</span>
+                <span>Total</span>
+                <span className="text-forest-800">
+                  {formatINR(subtotalPaise + (subtotalPaise >= 49900 ? 0 : 4000) + 1000)}
+                </span>
               </div>
             </div>
 

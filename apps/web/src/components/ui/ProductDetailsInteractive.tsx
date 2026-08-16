@@ -7,6 +7,9 @@ import { StarRating } from "@/components/ui/StarRating";
 import Image from "next/image";
 import { formatINR } from "@/lib/format";
 import { Badge } from "@/components/ui/Badge";
+import { ProductPriceBlock } from "@/components/ui/ProductPriceBlock";
+import { DeliveryBenefit } from "@/components/ui/DeliveryBenefit";
+import { ValueSummary } from "@/components/ui/ValueSummary";
 import {
   StarIcon,
   VerifiedIcon,
@@ -136,6 +139,9 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
     }
   };
 
+  const pricing = listing.pricing;
+  const isFreeDelivery = pricing?.isFreeDelivery ?? (inventory.price_paise >= 49900);
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-2 lg:gap-12">
       {/* LEFT — Images & Badges */}
@@ -202,7 +208,7 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
               <TruckIcon size={18} />
             </div>
             <div>
-              <p className="text-xs font-semibold text-ink-900 leading-tight">Fast & Safe Delivery</p>
+              <p className="text-xs font-semibold text-ink-900 leading-tight">Fast &amp; Safe Delivery</p>
               <p className="text-[10px] text-ink-400 mt-0.5">Secure green packaging</p>
             </div>
           </div>
@@ -260,22 +266,42 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
         </p>
 
         {/* Rating stars */}
-        <div className="flex items-center gap-1.5 mb-5">
+        <div className="flex items-center gap-1.5 mb-4">
           <StarRating rating={displayRating} size="sm" />
           {displayRating > 0 && (
             <span className="text-xs font-bold text-ink-700">{displayRating.toFixed(1)}</span>
           )}
-          <span className="text-xs text-ink-300">
+          <span className="text-xs text-ink-400">
             {reviewCount > 0 ? `(${reviewCount} review${reviewCount !== 1 ? "s" : ""})` : "No reviews yet"}
           </span>
         </div>
 
-        {/* Pricing */}
-        <div className="flex items-center gap-4 mb-4 pb-4 border-b border-ink-100">
-          <span className="font-serif text-3xl font-bold text-ink-900">
-            {formatINR(inventory.price_paise)}
-          </span>
+        {/* Pricing Block & Delivery Benefit */}
+        <div className="mb-5 pb-5 border-b border-ink-100 space-y-2.5">
+          <ProductPriceBlock
+            sellingPricePaise={pricing?.sellingPricePaise ?? inventory.price_paise}
+            originalPricePaise={pricing?.originalPricePaise}
+            discountPercentage={pricing?.discountPercentage}
+            discountAmountPaise={pricing?.discountAmountPaise}
+            isFreeDelivery={isFreeDelivery}
+            size="lg"
+            showSavings={true}
+          />
+          <DeliveryBenefit
+            isFreeDelivery={isFreeDelivery}
+            deliverySavingsPaise={pricing?.deliverySavingsPaise}
+          />
         </div>
+
+        {/* Value Summary Box */}
+        <ValueSummary
+          isFreeDelivery={isFreeDelivery}
+          isVerifiedSeller={seller.is_verified ?? true}
+          sellerName={seller.business_name}
+          rating={displayRating}
+          reviewCount={reviewCount}
+          className="mb-6"
+        />
 
         {/* Bullet points */}
         <ul className="space-y-2 mb-6" role="list">
