@@ -8,21 +8,19 @@ export class SellersService {
   async getProfile(userId: string): Promise<SellerProfile> {
     let profile = await sellerRepository.findByUserId(userId);
     if (!profile) {
-      // Auto-provision seller profile if user exists in user_profiles
+      // Auto-provision seller profile for authenticated user if missing
       try {
         const { getAdminDb } = await import("../config/database.js");
         const db = getAdminDb();
         const { data: userProf } = await db.from("user_profiles").select("id, full_name, email, role").eq("id", userId).maybeSingle();
 
-        if (userProf) {
-          profile = await sellerRepository.submitApplication(userId, {
-            business_name: userProf.full_name || "Nursery Partner",
-            contact_email: userProf.email || "",
-            contact_phone: "",
-            address: "",
-            business_description: "Registered seller account.",
-          });
-        }
+        profile = await sellerRepository.submitApplication(userId, {
+          business_name: userProf?.full_name || "Nursery Partner",
+          contact_email: userProf?.email || "",
+          contact_phone: "",
+          address: "",
+          business_description: "Registered seller account.",
+        });
       } catch (e) {
         console.error("[SellersService] Auto-provision seller profile error:", e);
       }

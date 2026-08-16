@@ -58,7 +58,7 @@ export class SellerRepository {
       contact_phone: appData.contact_phone || "",
       contact_email: appData.contact_email || "",
       address: appData.address || "",
-      status: "pending",
+      status: existing ? existing.status : "pending",
       updated_at: new Date().toISOString(),
     };
 
