@@ -616,6 +616,63 @@ var FloriaApiClient = class {
       }
     );
   }
+  // ── VERSIONED PRICING POLICIES (PHASE 3.23) ───────────────────────────────
+  async getPricingPolicies() {
+    return this.request(
+      "/api/v1/admin/pricing-policies"
+    );
+  }
+  async getActivePricingPolicy() {
+    return this.request(
+      "/api/v1/admin/pricing-policies/active"
+    );
+  }
+  async createPricingPolicyDraft(params) {
+    return this.request(
+      "/api/v1/admin/pricing-policies",
+      {
+        method: "POST",
+        body: JSON.stringify(params)
+      }
+    );
+  }
+  async previewPricingPolicyImpact(policyId) {
+    return this.request(
+      `/api/v1/admin/pricing-policies/${policyId}/preview`
+    );
+  }
+  async startPricingRecalculation(policyId) {
+    return this.request(
+      `/api/v1/admin/pricing-policies/${policyId}/recalculate`,
+      { method: "POST" }
+    );
+  }
+  async getPricingRecalculationStatus(policyId) {
+    return this.request(
+      `/api/v1/admin/pricing-policies/${policyId}/recalculation-status`
+    );
+  }
+  async activatePricingPolicy(policyId) {
+    return this.request(
+      `/api/v1/admin/pricing-policies/${policyId}/activate`,
+      { method: "POST" }
+    );
+  }
+  async setPricingOverride(params) {
+    return this.request(
+      "/api/v1/admin/pricing-policies/overrides",
+      {
+        method: "POST",
+        body: JSON.stringify(params)
+      }
+    );
+  }
+  async removePricingOverride(productId) {
+    return this.request(
+      `/api/v1/admin/pricing-policies/overrides/${productId}`,
+      { method: "DELETE" }
+    );
+  }
 };
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {

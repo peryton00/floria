@@ -1,12 +1,12 @@
 // Floria API — Versioned Pricing Policy & Recalculation Engine Tests (Phase 3.23)
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { policyService } from "./policy.service.js";
-import { recalculationService } from "./recalculation.service.js";
-import { pricingService } from "./pricing.service.js";
+import { policyService } from "../src/pricing/policy.service.js";
+import { recalculationService } from "../src/pricing/recalculation.service.js";
+import { pricingService } from "../src/pricing/pricing.service.js";
 
 const mockFrom = vi.fn();
 
-vi.mock("../config/database.js", () => {
+vi.mock("../src/config/database.js", () => {
   return {
     getAdminDb: () => ({
       from: mockFrom,
@@ -14,7 +14,7 @@ vi.mock("../config/database.js", () => {
   };
 });
 
-vi.mock("../database/repositories/audit.repository.js", () => {
+vi.mock("../src/database/repositories/audit.repository.js", () => {
   return {
     auditRepository: {
       log: vi.fn().mockResolvedValue(true),

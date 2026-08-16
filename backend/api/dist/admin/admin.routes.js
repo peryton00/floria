@@ -1,4 +1,7 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 // Floria API — Admin Routes
 const express_1 = require("express");
@@ -62,4 +65,7 @@ router.patch("/settings/delivery", admin_controller_js_1.adminController.updateD
 router.post("/delivery/preview", admin_controller_js_1.adminController.previewDeliveryFee);
 router.get("/settings/financials", admin_controller_js_1.adminController.getFinancialSettings);
 router.patch("/settings/financials", admin_controller_js_1.adminController.updateFinancialSettings);
+// Versioned Pricing Policies (Phase 3.23)
+const pricing_policy_routes_js_1 = __importDefault(require("./pricing-policy.routes.js"));
+router.use("/pricing-policies", pricing_policy_routes_js_1.default);
 exports.default = router;

@@ -1,6 +1,6 @@
 // Floria API — Business Rule Verification Test Suite (Phase 3.17.4 & Phase 3.23)
 import { describe, it, expect } from "vitest";
-import { pricingService } from "./pricing.service.js";
+import { pricingService } from "../src/pricing/pricing.service.js";
 
 describe("Pricing Engine & Business Rule Verification Suite", () => {
   const testSettings = {

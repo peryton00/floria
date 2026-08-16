@@ -336,6 +336,30 @@ declare class FloriaApiClient {
     previewDeliveryFee(subtotalPaise: number): Promise<ApiResponse<_floria_types.DeliveryCalculationResult>>;
     getFinancialSettings(): Promise<ApiResponse<_floria_types.FinancialSettings>>;
     updateFinancialSettings(updates: Partial<_floria_types.FinancialSettings>): Promise<ApiResponse<_floria_types.FinancialSettings>>;
+    getPricingPolicies(): Promise<ApiResponse<{
+        policies: _floria_types.PricingPolicyVersion[];
+    }>>;
+    getActivePricingPolicy(): Promise<ApiResponse<_floria_types.PricingPolicyVersion | null>>;
+    createPricingPolicyDraft(params: {
+        sellerCommissionRate: number;
+        floriaProfitRate: number;
+        platformMaintenanceFeePaise: number;
+        freeDeliveryThresholdPaise: number;
+        freeDeliveryRecoveryPaise: number;
+        notes?: string;
+    }): Promise<ApiResponse<_floria_types.PricingPolicyVersion>>;
+    previewPricingPolicyImpact(policyId: string): Promise<ApiResponse<_floria_types.PolicyImpactPreview>>;
+    startPricingRecalculation(policyId: string): Promise<ApiResponse<_floria_types.PricingRecalculationJob>>;
+    getPricingRecalculationStatus(policyId: string): Promise<ApiResponse<_floria_types.PricingRecalculationJob | null>>;
+    activatePricingPolicy(policyId: string): Promise<ApiResponse<_floria_types.PricingPolicyVersion>>;
+    setPricingOverride(params: {
+        productId: string;
+        customCustomerPricePaise: number;
+        reason: string;
+    }): Promise<ApiResponse<_floria_types.ProductPricingOverride>>;
+    removePricingOverride(productId: string): Promise<ApiResponse<{
+        removed: boolean;
+    }>>;
 }
 
 export { type ApiClientConfig, type ApiResponse, FloriaApiClient, type NotificationItem, type NotificationListResponse, type NurserySummary, type ProductReview, type QueryParams, type ReviewListResponse, type ReviewStatus, type ReviewSummary, type SellerDashboardData, type SellerDocument, type SellerNotificationSettings };

@@ -1,8 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.wishlistService = exports.WishlistService = void 0;
-// Floria API — Wishlist Service
 const database_js_1 = require("../config/database.js");
+const products_service_js_1 = require("../products/products.service.js");
+const pricing_service_js_1 = require("../pricing/pricing.service.js");
 const errors_js_1 = require("../utils/errors.js");
 class WishlistService {
     async getWishlist(userId) {
@@ -12,7 +13,19 @@ class WishlistService {
             .select("*, wishlist_items(*, product:products(*, inventory(*), images:product_images(*)))")
             .eq("user_id", userId)
             .maybeSingle();
-        return wishlist || { user_id: userId, wishlist_items: [] };
+        if (!wishlist) {
+            return { user_id: userId, wishlist_items: [] };
+        }
+        const settings = await pricing_service_js_1.pricingService.getFinancialSettings();
+        if (wishlist.wishlist_items && Array.isArray(wishlist.wishlist_items)) {
+            wishlist.wishlist_items = wishlist.wishlist_items.map((wi) => {
+                if (wi.product) {
+                    wi.product = products_service_js_1.productsService.enrichWithDbPricing(wi.product, settings);
+                }
+                return wi;
+            });
+        }
+        return wishlist;
     }
     async addItem(userId, productId) {
         const db = (0, database_js_1.getAdminDb)();

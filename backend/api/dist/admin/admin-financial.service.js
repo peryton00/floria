@@ -96,7 +96,10 @@ class AdminFinancialService {
             const sellerObj = sItems[0]?.seller;
             const sellerName = sellerObj?.business_name || "Partner Nursery";
             const fin = finMap.get(sellerId);
-            const commRate = fin?.commission_rate ?? order.commission_rate ?? 0.12;
+            // Prefer per-item snapshotted rate, then seller-level, then order-level.
+            // All are immutable snapshots stored at checkout. Never fabricate with a hardcode.
+            const itemCommRate = sItems[0]?.commission_rate_snapshot;
+            const commRate = itemCommRate ?? fin?.commission_rate ?? order.commission_rate ?? 0;
             const mappedItems = sItems.map((it) => {
                 const basePrice = it.base_price_paise_snapshot ?? it.unit_price_paise_snapshot ?? 0;
                 const lineGross = basePrice * it.quantity;
