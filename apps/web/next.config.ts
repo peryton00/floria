@@ -19,7 +19,7 @@ const csp = [
   `default-src 'self'`,
   `script-src 'self' 'unsafe-inline' https://vercel.live https://*.vercel.app${isDev ? " 'unsafe-eval'" : ""}`,
   `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
-  `font-src 'self' https://fonts.gstatic.com`,
+  `font-src 'self' https://fonts.gstatic.com https://vercel.live https://*.vercel.app`,
   `img-src 'self' data: blob: https://${supabaseHostname} https://*.supabase.co https://images.unsplash.com https://plus.unsplash.com`,
   `connect-src 'self' https://${supabaseHostname} https://*.supabase.co https://${apiHostname} https://*.onrender.com https://floria-api.onrender.com https://nominatim.openstreetmap.org https://vercel.live https://*.vercel.app wss://*.vercel.app`,
   `frame-src 'self' https://vercel.live https://*.vercel.app`,
