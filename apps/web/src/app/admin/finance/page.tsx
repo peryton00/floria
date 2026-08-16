@@ -19,7 +19,7 @@ export default function AdminFinancePage() {
       setLoading(true);
       const [statsRes, settingsRes, auditRes] = await Promise.all([
         api.getAdminDashboard(),
-        api.getPlatformSettings(),
+        api.getFinancialSettings(),
         api.getAuditLogs({ action: "PLATFORM_COMMISSION_UPDATED" }),
       ]);
 
@@ -28,7 +28,7 @@ export default function AdminFinancePage() {
       }
 
       if (settingsRes.success && settingsRes.data) {
-        const rate = settingsRes.data.commissionRate ?? 12.0;
+        const rate = settingsRes.data.sellerCommissionRate ?? 12.0;
         setCommissionRate(rate);
         setNewRate(String(rate));
       }
@@ -57,7 +57,7 @@ export default function AdminFinancePage() {
 
     try {
       setUpdating(true);
-      const res = await api.updateCommissionRate(parsedRate);
+      const res = await api.updateFinancialSettings({ sellerCommissionRate: parsedRate });
       if (res.success) {
         alert("Platform commission rate updated successfully.");
         await loadData();
