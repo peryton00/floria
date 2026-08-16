@@ -26,7 +26,7 @@ export function formatINR(paise: number): string {
 export function calculateCustomerProductPricePaise(
   sellerBasePricePaise: number,
   settingsOrProfitRate?: number | FinancialSettingsInput,
-  freeDeliveryThresholdPaise = 59900,
+  freeDeliveryThresholdPaise = 49900,
   freeDeliveryRecoveryPaise = 2000
 ): number {
   if (!sellerBasePricePaise || sellerBasePricePaise <= 0) return 0;
