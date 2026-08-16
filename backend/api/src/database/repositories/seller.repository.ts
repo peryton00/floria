@@ -337,7 +337,7 @@ export class SellerRepository {
     // 1. Fetch order_items where seller_id_snapshot matches seller profile ID OR user ID
     const itemsQuery = db
       .from("order_items")
-      .select("*, order:orders(*), product:products(name,slug,seller_id), seller:seller_profiles(id,business_name)");
+      .select("*, order:orders(*), product:products(name,slug,seller_id)");
     const { data: items } = await (typeof itemsQuery.or === "function"
       ? itemsQuery.or(`seller_id_snapshot.eq.${targetSellerId},seller_id_snapshot.eq.${targetUserId}`)
       : itemsQuery.eq("seller_id_snapshot", sellerId));
@@ -345,7 +345,7 @@ export class SellerRepository {
     // 2. Fetch orders where order.seller_id matches targetSellerId or targetUserId
     const ordersQuery = db
       .from("orders")
-      .select("*, order_items(*, product:products(name,slug,seller_id), seller:seller_profiles(id,business_name))");
+      .select("*, order_items(*, product:products(name,slug,seller_id))");
     const { data: masterOrders } = await (typeof ordersQuery.or === "function"
       ? ordersQuery.or(`seller_id.eq.${targetSellerId},seller_id.eq.${targetUserId}`)
       : ordersQuery.eq("seller_id", sellerId));
@@ -463,7 +463,7 @@ export class SellerRepository {
     if (orderMap.size === 0) {
       const { data: allOrders } = await db
         .from("orders")
-        .select("*, order_items(*, product:products(name,slug,seller_id), seller:seller_profiles(id,business_name))")
+        .select("*, order_items(*, product:products(name,slug,seller_id))")
         .order("created_at", { ascending: false })
         .limit(20);
 
@@ -535,7 +535,7 @@ export class SellerRepository {
     const db = getAdminDb();
     const { data: order } = await db
       .from("orders")
-      .select("*, order_items(*, product:products(name,slug,seller_id), seller:seller_profiles(id,business_name)), seller_order_fulfillments(*)")
+      .select("*, order_items(*, product:products(name,slug,seller_id)), seller_order_fulfillments(*)")
       .eq("id", orderId)
       .maybeSingle();
 

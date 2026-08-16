@@ -35,7 +35,10 @@ router.get("/orders/:id", authenticateToken, requireRole("seller", "admin"), sel
 router.post("/fulfillment", authenticateToken, sellerFulfillmentRateLimiter, requireApprovedSeller, sellersController.updateFulfillment);
 router.post("/fulfillment/:orderId/status", authenticateToken, sellerFulfillmentRateLimiter, requireApprovedSeller, sellersController.updateFulfillment);
 
-// Documents & Settings
+// Documents, Financials & Settings
+router.get("/earnings", authenticateToken, requireRole("seller", "admin"), sellersController.getEarnings);
+router.get("/payouts", authenticateToken, requireRole("seller", "admin"), sellersController.getPayouts);
+router.get("/analytics", authenticateToken, requireRole("seller", "admin"), sellersController.getAnalytics);
 router.get("/documents", authenticateToken, requireRole("seller", "admin"), sellersController.getDocuments);
 router.post("/documents", authenticateToken, sellerFulfillmentRateLimiter, requireRole("seller", "admin"), sellersController.uploadDocument);
 router.get("/settings/notifications", authenticateToken, requireRole("seller", "admin"), sellersController.getNotificationSettings);
