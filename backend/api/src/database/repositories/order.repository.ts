@@ -65,12 +65,35 @@ export class OrderRepository {
 
   async updateOrderStatus(orderId: string, status: string): Promise<boolean> {
     const db = getAdminDb();
+    const masterStatus = status.toLowerCase().replace(/ /g, "_");
+
     const { error } = await db
       .from("orders")
-      .update({ status: status.toLowerCase(), updated_at: new Date().toISOString() })
+      .update({ status: masterStatus, updated_at: new Date().toISOString() })
       .eq("id", orderId);
 
-    return !error;
+    if (error) return false;
+
+    const displayStatusMap: Record<string, string> = {
+      order_placed: "Order Placed",
+      seller_pending: "Order Placed",
+      nursery_confirmed: "Nursery Confirmed",
+      preparing: "Preparing",
+      ready_for_pickup: "Ready for Pickup",
+      picked_up: "Picked Up",
+      packing: "Packing",
+      out_for_delivery: "Out for Delivery",
+      delivered: "Delivered",
+      cancelled: "Cancelled",
+    };
+    const displayStatus = displayStatusMap[masterStatus] || status;
+
+    await db
+      .from("seller_order_fulfillments")
+      .update({ status: displayStatus, updated_at: new Date().toISOString() })
+      .eq("order_id", orderId);
+
+    return true;
   }
 
   async createOrder(orderPayload: any, lineItems: any[], fulfillments: any[]): Promise<string> {

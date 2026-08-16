@@ -6,6 +6,21 @@ import { api } from "@/lib/api";
 import { formatINR } from "@/lib/format";
 import { SearchIcon } from "@/components/ui/Icons";
 
+function formatOrderStatusDisplay(status: string): string {
+  if (!status) return "Order Placed";
+  const s = status.toLowerCase().replace(/_/g, " ");
+  if (s === "seller pending" || s === "seller_pending" || s === "order placed") return "Order Placed";
+  if (s === "nursery confirmed") return "Nursery Confirmed";
+  if (s === "preparing") return "Preparing";
+  if (s === "ready for pickup" || s === "ready_for_pickup") return "Ready for Pickup";
+  if (s === "picked up" || s === "picked_up") return "Picked Up";
+  if (s === "packing") return "Packing";
+  if (s === "out for delivery") return "Out for Delivery";
+  if (s === "delivered") return "Delivered";
+  if (s === "cancelled") return "Cancelled";
+  return status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -152,7 +167,7 @@ export default function AdminOrdersPage() {
                       <p className="text-[10px] text-ink-400 mt-0.5">{new Date(o.created_at).toLocaleDateString()}</p>
                     </div>
                     <span className="px-2.5 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider bg-forest-50 text-forest-700 border border-forest-100">
-                      {o.status}
+                      {formatOrderStatusDisplay(o.status)}
                     </span>
                   </div>
 
