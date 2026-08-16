@@ -284,6 +284,10 @@ declare class FloriaApiClient {
         page?: number;
         pageSize?: number;
     }): Promise<ApiResponse<ReviewListResponse>>;
+    getReviewEligibility(productId: string): Promise<ApiResponse<{
+        canReview: boolean;
+        reason?: string;
+    }>>;
     submitReview(productId: string, payload: {
         rating: number;
         title?: string;

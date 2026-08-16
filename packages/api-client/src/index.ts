@@ -753,6 +753,14 @@ export class FloriaApiClient {
     );
   }
 
+  public async getReviewEligibility(
+    productId: string
+  ): Promise<ApiResponse<{ canReview: boolean; reason?: string }>> {
+    return this.request<{ canReview: boolean; reason?: string }>(
+      `/api/v1/catalog/products/${productId}/review-eligibility`
+    );
+  }
+
   public async submitReview(
     productId: string,
     payload: { rating: number; title?: string; body?: string }

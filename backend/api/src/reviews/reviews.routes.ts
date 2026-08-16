@@ -20,6 +20,13 @@ router.get(
   reviewsController.getProductReviews
 );
 
+// ── AUTH: check review eligibility ───────────────────────────────────────
+router.get(
+  "/catalog/products/:id/review-eligibility",
+  authenticateToken,
+  reviewsController.getReviewEligibility
+);
+
 // ── AUTH: submit review (verified purchase enforced server-side) ──────────
 router.post(
   "/catalog/products/:id/reviews",

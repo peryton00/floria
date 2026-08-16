@@ -483,6 +483,11 @@ var FloriaApiClient = class {
       `/api/v1/catalog/products/${productId}/reviews${buildQueryString(params)}`
     );
   }
+  async getReviewEligibility(productId) {
+    return this.request(
+      `/api/v1/catalog/products/${productId}/review-eligibility`
+    );
+  }
   async submitReview(productId, payload) {
     return this.request(`/api/v1/catalog/products/${productId}/reviews`, {
       method: "POST",

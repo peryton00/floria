@@ -14,6 +14,8 @@ router.get("/catalog/sellers", rateLimit_js_1.publicCatalogRateLimiter, products
 // Mounted at /api/v1  →  GET /api/v1/catalog/products/:id/reviews
 // (registered from app.ts via productsRoutes OR directly here — see app.ts mount)
 router.get("/catalog/products/:id/reviews", rateLimit_js_1.publicCatalogRateLimiter, reviews_controller_js_1.reviewsController.getProductReviews);
+// ── AUTH: check review eligibility ───────────────────────────────────────
+router.get("/catalog/products/:id/review-eligibility", auth_js_1.authenticateToken, reviews_controller_js_1.reviewsController.getReviewEligibility);
 // ── AUTH: submit review (verified purchase enforced server-side) ──────────
 router.post("/catalog/products/:id/reviews", auth_js_1.authenticateToken, reviews_controller_js_1.reviewsController.submitReview);
 // ── AUTH: mark review helpful ─────────────────────────────────────────────

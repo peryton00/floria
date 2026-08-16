@@ -16,6 +16,26 @@ class ReviewsController {
             next(err);
         }
     }
+    // GET /api/v1/catalog/products/:id/review-eligibility
+    async getReviewEligibility(req, res, next) {
+        try {
+            const customerId = req.user?.id;
+            if (!customerId) {
+                res.json({ success: true, data: { canReview: false, reason: "NOT_LOGGED_IN" } });
+                return;
+            }
+            const eligible = await review_repository_js_1.reviewRepository.findEligibleOrderItem(customerId, String(req.params.id));
+            if (eligible) {
+                res.json({ success: true, data: { canReview: true, orderItemId: eligible.order_item_id } });
+            }
+            else {
+                res.json({ success: true, data: { canReview: false, reason: "NOT_ELIGIBLE" } });
+            }
+        }
+        catch (err) {
+            next(err);
+        }
+    }
     // POST /api/v1/catalog/products/:id/reviews
     async submitReview(req, res, next) {
         try {
