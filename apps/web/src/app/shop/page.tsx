@@ -7,6 +7,7 @@ import { FilterSidebar } from "@/components/ui/FilterSidebar";
 import { FilterAndSortControls } from "@/components/ui/FilterAndSortControls";
 import { LeafIcon } from "@/components/ui/Icons";
 
+
 export const metadata: Metadata = {
   title: "Shop All Plants & Gardening — Floria",
   description: "Browse plants, pots, seeds, fertilizers, and tools from verified local nurseries.",
@@ -25,7 +26,7 @@ interface Props {
 }
 
 export default async function ShopPage({ searchParams }: Props) {
-  const params = await searchParams;
+  const params = (await searchParams) || {};
 
   const minPriceNum = params.minPrice ? parseFloat(params.minPrice) : undefined;
   const maxPriceNum = params.maxPrice ? parseFloat(params.maxPrice) : undefined;

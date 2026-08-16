@@ -4,25 +4,32 @@ import { useState, useEffect } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { api } from "@/lib/api";
 import { PayoutIcon, ShieldIcon, CheckIcon, AlertIcon } from "@/components/ui/Icons";
+import type { FinancialSettings } from "@floria/types";
 
 export default function AdminSettingsPage() {
-  const [commissionRate, setCommissionRate] = useState<number | null>(null);
+  const [finSettings, setFinSettings] = useState<FinancialSettings | null>(null);
   const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState(false);
-  const [inputRate, setInputRate] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Edit Pricing Policy Modal State
+  const [editingPricingPolicy, setEditingPricingPolicy] = useState(false);
+  const [editCommissionRate, setEditCommissionRate] = useState("12.0");
+  const [editProfitRate, setEditProfitRate] = useState("2.0");
+  const [editMaintenanceFeeINR, setEditMaintenanceFeeINR] = useState("10.00");
+  const [editThresholdINR, setEditThresholdINR] = useState("599.00");
+  const [editRecoveryINR, setEditRecoveryINR] = useState("20.00");
 
   const fetchSettings = async () => {
     try {
       setLoading(true);
       setError(null);
-      const res = await api.getPlatformSettings();
+      const res = await api.getFinancialSettings();
       if (res.success && res.data) {
-        setCommissionRate(res.data.commissionRate);
+        setFinSettings(res.data);
       } else {
-        setError(res.error?.message || "Failed to load platform settings");
+        setError(res.error?.message || "Failed to load platform financial settings");
       }
     } catch (e: any) {
       setError(e.message || "Failed to connect to Floria API");
@@ -35,57 +42,83 @@ export default function AdminSettingsPage() {
     fetchSettings();
   }, []);
 
-  const handleOpenEdit = () => {
-    setInputRate(commissionRate !== null ? String(commissionRate) : "12.0");
-    setEditing(true);
+  const handleOpenEditPricingPolicy = () => {
+    if (finSettings) {
+      setEditCommissionRate(String(finSettings.sellerCommissionRate));
+      setEditProfitRate(String(finSettings.floriaProfitRate));
+      setEditMaintenanceFeeINR((finSettings.platformMaintenanceFeePaise / 100).toFixed(2));
+      setEditThresholdINR((finSettings.freeDeliveryThresholdPaise / 100).toFixed(2));
+      setEditRecoveryINR((finSettings.freeDeliveryRecoveryPaise / 100).toFixed(2));
+    }
+    setEditingPricingPolicy(true);
     setError(null);
     setSuccessMessage(null);
   };
 
-  const handleSaveCommission = async (e: React.FormEvent) => {
+  const handleSavePricingPolicy = async (e: React.FormEvent) => {
     e.preventDefault();
-    const parsedRate = parseFloat(inputRate);
+    const commRate = parseFloat(editCommissionRate);
+    const profitRate = parseFloat(editProfitRate);
+    const maintenancePaise = Math.round(parseFloat(editMaintenanceFeeINR) * 100);
+    const thresholdPaise = Math.round(parseFloat(editThresholdINR) * 100);
+    const recoveryPaise = Math.round(parseFloat(editRecoveryINR) * 100);
 
-    if (isNaN(parsedRate) || !isFinite(parsedRate)) {
-      setError("Please enter a valid numeric commission percentage rate.");
+    if (isNaN(commRate) || commRate < 0 || commRate > 50) {
+      setError("Seller commission rate must be between 0% and 50%.");
       return;
     }
-
-    if (parsedRate < 0.0) {
-      setError("Commission rate cannot be negative.");
+    if (isNaN(profitRate) || profitRate < 0 || profitRate > 50) {
+      setError("Floria profit rate must be between 0% and 50%.");
       return;
     }
-
-    if (parsedRate > 50.0) {
-      setError("Commission rate cannot exceed maximum technical limit of 50.0%.");
+    if (isNaN(maintenancePaise) || maintenancePaise < 0) {
+      setError("Maintenance fee must be a valid positive amount.");
+      return;
+    }
+    if (isNaN(thresholdPaise) || thresholdPaise < 0) {
+      setError("Free delivery threshold must be a valid positive amount.");
+      return;
+    }
+    if (isNaN(recoveryPaise) || recoveryPaise < 0) {
+      setError("Free delivery recovery must be a valid positive amount.");
       return;
     }
 
     try {
       setSaving(true);
       setError(null);
-      const res = await api.updateCommissionRate(parsedRate);
+      const res = await api.updateFinancialSettings({
+        sellerCommissionRate: commRate,
+        floriaProfitRate: profitRate,
+        platformMaintenanceFeePaise: maintenancePaise,
+        freeDeliveryThresholdPaise: thresholdPaise,
+        freeDeliveryRecoveryPaise: recoveryPaise,
+      });
 
       if (res.success && res.data) {
-        setCommissionRate(res.data.commissionRate);
-        setEditing(false);
-        setSuccessMessage(`Platform commission rate updated to ${res.data.commissionRate}% in database and audit logged.`);
+        setFinSettings(res.data);
+        setEditingPricingPolicy(false);
+        setSuccessMessage("Floria pricing policy updated successfully in database and audit logged.");
       } else {
-        setError(res.error?.message || "Failed to update commission rate");
+        setError(res.error?.message || "Failed to update pricing policy");
       }
     } catch (e: any) {
-      setError(e.message || "Error saving platform settings");
+      setError(e.message || "Error saving pricing policy");
     } finally {
       setSaving(false);
     }
+  };
+
+  const formatINR = (paise: number) => {
+    return `₹${(paise / 100).toFixed(2)}`;
   };
 
   return (
     <AdminShell>
       <div className="space-y-6 max-w-4xl">
         <div>
-          <h1 className="font-serif text-2xl font-bold text-ink-900 leading-tight">Platform Settings & Governance</h1>
-          <p className="text-xs text-ink-400 mt-0.5">Database-backed marketplace configuration, commission rates, and security parameters.</p>
+          <h1 className="font-serif text-2xl font-bold text-ink-900 leading-tight">Platform Settings &amp; Governance</h1>
+          <p className="text-xs text-ink-400 mt-0.5">Database-backed marketplace configuration, commission rates, pricing policies, and security parameters.</p>
         </div>
 
         {error && (
@@ -114,124 +147,156 @@ export default function AdminSettingsPage() {
                 <p className="text-xs text-ink-400">Database-backed parameters governing seller commission, internal profit margin, checkout maintenance fee, and product-level free delivery recovery.</p>
               </div>
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 text-xs">
-            <div className="bg-cream-50 p-4 rounded-xl space-y-1">
-              <p className="font-semibold text-ink-500 uppercase tracking-wider text-[10px]">Seller Commission</p>
-              <p className="text-xl font-mono font-bold text-amber-700">12%</p>
-              <p className="text-[10px] text-ink-400">Deducted from seller base price.</p>
-            </div>
-
-            <div className="bg-cream-50 p-4 rounded-xl space-y-1">
-              <p className="font-semibold text-ink-500 uppercase tracking-wider text-[10px]">Floria Profit</p>
-              <p className="text-xl font-mono font-bold text-forest-700">2%</p>
-              <p className="text-[10px] text-ink-400">Added to product price (Internal).</p>
-            </div>
-
-            <div className="bg-cream-50 p-4 rounded-xl space-y-1">
-              <p className="font-semibold text-ink-500 uppercase tracking-wider text-[10px]">Maintenance Fee</p>
-              <p className="text-xl font-mono font-bold text-stone-800">₹10.00</p>
-              <p className="text-[10px] text-ink-400">Charged once at checkout.</p>
-            </div>
-
-            <div className="bg-cream-50 p-4 rounded-xl space-y-1">
-              <p className="font-semibold text-ink-500 uppercase tracking-wider text-[10px]">Free Delivery Threshold</p>
-              <p className="text-xl font-mono font-bold text-emerald-700">₹599.00</p>
-              <p className="text-[10px] text-ink-400">Per product eligibility threshold.</p>
-            </div>
-
-            <div className="bg-cream-50 p-4 rounded-xl space-y-1">
-              <p className="font-semibold text-ink-500 uppercase tracking-wider text-[10px]">Delivery Recovery</p>
-              <p className="text-xl font-mono font-bold text-emerald-700">₹20.00</p>
-              <p className="text-[10px] text-ink-400">Hidden recovery for free items.</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Commission Rate Settings */}
-        <div className="bg-white rounded-xl border border-ink-100 p-6 shadow-sm space-y-4">
-          <div className="flex items-center justify-between border-b border-ink-100 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-forest-50 text-forest-700 flex items-center justify-center">
-                <PayoutIcon size={20} />
-              </div>
-              <div>
-                <h2 className="text-sm font-bold text-ink-900">Marketplace Commission Rate</h2>
-                <p className="text-xs text-ink-400">Server-authoritative database rate applied to new order subtotals.</p>
-              </div>
-            </div>
 
             <button
               type="button"
-              disabled={loading || editing}
-              onClick={handleOpenEdit}
+              disabled={loading || saving}
+              onClick={handleOpenEditPricingPolicy}
               className="px-4 py-2 bg-forest-700 hover:bg-forest-800 text-white font-bold text-xs uppercase tracking-wider rounded-lg transition-colors disabled:opacity-50"
             >
-              Configure Rate
+              Edit Pricing Policy
             </button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-            <div className="bg-cream-50 p-4 rounded-xl space-y-1">
-              <p className="font-semibold text-ink-500 uppercase tracking-wider text-[10px]">Database Configured Commission Rate</p>
-              {loading ? (
-                <div className="h-8 w-24 bg-ink-200/60 rounded-md animate-pulse my-1" />
-              ) : (
-                <p className="text-2xl font-serif font-bold text-forest-800">
-                  {commissionRate !== null ? `${commissionRate}%` : "Not Configured"}
-                </p>
-              )}
-              <p className="text-[11px] text-ink-400">Calculated server-side during checkout. Historical orders snapshot rates immutably.</p>
+          {loading ? (
+            <div className="py-8 flex justify-center">
+              <div className="w-6 h-6 border-2 border-forest-600 border-t-transparent rounded-full animate-spin" />
             </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 text-xs">
+              <div className="bg-cream-50 p-4 rounded-xl space-y-1">
+                <p className="font-semibold text-ink-500 uppercase tracking-wider text-[10px]">Seller Commission</p>
+                <p className="text-xl font-mono font-bold text-amber-700">{finSettings?.sellerCommissionRate ?? 12}%</p>
+                <p className="text-[10px] text-ink-400">Deducted from seller base price.</p>
+              </div>
 
-            <div className="bg-cream-50 p-4 rounded-xl space-y-1">
-              <p className="font-semibold text-ink-500 uppercase tracking-wider text-[10px]">Financial Settlement Formula</p>
-              <p className="text-base font-bold text-ink-900">Direct Nursery Net Payout</p>
-              <p className="text-[11px] text-ink-400">
-                Net seller payout = Subtotal - ({commissionRate !== null ? `${commissionRate}%` : "Commission Rate"}).
-              </p>
+              <div className="bg-cream-50 p-4 rounded-xl space-y-1">
+                <p className="font-semibold text-ink-500 uppercase tracking-wider text-[10px]">Floria Profit</p>
+                <p className="text-xl font-mono font-bold text-forest-700">{finSettings?.floriaProfitRate ?? 2}%</p>
+                <p className="text-[10px] text-ink-400">Added to product price (Internal).</p>
+              </div>
+
+              <div className="bg-cream-50 p-4 rounded-xl space-y-1">
+                <p className="font-semibold text-ink-500 uppercase tracking-wider text-[10px]">Maintenance Fee</p>
+                <p className="text-xl font-mono font-bold text-stone-800">{formatINR(finSettings?.platformMaintenanceFeePaise ?? 1000)}</p>
+                <p className="text-[10px] text-ink-400">Charged once at checkout.</p>
+              </div>
+
+              <div className="bg-cream-50 p-4 rounded-xl space-y-1">
+                <p className="font-semibold text-ink-500 uppercase tracking-wider text-[10px]">Free Delivery Threshold</p>
+                <p className="text-xl font-mono font-bold text-emerald-700">{formatINR(finSettings?.freeDeliveryThresholdPaise ?? 59900)}</p>
+                <p className="text-[10px] text-ink-400">Per product eligibility threshold.</p>
+              </div>
+
+              <div className="bg-cream-50 p-4 rounded-xl space-y-1">
+                <p className="font-semibold text-ink-500 uppercase tracking-wider text-[10px]">Delivery Recovery</p>
+                <p className="text-xl font-mono font-bold text-emerald-700">{formatINR(finSettings?.freeDeliveryRecoveryPaise ?? 2000)}</p>
+                <p className="text-[10px] text-ink-400">Hidden recovery for free items.</p>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
-        {/* Modal: Edit Commission Rate */}
-        {editing && (
+        {/* Modal: Edit Pricing Policy */}
+        {editingPricingPolicy && (
           <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl border border-ink-100 p-6 max-w-md w-full shadow-2xl space-y-4">
+            <div className="bg-white rounded-2xl border border-ink-100 p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center border-b border-ink-100 pb-3">
-                <h3 className="font-serif text-lg font-bold text-ink-900">Configure Platform Commission Rate</h3>
+                <h3 className="font-serif text-lg font-bold text-ink-900">Edit Floria Pricing Policy</h3>
                 <button
                   type="button"
-                  onClick={() => setEditing(false)}
+                  onClick={() => setEditingPricingPolicy(false)}
                   className="text-ink-400 hover:text-ink-900 font-bold text-sm"
                 >
                   ✕
                 </button>
               </div>
 
-              <form onSubmit={handleSaveCommission} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-ink-700 mb-1">
-                    Platform Revenue Share Percentage (%)
-                  </label>
-                  <div className="relative">
+              <form onSubmit={handleSavePricingPolicy} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-ink-700 mb-1">
+                      Seller Commission (%)
+                    </label>
                     <input
                       type="number"
                       step="0.1"
                       min="0"
                       max="50"
                       required
-                      value={inputRate}
-                      onChange={(e) => setInputRate(e.target.value)}
-                      placeholder="e.g. 12.0"
-                      className="w-full px-3 py-2 text-sm rounded-xl border border-ink-200 focus:outline-none focus:ring-1 focus:ring-forest-700 pr-8"
+                      value={editCommissionRate}
+                      onChange={(e) => setEditCommissionRate(e.target.value)}
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-ink-200 focus:outline-none focus:ring-1 focus:ring-forest-700 bg-white"
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 font-bold text-xs text-ink-400">%</span>
+                    <p className="text-[10px] text-ink-400 mt-1">Deducted from seller's base price.</p>
                   </div>
-                  <p className="text-[10px] text-ink-400 mt-1">
-                    Technical validation bounds: 0.0% to 50.0%. Updating rate generates an immutable audit record and applies to all new checkouts.
-                  </p>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-ink-700 mb-1">
+                      Floria Profit Margin (%)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      max="50"
+                      required
+                      value={editProfitRate}
+                      onChange={(e) => setEditProfitRate(e.target.value)}
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-ink-200 focus:outline-none focus:ring-1 focus:ring-forest-700 bg-white"
+                    />
+                    <p className="text-[10px] text-ink-400 mt-1">Added to product price (Internal).</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-ink-700 mb-1">
+                      Maintenance Fee (₹)
+                    </label>
+                    <input
+                      type="number"
+                      step="1"
+                      min="0"
+                      required
+                      value={editMaintenanceFeeINR}
+                      onChange={(e) => setEditMaintenanceFeeINR(e.target.value)}
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-ink-200 focus:outline-none focus:ring-1 focus:ring-forest-700 bg-white font-mono"
+                    />
+                    <p className="text-[10px] text-ink-400 mt-1">Once per checkout.</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-ink-700 mb-1">
+                      Free Threshold (₹)
+                    </label>
+                    <input
+                      type="number"
+                      step="1"
+                      min="0"
+                      required
+                      value={editThresholdINR}
+                      onChange={(e) => setEditThresholdINR(e.target.value)}
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-ink-200 focus:outline-none focus:ring-1 focus:ring-forest-700 bg-white font-mono"
+                    />
+                    <p className="text-[10px] text-ink-400 mt-1">Per product threshold.</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-ink-700 mb-1">
+                      Delivery Recovery (₹)
+                    </label>
+                    <input
+                      type="number"
+                      step="1"
+                      min="0"
+                      required
+                      value={editRecoveryINR}
+                      onChange={(e) => setEditRecoveryINR(e.target.value)}
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-ink-200 focus:outline-none focus:ring-1 focus:ring-forest-700 bg-white font-mono"
+                    />
+                    <p className="text-[10px] text-ink-400 mt-1">Hidden delivery recovery.</p>
+                  </div>
                 </div>
 
                 <div className="flex gap-3 pt-2">
@@ -240,11 +305,11 @@ export default function AdminSettingsPage() {
                     disabled={saving}
                     className="flex-1 py-2.5 rounded-xl bg-forest-700 hover:bg-forest-800 text-white font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-50"
                   >
-                    {saving ? "Saving to Database..." : "Save Setting"}
+                    {saving ? "Saving Changes..." : "Save Financial Settings"}
                   </button>
                   <button
                     type="button"
-                    onClick={() => setEditing(false)}
+                    onClick={() => setEditingPricingPolicy(false)}
                     className="px-4 py-2.5 rounded-xl border border-ink-200 text-ink-600 font-bold text-xs uppercase tracking-wider"
                   >
                     Cancel
@@ -263,7 +328,7 @@ export default function AdminSettingsPage() {
                 🚚
               </div>
               <div>
-                <h2 className="text-sm font-bold text-ink-900">Platform Delivery Fee Engine & Policy</h2>
+                <h2 className="text-sm font-bold text-ink-900">Platform Delivery Fee Engine &amp; Policy</h2>
                 <p className="text-xs text-ink-400">Server-authoritative delivery rules, minimum order thresholds, and single master order fee mode.</p>
               </div>
             </div>
@@ -285,8 +350,8 @@ export default function AdminSettingsPage() {
 
             <div className="bg-cream-50 p-4 rounded-xl space-y-1">
               <p className="font-semibold text-ink-500 uppercase tracking-wider text-[10px]">Free Delivery Threshold</p>
-              <p className="text-lg font-mono font-bold text-emerald-700">₹999.00</p>
-              <p className="text-[11px] text-ink-400">Subtotal &gt;= ₹999.00 receives ₹0 delivery.</p>
+              <p className="text-lg font-mono font-bold text-emerald-700">{formatINR(finSettings?.freeDeliveryThresholdPaise ?? 59900)}</p>
+              <p className="text-[11px] text-ink-400">Product price &gt;= threshold receives free delivery.</p>
             </div>
 
             <div className="bg-cream-50 p-4 rounded-xl space-y-1">
@@ -369,7 +434,7 @@ export default function AdminSettingsPage() {
               <ShieldIcon size={20} />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-ink-900">System Environment & Security Policy</h2>
+              <h2 className="text-sm font-bold text-ink-900">System Environment &amp; Security Policy</h2>
               <p className="text-xs text-ink-400">Platform operational bounds and authorization rules.</p>
             </div>
           </div>
