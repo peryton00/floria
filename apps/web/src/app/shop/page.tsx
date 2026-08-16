@@ -19,7 +19,7 @@ interface Props {
     minPrice?: string;
     maxPrice?: string;
     inStock?: string;
-    sort?: "featured" | "price-asc" | "price-desc" | "newest";
+    sort?: "featured" | "top-rated" | "most-reviewed" | "price-asc" | "price-desc" | "newest";
     q?: string;
   }>;
 }

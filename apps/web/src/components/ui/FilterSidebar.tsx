@@ -2,7 +2,9 @@
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { MOCK_CATEGORIES, MOCK_SELLERS } from "@/lib/services/mockData";
+import { api } from "@/lib/api";
+import type { NurserySummary } from "@/lib/api";
+import type { Category } from "@floria/types";
 
 interface FilterSidebarProps {
   currentCategory?: string;
@@ -13,6 +15,18 @@ export function FilterSidebar({ currentCategory, onFilterChange }: FilterSidebar
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [nurseries, setNurseries] = useState<NurserySummary[]>([]);
+
+  useEffect(() => {
+    api.getCategories().then((res) => {
+      if (res.success && res.data) setCategories(res.data);
+    });
+    api.getRankedNurseries().then((res) => {
+      if (res.success && res.data) setNurseries(res.data);
+    });
+  }, []);
 
   // URL state params
   const activeCategory = currentCategory ?? searchParams.get("category") ?? "all";
@@ -140,7 +154,7 @@ export function FilterSidebar({ currentCategory, onFilterChange }: FilterSidebar
               <span>All Categories</span>
             </button>
           </li>
-          {MOCK_CATEGORIES.map((cat) => {
+          {categories.map((cat) => {
             const isActive = activeCategory === cat.slug;
             return (
               <li key={cat.id}>
@@ -180,7 +194,7 @@ export function FilterSidebar({ currentCategory, onFilterChange }: FilterSidebar
               All Nurseries
             </button>
           </li>
-          {Object.values(MOCK_SELLERS).map((seller) => {
+          {nurseries.map((seller) => {
             const isActive = activeNursery === seller.id;
             return (
               <li key={seller.id}>

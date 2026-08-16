@@ -3,51 +3,26 @@ import Image from "next/image";
 import { CustomerShell } from "@/components/layout/CustomerShell";
 import { LeafIcon, MapPinIcon } from "@/components/ui/Icons";
 import { StarRating } from "@/components/ui/StarRating";
+import type { NurserySummary } from "@/lib/api";
 
-const NURSERIES = [
-  {
-    id: "green-leaf",
-    name: "Green Leaf Nursery",
-    city: "Bengaluru, Karnataka",
-    rating: 4.9,
-    reviewsCount: 142,
-    specialty: "Exotic Indoor Plants & Monsteras",
-    image: "/nursery-1.png",
-    description: "Specializing in high-humidity indoor foliage, rare variegated plants, and organic potting mixes.",
-  },
-  {
-    id: "clay-and-co",
-    name: "Clay & Co. Artisans",
-    city: "Pune, Maharashtra",
-    rating: 4.8,
-    reviewsCount: 98,
-    specialty: "Handcrafted Terracotta & Ceramic Planters",
-    image: "/nursery-2.png",
-    description: "Premium handcrafted terracotta pots, modern ceramic planters, and sustainable garden accessories.",
-  },
-  {
-    id: "nisarga-gardens",
-    name: "Nisarga Botanical Gardens",
-    city: "Nashik, Maharashtra",
-    rating: 4.7,
-    reviewsCount: 215,
-    specialty: "Organic Fruit Trees & Culinary Herb Seeds",
-    image: "/nursery-3.png",
-    description: "Heirloom seeds, fruit-bearing saplings, organic fertilizers, and pest-prevention oils.",
-  },
-  {
-    id: "sai-garden-center",
-    name: "Sai Garden Center",
-    city: "Hyderabad, Telangana",
-    rating: 4.6,
-    reviewsCount: 84,
-    specialty: "Flowering Shrubs & Bonsai Collections",
-    image: "/nursery-4.png",
-    description: "Curated flowering plants, mature bonsai specimens, and drip irrigation kits.",
-  },
-];
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
-export default function NurseriesPage() {
+async function fetchNurseries(): Promise<NurserySummary[]> {
+  try {
+    const res = await fetch(`${API_BASE}/api/v1/catalog/sellers`, {
+      next: { revalidate: 300 }, // 5-minute ISR
+    });
+    if (!res.ok) return [];
+    const json = await res.json();
+    return json.data ?? [];
+  } catch {
+    return [];
+  }
+}
+
+export default async function NurseriesPage() {
+  const nurseries = await fetchNurseries();
+
   return (
     <CustomerShell>
       <div className="space-y-8 py-4">
@@ -65,60 +40,87 @@ export default function NurseriesPage() {
           </p>
         </div>
 
-        {/* Nursery Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {NURSERIES.map((nursery) => (
-            <div
-              key={nursery.id}
-              className="bg-white rounded-2xl border border-ink-100 p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col sm:flex-row gap-6 items-start"
-            >
-              <div className="relative w-full sm:w-36 h-36 rounded-xl overflow-hidden bg-cream-100 shrink-0">
-                <Image
-                  src={nursery.image}
-                  alt={nursery.name}
-                  fill
-                  className="object-cover"
-                />
-              </div>
+        {nurseries.length === 0 ? (
+          <div className="bg-white rounded-2xl border border-ink-100 p-12 text-center shadow-xs max-w-lg mx-auto">
+            <p className="font-serif text-lg font-bold text-ink-900">No nurseries available yet</p>
+            <p className="text-xs text-ink-500 mt-2">Check back soon as our network of verified nurseries grows.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {nurseries.map((nursery) => {
+              const rs = Array.isArray(nursery.rating_summary)
+                ? nursery.rating_summary[0]
+                : nursery.rating_summary;
+              const rating = rs?.avg_rating ?? 0;
+              const reviewCount = rs?.review_count ?? 0;
 
-              <div className="space-y-2 flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-2">
-                  <h2 className="font-serif text-lg font-bold text-ink-900 truncate">
-                    {nursery.name}
-                  </h2>
+              return (
+                <div
+                  key={nursery.id}
+                  className="bg-white rounded-2xl border border-ink-100 p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col sm:flex-row gap-6 items-start"
+                >
+                  <div className="relative w-full sm:w-36 h-36 rounded-xl overflow-hidden bg-cream-100 shrink-0">
+                    {nursery.logo_url ? (
+                      <Image
+                        src={nursery.logo_url}
+                        alt={nursery.business_name}
+                        fill
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-forest-300">
+                        <LeafIcon size={40} />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-2 flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <h2 className="font-serif text-lg font-bold text-ink-900 truncate">
+                        {nursery.business_name}
+                      </h2>
+                    </div>
+
+                    {nursery.address && (
+                      <div className="flex items-center gap-2 text-xs text-ink-500">
+                        <MapPinIcon size={14} className="text-forest-700 shrink-0" />
+                        <span className="truncate">{nursery.address}</span>
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-2 pt-1">
+                      <StarRating rating={rating} size="sm" />
+                      {rating > 0 && (
+                        <>
+                          <span className="text-xs font-bold text-ink-800">{rating.toFixed(1)}</span>
+                          <span className="text-xs text-ink-400">({reviewCount} review{reviewCount !== 1 ? "s" : ""})</span>
+                        </>
+                      )}
+                      {rating === 0 && (
+                        <span className="text-xs text-ink-400">New nursery</span>
+                      )}
+                    </div>
+
+                    {nursery.business_description && (
+                      <p className="text-xs text-ink-500 line-clamp-2 leading-relaxed">
+                        {nursery.business_description}
+                      </p>
+                    )}
+
+                    <div className="pt-2">
+                      <Link
+                        href={`/shop?nursery=${nursery.id}`}
+                        className="inline-flex items-center text-xs font-bold text-forest-700 hover:text-forest-900 transition-colors"
+                      >
+                        View Plant Catalog &rarr;
+                      </Link>
+                    </div>
+                  </div>
                 </div>
-
-                <div className="flex items-center gap-2 text-xs text-ink-500">
-                  <MapPinIcon size={14} className="text-forest-700 shrink-0" />
-                  <span>{nursery.city}</span>
-                </div>
-
-                <div className="flex items-center gap-2 pt-1">
-                  <StarRating rating={nursery.rating} size="sm" />
-                  <span className="text-xs font-bold text-ink-800">{nursery.rating}</span>
-                  <span className="text-xs text-ink-400">({nursery.reviewsCount} reviews)</span>
-                </div>
-
-                <p className="text-xs text-forest-700 font-bold">
-                  {nursery.specialty}
-                </p>
-
-                <p className="text-xs text-ink-500 line-clamp-2 leading-relaxed">
-                  {nursery.description}
-                </p>
-
-                <div className="pt-2">
-                  <Link
-                    href={`/shop?nursery=${nursery.id}`}
-                    className="inline-flex items-center text-xs font-bold text-forest-700 hover:text-forest-900 transition-colors"
-                  >
-                    View Plant Catalog &rarr;
-                  </Link>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </CustomerShell>
   );

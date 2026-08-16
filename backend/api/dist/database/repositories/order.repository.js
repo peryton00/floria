@@ -8,7 +8,7 @@ class OrderRepository {
         const db = (0, database_js_1.getAdminDb)();
         const { data, error } = await db
             .from("orders")
-            .select("*, order_items(*), seller_order_fulfillments(*)")
+            .select("*, order_items(*, product:products(id,name,slug)), seller_order_fulfillments(*)")
             .eq("customer_id", customerId)
             .order("created_at", { ascending: false });
         if (error || !data)
@@ -19,7 +19,7 @@ class OrderRepository {
         const db = (0, database_js_1.getAdminDb)();
         const { data, error } = await db
             .from("orders")
-            .select("*, order_items(*), seller_order_fulfillments(*)")
+            .select("*, order_items(*, product:products(id,name,slug)), seller_order_fulfillments(*)")
             .eq("id", orderId)
             .maybeSingle();
         if (error || !data)
@@ -59,11 +59,31 @@ class OrderRepository {
     }
     async updateOrderStatus(orderId, status) {
         const db = (0, database_js_1.getAdminDb)();
+        const masterStatus = status.toLowerCase().replace(/ /g, "_");
         const { error } = await db
             .from("orders")
-            .update({ status: status.toLowerCase(), updated_at: new Date().toISOString() })
+            .update({ status: masterStatus, updated_at: new Date().toISOString() })
             .eq("id", orderId);
-        return !error;
+        if (error)
+            return false;
+        const displayStatusMap = {
+            order_placed: "Order Placed",
+            seller_pending: "Order Placed",
+            nursery_confirmed: "Nursery Confirmed",
+            preparing: "Preparing",
+            ready_for_pickup: "Ready for Pickup",
+            picked_up: "Picked Up",
+            packing: "Packing",
+            out_for_delivery: "Out for Delivery",
+            delivered: "Delivered",
+            cancelled: "Cancelled",
+        };
+        const displayStatus = displayStatusMap[masterStatus] || status;
+        await db
+            .from("seller_order_fulfillments")
+            .update({ status: displayStatus, updated_at: new Date().toISOString() })
+            .eq("order_id", orderId);
+        return true;
     }
     async createOrder(orderPayload, lineItems, fulfillments) {
         const db = (0, database_js_1.getAdminDb)();

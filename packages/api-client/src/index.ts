@@ -95,6 +95,60 @@ export interface SellerNotificationSettings {
   updated_at?: string;
 }
 
+export type ReviewStatus = "pending" | "approved" | "rejected" | "flagged";
+
+export interface ProductReview {
+  id: string;
+  product_id: string;
+  customer_id?: string;
+  rating: number;
+  title?: string;
+  body?: string;
+  is_verified_purchase: boolean;
+  status?: ReviewStatus;
+  helpful_count: number;
+  reported_count?: number;
+  seller_reply?: string;
+  moderation_note?: string;
+  created_at: string;
+  updated_at?: string;
+  customer?: { full_name: string | null };
+  product?: { id: string; name: string; slug: string };
+}
+
+export interface ReviewSummary {
+  product_id: string;
+  review_count: number;
+  avg_rating: number;
+  bayesian_rating: number;
+  wilson_lower_bound: number;
+  star_1_count: number;
+  star_2_count: number;
+  star_3_count: number;
+  star_4_count: number;
+  star_5_count: number;
+}
+
+export interface ReviewListResponse {
+  reviews: ProductReview[];
+  total: number;
+  summary?: ReviewSummary | null;
+}
+
+export interface NurserySummary {
+  id: string;
+  business_name: string;
+  business_description?: string;
+  logo_url?: string;
+  address?: string;
+  rating_summary?: {
+    review_count: number;
+    avg_rating: number;
+    bayesian_rating: number;
+    ranking_score: number;
+  } | null;
+}
+
 function buildQueryString(params?: QueryParams): string {
   if (!params) return "";
   const cleanEntries = Object.entries(params).filter(([_, v]) => v !== undefined && v !== "");
@@ -686,5 +740,110 @@ export class FloriaApiClient {
       method: "POST",
       body: JSON.stringify({ status }),
     });
+  }
+
+  // ── REVIEWS & RATINGS ─────────────────────────────────────────────────────
+
+  public async getProductReviews(
+    productId: string,
+    params?: { page?: number; pageSize?: number }
+  ): Promise<ApiResponse<ReviewListResponse>> {
+    return this.request<ReviewListResponse>(
+      `/api/v1/catalog/products/${productId}/reviews${buildQueryString(params)}`
+    );
+  }
+
+  public async submitReview(
+    productId: string,
+    payload: { rating: number; title?: string; body?: string }
+  ): Promise<ApiResponse<{ id: string; status: string; created_at: string }>> {
+    return this.request(`/api/v1/catalog/products/${productId}/reviews`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  public async markReviewHelpful(
+    productId: string,
+    reviewId: string
+  ): Promise<ApiResponse<{ action: "added" | "removed" }>> {
+    return this.request(`/api/v1/catalog/products/${productId}/reviews/${reviewId}/helpful`, {
+      method: "POST",
+    });
+  }
+
+  public async getMyReviews(
+    params?: { page?: number }
+  ): Promise<ApiResponse<ReviewListResponse>> {
+    return this.request<ReviewListResponse>(
+      `/api/v1/customer/reviews${buildQueryString(params)}`
+    );
+  }
+
+  public async getSellerReviews(
+    params?: { page?: number }
+  ): Promise<ApiResponse<ReviewListResponse>> {
+    return this.request<ReviewListResponse>(
+      `/api/v1/seller/reviews${buildQueryString(params)}`
+    );
+  }
+
+  public async flagReview(reviewId: string): Promise<ApiResponse<{ flagged: boolean }>> {
+    return this.request(`/api/v1/seller/reviews/${reviewId}/flag`, { method: "PATCH" });
+  }
+
+  public async adminGetReviews(
+    params?: { status?: string; productId?: string; page?: number; pageSize?: number }
+  ): Promise<ApiResponse<ReviewListResponse>> {
+    return this.request<ReviewListResponse>(
+      `/api/v1/admin/reviews${buildQueryString(params)}`
+    );
+  }
+
+  public async adminModerateReview(
+    reviewId: string,
+    action: "approve" | "reject" | "hide",
+    note?: string
+  ): Promise<ApiResponse<{ moderated: boolean }>> {
+    return this.request(`/api/v1/admin/reviews/${reviewId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ action, note }),
+    });
+  }
+
+  // ── CATALOG: TRENDING, RELATED, RANKED NURSERIES ─────────────────────────
+
+  public async getTrendingProducts(
+    params?: { limit?: number }
+  ): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>(
+      `/api/v1/catalog/products/trending${buildQueryString(params)}`
+    );
+  }
+
+  public async getRelatedProducts(slug: string): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>(`/api/v1/catalog/products/${slug}/related`);
+  }
+
+  public async getRankedNurseries(): Promise<ApiResponse<NurserySummary[]>> {
+    return this.request<NurserySummary[]>(`/api/v1/catalog/sellers`);
+  }
+
+  // ── ADMIN FINANCIAL TRANSPARENCY ─────────────────────────────────────────
+
+  public async getAdminProductFinancialCalculation(
+    productId: string
+  ): Promise<ApiResponse<import("@floria/types").AdminProductFinancialCalculation>> {
+    return this.request<import("@floria/types").AdminProductFinancialCalculation>(
+      `/api/v1/admin/products/${productId}/financial-calculation`
+    );
+  }
+
+  public async getAdminOrderFinancialBreakdown(
+    orderId: string
+  ): Promise<ApiResponse<import("@floria/types").AdminOrderFinancialBreakdown>> {
+    return this.request<import("@floria/types").AdminOrderFinancialBreakdown>(
+      `/api/v1/admin/orders/${orderId}/financial-breakdown`
+    );
   }
 }

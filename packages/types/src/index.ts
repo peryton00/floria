@@ -155,6 +155,12 @@ export interface ProductListing {
   primary_image: ProductImage | null;
   seller: Pick<SellerProfile, "id" | "business_name">;
   category: Pick<Category, "id" | "name" | "slug"> | null;
+  rating_summary?: {
+    review_count: number;
+    avg_rating: number;
+    bayesian_rating: number;
+    wilson_lower_bound: number;
+  } | null;
 }
 
 // ------------------------------------------------------------------
@@ -297,4 +303,73 @@ export interface CommissionConfig {
   created_by: UUID;
   notes: string | null;
   created_at: Timestamp;
+}
+
+// ------------------------------------------------------------------
+// Financial Transparency & Calculation Interfaces (Phase 3.17.1)
+// ------------------------------------------------------------------
+
+export interface AdminProductFinancialCalculation {
+  product: {
+    id: UUID;
+    name: string;
+    sellerId: UUID;
+    sellerName: string;
+  };
+  pricing: {
+    basePricePaise: number;
+    discountPaise: number;
+    sellingPricePaise: number;
+  };
+  commission: {
+    rate: number; // percentage e.g. 12 for 12%
+    amountPaise: number;
+  };
+  sellerEarnings: {
+    grossPaise: number;
+    netPaise: number;
+  };
+  customerCharges: {
+    deliveryFeePaise: number; // 0 if not configured
+    taxPaise: number; // 0 if not configured
+    discountPaise: number;
+    totalPaise: number;
+  };
+  currency: string;
+  configuredRules: {
+    taxConfigured: boolean;
+    deliveryConfigured: boolean;
+  };
+}
+
+export interface NurseryOrderFinancialAttribution {
+  sellerId: UUID;
+  sellerName: string;
+  items: Array<{
+    productId: UUID;
+    productName: string;
+    unitPricePaise: number;
+    quantity: number;
+    lineTotalPaise: number;
+    commissionPaise: number;
+    sellerNetPaise: number;
+  }>;
+  sellerGrossPaise: number;
+  commissionRate: number;
+  commissionPaise: number;
+  sellerNetPaise: number;
+}
+
+export interface AdminOrderFinancialBreakdown {
+  masterOrderId: UUID;
+  customerName: string;
+  customerTotalPaise: number;
+  subtotalPaise: number;
+  deliveryFeePaise: number;
+  taxPaise: number;
+  discountPaise: number;
+  totalPlatformCommissionPaise: number;
+  nurseryBreakdown: NurseryOrderFinancialAttribution[];
+  currency: string;
+  createdAt: Timestamp;
 }

@@ -1,0 +1,329 @@
+// Floria API — Review Repository
+// All rating mutations go through server-side DB functions — never direct client writes.
+import { getAdminDb } from "../../config/database.js";
+
+export interface ReviewFilters {
+  productId?: string;
+  customerId?: string;
+  sellerId?: string;
+  status?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export class ReviewRepository {
+  // ── PUBLIC: list approved reviews for a product ──────────────────────────
+  async findApprovedByProduct(productId: string, page = 1, pageSize = 10) {
+    const db = getAdminDb();
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    const { data, error, count } = await db
+      .from("product_reviews")
+      .select(
+        `id, rating, title, body, is_verified_purchase, helpful_count,
+         created_at,
+         customer:user_profiles(full_name)`,
+        { count: "exact" }
+      )
+      .eq("product_id", productId)
+      .eq("status", "approved")
+      .order("helpful_count", { ascending: false })
+      .order("created_at", { ascending: false })
+      .range(from, to);
+
+    if (error) return { reviews: [], total: 0 };
+    return { reviews: data ?? [], total: count ?? 0 };
+  }
+
+  // ── CUSTOMER: own reviews ─────────────────────────────────────────────────
+  async findByCustomer(customerId: string, page = 1, pageSize = 20) {
+    const db = getAdminDb();
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    const { data, error, count } = await db
+      .from("product_reviews")
+      .select(
+        `id, product_id, rating, title, body, status, helpful_count, created_at, updated_at,
+         product:products(id, name, slug)`,
+        { count: "exact" }
+      )
+      .eq("customer_id", customerId)
+      .order("created_at", { ascending: false })
+      .range(from, to);
+
+    if (error) return { reviews: [], total: 0 };
+    return { reviews: data ?? [], total: count ?? 0 };
+  }
+
+  // ── VERIFIED PURCHASE CHECK ───────────────────────────────────────────────
+  // Returns the order_item_id if the customer bought this product (delivered only)
+  // Server derives this — client never supplies it.
+  async findEligibleOrderItem(
+    customerId: string,
+    productId: string
+  ): Promise<{ order_item_id: string } | null> {
+    const db = getAdminDb();
+
+    const { data } = await db
+      .from("order_items")
+      .select("id, order:orders(customer_id, status)")
+      .eq("product_id", productId)
+      .limit(50); // scan up to 50 recent items for this product
+
+    if (!data) return null;
+
+    for (const item of data) {
+      const order = Array.isArray(item.order) ? item.order[0] : item.order;
+      if (
+        order?.customer_id === customerId &&
+        (order?.status === "delivered" || order?.status === "picked_up")
+      ) {
+        // Check no existing review for this order_item
+        const { data: existing } = await db
+          .from("product_reviews")
+          .select("id")
+          .eq("order_item_id", item.id)
+          .maybeSingle();
+
+        if (!existing) return { order_item_id: item.id };
+      }
+    }
+
+    return null;
+  }
+
+  // ── SUBMIT REVIEW ─────────────────────────────────────────────────────────
+  async create(payload: {
+    product_id: string;
+    customer_id: string;
+    order_item_id: string;
+    rating: number;
+    title?: string;
+    body?: string;
+  }) {
+    const db = getAdminDb();
+    const { data, error } = await db
+      .from("product_reviews")
+      .insert({
+        ...payload,
+        is_verified_purchase: true,
+        status: "pending",
+      })
+      .select("id, status, created_at")
+      .single();
+
+    if (error) {
+      // Unique constraint violation = duplicate
+      if (error.code === "23505") {
+        const err = new Error("ALREADY_REVIEWED") as any;
+        err.code = "ALREADY_REVIEWED";
+        throw err;
+      }
+      throw error;
+    }
+    return data;
+  }
+
+  // ── TOGGLE HELPFUL ────────────────────────────────────────────────────────
+  async toggleHelpful(reviewId: string, customerId: string): Promise<"added" | "removed"> {
+    const db = getAdminDb();
+
+    // Check if vote exists
+    const { data: existing } = await db
+      .from("review_helpful_votes")
+      .select("review_id")
+      .eq("review_id", reviewId)
+      .eq("customer_id", customerId)
+      .maybeSingle();
+
+    if (existing) {
+      // Remove vote + decrement
+      await db.from("review_helpful_votes")
+        .delete()
+        .eq("review_id", reviewId)
+        .eq("customer_id", customerId);
+      // Decrement via rpc if it exists, otherwise clamp at 0 via update
+      const { data: rev } = await db.from("product_reviews")
+        .select("helpful_count")
+        .eq("id", reviewId)
+        .maybeSingle();
+      if (rev) {
+        await db.from("product_reviews")
+          .update({ helpful_count: Math.max(0, (rev.helpful_count ?? 1) - 1) })
+          .eq("id", reviewId);
+      }
+      return "removed";
+    }
+
+    // Insert vote + increment
+    await db.from("review_helpful_votes")
+      .insert({ review_id: reviewId, customer_id: customerId });
+
+    const { data: rev } = await db.from("product_reviews")
+      .select("helpful_count")
+      .eq("id", reviewId)
+      .maybeSingle();
+    if (rev) {
+      await db.from("product_reviews")
+        .update({ helpful_count: (rev.helpful_count ?? 0) + 1 })
+        .eq("id", reviewId);
+    }
+    return "added";
+  }
+
+  // ── SELLER: flag a review for admin re-moderation ─────────────────────────
+  async flagReview(reviewId: string, sellerId: string): Promise<boolean> {
+    const db = getAdminDb();
+
+    // Verify review belongs to a product of this seller
+    const { data: review } = await db
+      .from("product_reviews")
+      .select("id, product:products(seller_id)")
+      .eq("id", reviewId)
+      .maybeSingle();
+
+    const productSellerId = Array.isArray(review?.product)
+      ? review.product[0]?.seller_id
+      : (review?.product as any)?.seller_id;
+
+    if (!review || productSellerId !== sellerId) return false;
+
+    const { error } = await db
+      .from("product_reviews")
+      .update({ status: "flagged" })
+      .eq("id", reviewId)
+      .eq("status", "approved");
+
+    if (!error) {
+      // Increment reported_count
+      const { data: rev } = await db.from("product_reviews")
+        .select("reported_count")
+        .eq("id", reviewId)
+        .maybeSingle();
+      if (rev) {
+        await db.from("product_reviews")
+          .update({ reported_count: (rev.reported_count ?? 0) + 1 })
+          .eq("id", reviewId);
+      }
+    }
+
+    return !error;
+  }
+
+  // ── SELLER: list reviews for all seller products ──────────────────────────
+  async findBySeller(sellerId: string, page = 1, pageSize = 20) {
+    const db = getAdminDb();
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    // Get seller's product IDs first
+    const { data: products } = await db
+      .from("products")
+      .select("id")
+      .eq("seller_id", sellerId)
+      .neq("status", "deleted");
+
+    if (!products?.length) return { reviews: [], total: 0 };
+    const productIds = products.map((p) => p.id);
+
+    const { data, error, count } = await db
+      .from("product_reviews")
+      .select(
+        `id, rating, title, body, status, helpful_count, seller_reply, created_at,
+         customer:user_profiles(full_name),
+         product:products(id, name, slug)`,
+        { count: "exact" }
+      )
+      .in("product_id", productIds)
+      .in("status", ["approved", "flagged"])
+      .order("created_at", { ascending: false })
+      .range(from, to);
+
+    if (error) return { reviews: [], total: 0 };
+    return { reviews: data ?? [], total: count ?? 0 };
+  }
+
+  // ── ADMIN: list all reviews (filterable) ──────────────────────────────────
+  async findAll(filters: ReviewFilters = {}) {
+    const db = getAdminDb();
+    const page = filters.page ?? 1;
+    const pageSize = filters.pageSize ?? 30;
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    let q = db
+      .from("product_reviews")
+      .select(
+        `id, rating, title, body, status, helpful_count, reported_count,
+         moderation_note, created_at, updated_at,
+         customer:user_profiles(id, full_name),
+         product:products(id, name, slug, seller_id)`,
+        { count: "exact" }
+      );
+
+    if (filters.status) q = q.eq("status", filters.status);
+    if (filters.productId) q = q.eq("product_id", filters.productId);
+    if (filters.customerId) q = q.eq("customer_id", filters.customerId);
+
+    const { data, error, count } = await q
+      .order("created_at", { ascending: false })
+      .range(from, to);
+
+    if (error) return { reviews: [], total: 0 };
+    return { reviews: data ?? [], total: count ?? 0 };
+  }
+
+  // ── ADMIN: moderate a review ──────────────────────────────────────────────
+  async moderate(
+    reviewId: string,
+    action: "approve" | "reject" | "hide",
+    note?: string
+  ): Promise<{ productId: string; sellerId: string } | null> {
+    const db = getAdminDb();
+    const newStatus = action === "approve" ? "approved" : "rejected";
+
+    const { data, error } = await db
+      .from("product_reviews")
+      .update({
+        status: newStatus,
+        moderation_note: note ?? null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", reviewId)
+      .select("product_id, product:products(seller_id)")
+      .single();
+
+    if (error || !data) return null;
+
+    const sellerId = Array.isArray(data.product)
+      ? data.product[0]?.seller_id
+      : (data.product as any)?.seller_id;
+
+    return { productId: data.product_id, sellerId };
+  }
+
+  // ── REFRESH RATING SUMMARIES (calls DB function) ─────────────────────────
+  // Called server-side after any moderation action
+  async refreshRatings(productId: string, sellerId: string) {
+    const db = getAdminDb();
+    await db.rpc("refresh_product_rating_summary", { p_product_id: productId });
+    if (sellerId) {
+      await db.rpc("refresh_seller_rating_summary", { p_seller_id: sellerId });
+    }
+  }
+
+  // ── RATING SUMMARY for a product ─────────────────────────────────────────
+  async getRatingSummary(productId: string) {
+    const db = getAdminDb();
+    const { data } = await db
+      .from("product_rating_summary")
+      .select("*")
+      .eq("product_id", productId)
+      .maybeSingle();
+    return data ?? null;
+  }
+}
+
+export const reviewRepository = new ReviewRepository();

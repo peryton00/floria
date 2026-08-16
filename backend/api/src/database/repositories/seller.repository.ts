@@ -129,7 +129,11 @@ export class SellerRepository {
     const db = getAdminDb();
     const { error } = await db
       .from("seller_profiles")
-      .update({ status, updated_at: new Date().toISOString() })
+      .update({
+        status,
+        is_active: status === "approved",
+        updated_at: new Date().toISOString(),
+      })
       .eq("id", sellerId);
 
     return !error;
@@ -818,9 +822,22 @@ export class SellerRepository {
   }
 
   async getPayouts(sellerId: string): Promise<any> {
+    const db = getAdminDb();
+    const { data: payoutsList } = await db
+      .from("payouts")
+      .select("*")
+      .eq("seller_id", sellerId)
+      .order("created_at", { ascending: false });
+
+    const { ledgerService } = await import("../../payments/ledger.service.js");
+    const balances = await ledgerService.getSellerBalance(sellerId);
+    const ledgerEntries = await ledgerService.getSellerLedgerEntries(sellerId, 30);
+
     return {
-      message: "Payout processing is not yet available.",
-      data: []
+      status: "active",
+      balances,
+      payouts: payoutsList || [],
+      ledgerEntries,
     };
   }
 

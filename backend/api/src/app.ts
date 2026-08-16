@@ -2,6 +2,7 @@
 import express from "express";
 import { createSecurityMiddleware } from "./middleware/security.js";
 import { createCorsMiddleware } from "./middleware/cors.js";
+import { requestCorrelationMiddleware } from "./middleware/requestCorrelation.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { getAdminDb } from "./config/database.js";
 
@@ -21,11 +22,13 @@ import wishlistRoutes from "./wishlist/wishlist.routes.js";
 import paymentsRoutes from "./payments/payments.routes.js";
 import notificationsRoutes from "./notifications/notifications.routes.js";
 import reportsRoutes from "./reports/reports.routes.js";
+import reviewsRoutes from "./reviews/reviews.routes.js";
 
 export function createApp() {
   const app = express();
 
-  // 1. Security & CORS
+  // 1. Security, CORS & Correlation Logging
+  app.use(requestCorrelationMiddleware);
   app.use(createCorsMiddleware());
   app.use(createSecurityMiddleware());
 
@@ -74,6 +77,7 @@ export function createApp() {
   apiV1.use("/payments", paymentsRoutes);
   apiV1.use("/notifications", notificationsRoutes);
   apiV1.use("/reports", reportsRoutes);
+  app.use("/api/v1", reviewsRoutes); // reviews routes self-contain full paths
 
   app.use("/api/v1", apiV1);
 

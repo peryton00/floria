@@ -1,8 +1,13 @@
 // Floria — Live Supabase DB Seed
 const { createClient } = require("@supabase/supabase-js");
 
-const url = "https://flymwzdtsrkiiriqaswc.supabase.co";
-const key = "sb_publishable_RrZ1XlBXOQFW-A1Iwr1XeQ_ZxOK23gJ";
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://flymwzdtsrkiiriqaswc.supabase.co";
+const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!url || !key) {
+  console.error("Missing Supabase URL or Anon/Service key in environment.");
+  process.exit(1);
+}
 
 const supabase = createClient(url, key);
 

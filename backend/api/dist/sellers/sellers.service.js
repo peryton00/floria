@@ -9,28 +9,70 @@ class SellersService {
     async getProfile(userId) {
         let profile = await seller_repository_js_1.sellerRepository.findByUserId(userId);
         if (!profile) {
-            // Auto-provision seller profile if user exists in user_profiles
+            // Auto-provision seller profile for authenticated user if missing
             try {
                 const { getAdminDb } = await import("../config/database.js");
                 const db = getAdminDb();
-                const { data: userProf } = await db.from("user_profiles").select("id, full_name, email, role").eq("id", userId).maybeSingle();
-                if (userProf) {
-                    profile = await seller_repository_js_1.sellerRepository.submitApplication(userId, {
-                        business_name: userProf.full_name || "Nursery Partner",
-                        contact_email: userProf.email || "",
-                        contact_phone: "",
-                        address: "",
-                        business_description: "Registered seller account.",
-                    });
-                }
+                const { data: userProf } = await db
+                    .from("user_profiles")
+                    .select("id, full_name, email, role")
+                    .eq("id", userId)
+                    .maybeSingle();
+                profile = await seller_repository_js_1.sellerRepository.submitApplication(userId, {
+                    business_name: userProf?.full_name || "Nursery Partner",
+                    contact_email: userProf?.email || "",
+                    contact_phone: "",
+                    address: "",
+                    business_description: "Registered seller account.",
+                });
             }
             catch (e) {
                 console.error("[SellersService] Auto-provision seller profile error:", e);
             }
         }
-        if (!profile)
-            throw errors_js_1.Errors.notFound("Seller profile");
+        if (!profile) {
+            throw errors_js_1.Errors.notFound("Seller profile not found. Please complete partner application.");
+        }
         return profile;
+    }
+    async getApplication(userId) {
+        const profile = await seller_repository_js_1.sellerRepository.findByUserId(userId);
+        if (profile) {
+            const isComplete = !!(profile.business_name &&
+                profile.business_name !== "Nursery Partner" &&
+                profile.business_name !== "New Nursery" &&
+                profile.contact_phone?.trim() &&
+                profile.address?.trim());
+            return { ...profile, is_complete: isComplete };
+        }
+        // If no seller_profile row exists, retrieve user email/name from user_profiles to pre-fill
+        try {
+            const { getAdminDb } = await import("../config/database.js");
+            const db = getAdminDb();
+            const { data: userProf } = await db
+                .from("user_profiles")
+                .select("full_name, email")
+                .eq("id", userId)
+                .maybeSingle();
+            return {
+                business_name: userProf?.full_name || "",
+                contact_email: userProf?.email || "",
+                contact_phone: "",
+                address: "",
+                business_description: "",
+                is_complete: false,
+            };
+        }
+        catch {
+            return {
+                business_name: "",
+                contact_email: "",
+                contact_phone: "",
+                address: "",
+                business_description: "",
+                is_complete: false,
+            };
+        }
     }
     async updateProfile(userId, updates) {
         const profile = await this.getProfile(userId);
@@ -63,7 +105,34 @@ class SellersService {
         return updated;
     }
     async submitApplication(userId, appData) {
-        const profile = await seller_repository_js_1.sellerRepository.submitApplication(userId, appData);
+        const name = appData.business_name?.trim();
+        if (!name || name === "Nursery Partner" || name === "New Nursery") {
+            throw errors_js_1.Errors.validation("Nursery / Business name is required.");
+        }
+        const email = appData.contact_email?.trim();
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            throw errors_js_1.Errors.validation("Valid contact email address is required.");
+        }
+        const phoneRaw = appData.contact_phone?.trim();
+        if (!phoneRaw) {
+            throw errors_js_1.Errors.validation("Contact phone number is required.");
+        }
+        const cleanPhone = phoneRaw.replace(/[\s\-+()\u00a0]/g, "").replace(/^91/, "");
+        if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
+            throw errors_js_1.Errors.validation("Invalid 10-digit Indian phone number format.");
+        }
+        const address = appData.address?.trim();
+        if (!address) {
+            throw errors_js_1.Errors.validation("Nursery location / address is required.");
+        }
+        const profile = await seller_repository_js_1.sellerRepository.submitApplication(userId, {
+            ...appData,
+            business_name: name,
+            contact_email: email,
+            contact_phone: cleanPhone,
+            address: address,
+            business_description: appData.business_description?.trim() || "",
+        });
         await audit_repository_js_1.auditRepository.log({
             actor_user_id: userId,
             actor_role: "seller",
@@ -72,9 +141,6 @@ class SellersService {
             resource_id: profile.id,
         });
         return profile;
-    }
-    async getApplication(userId) {
-        return seller_repository_js_1.sellerRepository.findByUserId(userId);
     }
     async getProducts(sellerId, filters) {
         return seller_repository_js_1.sellerRepository.findSellerProducts(sellerId, filters);

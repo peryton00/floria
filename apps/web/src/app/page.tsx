@@ -55,36 +55,27 @@ const CATEGORIES = [
   },
 ] as const;
 
-const NURSERIES = [
-  {
-    name: "Green Leaf Nursery",
-    location: "Raipur, Chhattisgarh",
-    rating: 4.8,
-    count: 320,
-  },
-  {
-    name: "Nature's Bloom",
-    location: "Bhilai, Chhattisgarh",
-    rating: 4.7,
-    count: 210,
-  },
-  {
-    name: "Sai Garden Center",
-    location: "Durg, Chhattisgarh",
-    rating: 4.6,
-    count: 160,
-  },
-  {
-    name: "Plant Paradise",
-    location: "Raipur, Chhattisgarh",
-    rating: 4.8,
-    count: 290,
-  },
-] as const;
+import type { NurserySummary } from "@/lib/api";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+
+async function fetchRankedNurseries(): Promise<NurserySummary[]> {
+  try {
+    const res = await fetch(`${API_BASE}/api/v1/catalog/sellers`, {
+      next: { revalidate: 300 },
+    });
+    if (!res.ok) return [];
+    const json = await res.json();
+    return json.data ?? [];
+  } catch {
+    return [];
+  }
+}
 
 export default async function HomePage() {
   const allListings = await getProductListings();
   const bestSellers = allListings.slice(0, 5);
+  const nurseries = await fetchRankedNurseries();
 
   return (
     <CustomerShell fullWidth>
@@ -389,7 +380,7 @@ export default async function HomePage() {
               </p>
             </div>
             <Link
-              href="/categories"
+              href="/nurseries"
               className="text-xs font-bold uppercase tracking-wider text-white hover:text-white/80 transition-colors flex-shrink-0 ml-4"
             >
               VIEW ALL
@@ -397,44 +388,61 @@ export default async function HomePage() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {NURSERIES.map((nursery, i) => (
-              <Link
-                key={nursery.name}
-                href="/categories"
-                className="group flex flex-col bg-white rounded-xl overflow-hidden border border-ink-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-700"
-              >
-                {/* Photo Container */}
-                <div className="relative aspect-[16/10] w-full overflow-hidden">
-                  <Image
-                    src={`/nursery-${i + 1}.png`}
-                    alt={nursery.name}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-                  />
-                </div>
-                {/* Info */}
-                <div className="p-3 bg-white flex flex-col flex-1">
-                  <p className="font-sans text-xs font-bold text-ink-900 group-hover:text-forest-700 transition-colors leading-tight">
-                    {nursery.name}
-                  </p>
-                  <p className="text-[10px] text-ink-400 mt-1 font-medium">
-                    {nursery.location}
-                  </p>
-                  <div className="flex items-center gap-1 mt-2">
-                    <StarIcon
-                      size={10}
-                      className="text-amber-400 fill-amber-400"
-                    />
-                    <span className="text-[10px] font-bold text-ink-700">
-                      {nursery.rating}
-                    </span>
-                    <span className="text-[10px] text-ink-300 font-medium">
-                      ({nursery.count})
-                    </span>
+            {nurseries.slice(0, 4).map((nursery, i) => {
+              const rs = Array.isArray(nursery.rating_summary) ? nursery.rating_summary[0] : nursery.rating_summary;
+              const rating = rs?.avg_rating ?? 0;
+              const count = rs?.review_count ?? 0;
+              return (
+                <Link
+                  key={nursery.id}
+                  href={`/shop?nursery=${nursery.id}`}
+                  className="group flex flex-col bg-white rounded-xl overflow-hidden border border-ink-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-700"
+                >
+                  {/* Photo Container */}
+                  <div className="relative aspect-[16/10] w-full overflow-hidden bg-cream-100">
+                    {nursery.logo_url ? (
+                      <Image
+                        src={nursery.logo_url}
+                        alt={nursery.business_name}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-forest-700 font-serif font-bold text-lg">
+                        {nursery.business_name.substring(0, 2).toUpperCase()}
+                      </div>
+                    )}
                   </div>
-                </div>
-              </Link>
-            ))}
+                  {/* Info */}
+                  <div className="p-3 bg-white flex flex-col flex-1">
+                    <p className="font-sans text-xs font-bold text-ink-900 group-hover:text-forest-700 transition-colors leading-tight">
+                      {nursery.business_name}
+                    </p>
+                    <p className="text-[10px] text-ink-400 mt-1 font-medium truncate">
+                      {nursery.address || "Verified Local Partner"}
+                    </p>
+                    <div className="flex items-center gap-1 mt-2">
+                      {count > 0 ? (
+                        <>
+                          <StarIcon
+                            size={10}
+                            className="text-amber-400 fill-amber-400"
+                          />
+                          <span className="text-[10px] font-bold text-ink-700">
+                            {rating.toFixed(1)}
+                          </span>
+                          <span className="text-[10px] text-ink-300 font-medium">
+                            ({count})
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-[10px] text-ink-400 font-medium">New Nursery</span>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </section>

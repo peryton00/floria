@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { CustomerShell } from "@/components/layout/CustomerShell";
-import { getProductListingBySlug } from "@/lib/services/storefront";
+import { getProductListingBySlug, getRelatedListings } from "@/lib/services/storefront";
 import { ProductDetailsInteractive } from "@/components/ui/ProductDetailsInteractive";
+import { ProductCard } from "@/components/ui/ProductCard";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -26,6 +27,7 @@ export default async function ProductSlugPage({ params }: Props) {
   if (!listing) notFound();
 
   const { product, category } = listing;
+  const relatedListings = await getRelatedListings(slug);
 
   return (
     <CustomerShell>
@@ -46,6 +48,33 @@ export default async function ProductSlugPage({ params }: Props) {
 
       {/* Main interactive panel */}
       <ProductDetailsInteractive listing={listing} />
+
+      {/* Similar Products */}
+      {relatedListings.length > 0 && (
+        <section aria-labelledby="related-heading" className="mt-14 pt-10 border-t border-ink-100">
+          <div className="flex items-end justify-between mb-6">
+            <div>
+              <h2 id="related-heading" className="font-serif text-xl font-bold text-ink-900">
+                Similar Products
+              </h2>
+              <p className="text-xs text-ink-400 mt-0.5">
+                More choices from the {category?.name || "same"} category.
+              </p>
+            </div>
+            <Link
+              href={category ? `/categories/${category.slug}` : "/shop"}
+              className="text-xs font-bold uppercase tracking-wider text-forest-700 hover:text-forest-900 transition-colors"
+            >
+              View All
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {relatedListings.slice(0, 6).map((item) => (
+              <ProductCard key={item.product.id} listing={item} />
+            ))}
+          </div>
+        </section>
+      )}
     </CustomerShell>
   );
 }

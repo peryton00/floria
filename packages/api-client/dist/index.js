@@ -501,6 +501,70 @@ var FloriaApiClient = class {
       body: JSON.stringify({ status })
     });
   }
+  // ── REVIEWS & RATINGS ─────────────────────────────────────────────────────
+  async getProductReviews(productId, params) {
+    return this.request(
+      `/api/v1/catalog/products/${productId}/reviews${buildQueryString(params)}`
+    );
+  }
+  async submitReview(productId, payload) {
+    return this.request(`/api/v1/catalog/products/${productId}/reviews`, {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+  }
+  async markReviewHelpful(productId, reviewId) {
+    return this.request(`/api/v1/catalog/products/${productId}/reviews/${reviewId}/helpful`, {
+      method: "POST"
+    });
+  }
+  async getMyReviews(params) {
+    return this.request(
+      `/api/v1/customer/reviews${buildQueryString(params)}`
+    );
+  }
+  async getSellerReviews(params) {
+    return this.request(
+      `/api/v1/seller/reviews${buildQueryString(params)}`
+    );
+  }
+  async flagReview(reviewId) {
+    return this.request(`/api/v1/seller/reviews/${reviewId}/flag`, { method: "PATCH" });
+  }
+  async adminGetReviews(params) {
+    return this.request(
+      `/api/v1/admin/reviews${buildQueryString(params)}`
+    );
+  }
+  async adminModerateReview(reviewId, action, note) {
+    return this.request(`/api/v1/admin/reviews/${reviewId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ action, note })
+    });
+  }
+  // ── CATALOG: TRENDING, RELATED, RANKED NURSERIES ─────────────────────────
+  async getTrendingProducts(params) {
+    return this.request(
+      `/api/v1/catalog/products/trending${buildQueryString(params)}`
+    );
+  }
+  async getRelatedProducts(slug) {
+    return this.request(`/api/v1/catalog/products/${slug}/related`);
+  }
+  async getRankedNurseries() {
+    return this.request(`/api/v1/catalog/sellers`);
+  }
+  // ── ADMIN FINANCIAL TRANSPARENCY ─────────────────────────────────────────
+  async getAdminProductFinancialCalculation(productId) {
+    return this.request(
+      `/api/v1/admin/products/${productId}/financial-calculation`
+    );
+  }
+  async getAdminOrderFinancialBreakdown(orderId) {
+    return this.request(
+      `/api/v1/admin/orders/${orderId}/financial-breakdown`
+    );
+  }
 };
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {

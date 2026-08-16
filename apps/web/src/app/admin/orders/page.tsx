@@ -5,6 +5,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { api } from "@/lib/api";
 import { formatINR } from "@/lib/format";
 import { SearchIcon } from "@/components/ui/Icons";
+import { OrderFinancialBreakdown } from "@/components/admin/OrderFinancialBreakdown";
 
 function formatOrderStatusDisplay(status: string): string {
   if (!status) return "Order Placed";
@@ -275,6 +276,11 @@ export default function AdminOrdersPage() {
                     </div>
                   ))}
                 </div>
+              </div>
+
+              {/* Multi-Nursery Financial Breakdown Panel */}
+              <div className="pt-2">
+                <OrderFinancialBreakdown orderId={selectedOrder.id} />
               </div>
             </div>
           </div>

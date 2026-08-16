@@ -398,6 +398,26 @@ export class AdminController {
       next(err);
     }
   }
+
+  async getProductFinancialCalculation(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { adminFinancialService } = await import("./admin-financial.service.js");
+      const calculation = await adminFinancialService.getProductFinancialCalculation(req.params.id as string);
+      res.json({ success: true, data: calculation });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async getOrderFinancialBreakdown(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { adminFinancialService } = await import("./admin-financial.service.js");
+      const breakdown = await adminFinancialService.getOrderFinancialBreakdown(req.params.id as string);
+      res.json({ success: true, data: breakdown });
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 export const adminController = new AdminController();

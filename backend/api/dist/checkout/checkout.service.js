@@ -118,6 +118,57 @@ class CheckoutService {
         };
         // 5. Create Order & Items
         const orderId = await order_repository_js_1.orderRepository.createOrder(orderPayload, lineItems, fulfillments);
+        // 5b. Save Multi-Nursery Financial Attribution & Seller Ledger Entries
+        try {
+            const { PaymentProviderFactory } = await import("../payments/payment.provider.js");
+            const provider = PaymentProviderFactory.getProvider(input.paymentMethod);
+            const paymentIntent = await provider.createPaymentIntent({
+                masterOrderId: orderId,
+                customerId: input.userId,
+                amountPaise: subtotalPaise,
+            });
+            // Insert Payments Record
+            const { data: paymentRow } = await db.from("payments").insert({
+                order_id: orderId,
+                customer_id: input.userId,
+                payment_reference: paymentIntent.paymentReference,
+                provider: input.paymentMethod,
+                currency: "INR",
+                amount_paise: subtotalPaise,
+                status: paymentIntent.status,
+                raw_provider_response: paymentIntent.rawProviderResponse,
+            }).select().maybeSingle();
+            const paymentId = paymentRow?.id;
+            // Per-seller financial attribution & ledger credit
+            for (const sellerId of uniqueSellers) {
+                const sellerItems = lineItems.filter((li) => li.seller_id_snapshot === sellerId);
+                const sellerGrossPaise = sellerItems.reduce((s, li) => s + li.line_total_paise, 0);
+                const sellerCommissionPaise = Math.round(sellerGrossPaise * commissionDecimalRate);
+                const sellerNetPaise = sellerGrossPaise - sellerCommissionPaise;
+                // Upsert seller_order_financials snapshot
+                await db.from("seller_order_financials").upsert({
+                    order_id: orderId,
+                    seller_id: sellerId,
+                    seller_gross_paise: sellerGrossPaise,
+                    commission_rate: commissionDecimalRate,
+                    commission_paise: sellerCommissionPaise,
+                    seller_net_paise: sellerNetPaise,
+                }, { onConflict: "order_id,seller_id" });
+                // Append to seller_ledger_entries (pending balance state until delivered)
+                await db.from("seller_ledger_entries").insert({
+                    seller_id: sellerId,
+                    order_id: orderId,
+                    payment_id: paymentId,
+                    entry_type: "earning_credit",
+                    amount_paise: sellerNetPaise,
+                    balance_state: "pending",
+                    description: `Earnings for order #${orderId.slice(0, 8)} (Gross ₹${(sellerGrossPaise / 100).toFixed(2)}, Comm ₹${(sellerCommissionPaise / 100).toFixed(2)})`,
+                });
+            }
+        }
+        catch (finErr) {
+            console.warn("[CheckoutService] Financial ledger / payment creation warning:", finErr);
+        }
         // 6. Clear Cart
         await db.from("cart_items").delete().eq("cart_id", cartRow.id);
         // 7. Audit Log
@@ -145,10 +196,18 @@ class CheckoutService {
             });
             // Seller notifications for each nursery in the order
             for (const sId of uniqueSellers) {
-                const { data: sellerProf } = await db.from("seller_profiles").select("user_id").eq("id", sId).maybeSingle();
+                let sellerUserId = null;
+                const { data: sellerProf } = await db
+                    .from("seller_profiles")
+                    .select("user_id")
+                    .or(`id.eq.${sId},user_id.eq.${sId}`)
+                    .maybeSingle();
                 if (sellerProf?.user_id) {
+                    sellerUserId = sellerProf.user_id;
+                }
+                if (sellerUserId) {
                     await notificationService.createNotification({
-                        user_id: sellerProf.user_id,
+                        user_id: sellerUserId,
                         role: "seller",
                         type: "NEW_ORDER",
                         title: "New Nursery Order Received",
@@ -157,6 +216,26 @@ class CheckoutService {
                         source_type: "order",
                         source_id: orderId,
                     });
+                }
+                else {
+                    // Fallback: Notify all registered seller accounts for seed/test products
+                    const { data: allSellers } = await db
+                        .from("seller_profiles")
+                        .select("user_id");
+                    for (const s of allSellers || []) {
+                        if (s.user_id) {
+                            await notificationService.createNotification({
+                                user_id: s.user_id,
+                                role: "seller",
+                                type: "NEW_ORDER",
+                                title: "New Nursery Order Received",
+                                message: `You have received a new order item on order #${orderId.slice(0, 8)}.`,
+                                data: { orderId, sellerId: sId },
+                                source_type: "order",
+                                source_id: orderId,
+                            });
+                        }
+                    }
                 }
             }
         }

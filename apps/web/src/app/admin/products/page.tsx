@@ -6,6 +6,8 @@ import { api } from "@/lib/api";
 import { formatINR } from "@/lib/format";
 import { SearchIcon, LeafIcon } from "@/components/ui/Icons";
 
+import { ProductFinancialBreakdown } from "@/components/admin/ProductFinancialBreakdown";
+
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -14,6 +16,7 @@ export default function AdminProductsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
+  const [financialProductId, setFinancialProductId] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -251,7 +254,14 @@ export default function AdminProductsPage() {
                     </div>
                   </div>
 
-                  <div className="pt-2 border-t border-ink-50 flex justify-end">
+                  <div className="pt-2 border-t border-ink-50 flex justify-between items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setFinancialProductId(p.id)}
+                      className="px-2.5 py-1 rounded-lg border border-emerald-300 bg-emerald-50/60 hover:bg-emerald-100 text-emerald-800 font-bold text-[9px] uppercase tracking-wider transition-colors"
+                    >
+                      Financials
+                    </button>
                     <button
                       type="button"
                       onClick={() => handleOpenModerate(p)}
@@ -473,6 +483,14 @@ export default function AdminProductsPage() {
               )}
             </div>
           </div>
+        )}
+
+        {/* Modal: Financial Breakdown Inspection */}
+        {financialProductId && (
+          <ProductFinancialBreakdown
+            productId={financialProductId}
+            onClose={() => setFinancialProductId(null)}
+          />
         )}
       </div>
     </AdminShell>

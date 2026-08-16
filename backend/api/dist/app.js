@@ -8,6 +8,7 @@ exports.createApp = createApp;
 const express_1 = __importDefault(require("express"));
 const security_js_1 = require("./middleware/security.js");
 const cors_js_1 = require("./middleware/cors.js");
+const requestCorrelation_js_1 = require("./middleware/requestCorrelation.js");
 const errorHandler_js_1 = require("./middleware/errorHandler.js");
 const database_js_1 = require("./config/database.js");
 // Domain Route Modules
@@ -26,9 +27,11 @@ const wishlist_routes_js_1 = __importDefault(require("./wishlist/wishlist.routes
 const payments_routes_js_1 = __importDefault(require("./payments/payments.routes.js"));
 const notifications_routes_js_1 = __importDefault(require("./notifications/notifications.routes.js"));
 const reports_routes_js_1 = __importDefault(require("./reports/reports.routes.js"));
+const reviews_routes_js_1 = __importDefault(require("./reviews/reviews.routes.js"));
 function createApp() {
     const app = (0, express_1.default)();
-    // 1. Security & CORS
+    // 1. Security, CORS & Correlation Logging
+    app.use(requestCorrelation_js_1.requestCorrelationMiddleware);
     app.use((0, cors_js_1.createCorsMiddleware)());
     app.use((0, security_js_1.createSecurityMiddleware)());
     // 2. Request Parsing
@@ -71,6 +74,7 @@ function createApp() {
     apiV1.use("/payments", payments_routes_js_1.default);
     apiV1.use("/notifications", notifications_routes_js_1.default);
     apiV1.use("/reports", reports_routes_js_1.default);
+    app.use("/api/v1", reviews_routes_js_1.default); // reviews routes self-contain full paths
     app.use("/api/v1", apiV1);
     // 5. 404 Route Handler
     app.use((_req, res) => {

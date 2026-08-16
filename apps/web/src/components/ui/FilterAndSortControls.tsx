@@ -80,7 +80,9 @@ export function FilterAndSortControls({
               onChange={(e) => handleSortChange(e.target.value)}
               className="bg-white border border-ink-200 rounded-xl px-3 py-1.5 text-xs font-bold text-ink-900 focus:outline-none focus:ring-1 focus:ring-forest-700 cursor-pointer"
             >
-              <option value="featured">Featured</option>
+              <option value="featured">Featured / Recommended</option>
+              <option value="top-rated">Top Rated</option>
+              <option value="most-reviewed">Most Reviewed</option>
               <option value="price-asc">Price: Low to High</option>
               <option value="price-desc">Price: High to Low</option>
               <option value="newest">Newest</option>

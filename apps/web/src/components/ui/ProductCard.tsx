@@ -18,16 +18,15 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ listing, showBestSeller, discountPercent }: ProductCardProps) {
-  const { product, inventory, primary_image, seller } = listing;
+  const { product, inventory, primary_image, seller, rating_summary } = listing;
   const isOutOfStock = inventory.stock_quantity === 0;
 
   const { isWishlisted, toggleWishlist } = useWishlist();
   const { addToCart } = useCart();
   const wishlisted = isWishlisted(product.id);
 
-  // Mock rating — real ratings come from reviews in Phase 2
-  const mockRating = parseFloat((4.3 + (product.name.charCodeAt(0) % 10) * 0.05).toFixed(1));
-  const mockCount = 40 + (product.name.length * 7);
+  const reviewCount = rating_summary?.review_count ?? 0;
+  const avgRating = rating_summary?.avg_rating ?? 0;
   const originalPrice = discountPercent
     ? Math.round(inventory.price_paise / (1 - discountPercent / 100) / 100) * 100
     : null;
@@ -83,8 +82,12 @@ export function ProductCard({ listing, showBestSeller, discountPercent }: Produc
       {/* Info */}
       <Link href={`/products/${product.slug}`} className="p-3 flex flex-col flex-1 focus-visible:outline-none">
         {/* Rating */}
-        <div className="mb-1.5">
-          <StarRating rating={mockRating} count={mockCount} size="sm" />
+        <div className="mb-1.5 min-h-[18px]">
+          {reviewCount > 0 ? (
+            <StarRating rating={avgRating} count={reviewCount} size="sm" />
+          ) : (
+            <span className="text-[11px] text-ink-400 font-ui">No reviews yet</span>
+          )}
         </div>
         {/* Name */}
         <p className="font-sans text-[13px] font-semibold text-ink-900 leading-snug line-clamp-2 mb-0.5 group-hover:text-forest-700 transition-colors">

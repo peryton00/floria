@@ -75,6 +75,9 @@ function buildMockListing(p: Product): ProductListing {
 function mapRow(row: Record<string, unknown>): ProductListing {
   const images = (row["images"] as ProductImage[]) ?? [];
   const inv = (row["inventory"] as Partial<Inventory>) ?? {};
+  const rawRs = row["rating_summary"];
+  const rs = Array.isArray(rawRs) ? rawRs[0] : rawRs;
+
   return {
     product: {
       id: row["id"] as string,
@@ -105,6 +108,12 @@ function mapRow(row: Record<string, unknown>): ProductListing {
     category: row["category"]
       ? { id: (row["category"] as Category).id, name: (row["category"] as Category).name, slug: (row["category"] as Category).slug }
       : null,
+    rating_summary: rs ? {
+      review_count: Number(rs.review_count ?? 0),
+      avg_rating: Number(rs.avg_rating ?? 0),
+      bayesian_rating: Number(rs.bayesian_rating ?? 0),
+      wilson_lower_bound: Number(rs.wilson_lower_bound ?? 0),
+    } : null,
   };
 }
 
@@ -116,7 +125,7 @@ export interface ListingFilterOptions {
   maxPrice?: number;
   inStockOnly?: boolean;
   searchQuery?: string;
-  sort?: "featured" | "price-asc" | "price-desc" | "newest";
+  sort?: "featured" | "top-rated" | "most-reviewed" | "price-asc" | "price-desc" | "newest";
 }
 
 export function filterAndSortListings(
@@ -165,6 +174,18 @@ export function filterAndSortListings(
     result.sort((a, b) => b.inventory.price_paise - a.inventory.price_paise);
   } else if (opts.sort === "newest") {
     result.sort((a, b) => new Date(b.product.created_at).getTime() - new Date(a.product.created_at).getTime());
+  } else if (opts.sort === "top-rated") {
+    result.sort((a, b) => {
+      const aRating = a.rating_summary?.bayesian_rating ?? 0;
+      const bRating = b.rating_summary?.bayesian_rating ?? 0;
+      return bRating - aRating;
+    });
+  } else if (opts.sort === "most-reviewed") {
+    result.sort((a, b) => {
+      const aCount = a.rating_summary?.review_count ?? 0;
+      const bCount = b.rating_summary?.review_count ?? 0;
+      return bCount - aCount;
+    });
   }
 
   return result;
@@ -258,3 +279,28 @@ export async function searchProductListings(
 ): Promise<ProductListing[]> {
   return getProductListings(undefined, { ...options, searchQuery: query });
 }
+
+export async function getTrendingListings(limit = 10): Promise<ProductListing[]> {
+  try {
+    const res = await api.getTrendingProducts({ limit });
+    if (res.success && res.data && res.data.length > 0) {
+      return (res.data as Record<string, unknown>[]).map(mapRow);
+    }
+  } catch (e) {
+    console.warn("[storefront] getTrendingListings API error:", e);
+  }
+  return [];
+}
+
+export async function getRelatedListings(slug: string): Promise<ProductListing[]> {
+  try {
+    const res = await api.getRelatedProducts(slug);
+    if (res.success && res.data && res.data.length > 0) {
+      return (res.data as Record<string, unknown>[]).map(mapRow);
+    }
+  } catch (e) {
+    console.warn("[storefront] getRelatedListings API error:", e);
+  }
+  return [];
+}
+

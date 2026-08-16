@@ -40,6 +40,7 @@ router.patch("/sellers/:id", validateRequest(uuidParamSchema), adminController.u
 
 // Product Moderation
 router.get("/products", adminController.getProducts);
+router.get("/products/:id/financial-calculation", validateRequest(uuidParamSchema), adminController.getProductFinancialCalculation);
 router.get("/products/:id", validateRequest(uuidParamSchema), adminController.getProductById);
 router.patch("/products/:id/status", validateRequest(uuidParamSchema), adminController.updateProductStatus);
 router.patch("/products/:id/publish", validateRequest(uuidParamSchema), adminController.publishProduct);
@@ -55,6 +56,7 @@ router.patch("/categories/:id", validateRequest(uuidParamSchema), adminControlle
 
 // Platform Order Oversight
 router.get("/orders", adminController.getOrders);
+router.get("/orders/:id/financial-breakdown", validateRequest(uuidParamSchema), adminController.getOrderFinancialBreakdown);
 router.get("/orders/:id", adminController.getOrderById);
 router.patch("/orders/:id", adminController.updateOrder);
 

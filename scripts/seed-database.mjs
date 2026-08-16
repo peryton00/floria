@@ -3,8 +3,13 @@
 
 import { createClient } from "@supabase/supabase-js";
 
-const url = "https://flymwzdtsrkiiriqaswc.supabase.co";
-const serviceKey = "sb_publishable_RrZ1XlBXOQFW-A1Iwr1XeQ_ZxOK23gJ";
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://flymwzdtsrkiiriqaswc.supabase.co";
+const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!url || !serviceKey) {
+  console.error("Missing Supabase URL or key in environment.");
+  process.exit(1);
+}
 
 const supabase = createClient(url, serviceKey);
 

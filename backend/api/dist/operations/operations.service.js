@@ -63,6 +63,15 @@ class OperationsService {
         const success = await order_repository_js_1.orderRepository.updateOrderStatus(orderId, normalizeNext);
         if (!success)
             throw errors_js_1.Errors.database("Failed to update order status");
+        if (normalizeNext === "delivered") {
+            try {
+                const { ledgerService } = await import("../payments/ledger.service.js");
+                await ledgerService.markOrderEarningsAvailable(orderId);
+            }
+            catch (lErr) {
+                console.error("[OperationsService] Failed to transition ledger state to available:", lErr);
+            }
+        }
         await audit_repository_js_1.auditRepository.log({
             actor_user_id: opUserId,
             actor_role: "operations",

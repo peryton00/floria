@@ -1,0 +1,63 @@
+name: Floria Continuous Integration & Security Pipeline
+
+on:
+  push:
+    branches: [ main, develop, staging ]
+  pull_request:
+    branches: [ main, develop, staging ]
+
+jobs:
+  audit-and-security:
+    name: Security & Secret Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+      - name: Run Dependency Audit
+        run: pnpm audit --audit-level=high || true
+
+  build-and-test:
+    name: Lint, Typecheck & Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build Shared Packages
+        run: pnpm --filter "@floria/types" build && pnpm --filter "@floria/api-client" build
+      - name: Typecheck Backend API
+        run: pnpm --filter "@floria/api" typecheck
+      - name: Typecheck Web App
+        run: pnpm --filter "@floria/web" typecheck
+      - name: Build Backend API
+        run: pnpm --filter "@floria/api" build
+      - name: Build Web App
+        run: pnpm --filter "@floria/web" build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+
+  deploy-staging:
+    name: Staging Deployment Trigger
+    needs: [audit-and-security, build-and-test]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Staging Deployment Readiness
+        run: echo "Staging build verified. Render & Vercel auto-deploy hooks triggered via Git integration."

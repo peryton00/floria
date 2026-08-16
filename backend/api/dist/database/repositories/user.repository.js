@@ -34,12 +34,17 @@ class UserRepository {
         return !error;
     }
     async updateProfile(userId, updates) {
+        return this.updateUser(userId, updates);
+    }
+    async updateUser(userId, updates) {
         const db = (0, database_js_1.getAdminDb)();
         const payload = { updated_at: new Date().toISOString() };
         if (updates.full_name !== undefined)
             payload.full_name = updates.full_name;
         if (updates.phone !== undefined)
             payload.phone = updates.phone;
+        if (updates.role !== undefined)
+            payload.role = updates.role;
         const { data, error } = await db
             .from("user_profiles")
             .update(payload)
@@ -48,6 +53,27 @@ class UserRepository {
             .maybeSingle();
         if (error || !data)
             return null;
+        if (updates.role === "seller") {
+            const { data: existingSeller } = await db
+                .from("seller_profiles")
+                .select("id")
+                .eq("user_id", userId)
+                .maybeSingle();
+            if (!existingSeller) {
+                await db.from("seller_profiles").insert({
+                    user_id: userId,
+                    business_name: data.full_name || "Nursery Partner",
+                    business_description: "Role assigned by Admin",
+                    contact_email: "",
+                    contact_phone: data.phone || "",
+                    address: "",
+                    status: "approved",
+                    is_active: true,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                });
+            }
+        }
         return data;
     }
     async deleteAccount(userId) {

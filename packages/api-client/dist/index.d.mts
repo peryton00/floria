@@ -1,3 +1,5 @@
+import * as _floria_types from '@floria/types';
+
 interface ApiClientConfig {
     baseUrl: string;
     getAccessToken?: () => Promise<string | null> | string | null;
@@ -83,6 +85,61 @@ interface SellerNotificationSettings {
     email_notifications: boolean;
     created_at?: string;
     updated_at?: string;
+}
+type ReviewStatus = "pending" | "approved" | "rejected" | "flagged";
+interface ProductReview {
+    id: string;
+    product_id: string;
+    customer_id?: string;
+    rating: number;
+    title?: string;
+    body?: string;
+    is_verified_purchase: boolean;
+    status?: ReviewStatus;
+    helpful_count: number;
+    reported_count?: number;
+    seller_reply?: string;
+    moderation_note?: string;
+    created_at: string;
+    updated_at?: string;
+    customer?: {
+        full_name: string | null;
+    };
+    product?: {
+        id: string;
+        name: string;
+        slug: string;
+    };
+}
+interface ReviewSummary {
+    product_id: string;
+    review_count: number;
+    avg_rating: number;
+    bayesian_rating: number;
+    wilson_lower_bound: number;
+    star_1_count: number;
+    star_2_count: number;
+    star_3_count: number;
+    star_4_count: number;
+    star_5_count: number;
+}
+interface ReviewListResponse {
+    reviews: ProductReview[];
+    total: number;
+    summary?: ReviewSummary | null;
+}
+interface NurserySummary {
+    id: string;
+    business_name: string;
+    business_description?: string;
+    logo_url?: string;
+    address?: string;
+    rating_summary?: {
+        review_count: number;
+        avg_rating: number;
+        bayesian_rating: number;
+        ranking_score: number;
+    } | null;
 }
 declare class FloriaApiClient {
     private baseUrl;
@@ -223,6 +280,47 @@ declare class FloriaApiClient {
         assignedTo: string;
     }): Promise<ApiResponse<any>>;
     updateDeliveryStatus(id: string, status: string): Promise<ApiResponse<any>>;
+    getProductReviews(productId: string, params?: {
+        page?: number;
+        pageSize?: number;
+    }): Promise<ApiResponse<ReviewListResponse>>;
+    submitReview(productId: string, payload: {
+        rating: number;
+        title?: string;
+        body?: string;
+    }): Promise<ApiResponse<{
+        id: string;
+        status: string;
+        created_at: string;
+    }>>;
+    markReviewHelpful(productId: string, reviewId: string): Promise<ApiResponse<{
+        action: "added" | "removed";
+    }>>;
+    getMyReviews(params?: {
+        page?: number;
+    }): Promise<ApiResponse<ReviewListResponse>>;
+    getSellerReviews(params?: {
+        page?: number;
+    }): Promise<ApiResponse<ReviewListResponse>>;
+    flagReview(reviewId: string): Promise<ApiResponse<{
+        flagged: boolean;
+    }>>;
+    adminGetReviews(params?: {
+        status?: string;
+        productId?: string;
+        page?: number;
+        pageSize?: number;
+    }): Promise<ApiResponse<ReviewListResponse>>;
+    adminModerateReview(reviewId: string, action: "approve" | "reject" | "hide", note?: string): Promise<ApiResponse<{
+        moderated: boolean;
+    }>>;
+    getTrendingProducts(params?: {
+        limit?: number;
+    }): Promise<ApiResponse<any[]>>;
+    getRelatedProducts(slug: string): Promise<ApiResponse<any[]>>;
+    getRankedNurseries(): Promise<ApiResponse<NurserySummary[]>>;
+    getAdminProductFinancialCalculation(productId: string): Promise<ApiResponse<_floria_types.AdminProductFinancialCalculation>>;
+    getAdminOrderFinancialBreakdown(orderId: string): Promise<ApiResponse<_floria_types.AdminOrderFinancialBreakdown>>;
 }
 
-export { type ApiClientConfig, type ApiResponse, FloriaApiClient, type NotificationItem, type NotificationListResponse, type QueryParams, type SellerDashboardData, type SellerDocument, type SellerNotificationSettings };
+export { type ApiClientConfig, type ApiResponse, FloriaApiClient, type NotificationItem, type NotificationListResponse, type NurserySummary, type ProductReview, type QueryParams, type ReviewListResponse, type ReviewStatus, type ReviewSummary, type SellerDashboardData, type SellerDocument, type SellerNotificationSettings };

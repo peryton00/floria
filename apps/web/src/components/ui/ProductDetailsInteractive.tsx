@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { ReviewList } from "@/components/ui/ReviewList";
+import { ReviewForm } from "@/components/ui/ReviewForm";
+import { StarRating } from "@/components/ui/StarRating";
 import Image from "next/image";
 import { formatINR } from "@/lib/format";
 import { Badge } from "@/components/ui/Badge";
@@ -48,11 +51,11 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
     window.location.href = "/cart";
   };
 
-  // Mock details
-  const mockRating = 4.8;
-  const mockReviewsCount = 320;
-  const originalPrice = 119900; // ₹1,199
-  const discountPercent = 25;
+  // Real rating from rating_summary (joined by backend)
+  const ratingSummary = listing.rating_summary;
+  const displayRating = ratingSummary?.avg_rating ?? 0;
+  const reviewCount = ratingSummary?.review_count ?? 0;
+  const [reviewPage, setReviewPage] = useState(1);
 
   const features = [
     "Large, glossy leaves",
@@ -116,28 +119,16 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
         );
       case "reviews":
         return (
-          <div className="space-y-3">
-            {[
-              { name: "Rahul S.", rating: 5, date: "12 May 2024", comment: "Beautiful plant! The packaging was excellent and it arrived in perfect condition." },
-              { name: "Priya K.", rating: 4, date: "10 May 2024", comment: "Stunning leaves. Slightly smaller than expected but growing rapidly now." },
-            ].map((rev, idx) => (
-              <div key={idx} className="border-b border-ink-100 pb-3 last:border-b-0">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="font-semibold text-xs text-ink-900">{rev.name}</span>
-                  <span className="text-[10px] text-ink-300">{rev.date}</span>
-                </div>
-                <div className="flex gap-0.5 mb-1.5">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <StarIcon
-                      key={i}
-                      size={10}
-                      className={i < rev.rating ? "text-amber-400 fill-amber-400" : "text-ink-100"}
-                    />
-                  ))}
-                </div>
-                <p className="text-xs text-ink-500">{rev.comment}</p>
-              </div>
-            ))}
+          <div className="space-y-4">
+            <ReviewList
+              reviews={ratingSummary?.reviews ?? []}
+              total={reviewCount}
+              summary={ratingSummary}
+              productId={product.id}
+              page={reviewPage}
+              onPageChange={setReviewPage}
+            />
+            <ReviewForm productId={product.id} />
           </div>
         );
       default:
@@ -270,17 +261,13 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
 
         {/* Rating stars */}
         <div className="flex items-center gap-1.5 mb-5">
-          <div className="flex gap-0.5">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <StarIcon
-                key={i}
-                size={14}
-                className={i < Math.floor(mockRating) ? "text-amber-400 fill-amber-400" : "text-ink-100"}
-              />
-            ))}
-          </div>
-          <span className="text-xs font-bold text-ink-700">{mockRating}</span>
-          <span className="text-xs text-ink-300">({mockReviewsCount} reviews)</span>
+          <StarRating rating={displayRating} size="sm" />
+          {displayRating > 0 && (
+            <span className="text-xs font-bold text-ink-700">{displayRating.toFixed(1)}</span>
+          )}
+          <span className="text-xs text-ink-300">
+            {reviewCount > 0 ? `(${reviewCount} review${reviewCount !== 1 ? "s" : ""})` : "No reviews yet"}
+          </span>
         </div>
 
         {/* Pricing */}
@@ -288,16 +275,6 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
           <span className="font-serif text-3xl font-bold text-ink-900">
             {formatINR(inventory.price_paise)}
           </span>
-          {originalPrice && (
-            <span className="text-base text-ink-300 line-through">
-              {formatINR(originalPrice)}
-            </span>
-          )}
-          {discountPercent && (
-            <span className="px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-white rounded bg-forest-700">
-              {discountPercent}% OFF
-            </span>
-          )}
         </div>
 
         {/* Bullet points */}
