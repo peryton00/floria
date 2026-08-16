@@ -48,11 +48,11 @@ export function Header() {
     "flex items-center transition-all duration-400",
     isHome && !isScrolled
       ? "h-20 bg-transparent border-b border-transparent"
-      : "h-16 bg-white/95 backdrop-blur-md border-b border-ink-100 shadow-xs",
+      : "h-16 bg-white/95 backdrop-blur-md border-b border-ink-150 shadow-xs",
   ].join(" ");
 
   const logoTextClass = [
-    "font-serif font-semibold text-ink-900 tracking-tight select-none transition-all duration-300",
+    "font-serif font-bold text-forest-800 tracking-tight select-none transition-all duration-300",
     isHome && !isScrolled ? "text-xl" : "text-lg",
   ].join(" ");
 
@@ -62,12 +62,12 @@ export function Header() {
   ].join(" ");
 
   const navLinkClass = [
-    "font-medium text-ink-500 hover:text-ink-900 whitespace-nowrap transition-all duration-300 rounded-md hover:bg-cream-100 flex items-center gap-1",
+    "font-medium text-ink-500 hover:text-ink-900 whitespace-nowrap transition-all duration-300 rounded-md hover:bg-cream-200 flex items-center gap-1",
     isHome && !isScrolled ? "text-[14px] px-3.5 py-2.5" : "text-[13px] px-3 py-2",
   ].join(" ");
 
   const iconLinkClass = [
-    "rounded-lg text-ink-500 hover:text-ink-900 hover:bg-cream-100 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-700",
+    "rounded-lg text-ink-500 hover:text-ink-900 hover:bg-cream-200 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-800",
     isHome && !isScrolled ? "p-2.5" : "p-2",
   ].join(" ");
 
@@ -78,7 +78,7 @@ export function Header() {
         <Link
           href="/"
           aria-label="Floria — go to home"
-          className="flex items-center gap-2 flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-700 rounded"
+          className="flex items-center gap-2 flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-800 rounded"
         >
           <Image
             src="/floria-logo.png"

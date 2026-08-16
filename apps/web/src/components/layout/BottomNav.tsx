@@ -53,15 +53,13 @@ export function BottomNav() {
         // Fixed bottom, full width, above content
         "fixed bottom-0 left-0 right-0 z-50",
         // Height and background
-        "h-16 bg-cream-50",
+        "h-16 bg-white/95 backdrop-blur-md",
         // Border top
-        "border-t border-ink-100",
+        "border-t border-ink-150 shadow-xs",
         // Safe area for iOS home indicator
         "pb-safe",
         // Hide on md+
         "md:hidden",
-        // Backdrop for glass effect
-        "backdrop-blur-sm bg-cream-50/95",
       ].join(" ")}
     >
       <ul className="flex h-full" role="list">
@@ -76,14 +74,14 @@ export function BottomNav() {
                 className={[
                   "flex items-center justify-center h-full",
                   "transition-colors duration-150",
-                  "focus-visible:outline-none focus-visible:bg-sage-100",
-                  active ? "text-forest-700" : "text-ink-300 hover:text-ink-500",
+                  "focus-visible:outline-none focus-visible:bg-cream-200",
+                  active ? "text-forest-800 font-bold" : "text-ink-500 hover:text-ink-900",
                 ].join(" ")}
               >
                 <span className="flex-shrink-0">
                   <IconComponent
                     size={24}
-                    className={active ? "fill-forest-700/10 text-forest-700" : "text-ink-400"}
+                    className={active ? "fill-forest-800/15 text-forest-800" : "text-ink-500"}
                   />
                 </span>
               </Link>

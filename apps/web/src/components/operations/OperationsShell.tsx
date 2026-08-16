@@ -119,16 +119,16 @@ export function OperationsShell({ children }: OperationsShellProps) {
   }
 
   return (
-    <div className="min-h-screen bg-cream-50 flex font-ui">
+    <div className="min-h-screen bg-[#F9F8F3] flex font-ui">
       {/* DESKTOP SIDEBAR */}
-      <aside className="hidden md:flex w-64 bg-[#0F1C15] text-white/80 flex-col flex-shrink-0" aria-label="Operations panel navigation">
+      <aside className="hidden md:flex w-64 bg-[#1E3A2B] text-white/80 flex-col flex-shrink-0 border-r border-white/10" aria-label="Operations panel navigation">
         {/* Header */}
         <div className="p-5 border-b border-white/10 flex items-center justify-between">
           <Link href="/operations" className="flex items-center gap-2">
-            <Image src="/floria-logo.png" alt="Floria Logo" width={22} height={22} className="object-contain brightness-[5] opacity-80" />
+            <Image src="/floria-logo.png" alt="Floria Logo" width={22} height={22} className="object-contain brightness-[5] opacity-90" />
             <div>
-              <span className="font-serif text-sm font-semibold text-white tracking-tight block leading-tight">Floria Ops</span>
-              <span className="text-[9px] uppercase tracking-widest text-forest-400 font-bold block leading-none mt-0.5">Fulfillment & Delivery</span>
+              <span className="font-serif text-sm font-bold text-white tracking-tight block leading-tight">Floria Ops</span>
+              <span className="text-[9px] uppercase tracking-widest text-[#DDE7DD] font-bold block leading-none mt-0.5">Fulfillment & Delivery</span>
             </div>
           </Link>
         </div>
@@ -144,11 +144,11 @@ export function OperationsShell({ children }: OperationsShellProps) {
                 className={[
                   "flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors whitespace-nowrap",
                   isActive
-                    ? "bg-forest-700 text-white shadow-sm"
-                    : "hover:bg-white/5 hover:text-white",
+                    ? "bg-[#274D39] text-white shadow-xs border-l-2 border-[#DDE7DD]"
+                    : "hover:bg-white/10 hover:text-white",
                 ].join(" ")}
               >
-                {link.icon}
+                <span className={isActive ? "text-[#DDE7DD]" : "text-white/70"}>{link.icon}</span>
                 <span>{link.label}</span>
               </Link>
             );
@@ -156,10 +156,10 @@ export function OperationsShell({ children }: OperationsShellProps) {
         </nav>
 
         {/* Footer info (Desktop) */}
-        <div className="p-4 border-t border-white/10 flex items-center justify-between mt-auto">
+        <div className="p-4 border-t border-white/10 flex items-center justify-between mt-auto bg-black/10">
           <div className="min-w-0 pr-2">
             <p className="text-xs font-bold text-white truncate leading-tight">{userName}</p>
-            <p className="text-[9px] uppercase tracking-widest text-forest-300 truncate mt-0.5 leading-none">{userRole}</p>
+            <p className="text-[9px] uppercase tracking-widest text-[#DDE7DD] truncate mt-0.5 leading-none">{userRole}</p>
           </div>
           <button
             type="button"

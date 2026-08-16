@@ -15,66 +15,129 @@
 :root {
   color-scheme: light;
 
-  /* --- Color: Primary — Deep Forest Green --- */
-  --color-forest-50:  #f0f7ec;
-  --color-forest-100: #d9edcf;
-  --color-forest-200: #b4dba0;
-  --color-forest-300: #82c36b;
-  --color-forest-400: #57a83c;
-  --color-forest-500: #3d8c28;
-  --color-forest-600: #2d6e1d;
-  --color-forest-700: #245718; /* primary */
-  --color-forest-800: #1a3f12;
-  --color-forest-900: #102a0b;
+  /* ============================================================
+     APPROVED FLORIA PRODUCTION COLOR PALETTE (Phase 3.25)
+     ============================================================ */
 
-  /* --- Color: Background — Warm Cream --- */
-  --color-cream-50:  #fdfcf8;
-  --color-cream-100: #faf7f0;  /* page background */
-  --color-cream-200: #f4eddc;
-  --color-cream-300: #ecddc3;
-  --color-cream-400: #e0c99a;
+  /* --- Core Brand Tokens --- */
+  --floria-forest:         #1E3A2B; /* Primary Base / Deep Forest Green */
+  --floria-terracotta:     #943828; /* Primary Accent / Earthy Terracotta */
+  --floria-sage:           #4A5D4E; /* Secondary Brand / Olive Sage */
+  --floria-botanical:      #DDE7DD; /* Light Accent / Soft Botanical Green */
 
-  /* --- Color: Text --- */
-  --color-ink-900: #151510;  /* near-black heading */
-  --color-ink-700: #2c2c24;  /* body text */
-  --color-ink-500: #6b6b5a;  /* secondary text */
-  --color-ink-300: #a8a896;  /* placeholder / disabled */
-  --color-ink-100: #e8e8dc;  /* dividers */
+  /* --- Surface Tokens --- */
+  --floria-background:     #F9F8F3; /* Main Background / Warm Cream */
+  --floria-surface:        #FFFFFF; /* Card Surface / Pure White */
+  --floria-muted-surface:  #EFECE4; /* Muted Surface / Sand Beige */
 
-  /* --- Color: Neutrals (muted natural) --- */
-  --color-sage-400: #8a9e82;
-  --color-sage-200: #c5d4bf;
-  --color-sage-100: #e5ede2;
-  --color-stone-400: #a09880;
-  --color-stone-200: #d4ccc0;
-  --color-stone-100: #ece8e0;
-  --color-bark-700: #6b4a28;
-  --color-bark-400: #a07850;
+  /* --- Typography Tokens --- */
+  --floria-text-primary:   #212529; /* Text Primary / Charcoal */
+  --floria-text-secondary: #6C756F; /* Text Secondary / Muted Gray-Green */
 
-  /* --- Color: Accent (restrained warm) --- */
-  --color-glow-400: #d4955a;  /* warm terracotta accent */
-  --color-glow-300: #e8b48a;
-  --color-glow-100: #faeee3;
+  /* --- Border Token --- */
+  --floria-border:         #E2DDD5; /* Border / Divider Linen */
 
-  /* --- Color: Red emphasis ("Delivered with Care.", Best Seller badge) --- */
-  --color-red-700: #8B1919;  /* deep botanical red */
-  --color-red-600: #A52020;
-  --color-red-100: #fde8e8;
+  /* --- Functional Semantic Aliases --- */
+  --color-primary:         var(--floria-forest);
+  --color-primary-hover:   #15291E;
+  --color-action:          var(--floria-terracotta);
+  --color-action-hover:    #7D2E20;
+  --color-secondary:       var(--floria-sage);
+  --color-secondary-hover: #3D4D40;
+  --color-botanical:       var(--floria-botanical);
+  --color-page:            var(--floria-background);
+  --color-surface:         var(--floria-surface);
+  --color-muted-surface:   var(--floria-muted-surface);
+  --color-text:            var(--floria-text-primary);
+  --color-text-secondary:  var(--floria-text-secondary);
+  --color-border:          var(--floria-border);
 
-  /* --- Color: Dark canopy (footer, dark hero band) --- */
-  --color-canopy-900: #1A2B1A;  /* very dark forest green footer */
-  --color-canopy-800: #1E3320;
-  --color-canopy-700: #243D27;
+  /* --- Scales: Forest --- */
+  --color-forest-50:  #F4F8F4;
+  --color-forest-100: #DDE7DD; /* Soft botanical */
+  --color-forest-200: #BED3C0;
+  --color-forest-300: #8FB793;
+  --color-forest-400: #5C8C63;
+  --color-forest-500: #3E6B46;
+  --color-forest-600: #2C5235;
+  --color-forest-700: #23442C;
+  --color-forest-800: #1E3A2B; /* Primary Core */
+  --color-forest-900: #12241B;
+
+  /* --- Scales: Terracotta --- */
+  --color-terracotta-50:  #FDF4F2;
+  --color-terracotta-100: #FBE5E1;
+  --color-terracotta-200: #F6CBC3;
+  --color-terracotta-300: #ED9F92;
+  --color-terracotta-400: #DE7260;
+  --color-terracotta-500: #C24D3A;
+  --color-terracotta-600: #A83E2D;
+  --color-terracotta-700: #943828; /* Primary Accent / CTA */
+  --color-terracotta-800: #7D2E20;
+  --color-terracotta-900: #521D14;
+
+  /* --- Scales: Sage --- */
+  --color-sage-50:  #F4F6F4;
+  --color-sage-100: #DDE7DD;
+  --color-sage-200: #C4D3C5;
+  --color-sage-300: #9EB5A0;
+  --color-sage-400: #739076;
+  --color-sage-500: #57705B;
+  --color-sage-600: #4A5D4E; /* Secondary Brand */
+  --color-sage-700: #3A4A3E;
+  --color-sage-800: #2C382F;
+  --color-sage-900: #1C241E;
+
+  /* --- Scales: Cream & Muted Surfaces --- */
+  --color-cream-50:  #FFFFFF;
+  --color-cream-100: #F9F8F3; /* Main background canvas */
+  --color-cream-200: #EFECE4; /* Sand beige muted surface */
+  --color-cream-300: #E2DDD5; /* Border / Divider */
+  --color-cream-400: #D5CFC5;
+
+  /* --- Scales: Text Ink --- */
+  --color-ink-900: #212529; /* Text Primary / Charcoal */
+  --color-ink-700: #343A40;
+  --color-ink-600: #495057;
+  --color-ink-500: #6C756F; /* Text Secondary / Muted Gray-Green */
+  --color-ink-400: #868E96;
+  --color-ink-300: #ADB5BD;
+  --color-ink-200: #CED4DA;
+  --color-ink-150: #E2DDD5;
+  --color-ink-100: #E2DDD5; /* Dividers */
+  --color-ink-50:  #F9F8F3;
+
+  /* --- Color: Neutrals --- */
+  --color-stone-400: #9E998E;
+  --color-stone-200: #D8D3C8;
+  --color-stone-100: #EFECE4;
+  --color-bark-700:  #5C4533;
+  --color-bark-400:  #8E745E;
+
+  /* --- Color: Accent (Terracotta alias for glow) --- */
+  --color-glow-400: #943828;
+  --color-glow-300: #C24D3A;
+  --color-glow-100: #FBE5E1;
+
+  /* --- Color: Red emphasis --- */
+  --color-red-700: #943828;
+  --color-red-600: #A83E2D;
+  --color-red-100: #FBE5E1;
+
+  /* --- Color: Dark canopy (footer, dark brand bands) --- */
+  --color-canopy-900: #1E3A2B;
+  --color-canopy-800: #15291E;
+  --color-canopy-700: #274D39;
 
   /* --- Color: Status --- */
-  --color-success-600: #2d7a47;
-  --color-success-100: #dcf0e5;
-  --color-warning-600: #a06020;
-  --color-warning-100: #fce9d0;
-  --color-error-600:   #b53030;
-  --color-error-100:   #fde8e8;
-  --color-info-600:    #1e5fa0;
-  --color-info-100:    #dceeff;
+  --color-success-600: #2B6E3F;
+  --color-success-100: #DDE7DD;
+  --color-warning-600: #A05B1E;
+  --color-warning-100: #FCEFD9;
+  --color-error-600:   #A82E2E;
+  --color-error-100:   #FDE8E8;
+  --color-info-600:    #245D8C;
+  --color-info-100:    #E0F0FC;
 
   /* --- Typography --- */
   --font-display: "Cormorant Garamond", serif;
@@ -110,11 +173,11 @@
   --radius-full: 9999px;
 
   /* --- Shadows (restrained botanical) --- */
-  --shadow-xs:  0 1px 2px 0 rgb(21 21 16 / 0.06);
-  --shadow-sm:  0 1px 4px 0 rgb(21 21 16 / 0.08), 0 1px 2px -1px rgb(21 21 16 / 0.06);
-  --shadow-md:  0 4px 12px -2px rgb(21 21 16 / 0.10), 0 2px 4px -2px rgb(21 21 16 / 0.06);
-  --shadow-lg:  0 10px 24px -4px rgb(21 21 16 / 0.12), 0 4px 8px -4px rgb(21 21 16 / 0.06);
-  --shadow-xl:  0 20px 40px -8px rgb(21 21 16 / 0.14), 0 8px 16px -8px rgb(21 21 16 / 0.06);
+  --shadow-xs:  0 1px 2px 0 rgb(33 37 41 / 0.05);
+  --shadow-sm:  0 1px 4px 0 rgb(33 37 41 / 0.07), 0 1px 2px -1px rgb(33 37 41 / 0.05);
+  --shadow-md:  0 4px 12px -2px rgb(33 37 41 / 0.08), 0 2px 4px -2px rgb(33 37 41 / 0.05);
+  --shadow-lg:  0 10px 24px -4px rgb(33 37 41 / 0.10), 0 4px 8px -4px rgb(33 37 41 / 0.05);
+  --shadow-xl:  0 20px 40px -8px rgb(33 37 41 / 0.12), 0 8px 16px -8px rgb(33 37 41 / 0.05);
 
   /* --- Transitions --- */
   --transition-fast:   150ms ease;
@@ -132,7 +195,19 @@
    Tailwind v4 — Theme extension via CSS
    ============================================================ */
 @theme {
-  /* Colors */
+  /* Floria Semantic & Core Colors */
+  --color-floria-forest:         var(--floria-forest);
+  --color-floria-terracotta:     var(--floria-terracotta);
+  --color-floria-sage:           var(--floria-sage);
+  --color-floria-botanical:      var(--floria-botanical);
+  --color-floria-background:     var(--floria-background);
+  --color-floria-surface:        var(--floria-surface);
+  --color-floria-muted-surface:  var(--floria-muted-surface);
+  --color-floria-text-primary:   var(--floria-text-primary);
+  --color-floria-text-secondary: var(--floria-text-secondary);
+  --color-floria-border:         var(--floria-border);
+
+  /* Scale extensions */
   --color-forest-*: initial;
   --color-forest-50:  var(--color-forest-50);
   --color-forest-100: var(--color-forest-100);
@@ -145,6 +220,30 @@
   --color-forest-800: var(--color-forest-800);
   --color-forest-900: var(--color-forest-900);
 
+  --color-terracotta-*: initial;
+  --color-terracotta-50:  var(--color-terracotta-50);
+  --color-terracotta-100: var(--color-terracotta-100);
+  --color-terracotta-200: var(--color-terracotta-200);
+  --color-terracotta-300: var(--color-terracotta-300);
+  --color-terracotta-400: var(--color-terracotta-400);
+  --color-terracotta-500: var(--color-terracotta-500);
+  --color-terracotta-600: var(--color-terracotta-600);
+  --color-terracotta-700: var(--color-terracotta-700);
+  --color-terracotta-800: var(--color-terracotta-800);
+  --color-terracotta-900: var(--color-terracotta-900);
+
+  --color-sage-*: initial;
+  --color-sage-50:  var(--color-sage-50);
+  --color-sage-100: var(--color-sage-100);
+  --color-sage-200: var(--color-sage-200);
+  --color-sage-300: var(--color-sage-300);
+  --color-sage-400: var(--color-sage-400);
+  --color-sage-500: var(--color-sage-500);
+  --color-sage-600: var(--color-sage-600);
+  --color-sage-700: var(--color-sage-700);
+  --color-sage-800: var(--color-sage-800);
+  --color-sage-900: var(--color-sage-900);
+
   --color-cream-50:   var(--color-cream-50);
   --color-cream-100:  var(--color-cream-100);
   --color-cream-200:  var(--color-cream-200);
@@ -153,13 +252,15 @@
 
   --color-ink-900: var(--color-ink-900);
   --color-ink-700: var(--color-ink-700);
+  --color-ink-600: var(--color-ink-600);
   --color-ink-500: var(--color-ink-500);
+  --color-ink-400: var(--color-ink-400);
   --color-ink-300: var(--color-ink-300);
+  --color-ink-200: var(--color-ink-200);
+  --color-ink-150: var(--color-ink-150);
   --color-ink-100: var(--color-ink-100);
+  --color-ink-50:  var(--color-ink-50);
 
-  --color-sage-400: var(--color-sage-400);
-  --color-sage-200: var(--color-sage-200);
-  --color-sage-100: var(--color-sage-100);
   --color-stone-400: var(--color-stone-400);
   --color-stone-200: var(--color-stone-200);
   --color-stone-100: var(--color-stone-100);

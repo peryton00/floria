@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
-type Variant = "primary" | "secondary" | "ghost" | "destructive" | "outline";
+type Variant = "primary" | "secondary" | "cta" | "action" | "terracotta" | "muted" | "ghost" | "destructive" | "outline";
 type Size = "sm" | "md" | "lg";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -12,16 +12,24 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantStyles: Record<Variant, string> = {
+  cta:
+    "bg-terracotta-700 text-white hover:bg-terracotta-800 active:bg-terracotta-900 focus-visible:ring-terracotta-700 shadow-xs font-semibold",
+  action:
+    "bg-terracotta-700 text-white hover:bg-terracotta-800 active:bg-terracotta-900 focus-visible:ring-terracotta-700 shadow-xs font-semibold",
+  terracotta:
+    "bg-terracotta-700 text-white hover:bg-terracotta-800 active:bg-terracotta-900 focus-visible:ring-terracotta-700 shadow-xs font-semibold",
   primary:
-    "bg-forest-700 text-white hover:bg-forest-800 active:bg-forest-900 focus-visible:ring-forest-700",
+    "bg-forest-800 text-white hover:bg-forest-900 active:bg-forest-900 focus-visible:ring-forest-800 shadow-xs font-semibold",
   secondary:
-    "bg-cream-200 text-ink-900 hover:bg-cream-300 active:bg-cream-400 focus-visible:ring-forest-700",
+    "bg-sage-600 text-white hover:bg-sage-700 active:bg-sage-800 focus-visible:ring-sage-600 font-semibold",
+  muted:
+    "bg-cream-200 text-ink-900 hover:bg-cream-300 active:bg-cream-400 focus-visible:ring-forest-800 border border-ink-150 font-medium",
   ghost:
-    "bg-transparent text-ink-700 hover:bg-cream-200 active:bg-cream-300 focus-visible:ring-forest-700",
+    "bg-transparent text-ink-700 hover:bg-cream-200 active:bg-cream-300 focus-visible:ring-forest-800 font-medium",
   outline:
-    "bg-transparent border border-forest-700 text-forest-700 hover:bg-forest-50 active:bg-forest-100 focus-visible:ring-forest-700",
+    "bg-transparent border border-forest-800 text-forest-800 hover:bg-forest-50 active:bg-forest-100 focus-visible:ring-forest-800 font-semibold",
   destructive:
-    "bg-error-600 text-white hover:opacity-90 active:opacity-80 focus-visible:ring-error-600",
+    "bg-error-600 text-white hover:opacity-90 active:opacity-80 focus-visible:ring-error-600 font-semibold",
 };
 
 const sizeStyles: Record<Size, string> = {

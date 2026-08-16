@@ -60,14 +60,14 @@ export function Footer() {
 
             <p
               className="text-sm leading-relaxed mb-8 max-w-xs"
-              style={{ color: "rgba(255,255,255,0.58)" }}
+              style={{ color: "rgba(255,255,255,0.78)" }}
             >
               Your one-stop marketplace for plants and gardening essentials from trusted local nurseries across India.
             </p>
 
             <p
               className="text-[10px] font-bold uppercase tracking-widest mb-3"
-              style={{ color: "rgba(255,255,255,0.32)", letterSpacing: "0.14em" }}
+              style={{ color: "rgba(255,255,255,0.60)", letterSpacing: "0.14em" }}
             >
               NEWSLETTER
             </p>
@@ -82,7 +82,7 @@ export function Footer() {
                   rel="noopener noreferrer"
                   aria-label={label}
                   className="w-8 h-8 flex items-center justify-center rounded-full transition-all hover:scale-110"
-                  style={{ backgroundColor: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.60)" }}
+                  style={{ backgroundColor: "rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.90)" }}
                 >
                   <svg viewBox={viewBox} width="14" height="14" fill="currentColor" aria-hidden="true">
                     <path d={path} />
@@ -99,14 +99,14 @@ export function Footer() {
       </div>
 
       {/* Bottom strip */}
-      <div className="border-t" style={{ borderColor: "rgba(255,255,255,0.07)" }}>
+      <div className="border-t" style={{ borderColor: "rgba(255,255,255,0.12)" }}>
         <div className="max-w-screen-xl mx-auto px-4 md:px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.32)" }}>
+          <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.65)" }}>
             &copy; {new Date().getFullYear()} Floria Technologies Pvt. Ltd. All rights reserved.
           </p>
-          <div className="flex items-center gap-1.5 text-[12px]" style={{ color: "rgba(255,255,255,0.22)" }}>
+          <div className="flex items-center gap-1.5 text-[12px]" style={{ color: "rgba(255,255,255,0.65)" }}>
             <span>Grown with care, delivered with love</span>
-            <LeafIcon size={12} className="opacity-60" />
+            <LeafIcon size={12} className="opacity-80" />
           </div>
         </div>
       </div>
@@ -125,7 +125,7 @@ function FooterColumn({
     <div>
       <p
         className="text-[12px] font-bold uppercase mb-5"
-        style={{ color: "var(--color-forest-50)", letterSpacing: "0.13em" }}
+        style={{ color: "#DDE7DD", letterSpacing: "0.13em" }}
       >
         {title}
       </p>
@@ -135,7 +135,7 @@ function FooterColumn({
             <Link
               href={href}
               className="text-[12.5px] leading-snug transition-colors hover:text-white"
-              style={{ color: "rgba(255,255,255,0.62)" }}
+              style={{ color: "rgba(255,255,255,0.78)" }}
             >
               {label}
             </Link>

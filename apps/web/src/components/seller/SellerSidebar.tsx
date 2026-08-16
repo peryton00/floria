@@ -52,7 +52,7 @@ export function SellerSidebar({ onClose }: SellerSidebarProps) {
 
   return (
     <aside
-      className="w-60 bg-[#1A2B1A] text-white/70 flex flex-col flex-shrink-0 min-h-screen"
+      className="w-60 bg-[#1E3A2B] text-white/80 flex flex-col flex-shrink-0 min-h-screen border-r border-white/10"
       aria-label="Seller navigation"
     >
       {/* Brand */}
@@ -68,9 +68,9 @@ export function SellerSidebar({ onClose }: SellerSidebarProps) {
             alt="Floria"
             width={22}
             height={22}
-            className="object-contain brightness-[5] opacity-80"
+            className="object-contain brightness-[5] opacity-90"
           />
-          <span className="font-serif text-sm font-semibold text-white tracking-tight leading-none">
+          <span className="font-serif text-sm font-bold text-white tracking-tight leading-none">
             Seller Portal
           </span>
         </Link>
@@ -79,7 +79,7 @@ export function SellerSidebar({ onClose }: SellerSidebarProps) {
           <button
             type="button"
             onClick={onClose}
-            className="lg:hidden text-white/50 hover:text-white p-1"
+            className="lg:hidden text-white/60 hover:text-white p-1"
             aria-label="Close navigation"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -91,9 +91,9 @@ export function SellerSidebar({ onClose }: SellerSidebarProps) {
 
       {/* Nursery info */}
       {sellerProfile && (
-        <div className="px-5 py-4 border-b border-white/10">
+        <div className="px-5 py-4 border-b border-white/10 bg-black/10">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-forest-700 flex items-center justify-center font-bold text-sm text-white flex-shrink-0">
+            <div className="w-9 h-9 rounded bg-[#274D39] border border-[#DDE7DD]/20 flex items-center justify-center font-bold text-sm text-white flex-shrink-0 shadow-xs">
               {sellerProfile.business_name.charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0">
@@ -141,12 +141,12 @@ export function SellerSidebar({ onClose }: SellerSidebarProps) {
               className={[
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors focus:outline-none focus:ring-1 focus:ring-white/30",
                 isActive
-                  ? "bg-forest-700 text-white shadow-sm"
-                  : "hover:bg-white/5 hover:text-white",
+                  ? "bg-[#274D39] text-white font-bold shadow-xs border-l-2 border-[#DDE7DD]"
+                  : "hover:bg-white/10 hover:text-white",
               ].join(" ")}
               aria-current={isActive ? "page" : undefined}
             >
-              {item.icon}
+              <span className={isActive ? "text-[#DDE7DD]" : "text-white/70"}>{item.icon}</span>
               <span>{item.label}</span>
             </Link>
           );
@@ -158,7 +158,7 @@ export function SellerSidebar({ onClose }: SellerSidebarProps) {
         <Link
           href="/"
           onClick={onClose}
-          className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-white/40 hover:text-white/70 transition-colors"
+          className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-white/60 hover:text-white transition-colors"
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="m15 18-6-6 6-6" />

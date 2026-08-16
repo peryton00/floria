@@ -693,14 +693,14 @@ export default function CheckoutPage() {
                 disabled={outOfStockItems.length > 0 || isPlacingOrder}
                 onClick={handlePlaceOrder}
                 className={[
-                  "w-full py-3.5 font-bold text-sm uppercase tracking-wider rounded-xl transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2",
+                  "w-full py-3.5 font-bold text-sm uppercase tracking-wider rounded-xl transition-all shadow-xs focus:outline-none focus:ring-2 focus:ring-offset-2",
                   outOfStockItems.length > 0 || isPlacingOrder
-                    ? "bg-ink-100 text-ink-400 cursor-not-allowed"
-                    : "bg-forest-700 hover:bg-forest-800 text-white focus:ring-forest-700 active:scale-[0.98]",
+                    ? "bg-cream-300 text-ink-400 cursor-not-allowed"
+                    : "bg-terracotta-700 hover:bg-terracotta-800 text-white focus:ring-terracotta-700 active:scale-[0.98]",
                 ].join(" ")}
               >
                 {isPlacingOrder
-                  ? "Placing Order…"
+                  ? "Placing Order..."
                   : paymentMethod === "online"
                   ? "Continue to Payment"
                   : "Place Order"}

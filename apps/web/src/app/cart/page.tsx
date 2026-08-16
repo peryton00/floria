@@ -95,7 +95,7 @@ export default function CartPage() {
           </p>
           <Link
             href="/categories"
-            className="inline-flex items-center justify-center px-8 py-3.5 bg-forest-700 hover:bg-forest-800 text-white font-bold text-sm rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-forest-700 focus:ring-offset-2"
+            className="inline-flex items-center justify-center px-8 py-3.5 bg-terracotta-700 hover:bg-terracotta-800 text-white font-bold text-sm rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-terracotta-700 focus:ring-offset-2 shadow-xs"
           >
             Browse Plants
           </Link>
@@ -288,8 +288,8 @@ export default function CartPage() {
 
 
           {/* Price breakdown */}
-          <div className="p-5 bg-white rounded-2xl border border-ink-100 shadow-sm">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-ink-900 pb-3 border-b border-ink-100 mb-4">
+          <div className="p-5 bg-white rounded-2xl border border-ink-150 shadow-xs">
+            <h2 className="text-xs font-bold uppercase tracking-widest text-ink-900 pb-3 border-b border-ink-150 mb-4">
               Price Details
             </h2>
 
@@ -301,21 +301,21 @@ export default function CartPage() {
                 </span>
               </div>
               {discountPaise > 0 && (
-                <div className="flex justify-between text-forest-700">
+                <div className="flex justify-between text-forest-800">
                   <span>Discount</span>
                   <span className="font-semibold">−{formatINR(discountPaise)}</span>
                 </div>
               )}
               <div className="flex justify-between text-ink-600">
                 <span>Delivery</span>
-                <span className="text-ink-400 font-medium italic text-xs">Calculated at checkout</span>
+                <span className="text-ink-500 font-medium italic text-xs">Calculated at checkout</span>
               </div>
-              <div className="flex justify-between pt-3 border-t border-ink-100 text-ink-900 font-bold text-base">
+              <div className="flex justify-between pt-3 border-t border-ink-150 text-ink-900 font-bold text-base">
                 <span>Subtotal</span>
                 <span className="text-forest-800">{formatINR(subtotalPaise)}</span>
               </div>
               {discountPaise > 0 && (
-                <p className="text-[11px] text-forest-700 bg-forest-50 rounded-lg px-3 py-2 text-center font-semibold">
+                <p className="text-[11px] text-forest-800 bg-forest-100 rounded-lg px-3 py-2 text-center font-semibold border border-forest-200">
                   You save {formatINR(discountPaise)} on this order 🌿
                 </p>
               )}
@@ -326,13 +326,13 @@ export default function CartPage() {
               <Link
                 href="/checkout"
                 aria-label="Proceed to checkout"
-                className="w-full flex items-center justify-center py-3.5 bg-forest-700 hover:bg-forest-800 text-white font-bold text-sm uppercase tracking-wider rounded-xl transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-700 focus:ring-offset-2"
+                className="w-full flex items-center justify-center py-3.5 bg-terracotta-700 hover:bg-terracotta-800 text-white font-bold text-sm uppercase tracking-wider rounded-xl transition-all shadow-xs focus:outline-none focus:ring-2 focus:ring-terracotta-700 focus:ring-offset-2"
               >
                 Proceed to Checkout
               </Link>
               <Link
                 href="/categories"
-                className="w-full flex items-center justify-center py-3 border border-ink-200 hover:border-ink-400 text-ink-700 font-semibold text-sm rounded-xl transition-colors focus:outline-none"
+                className="w-full flex items-center justify-center py-3 border border-ink-150 hover:bg-cream-200 text-ink-800 font-semibold text-sm rounded-xl transition-colors focus:outline-none"
               >
                 Continue Shopping
               </Link>
@@ -340,9 +340,9 @@ export default function CartPage() {
           </div>
 
           {/* Trust note */}
-          <div className="px-4 py-3 bg-white rounded-xl border border-ink-100 shadow-sm">
-            <div className="flex items-center gap-2 text-[11px] text-ink-400">
-              <LeafIcon size={14} className="text-forest-700 flex-shrink-0" />
+          <div className="px-4 py-3 bg-white rounded-xl border border-ink-150 shadow-xs">
+            <div className="flex items-center gap-2 text-[11px] text-ink-500">
+              <LeafIcon size={14} className="text-forest-800 flex-shrink-0" />
               <span>All plants are quality-checked from trusted nurseries</span>
             </div>
           </div>

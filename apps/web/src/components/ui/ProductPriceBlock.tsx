@@ -64,7 +64,7 @@ export function ProductPriceBlock({
               {formatINR(originalPricePaise as number)}
             </span>
             {discountPercentage && discountPercentage > 0 && (
-              <span className="px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 rounded border border-emerald-200">
+              <span className="px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-terracotta-700 bg-terracotta-100 rounded border border-terracotta-200">
                 {discountPercentage}% OFF
               </span>
             )}
@@ -74,14 +74,14 @@ export function ProductPriceBlock({
 
       {/* Optional Genuine Savings Subtext */}
       {showSavings && hasLegitimateDiscount && calculatedSavingsPaise > 0 && (
-        <p className="text-[11px] font-medium text-emerald-700 font-ui">
+        <p className="text-[11px] font-semibold text-forest-800 font-ui">
           You save {formatINR(calculatedSavingsPaise)}
         </p>
       )}
 
       {/* Free Delivery Customer Benefit Tag */}
       {isFreeDelivery && (
-        <div className="flex items-center gap-1 text-[11px] font-bold text-forest-700 font-ui">
+        <div className="flex items-center gap-1 text-[11px] font-bold text-forest-800 font-ui">
           <span>FREE DELIVERY</span>
         </div>
       )}

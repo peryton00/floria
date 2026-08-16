@@ -46,7 +46,7 @@ export function ProductCard({
   }
 
   if (discountPercent && discountPercent > 0 && originalPricePaise && originalPricePaise > sellingPricePaise) {
-    badges.push({ key: "discount", label: `${discountPercent}% OFF`, className: "bg-forest-700 text-white" });
+    badges.push({ key: "discount", label: `${discountPercent}% OFF`, className: "bg-terracotta-700 text-white font-bold" });
   }
 
   if (isFreeDelivery && badges.length < 2) {
@@ -54,14 +54,14 @@ export function ProductCard({
   }
 
   if (showBestSeller && badges.length < 2) {
-    badges.push({ key: "bestseller", label: "BEST SELLER", className: "bg-red-700 text-white" });
+    badges.push({ key: "bestseller", label: "BEST SELLER", className: "bg-terracotta-700 text-white font-bold" });
   }
 
   return (
-    <div className="group flex flex-col bg-white rounded-xl overflow-hidden border border-ink-100 shadow-xs hover:shadow-md hover:border-forest-200 transition-all duration-250 ease-out focus-within:ring-2 focus-within:ring-forest-700">
+    <div className="group flex flex-col bg-white rounded-xl overflow-hidden border border-ink-150 shadow-xs hover:shadow-md hover:border-forest-300 transition-all duration-250 ease-out focus-within:ring-2 focus-within:ring-forest-800">
       {/* Image */}
       <Link href={`/products/${product.slug}`} className="focus-visible:outline-none">
-        <div className="relative overflow-hidden" style={{ paddingBottom: "100%" }}>
+        <div className="relative overflow-hidden bg-cream-200" style={{ paddingBottom: "100%" }}>
           <Image
             src={primary_image?.url || "/floria-logo.png"}
             alt={primary_image?.alt_text || product.name}
@@ -93,25 +93,25 @@ export function ProductCard({
       </Link>
 
       {/* Info */}
-      <Link href={`/products/${product.slug}`} className="p-3 flex flex-col flex-1 focus-visible:outline-none">
+      <Link href={`/products/${product.slug}`} className="p-3.5 flex flex-col flex-1 focus-visible:outline-none">
         {/* Rating */}
         <div className="mb-1.5 min-h-[18px]">
           {reviewCount > 0 ? (
             <StarRating rating={avgRating} count={reviewCount} size="sm" />
           ) : (
-            <span className="text-[11px] text-ink-400 font-ui font-medium">No reviews yet</span>
+            <span className="text-[11px] text-ink-500 font-ui font-medium">No reviews yet</span>
           )}
         </div>
 
         {/* Name */}
-        <p className="font-sans text-[13px] font-semibold text-ink-900 leading-snug line-clamp-2 mb-0.5 group-hover:text-forest-700 transition-colors">
+        <p className="font-sans text-[13px] font-semibold text-ink-900 leading-snug line-clamp-2 mb-0.5 group-hover:text-forest-800 transition-colors">
           {product.name}
         </p>
 
         {/* Seller / Nursery */}
-        <p className="text-[11px] text-ink-400 mb-2 font-ui flex items-center gap-1">
+        <p className="text-[11px] text-ink-500 mb-2 font-ui flex items-center gap-1">
           <span>{seller.business_name}</span>
-          {seller.is_verified && <span className="text-forest-700 font-bold" title="Verified Nursery Partner">✓</span>}
+          {seller.is_verified && <span className="text-forest-800 font-bold" title="Verified Nursery Partner">✓</span>}
         </p>
 
         {/* Price & Cart button row */}
@@ -135,10 +135,10 @@ export function ProductCard({
               addToCart(listing);
             }}
             className={[
-              "w-8 h-8 rounded-full flex items-center justify-center transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-1 flex-shrink-0",
+              "w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-xs focus:outline-none focus:ring-2 focus:ring-offset-1 flex-shrink-0",
               isOutOfStock
-                ? "bg-ink-100 text-ink-300 cursor-not-allowed"
-                : "bg-forest-700 hover:bg-forest-800 text-white focus:ring-forest-600",
+                ? "bg-cream-300 text-ink-400 cursor-not-allowed"
+                : "bg-terracotta-700 hover:bg-terracotta-800 text-white focus:ring-terracotta-700 active:scale-95",
             ].join(" ")}
           >
             <BagIcon size={14} />

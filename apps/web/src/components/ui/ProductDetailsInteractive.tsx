@@ -355,10 +355,10 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
             disabled={isOutOfStock}
             onClick={() => addToCart(listing, quantity)}
             className={[
-              "py-3.5 rounded-xl font-bold text-sm tracking-wider uppercase transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2",
+              "py-3.5 rounded-xl font-bold text-sm tracking-wider uppercase transition-all shadow-xs focus:outline-none focus:ring-2 focus:ring-offset-2",
               isOutOfStock
-                ? "bg-ink-100 text-ink-400 cursor-not-allowed"
-                : "bg-forest-700 text-white hover:bg-forest-800 focus:ring-forest-700 active:scale-[0.98]",
+                ? "bg-cream-300 text-ink-400 cursor-not-allowed"
+                : "bg-terracotta-700 text-white hover:bg-terracotta-800 focus:ring-terracotta-700 active:scale-[0.98]",
             ].join(" ")}
           >
             Add to Cart
@@ -368,10 +368,10 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
             disabled={isOutOfStock}
             onClick={handleBuyNow}
             className={[
-              "py-3.5 rounded-xl font-bold text-sm tracking-wider uppercase transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2",
+              "py-3.5 rounded-xl font-bold text-sm tracking-wider uppercase transition-all shadow-xs focus:outline-none focus:ring-2 focus:ring-offset-2",
               isOutOfStock
-                ? "bg-ink-100 text-ink-400 cursor-not-allowed"
-                : "bg-canopy-900 text-white hover:bg-canopy-800 focus:ring-canopy-900 active:scale-[0.98]",
+                ? "bg-cream-300 text-ink-400 cursor-not-allowed"
+                : "bg-forest-800 text-white hover:bg-forest-900 focus:ring-forest-800 active:scale-[0.98]",
             ].join(" ")}
           >
             Buy Now
@@ -379,9 +379,9 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
         </div>
 
         {/* Tab System */}
-        <div className="border-t border-ink-100 pt-6">
+        <div className="border-t border-ink-150 pt-6">
           {/* Tab buttons */}
-          <div className="flex border-b border-ink-100 overflow-x-auto pb-px gap-6 text-xs font-bold uppercase tracking-wider text-ink-300">
+          <div className="flex border-b border-ink-150 overflow-x-auto pb-px gap-6 text-xs font-bold uppercase tracking-wider text-ink-500">
             {[
               { id: "description", label: "Description" },
               { id: "care", label: "Care Guide" },
