@@ -137,6 +137,27 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
         });
       });
 
+      let displayStatus: OrderStatus = "Order Placed";
+      const st = (o.status || "").toLowerCase().replace(/_/g, " ");
+
+      if (st.includes("ready") || st.includes("pickup")) {
+        displayStatus = "Ready for Pickup";
+      } else if (st.includes("preparing")) {
+        displayStatus = "Preparing";
+      } else if (st.includes("nursery confirmed") || st.includes("confirmed")) {
+        displayStatus = "Nursery Confirmed";
+      } else if (st.includes("picked up")) {
+        displayStatus = "Picked Up";
+      } else if (st.includes("packing")) {
+        displayStatus = "Packing";
+      } else if (st.includes("delivery") || st.includes("out for delivery")) {
+        displayStatus = "Out for Delivery";
+      } else if (st.includes("delivered")) {
+        displayStatus = "Delivered";
+      } else if (st.includes("cancelled")) {
+        displayStatus = "Cancelled";
+      }
+
       return {
         id: o.id,
         createdAt: new Date(o.created_at || Date.now()).toLocaleDateString("en-IN", {
@@ -145,11 +166,7 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
           year: "numeric",
         }),
         createdAtTimestamp: new Date(o.created_at || Date.now()).getTime(),
-        status: (o.status === "preparing"
-          ? "Preparing"
-          : o.status === "delivered"
-          ? "Delivered"
-          : "Order Placed") as OrderStatus,
+        status: displayStatus,
         address: {
           full_name: addr.full_name || "Customer",
           phone: addr.phone || "",

@@ -37,10 +37,15 @@ export class UserRepository {
   }
 
   async updateProfile(userId: string, updates: { full_name?: string; phone?: string }): Promise<UserProfile | null> {
+    return this.updateUser(userId, updates);
+  }
+
+  async updateUser(userId: string, updates: { full_name?: string; phone?: string; role?: UserRole }): Promise<UserProfile | null> {
     const db = getAdminDb();
     const payload: Record<string, any> = { updated_at: new Date().toISOString() };
     if (updates.full_name !== undefined) payload.full_name = updates.full_name;
     if (updates.phone !== undefined) payload.phone = updates.phone;
+    if (updates.role !== undefined) payload.role = updates.role;
 
     const { data, error } = await db
       .from("user_profiles")
@@ -50,6 +55,30 @@ export class UserRepository {
       .maybeSingle();
 
     if (error || !data) return null;
+
+    if (updates.role === "seller") {
+      const { data: existingSeller } = await db
+        .from("seller_profiles")
+        .select("id")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (!existingSeller) {
+        await db.from("seller_profiles").insert({
+          user_id: userId,
+          business_name: data.full_name || "Nursery Partner",
+          business_description: "Role assigned by Admin",
+          contact_email: "",
+          contact_phone: data.phone || "",
+          address: "",
+          status: "approved",
+          is_active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+      }
+    }
+
     return data as UserProfile;
   }
 

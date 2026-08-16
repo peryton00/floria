@@ -626,6 +626,21 @@ export class SellerRepository {
     });
 
     if (error) throw error;
+
+    const masterStatusMap: Record<string, string> = {
+      "Nursery Confirmed": "nursery_confirmed",
+      "Preparing": "preparing",
+      "Ready for Pickup": "ready_for_pickup",
+      "Picked Up": "picked_up",
+      "Delivered": "delivered",
+    };
+    const masterStatus = masterStatusMap[newStatus] || newStatus.toLowerCase().replace(/ /g, "_");
+
+    await db
+      .from("orders")
+      .update({ status: masterStatus, updated_at: new Date().toISOString() })
+      .eq("id", masterOrderId);
+
     orderView.status = newStatus;
     return orderView;
   }

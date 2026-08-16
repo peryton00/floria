@@ -48,16 +48,25 @@ function mapApiOrderToRecord(o: any): OrderRecord {
 
     const fulfillment = fulfillments.find((f: any) => f.seller_id === sellerId);
     const rawStatus = fulfillment?.status || o.status || "Order Placed";
-    
+    const st = (rawStatus || "").toLowerCase().replace(/_/g, " ");
+
     let displayStatus: OrderStatus = "Order Placed";
-    if (rawStatus === "preparing" || rawStatus === "Preparing") {
+    if (st.includes("ready") || st.includes("pickup")) {
+      displayStatus = "Ready for Pickup";
+    } else if (st.includes("preparing")) {
       displayStatus = "Preparing";
-    } else if (rawStatus === "delivered" || rawStatus === "Delivered") {
+    } else if (st.includes("nursery confirmed") || st.includes("confirmed")) {
+      displayStatus = "Nursery Confirmed";
+    } else if (st.includes("picked up")) {
+      displayStatus = "Picked Up";
+    } else if (st.includes("packing")) {
+      displayStatus = "Packing";
+    } else if (st.includes("delivery") || st.includes("out for delivery")) {
+      displayStatus = "Out for Delivery";
+    } else if (st.includes("delivered")) {
       displayStatus = "Delivered";
-    } else if (rawStatus === "Cancelled" || rawStatus === "cancelled") {
+    } else if (st.includes("cancelled")) {
       displayStatus = "Cancelled";
-    } else if (rawStatus) {
-      displayStatus = rawStatus as OrderStatus;
     }
 
     if (!groupsMap.has(sellerId)) {
@@ -81,6 +90,26 @@ function mapApiOrderToRecord(o: any): OrderRecord {
     });
   });
 
+  let masterDisplayStatus: OrderStatus = "Order Placed";
+  const mst = (o.status || "").toLowerCase().replace(/_/g, " ");
+  if (mst.includes("ready") || mst.includes("pickup")) {
+    masterDisplayStatus = "Ready for Pickup";
+  } else if (mst.includes("preparing")) {
+    masterDisplayStatus = "Preparing";
+  } else if (mst.includes("nursery confirmed") || mst.includes("confirmed")) {
+    masterDisplayStatus = "Nursery Confirmed";
+  } else if (mst.includes("picked up")) {
+    masterDisplayStatus = "Picked Up";
+  } else if (mst.includes("packing")) {
+    masterDisplayStatus = "Packing";
+  } else if (mst.includes("delivery") || mst.includes("out for delivery")) {
+    masterDisplayStatus = "Out for Delivery";
+  } else if (mst.includes("delivered")) {
+    masterDisplayStatus = "Delivered";
+  } else if (mst.includes("cancelled")) {
+    masterDisplayStatus = "Cancelled";
+  }
+
   return {
     id: o.id,
     createdAt: new Date(o.created_at || Date.now()).toLocaleDateString("en-IN", {
@@ -89,11 +118,7 @@ function mapApiOrderToRecord(o: any): OrderRecord {
       year: "numeric",
     }),
     createdAtTimestamp: new Date(o.created_at || Date.now()).getTime(),
-    status: (o.status === "preparing"
-      ? "Preparing"
-      : o.status === "delivered"
-      ? "Delivered"
-      : "Order Placed") as OrderStatus,
+    status: masterDisplayStatus,
     address: {
       full_name: addr.full_name || "Customer",
       phone: addr.phone || "",

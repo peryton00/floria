@@ -354,9 +354,10 @@ export default function AdminUsersPage() {
                       className="w-full px-3 py-2 text-xs rounded-lg border border-ink-200 focus:outline-none focus:ring-1 focus:ring-forest-700 bg-white"
                     >
                       <option value="customer">Customer</option>
-                      <option value="seller">Seller</option>
-                      <option value="operations">Operations</option>
+                      <option value="seller">Seller / Nursery Partner</option>
+                      <option value="operations">Operations Manager</option>
                       <option value="admin">Admin</option>
+                      <option value="super_admin">Super Admin</option>
                     </select>
                   </div>
 
