@@ -35,6 +35,7 @@ router.get("/sellers/:id/documents", (0, validation_js_1.validateRequest)(uuidPa
 router.patch("/sellers/:id", (0, validation_js_1.validateRequest)(uuidParamSchema), admin_controller_js_1.adminController.updateSeller);
 // Product Moderation
 router.get("/products", admin_controller_js_1.adminController.getProducts);
+router.get("/products/:id/financial-calculation", (0, validation_js_1.validateRequest)(uuidParamSchema), admin_controller_js_1.adminController.getProductFinancialCalculation);
 router.get("/products/:id", (0, validation_js_1.validateRequest)(uuidParamSchema), admin_controller_js_1.adminController.getProductById);
 router.patch("/products/:id/status", (0, validation_js_1.validateRequest)(uuidParamSchema), admin_controller_js_1.adminController.updateProductStatus);
 router.patch("/products/:id/publish", (0, validation_js_1.validateRequest)(uuidParamSchema), admin_controller_js_1.adminController.publishProduct);
@@ -48,11 +49,17 @@ router.post("/categories", admin_controller_js_1.adminController.createCategory)
 router.patch("/categories/:id", (0, validation_js_1.validateRequest)(uuidParamSchema), admin_controller_js_1.adminController.updateCategory);
 // Platform Order Oversight
 router.get("/orders", admin_controller_js_1.adminController.getOrders);
+router.get("/orders/:id/financial-breakdown", (0, validation_js_1.validateRequest)(uuidParamSchema), admin_controller_js_1.adminController.getOrderFinancialBreakdown);
 router.get("/orders/:id", admin_controller_js_1.adminController.getOrderById);
 router.patch("/orders/:id", admin_controller_js_1.adminController.updateOrder);
 // Audit Logging Visibility
 router.get("/audit-logs", admin_controller_js_1.adminController.getAuditLogs);
-// Platform Settings & Commission Rate Management
+// Platform Settings & Financial Engine Governance
 router.get("/settings/platform", admin_controller_js_1.adminController.getSettings);
 router.patch("/settings/commission", admin_controller_js_1.adminController.updateCommissionRate);
+router.get("/settings/delivery", admin_controller_js_1.adminController.getDeliverySettings);
+router.patch("/settings/delivery", admin_controller_js_1.adminController.updateDeliverySettings);
+router.post("/delivery/preview", admin_controller_js_1.adminController.previewDeliveryFee);
+router.get("/settings/financials", admin_controller_js_1.adminController.getFinancialSettings);
+router.patch("/settings/financials", admin_controller_js_1.adminController.updateFinancialSettings);
 exports.default = router;

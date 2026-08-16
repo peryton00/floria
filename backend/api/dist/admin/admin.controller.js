@@ -385,6 +385,79 @@ class AdminController {
             next(err);
         }
     }
+    async getProductFinancialCalculation(req, res, next) {
+        try {
+            const { adminFinancialService } = await import("./admin-financial.service.js");
+            const calculation = await adminFinancialService.getProductFinancialCalculation(req.params.id);
+            res.json({ success: true, data: calculation });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+    async getOrderFinancialBreakdown(req, res, next) {
+        try {
+            const { adminFinancialService } = await import("./admin-financial.service.js");
+            const breakdown = await adminFinancialService.getOrderFinancialBreakdown(req.params.id);
+            res.json({ success: true, data: breakdown });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+    // ── Delivery Settings & Calculation Preview ──────────────────────────────
+    async getDeliverySettings(req, res, next) {
+        try {
+            const { deliveryService } = await import("../delivery/delivery.service.js");
+            const settings = await deliveryService.getDeliverySettings();
+            res.json({ success: true, data: settings });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+    async updateDeliverySettings(req, res, next) {
+        try {
+            const { deliveryService } = await import("../delivery/delivery.service.js");
+            const settings = await deliveryService.updateDeliverySettings(req.body, req.user.id);
+            res.json({ success: true, data: settings });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+    async previewDeliveryFee(req, res, next) {
+        try {
+            const { deliveryService } = await import("../delivery/delivery.service.js");
+            const subtotalPaise = Number(req.body?.subtotalPaise || 0);
+            const result = await deliveryService.calculateDeliveryFee({ eligibleSubtotalPaise: subtotalPaise });
+            res.json({ success: true, data: result });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+    // ── Financial Settings & Unified Pricing Engine ───────────────────────────
+    async getFinancialSettings(req, res, next) {
+        try {
+            const { pricingService } = await import("../pricing/pricing.service.js");
+            const settings = await pricingService.getFinancialSettings();
+            res.json({ success: true, data: settings });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+    async updateFinancialSettings(req, res, next) {
+        try {
+            const { pricingService } = await import("../pricing/pricing.service.js");
+            const settings = await pricingService.updateFinancialSettings(req.body, req.user.id);
+            res.json({ success: true, data: settings });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
 }
 exports.AdminController = AdminController;
 exports.adminController = new AdminController();

@@ -317,29 +317,30 @@ export interface AdminProductFinancialCalculation {
     sellerName: string;
   };
   pricing: {
-    basePricePaise: number;
-    discountPaise: number;
-    sellingPricePaise: number;
+    sellerBasePricePaise: number;
+    floriaProfitRate: number; // e.g. 2.0
+    floriaProfitPaise: number;
+    deliveryRecoveryPaise: number;
+    customerProductPricePaise: number;
+    isFreeDeliveryEligible: boolean;
   };
   commission: {
-    rate: number; // percentage e.g. 12 for 12%
+    rate: number; // percentage e.g. 12.0
     amountPaise: number;
   };
   sellerEarnings: {
-    grossPaise: number;
+    basePricePaise: number;
+    commissionPaise: number;
     netPaise: number;
   };
   customerCharges: {
+    productPricePaise: number;
     deliveryFeePaise: number; // 0 if not configured
     taxPaise: number; // 0 if not configured
     discountPaise: number;
     totalPaise: number;
   };
   currency: string;
-  configuredRules: {
-    taxConfigured: boolean;
-    deliveryConfigured: boolean;
-  };
 }
 
 export interface NurseryOrderFinancialAttribution {
@@ -365,11 +366,68 @@ export interface AdminOrderFinancialBreakdown {
   customerName: string;
   customerTotalPaise: number;
   subtotalPaise: number;
+  maintenanceFeePaise: number;
   deliveryFeePaise: number;
+  deliveryFeeReason?: DeliveryFeeReason;
   taxPaise: number;
   discountPaise: number;
   totalPlatformCommissionPaise: number;
+  totalFloriaProfitPaise?: number;
+  totalDeliveryRecoveryPaise?: number;
   nurseryBreakdown: NurseryOrderFinancialAttribution[];
   currency: string;
   createdAt: Timestamp;
+}
+
+// ------------------------------------------------------------------
+// Financial Settings & Unified Pricing Engine Interfaces (Phase 3.17.3)
+// ------------------------------------------------------------------
+
+export interface FinancialSettings {
+  sellerCommissionRate: number; // e.g. 12.0 for 12%
+  floriaProfitRate: number; // e.g. 2.0 for 2%
+  platformMaintenanceFeePaise: number; // e.g. 1000 for ₹10.00
+  freeDeliveryThresholdPaise: number; // e.g. 59900 for ₹599.00
+  freeDeliveryRecoveryPaise: number; // e.g. 2000 for ₹20.00
+}
+
+export interface ProductPricingCalculation {
+  sellerBasePricePaise: number;
+  sellerCommissionRate: number;
+  sellerCommissionPaise: number;
+  sellerNetPaise: number;
+  floriaProfitRate: number;
+  floriaProfitPaise: number;
+  deliveryRecoveryPaise: number;
+  customerProductPricePaise: number;
+  isFreeDeliveryEligible: boolean;
+  freeDeliveryThresholdPaise: number;
+}
+
+// ------------------------------------------------------------------
+// Delivery Fee Engine & Policy Interfaces (Phase 3.17.2)
+// ------------------------------------------------------------------
+
+export type DeliveryFeeReason =
+  | "FREE_DELIVERY_THRESHOLD"
+  | "PAID_BELOW_THRESHOLD"
+  | "FREE_DELIVERY_PROMOTION"
+  | "FREE_DELIVERY_ADMIN"
+  | "DELIVERY_DISABLED";
+
+export interface DeliverySettings {
+  deliveryEnabled: boolean;
+  baseDeliveryFeePaise: number; // e.g. 4000 for ₹40.00
+  freeDeliveryEnabled: boolean;
+  freeDeliveryThresholdPaise: number; // e.g. 99900 for ₹999.00
+  masterOrderDeliveryMode: "master_order_single" | "per_nursery";
+}
+
+export interface DeliveryCalculationResult {
+  deliveryFeePaise: number;
+  isFreeDelivery: boolean;
+  reason: DeliveryFeeReason;
+  thresholdPaise: number;
+  eligibleSubtotalPaise: number;
+  baseDeliveryFeePaise: number;
 }

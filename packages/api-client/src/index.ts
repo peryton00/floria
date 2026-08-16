@@ -846,4 +846,60 @@ export class FloriaApiClient {
       `/api/v1/admin/orders/${orderId}/financial-breakdown`
     );
   }
+
+  // ── DELIVERY FEE ENGINE & POLICY ─────────────────────────────────────────
+
+  public async getDeliverySettings(): Promise<
+    ApiResponse<import("@floria/types").DeliverySettings>
+  > {
+    return this.request<import("@floria/types").DeliverySettings>(
+      "/api/v1/admin/settings/delivery"
+    );
+  }
+
+  public async updateDeliverySettings(
+    updates: Partial<import("@floria/types").DeliverySettings>
+  ): Promise<ApiResponse<import("@floria/types").DeliverySettings>> {
+    return this.request<import("@floria/types").DeliverySettings>(
+      "/api/v1/admin/settings/delivery",
+      {
+        method: "PATCH",
+        body: JSON.stringify(updates),
+      }
+    );
+  }
+
+  public async previewDeliveryFee(
+    subtotalPaise: number
+  ): Promise<ApiResponse<import("@floria/types").DeliveryCalculationResult>> {
+    return this.request<import("@floria/types").DeliveryCalculationResult>(
+      "/api/v1/admin/delivery/preview",
+      {
+        method: "POST",
+        body: JSON.stringify({ subtotalPaise }),
+      }
+    );
+  }
+
+  // ── FINANCIAL SETTINGS & UNIFIED PRICING ENGINE ───────────────────────────
+
+  public async getFinancialSettings(): Promise<
+    ApiResponse<import("@floria/types").FinancialSettings>
+  > {
+    return this.request<import("@floria/types").FinancialSettings>(
+      "/api/v1/admin/settings/financials"
+    );
+  }
+
+  public async updateFinancialSettings(
+    updates: Partial<import("@floria/types").FinancialSettings>
+  ): Promise<ApiResponse<import("@floria/types").FinancialSettings>> {
+    return this.request<import("@floria/types").FinancialSettings>(
+      "/api/v1/admin/settings/financials",
+      {
+        method: "PATCH",
+        body: JSON.stringify(updates),
+      }
+    );
+  }
 }

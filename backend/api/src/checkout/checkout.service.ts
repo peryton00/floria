@@ -68,7 +68,7 @@ export class CheckoutService {
 
     const { data: inventories } = await db
       .from("inventory")
-      .select("product_id, price_paise, stock_quantity")
+      .select("product_id, base_price_paise, price_paise, stock_quantity")
       .in("product_id", productIds);
 
     if (!products || products.length === 0) {
@@ -76,9 +76,14 @@ export class CheckoutService {
     }
 
     const productMap = new Map(products.map((p) => [p.id, p]));
-    const invMap = new Map((inventories || []).map((i) => [i.product_id, i]));
+    const invMap = new Map((inventories || []).map((i: any) => [i.product_id, i]));
+
+    const { pricingService } = await import("../pricing/pricing.service.js");
+    const finSettings = await pricingService.getFinancialSettings();
 
     const lineItems: any[] = [];
+    let allItemsFreeDeliveryEligible = true;
+
     for (const item of cartItems) {
       const p = productMap.get(item.product_id);
       const inv = invMap.get(item.product_id);
@@ -86,13 +91,28 @@ export class CheckoutService {
       if (!p || !inv) throw Errors.validation("Cart contains invalid or inactive product.");
       if (inv.stock_quantity < item.quantity) throw Errors.outOfStock(p.name);
 
+      const rawBase = inv.base_price_paise ?? inv.price_paise ?? 0;
+      const calc = await pricingService.calculateProductPricing(rawBase, finSettings);
+
+      if (!calc.isFreeDeliveryEligible) {
+        allItemsFreeDeliveryEligible = false;
+      }
+
       lineItems.push({
         product_id: p.id,
         product_name_snapshot: p.name,
         seller_id_snapshot: p.seller_id,
-        unit_price_paise_snapshot: inv.price_paise,
+        base_price_paise_snapshot: calc.sellerBasePricePaise,
+        floria_profit_rate_snapshot: calc.floriaProfitRate / 100.0,
+        floria_profit_paise_snapshot: calc.floriaProfitPaise,
+        delivery_recovery_paise_snapshot: calc.deliveryRecoveryPaise,
+        customer_price_paise_snapshot: calc.customerProductPricePaise,
+        is_free_delivery_eligible_snapshot: calc.isFreeDeliveryEligible,
+        unit_price_paise_snapshot: calc.customerProductPricePaise,
         quantity: item.quantity,
-        line_total_paise: inv.price_paise * item.quantity,
+        line_total_paise: calc.customerProductPricePaise * item.quantity,
+        commission_rate_snapshot: calc.sellerCommissionRate / 100.0,
+        commission_paise_snapshot: calc.sellerCommissionPaise,
       });
     }
 
@@ -117,9 +137,32 @@ export class CheckoutService {
     }
 
     const subtotalPaise = lineItems.reduce((s, li) => s + li.line_total_paise, 0);
-    const ratePct = await settingsRepository.getCommissionRate();
+    const maintenanceFeePaise = finSettings.platformMaintenanceFeePaise; // ₹10.00 default
+
+    // Server-authoritative delivery fee calculation (Product-level free delivery rule)
+    const { deliveryService } = await import("../delivery/delivery.service.js");
+    const deliverySettings = await deliveryService.getDeliverySettings();
+
+    let deliveryFeePaise = 0;
+    let deliveryFeeReason = "FREE_DELIVERY_THRESHOLD";
+
+    if (!deliverySettings.deliveryEnabled) {
+      deliveryFeePaise = 0;
+      deliveryFeeReason = "DELIVERY_DISABLED";
+    } else if (deliverySettings.freeDeliveryEnabled && allItemsFreeDeliveryEligible) {
+      deliveryFeePaise = 0;
+      deliveryFeeReason = "FREE_DELIVERY_THRESHOLD";
+    } else {
+      deliveryFeePaise = deliverySettings.baseDeliveryFeePaise; // ₹40.00 default
+      deliveryFeeReason = "PAID_BELOW_THRESHOLD";
+    }
+
+    const finalTotalPaise = subtotalPaise + maintenanceFeePaise + deliveryFeePaise;
+
+    const ratePct = finSettings.sellerCommissionRate;
     const commissionDecimalRate = ratePct / 100.0;
-    const commissionPaise = Math.round(subtotalPaise * commissionDecimalRate);
+    const sellerBaseSubtotal = lineItems.reduce((s, li) => s + (li.base_price_paise_snapshot * li.quantity), 0);
+    const commissionPaise = Math.round(sellerBaseSubtotal * commissionDecimalRate);
     const primarySellerId = lineItems[0].seller_id_snapshot;
 
     const uniqueSellers = [...new Set(lineItems.map((li) => li.seller_id_snapshot))];
@@ -134,10 +177,14 @@ export class CheckoutService {
       status: "seller_pending",
       delivery_address_snapshot: deliveryAddress,
       subtotal_paise: subtotalPaise,
-      delivery_fee_paise: 0,
+      maintenance_fee_paise: maintenanceFeePaise,
+      delivery_fee_paise: deliveryFeePaise,
+      delivery_fee_reason: deliveryFeeReason,
+      delivery_threshold_paise_snapshot: finSettings.freeDeliveryThresholdPaise,
+      eligible_delivery_subtotal_paise: subtotalPaise,
       commission_rate: commissionDecimalRate,
       commission_paise: commissionPaise,
-      total_paise: subtotalPaise,
+      total_paise: finalTotalPaise,
       notes: input.paymentMethod === "cod" ? "COD" : "Online",
     };
 

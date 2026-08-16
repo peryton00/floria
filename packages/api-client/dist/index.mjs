@@ -541,6 +541,45 @@ var FloriaApiClient = class {
       `/api/v1/admin/orders/${orderId}/financial-breakdown`
     );
   }
+  // ── DELIVERY FEE ENGINE & POLICY ─────────────────────────────────────────
+  async getDeliverySettings() {
+    return this.request(
+      "/api/v1/admin/settings/delivery"
+    );
+  }
+  async updateDeliverySettings(updates) {
+    return this.request(
+      "/api/v1/admin/settings/delivery",
+      {
+        method: "PATCH",
+        body: JSON.stringify(updates)
+      }
+    );
+  }
+  async previewDeliveryFee(subtotalPaise) {
+    return this.request(
+      "/api/v1/admin/delivery/preview",
+      {
+        method: "POST",
+        body: JSON.stringify({ subtotalPaise })
+      }
+    );
+  }
+  // ── FINANCIAL SETTINGS & UNIFIED PRICING ENGINE ───────────────────────────
+  async getFinancialSettings() {
+    return this.request(
+      "/api/v1/admin/settings/financials"
+    );
+  }
+  async updateFinancialSettings(updates) {
+    return this.request(
+      "/api/v1/admin/settings/financials",
+      {
+        method: "PATCH",
+        body: JSON.stringify(updates)
+      }
+    );
+  }
 };
 export {
   FloriaApiClient

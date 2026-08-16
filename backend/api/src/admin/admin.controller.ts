@@ -418,6 +418,59 @@ export class AdminController {
       next(err);
     }
   }
+
+  // ── Delivery Settings & Calculation Preview ──────────────────────────────
+  async getDeliverySettings(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { deliveryService } = await import("../delivery/delivery.service.js");
+      const settings = await deliveryService.getDeliverySettings();
+      res.json({ success: true, data: settings });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async updateDeliverySettings(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { deliveryService } = await import("../delivery/delivery.service.js");
+      const settings = await deliveryService.updateDeliverySettings(req.body, req.user!.id);
+      res.json({ success: true, data: settings });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async previewDeliveryFee(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { deliveryService } = await import("../delivery/delivery.service.js");
+      const subtotalPaise = Number(req.body?.subtotalPaise || 0);
+      const result = await deliveryService.calculateDeliveryFee({ eligibleSubtotalPaise: subtotalPaise });
+      res.json({ success: true, data: result });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  // ── Financial Settings & Unified Pricing Engine ───────────────────────────
+  async getFinancialSettings(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { pricingService } = await import("../pricing/pricing.service.js");
+      const settings = await pricingService.getFinancialSettings();
+      res.json({ success: true, data: settings });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async updateFinancialSettings(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { pricingService } = await import("../pricing/pricing.service.js");
+      const settings = await pricingService.updateFinancialSettings(req.body, req.user!.id);
+      res.json({ success: true, data: settings });
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 export const adminController = new AdminController();

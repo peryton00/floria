@@ -63,8 +63,13 @@ router.patch("/orders/:id", adminController.updateOrder);
 // Audit Logging Visibility
 router.get("/audit-logs", adminController.getAuditLogs);
 
-// Platform Settings & Commission Rate Management
+// Platform Settings & Financial Engine Governance
 router.get("/settings/platform", adminController.getSettings);
 router.patch("/settings/commission", adminController.updateCommissionRate);
+router.get("/settings/delivery", adminController.getDeliverySettings);
+router.patch("/settings/delivery", adminController.updateDeliverySettings);
+router.post("/delivery/preview", adminController.previewDeliveryFee);
+router.get("/settings/financials", adminController.getFinancialSettings);
+router.patch("/settings/financials", adminController.updateFinancialSettings);
 
 export default router;

@@ -321,6 +321,11 @@ declare class FloriaApiClient {
     getRankedNurseries(): Promise<ApiResponse<NurserySummary[]>>;
     getAdminProductFinancialCalculation(productId: string): Promise<ApiResponse<_floria_types.AdminProductFinancialCalculation>>;
     getAdminOrderFinancialBreakdown(orderId: string): Promise<ApiResponse<_floria_types.AdminOrderFinancialBreakdown>>;
+    getDeliverySettings(): Promise<ApiResponse<_floria_types.DeliverySettings>>;
+    updateDeliverySettings(updates: Partial<_floria_types.DeliverySettings>): Promise<ApiResponse<_floria_types.DeliverySettings>>;
+    previewDeliveryFee(subtotalPaise: number): Promise<ApiResponse<_floria_types.DeliveryCalculationResult>>;
+    getFinancialSettings(): Promise<ApiResponse<_floria_types.FinancialSettings>>;
+    updateFinancialSettings(updates: Partial<_floria_types.FinancialSettings>): Promise<ApiResponse<_floria_types.FinancialSettings>>;
 }
 
 export { type ApiClientConfig, type ApiResponse, FloriaApiClient, type NotificationItem, type NotificationListResponse, type NurserySummary, type ProductReview, type QueryParams, type ReviewListResponse, type ReviewStatus, type ReviewSummary, type SellerDashboardData, type SellerDocument, type SellerNotificationSettings };

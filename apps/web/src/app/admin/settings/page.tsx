@@ -102,6 +102,53 @@ export default function AdminSettingsPage() {
           </div>
         )}
 
+        {/* Floria Unified Pricing Policy Section */}
+        <div className="bg-white rounded-xl border border-ink-100 p-6 shadow-sm space-y-4">
+          <div className="flex items-center justify-between border-b border-ink-100 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-forest-50 text-forest-700 flex items-center justify-center font-bold">
+                🏷️
+              </div>
+              <div>
+                <h2 className="text-sm font-bold text-ink-900">FLORIA PRICING POLICY</h2>
+                <p className="text-xs text-ink-400">Database-backed parameters governing seller commission, internal profit margin, checkout maintenance fee, and product-level free delivery recovery.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 text-xs">
+            <div className="bg-cream-50 p-4 rounded-xl space-y-1">
+              <p className="font-semibold text-ink-500 uppercase tracking-wider text-[10px]">Seller Commission</p>
+              <p className="text-xl font-mono font-bold text-amber-700">12%</p>
+              <p className="text-[10px] text-ink-400">Deducted from seller base price.</p>
+            </div>
+
+            <div className="bg-cream-50 p-4 rounded-xl space-y-1">
+              <p className="font-semibold text-ink-500 uppercase tracking-wider text-[10px]">Floria Profit</p>
+              <p className="text-xl font-mono font-bold text-forest-700">2%</p>
+              <p className="text-[10px] text-ink-400">Added to product price (Internal).</p>
+            </div>
+
+            <div className="bg-cream-50 p-4 rounded-xl space-y-1">
+              <p className="font-semibold text-ink-500 uppercase tracking-wider text-[10px]">Maintenance Fee</p>
+              <p className="text-xl font-mono font-bold text-stone-800">₹10.00</p>
+              <p className="text-[10px] text-ink-400">Charged once at checkout.</p>
+            </div>
+
+            <div className="bg-cream-50 p-4 rounded-xl space-y-1">
+              <p className="font-semibold text-ink-500 uppercase tracking-wider text-[10px]">Free Delivery Threshold</p>
+              <p className="text-xl font-mono font-bold text-emerald-700">₹599.00</p>
+              <p className="text-[10px] text-ink-400">Per product eligibility threshold.</p>
+            </div>
+
+            <div className="bg-cream-50 p-4 rounded-xl space-y-1">
+              <p className="font-semibold text-ink-500 uppercase tracking-wider text-[10px]">Delivery Recovery</p>
+              <p className="text-xl font-mono font-bold text-emerald-700">₹20.00</p>
+              <p className="text-[10px] text-ink-400">Hidden recovery for free items.</p>
+            </div>
+          </div>
+        </div>
+
         {/* Commission Rate Settings */}
         <div className="bg-white rounded-xl border border-ink-100 p-6 shadow-sm space-y-4">
           <div className="flex items-center justify-between border-b border-ink-100 pb-4">
@@ -207,6 +254,113 @@ export default function AdminSettingsPage() {
             </div>
           </div>
         )}
+
+        {/* Delivery Fee Settings & Interactive Calculation Preview */}
+        <div className="bg-white rounded-xl border border-ink-100 p-6 shadow-sm space-y-6">
+          <div className="flex items-center justify-between border-b border-ink-100 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold text-lg">
+                🚚
+              </div>
+              <div>
+                <h2 className="text-sm font-bold text-ink-900">Platform Delivery Fee Engine & Policy</h2>
+                <p className="text-xs text-ink-400">Server-authoritative delivery rules, minimum order thresholds, and single master order fee mode.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Delivery Policy Configuration */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+            <div className="bg-cream-50 p-4 rounded-xl space-y-1">
+              <p className="font-semibold text-ink-500 uppercase tracking-wider text-[10px]">Delivery Engine Status</p>
+              <p className="text-lg font-bold text-emerald-700">ACTIVE (Enabled)</p>
+              <p className="text-[11px] text-ink-400">Calculated server-side during checkout.</p>
+            </div>
+
+            <div className="bg-cream-50 p-4 rounded-xl space-y-1">
+              <p className="font-semibold text-ink-500 uppercase tracking-wider text-[10px]">Base Delivery Fee</p>
+              <p className="text-lg font-mono font-bold text-stone-800">₹40.00</p>
+              <p className="text-[11px] text-ink-400">Charged on orders below free threshold.</p>
+            </div>
+
+            <div className="bg-cream-50 p-4 rounded-xl space-y-1">
+              <p className="font-semibold text-ink-500 uppercase tracking-wider text-[10px]">Free Delivery Threshold</p>
+              <p className="text-lg font-mono font-bold text-emerald-700">₹999.00</p>
+              <p className="text-[11px] text-ink-400">Subtotal &gt;= ₹999.00 receives ₹0 delivery.</p>
+            </div>
+
+            <div className="bg-cream-50 p-4 rounded-xl space-y-1">
+              <p className="font-semibold text-ink-500 uppercase tracking-wider text-[10px]">Delivery Mode</p>
+              <p className="text-base font-bold text-stone-800">Master Order Fee</p>
+              <p className="text-[11px] text-ink-400">1 fee per order across multiple nurseries.</p>
+            </div>
+          </div>
+
+          {/* Interactive Delivery Fee Calculation Preview Tool */}
+          <div className="border border-stone-200 rounded-xl p-5 bg-stone-900 text-stone-100 space-y-4">
+            <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Admin Inspection Tool</span>
+                <h3 className="text-sm font-bold text-stone-100 mt-0.5">Interactive Delivery Calculation Preview</h3>
+              </div>
+              <span className="text-xs font-mono text-stone-400 bg-stone-800 px-2.5 py-1 rounded-full">Server Engine Test</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+              <div>
+                <label className="block text-xs font-semibold text-stone-300 mb-1">Eligible Order Subtotal (INR)</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-xs text-stone-400">₹</span>
+                  <input
+                    type="number"
+                    step="1"
+                    defaultValue="850"
+                    id="previewSubtotalInput"
+                    className="w-full pl-7 pr-3 py-2 text-xs font-mono rounded-lg bg-stone-950 border border-stone-700 text-stone-100 focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={async () => {
+                  const el = document.getElementById("previewSubtotalInput") as HTMLInputElement;
+                  const val = parseFloat(el?.value || "850");
+                  const paise = Math.round(val * 100);
+                  const res = await api.previewDeliveryFee(paise);
+                  const resEl = document.getElementById("previewResultDisplay");
+                  if (resEl && res.success && res.data) {
+                    resEl.innerHTML = `
+                      <div class="space-y-1">
+                        <div class="flex justify-between items-center text-xs">
+                          <span class="text-stone-400">Final Delivery Fee:</span>
+                          <span class="font-mono font-bold ${res.data.isFreeDelivery ? "text-emerald-400" : "text-amber-400"}">
+                            ${res.data.isFreeDelivery ? "₹0.00 (FREE)" : `₹${(res.data.deliveryFeePaise / 100).toFixed(2)}`}
+                          </span>
+                        </div>
+                        <div class="flex justify-between items-center text-[11px] text-stone-400">
+                          <span>Applied Rule Reason:</span>
+                          <span class="font-mono text-stone-200">${res.data.reason}</span>
+                        </div>
+                        <div class="flex justify-between items-center text-[11px] text-stone-400">
+                          <span>Threshold Target:</span>
+                          <span class="font-mono">₹${(res.data.thresholdPaise / 100).toFixed(2)}</span>
+                        </div>
+                      </div>
+                    `;
+                  }
+                }}
+                className="py-2 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider rounded-lg transition-colors"
+              >
+                Test Calculation
+              </button>
+
+              <div id="previewResultDisplay" className="p-3 rounded-lg bg-stone-950 border border-stone-800 min-h-[50px] flex items-center justify-center text-xs text-stone-400">
+                Enter subtotal above &amp; click Test Calculation.
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Security & System Info */}
         <div className="bg-white rounded-xl border border-ink-100 p-6 shadow-sm space-y-4">

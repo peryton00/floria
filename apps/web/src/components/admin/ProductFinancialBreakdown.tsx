@@ -46,7 +46,7 @@ export function ProductFinancialBreakdown({ productId, onClose }: Props) {
         <div className="flex items-center justify-between border-b border-stone-800 pb-4 mb-6">
           <div>
             <span className="text-xs uppercase font-semibold tracking-wider text-emerald-400">Admin Financial Inspection</span>
-            <h2 className="text-xl font-bold text-stone-100 mt-1">Product Price Breakdown</h2>
+            <h2 className="text-xl font-bold text-stone-100 mt-1">Product Unified Price &amp; Profit Breakdown</h2>
           </div>
           <button
             onClick={onClose}
@@ -77,92 +77,64 @@ export function ProductFinancialBreakdown({ productId, onClose }: Props) {
               <p className="text-xs text-stone-400">Nursery Partner: <span className="text-emerald-400 font-medium">{data.product.sellerName}</span></p>
             </div>
 
-            {/* Base Product Pricing */}
+            {/* Seller Base Pricing & Net Payout */}
             <div className="space-y-2">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-stone-400 border-b border-stone-800/60 pb-1">
-                Base Product Price
+                Seller Base Price &amp; Commission Settlement
               </h3>
               <div className="flex justify-between text-sm py-1">
-                <span className="text-stone-400">Nursery Base Price</span>
-                <span className="font-mono text-stone-200">{formatINR(data.pricing.basePricePaise)}</span>
-              </div>
-              <div className="flex justify-between text-sm py-1">
-                <span className="text-stone-400">Seller Discount</span>
-                <span className="font-mono text-stone-200">{data.pricing.discountPaise > 0 ? `-${formatINR(data.pricing.discountPaise)}` : "₹0.00"}</span>
-              </div>
-              <div className="flex justify-between text-sm py-1 font-semibold border-t border-stone-800/40 pt-2 text-stone-100">
-                <span>Seller Selling Price</span>
-                <span className="font-mono text-emerald-400">{formatINR(data.pricing.sellingPricePaise)}</span>
-              </div>
-            </div>
-
-            {/* Platform Commission */}
-            <div className="space-y-2">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-stone-400 border-b border-stone-800/60 pb-1">
-                Platform Commission (Configured in Settings)
-              </h3>
-              <div className="flex justify-between text-sm py-1">
-                <span className="text-stone-400">Platform Commission Rate</span>
-                <span className="font-mono text-stone-200">{data.commission.rate}%</span>
-              </div>
-              <div className="flex justify-between text-sm py-1 font-semibold text-amber-400">
-                <span>Commission Amount</span>
-                <span className="font-mono">{formatINR(data.commission.amountPaise)}</span>
-              </div>
-            </div>
-
-            {/* Seller Net Earnings */}
-            <div className="space-y-2">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-stone-400 border-b border-stone-800/60 pb-1">
-                Seller Net Earnings
-              </h3>
-              <div className="flex justify-between text-sm py-1">
-                <span className="text-stone-400">Seller Gross</span>
-                <span className="font-mono text-stone-200">{formatINR(data.sellerEarnings.grossPaise)}</span>
+                <span className="text-stone-400">Seller Base Price</span>
+                <span className="font-mono text-stone-200">{formatINR(data.pricing.sellerBasePricePaise)}</span>
               </div>
               <div className="flex justify-between text-sm py-1 text-amber-400">
-                <span className="text-stone-400">Floria Platform Commission ({data.commission.rate}%)</span>
+                <span className="text-stone-400">Seller Commission ({data.commission.rate}%)</span>
                 <span className="font-mono">-{formatINR(data.commission.amountPaise)}</span>
               </div>
-              <div className="flex justify-between text-sm py-1 font-bold border-t border-stone-800/40 pt-2 text-emerald-300">
+              <div className="flex justify-between text-sm py-1 font-semibold border-t border-stone-800/40 pt-2 text-emerald-300">
                 <span>Seller Net Payout</span>
-                <span className="font-mono text-base">{formatINR(data.sellerEarnings.netPaise)}</span>
+                <span className="font-mono font-bold text-base">{formatINR(data.sellerEarnings.netPaise)}</span>
               </div>
             </div>
 
-            {/* Customer Charges */}
+            {/* Floria Internal Margin & Recovery */}
             <div className="space-y-2">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-stone-400 border-b border-stone-800/60 pb-1">
-                Customer Charges
+                Floria Internal Pricing Components (Admin Only)
               </h3>
               <div className="flex justify-between text-sm py-1">
-                <span className="text-stone-400">Product Price</span>
-                <span className="font-mono text-stone-200">{formatINR(data.pricing.sellingPricePaise)}</span>
+                <span className="text-stone-400">Floria Profit Margin ({data.pricing.floriaProfitRate}%)</span>
+                <span className="font-mono text-emerald-400">+{formatINR(data.pricing.floriaProfitPaise)}</span>
               </div>
               <div className="flex justify-between text-sm py-1">
-                <span className="text-stone-400">Delivery Fee</span>
-                <span className="font-mono text-stone-300">
-                  {data.configuredRules.deliveryConfigured ? formatINR(data.customerCharges.deliveryFeePaise) : "₹0.00 (Free)"}
+                <span className="text-stone-400">Free Delivery Recovery</span>
+                <span className="font-mono text-emerald-400">
+                  {data.pricing.deliveryRecoveryPaise > 0 ? `+${formatINR(data.pricing.deliveryRecoveryPaise)}` : "₹0.00 (Not Applied)"}
                 </span>
               </div>
               <div className="flex justify-between text-sm py-1">
-                <span className="text-stone-400">Tax</span>
-                <span className="font-mono text-stone-400">
-                  {data.configuredRules.taxConfigured ? formatINR(data.customerCharges.taxPaise) : "Not Configured"}
+                <span className="text-stone-400">Product Free Delivery Eligible (Threshold &gt;= ₹599)</span>
+                <span className={`font-semibold ${data.pricing.isFreeDeliveryEligible ? "text-emerald-400" : "text-amber-400"}`}>
+                  {data.pricing.isFreeDeliveryEligible ? "YES (Free Delivery Eligible)" : "NO (Paid Delivery)"}
                 </span>
               </div>
+            </div>
+
+            {/* Customer Product Price */}
+            <div className="space-y-2">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-stone-400 border-b border-stone-800/60 pb-1">
+                Customer Product Price
+              </h3>
               <div className="flex justify-between text-base font-bold border-t border-stone-700 pt-3 text-stone-100">
-                <span>CUSTOMER TOTAL</span>
-                <span className="font-mono text-emerald-400 text-lg">{formatINR(data.customerCharges.totalPaise)}</span>
+                <span>FINAL LISTING PRODUCT PRICE</span>
+                <span className="font-mono text-emerald-400 text-lg">{formatINR(data.pricing.customerProductPricePaise)}</span>
               </div>
             </div>
 
             {/* Formula Legend Footer */}
             <div className="rounded-xl bg-stone-950/80 border border-stone-800/60 p-3 text-[11px] text-stone-400 space-y-1 font-mono">
-              <p><span className="text-stone-300 font-semibold">Selling Price</span> = Base Price − Discount</p>
-              <p><span className="text-stone-300 font-semibold">Commission</span> = Selling Price × {data.commission.rate}%</p>
-              <p><span className="text-stone-300 font-semibold">Seller Net</span> = Selling Price − Commission</p>
-              <p><span className="text-stone-300 font-semibold">Customer Total</span> = Selling Price + Delivery + Tax</p>
+              <p><span className="text-stone-300 font-semibold">Seller Net</span> = Base Price − Commission ({data.commission.rate}%)</p>
+              <p><span className="text-stone-300 font-semibold">Floria Profit</span> = Base Price × {data.pricing.floriaProfitRate}%</p>
+              <p><span className="text-stone-300 font-semibold">Customer Price</span> = Base Price + Profit + Delivery Recovery</p>
             </div>
           </div>
         ) : null}

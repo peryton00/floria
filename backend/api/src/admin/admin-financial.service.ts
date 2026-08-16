@@ -23,29 +23,16 @@ export class AdminFinancialService {
 
     const { data: inv } = await db
       .from("inventory")
-      .select("price_paise, sku")
+      .select("base_price_paise, price_paise, sku")
       .eq("product_id", productId)
       .maybeSingle();
 
-    const baseSellingPrice = inv?.price_paise ?? 0;
+    const rawBase = inv?.base_price_paise ?? inv?.price_paise ?? 0;
     const sellerObj = Array.isArray(prod.seller) ? prod.seller[0] : prod.seller;
 
-    // 2. Fetch Server-Authoritative Platform Commission Rate
-    const commissionPct = await settingsRepository.getCommissionRate(); // e.g. 12 (for 12%)
-    const commissionDecimal = commissionPct / 100.0;
-
-    // 3. Integer Paise Server Calculations
-    const basePricePaise = baseSellingPrice;
-    const discountPaise = 0; // Not configured on product level currently
-    const sellingPricePaise = baseSellingPrice;
-
-    const commissionAmountPaise = Math.round(sellingPricePaise * commissionDecimal);
-    const sellerGrossPaise = sellingPricePaise;
-    const sellerNetPaise = sellerGrossPaise - commissionAmountPaise;
-
-    const deliveryFeePaise = 0; // Not configured / Free delivery
-    const taxPaise = 0; // Tax rules not configured
-    const totalPaise = sellingPricePaise + deliveryFeePaise + taxPaise;
+    // 2. Perform Unified Pricing Engine Calculation
+    const { pricingService } = await import("../pricing/pricing.service.js");
+    const calc = await pricingService.calculateProductPricing(rawBase);
 
     return {
       product: {
@@ -55,29 +42,30 @@ export class AdminFinancialService {
         sellerName: sellerObj?.business_name || "Partner Nursery",
       },
       pricing: {
-        basePricePaise,
-        discountPaise,
-        sellingPricePaise,
+        sellerBasePricePaise: calc.sellerBasePricePaise,
+        floriaProfitRate: calc.floriaProfitRate,
+        floriaProfitPaise: calc.floriaProfitPaise,
+        deliveryRecoveryPaise: calc.deliveryRecoveryPaise,
+        customerProductPricePaise: calc.customerProductPricePaise,
+        isFreeDeliveryEligible: calc.isFreeDeliveryEligible,
       },
       commission: {
-        rate: commissionPct,
-        amountPaise: commissionAmountPaise,
+        rate: calc.sellerCommissionRate,
+        amountPaise: calc.sellerCommissionPaise,
       },
       sellerEarnings: {
-        grossPaise: sellerGrossPaise,
-        netPaise: sellerNetPaise,
+        basePricePaise: calc.sellerBasePricePaise,
+        commissionPaise: calc.sellerCommissionPaise,
+        netPaise: calc.sellerNetPaise,
       },
       customerCharges: {
-        deliveryFeePaise,
-        taxPaise,
+        productPricePaise: calc.customerProductPricePaise,
+        deliveryFeePaise: 0,
+        taxPaise: 0,
         discountPaise: 0,
-        totalPaise,
+        totalPaise: calc.customerProductPricePaise,
       },
       currency: "INR",
-      configuredRules: {
-        taxConfigured: false,
-        deliveryConfigured: false,
-      },
     };
   }
 
@@ -117,6 +105,8 @@ export class AdminFinancialService {
 
     const nurseryBreakdown: NurseryOrderFinancialAttribution[] = [];
     let totalPlatformCommission = 0;
+    let totalFloriaProfit = 0;
+    let totalDeliveryRecovery = 0;
 
     for (const [sellerId, sItems] of sellerItemMap.entries()) {
       const sellerObj = sItems[0]?.seller;
@@ -126,21 +116,26 @@ export class AdminFinancialService {
       const commRate = fin?.commission_rate ?? order.commission_rate ?? 0.12;
 
       const mappedItems = sItems.map((it) => {
-        const lineGross = (it.unit_price_paise_snapshot || 0) * it.quantity;
+        const basePrice = it.base_price_paise_snapshot ?? it.unit_price_paise_snapshot ?? 0;
+        const lineGross = basePrice * it.quantity;
         const lineComm = Math.round(lineGross * commRate);
         const lineNet = lineGross - lineComm;
+
+        totalFloriaProfit += (it.floria_profit_paise_snapshot || 0) * it.quantity;
+        totalDeliveryRecovery += (it.delivery_recovery_paise_snapshot || 0) * it.quantity;
+
         return {
           productId: it.product_id,
           productName: it.product_name_snapshot || "Product",
-          unitPricePaise: it.unit_price_paise_snapshot || 0,
+          unitPricePaise: it.customer_price_paise_snapshot || it.unit_price_paise_snapshot || 0,
           quantity: it.quantity,
-          lineTotalPaise: lineGross,
+          lineTotalPaise: (it.customer_price_paise_snapshot || it.unit_price_paise_snapshot || 0) * it.quantity,
           commissionPaise: lineComm,
           sellerNetPaise: lineNet,
         };
       });
 
-      const sellerGrossPaise = fin?.seller_gross_paise ?? mappedItems.reduce((s, i) => s + i.lineTotalPaise, 0);
+      const sellerGrossPaise = fin?.seller_gross_paise ?? mappedItems.reduce((s, i) => s + (i.unitPricePaise * i.quantity), 0);
       const commissionPaise = fin?.commission_paise ?? Math.round(sellerGrossPaise * commRate);
       const sellerNetPaise = fin?.seller_net_paise ?? (sellerGrossPaise - commissionPaise);
 
@@ -151,7 +146,7 @@ export class AdminFinancialService {
         sellerName,
         items: mappedItems,
         sellerGrossPaise,
-        commissionRate: commRate * 100, // percentage e.g. 12
+        commissionRate: commRate * 100,
         commissionPaise,
         sellerNetPaise,
       });
@@ -164,10 +159,14 @@ export class AdminFinancialService {
       customerName: customerObj?.full_name || order.delivery_address_snapshot?.full_name || "Customer",
       customerTotalPaise: order.total_paise || order.subtotal_paise || 0,
       subtotalPaise: order.subtotal_paise || 0,
+      maintenanceFeePaise: order.maintenance_fee_paise || 0,
       deliveryFeePaise: order.delivery_fee_paise || 0,
+      deliveryFeeReason: order.delivery_fee_reason,
       taxPaise: 0,
       discountPaise: 0,
       totalPlatformCommissionPaise: totalPlatformCommission || order.commission_paise || 0,
+      totalFloriaProfitPaise: totalFloriaProfit,
+      totalDeliveryRecoveryPaise: totalDeliveryRecovery,
       nurseryBreakdown,
       currency: "INR",
       createdAt: order.created_at,

@@ -119,15 +119,27 @@ export function OrderFinancialBreakdown({ orderId }: Props) {
           <span className="font-mono">{formatINR(data.subtotalPaise)}</span>
         </div>
         <div className="flex justify-between">
-          <span className="text-stone-400">Delivery Fee</span>
+          <span className="text-stone-400">Platform Maintenance Fee</span>
+          <span className="font-mono text-stone-200">{formatINR(data.maintenanceFeePaise)}</span>
+        </div>
+        <div className="flex justify-between items-baseline">
+          <span className="text-stone-400">
+            Delivery Fee {data.deliveryFeeReason && <span className="text-[10px] font-mono text-stone-500">({data.deliveryFeeReason})</span>}
+          </span>
           <span className="font-mono text-stone-300">
-            {data.deliveryFeePaise > 0 ? formatINR(data.deliveryFeePaise) : "₹0.00 (Free)"}
+            {data.deliveryFeePaise > 0 ? formatINR(data.deliveryFeePaise) : "₹0.00 (Free Delivery)"}
           </span>
         </div>
         <div className="flex justify-between text-amber-400 font-semibold border-t border-stone-800/60 pt-2">
           <span>Total Platform Commission</span>
           <span className="font-mono">{formatINR(data.totalPlatformCommissionPaise)}</span>
         </div>
+        {data.totalFloriaProfitPaise !== undefined && data.totalFloriaProfitPaise > 0 && (
+          <div className="flex justify-between text-emerald-400 font-semibold">
+            <span>Total Internal Floria Profit</span>
+            <span className="font-mono">+{formatINR(data.totalFloriaProfitPaise)}</span>
+          </div>
+        )}
         <div className="flex justify-between text-base font-bold border-t border-stone-700 pt-3 text-stone-100">
           <span>CUSTOMER TOTAL</span>
           <span className="font-mono text-emerald-400">{formatINR(data.customerTotalPaise)}</span>
