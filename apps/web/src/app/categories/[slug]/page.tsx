@@ -6,6 +6,7 @@ import { getCategoryBySlug, getProductListingsByCategorySlug } from "@/lib/servi
 import { ProductCard } from "@/components/ui/ProductCard";
 import { FilterSidebar } from "@/components/ui/FilterSidebar";
 import { FilterAndSortControls } from "@/components/ui/FilterAndSortControls";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { LeafIcon } from "@/components/ui/Icons";
 
 interface Props {
@@ -86,25 +87,25 @@ export default async function CategorySlugPage({ params, searchParams }: Props) 
 
           {/* Product Grid */}
           {productListings.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-ink-100 p-8 sm:p-12 text-center shadow-sm my-4 space-y-4">
-              <div className="w-12 h-12 rounded-full bg-cream-100 text-ink-400 flex items-center justify-center mx-auto">
-                <LeafIcon size={24} />
-              </div>
-              <div>
-                <h3 className="font-serif font-bold text-ink-900 text-lg">No products match your filters</h3>
-                <p className="text-xs text-ink-500 mt-1 max-w-sm mx-auto">
-                  Try clearing your filters or exploring other categories on Floria.
-                </p>
-              </div>
-              <div className="pt-2 flex justify-center gap-3">
-                <Link
-                  href={`/categories/${slug}`}
-                  className="py-2.5 px-5 bg-forest-700 hover:bg-forest-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-colors shadow-sm"
-                >
-                  Reset Category Filters
-                </Link>
-              </div>
-            </div>
+            <EmptyState
+              badge="No Matching Plants"
+              title="No products match your filters"
+              description="We couldn't find anything matching your active filters in this category. Try adjusting your criteria or discover other green collections."
+              primaryAction={{
+                label: "Reset Category Filters",
+                href: `/categories/${slug}`,
+              }}
+              secondaryAction={{
+                label: "Explore All Categories",
+                href: "/categories",
+              }}
+              suggestions={[
+                { label: "Indoor Plants", href: "/categories/indoor-plants" },
+                { label: "Herbs & Edibles", href: "/categories/herbs-edibles" },
+                { label: "Planters & Pots", href: "/categories/planters-pots" },
+                { label: "Soil & Fertilizers", href: "/categories/soil-fertilizers" },
+              ]}
+            />
           ) : (
             <div
               className="grid grid-cols-2 lg:grid-cols-3 gap-4"
