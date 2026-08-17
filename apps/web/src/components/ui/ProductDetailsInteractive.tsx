@@ -362,11 +362,12 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
             type="button"
             disabled={isOutOfStock}
             onClick={() => addToCart(listing, quantity)}
+            style={!isOutOfStock ? { color: "#ffffff" } : undefined}
             className={[
               "py-4 rounded-xl font-bold text-xs uppercase tracking-wider transition-all shadow-xs focus:outline-none focus:ring-2 focus:ring-offset-2",
               isOutOfStock
                 ? "bg-cream-300 text-ink-400 cursor-not-allowed"
-                : "bg-terracotta-700 text-white hover:bg-terracotta-800 hover:shadow-md hover:scale-[1.01] focus:ring-terracotta-700 active:scale-[0.98]",
+                : "bg-terracotta-700 !text-white hover:bg-terracotta-800 hover:shadow-md hover:scale-[1.01] focus:ring-terracotta-700 active:scale-[0.98]",
             ].join(" ")}
           >
             Add to Cart
@@ -375,11 +376,12 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
             type="button"
             disabled={isOutOfStock}
             onClick={handleBuyNow}
+            style={!isOutOfStock ? { color: "#ffffff" } : undefined}
             className={[
               "py-4 rounded-xl font-bold text-xs uppercase tracking-wider transition-all shadow-xs focus:outline-none focus:ring-2 focus:ring-offset-2",
               isOutOfStock
                 ? "bg-cream-300 text-ink-400 cursor-not-allowed"
-                : "bg-forest-800 text-white hover:bg-forest-900 hover:shadow-md hover:scale-[1.01] focus:ring-forest-800 active:scale-[0.98]",
+                : "bg-forest-800 !text-white hover:bg-forest-900 hover:shadow-md hover:scale-[1.01] focus:ring-forest-800 active:scale-[0.98]",
             ].join(" ")}
           >
             Buy Now

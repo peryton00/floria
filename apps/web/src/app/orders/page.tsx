@@ -103,7 +103,8 @@ export default function OrdersPage() {
           </p>
           <Link
             href="/categories"
-            className="inline-flex items-center justify-center px-6 py-3 bg-forest-800 hover:bg-forest-900 text-white font-semibold text-sm rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-forest-800"
+            className="inline-flex items-center justify-center px-6 py-3 bg-forest-800 hover:bg-forest-900 !text-white font-semibold text-sm rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-forest-800 shadow-sm"
+            style={{ color: "#ffffff" }}
           >
             Start Shopping
           </Link>
@@ -234,7 +235,8 @@ export default function OrdersPage() {
 
                     <Link
                       href={`/orders/${order.id}`}
-                      className="inline-flex items-center justify-center px-5 py-2.5 bg-forest-800 hover:bg-forest-900 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-forest-800"
+                      className="inline-flex items-center justify-center px-5 py-2.5 bg-forest-800 hover:bg-forest-900 !text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-forest-800 shadow-sm"
+                      style={{ color: "#ffffff" }}
                     >
                       Track Order
                     </Link>

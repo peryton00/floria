@@ -119,7 +119,8 @@ function LoginForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3.5 bg-forest-700 hover:bg-forest-800 text-white font-bold text-xs uppercase tracking-widest rounded-full transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-700 pt-3 min-h-[44px] disabled:opacity-50"
+          style={{ color: "#ffffff" }}
+          className="w-full py-3.5 bg-forest-800 hover:bg-forest-900 !text-white font-bold text-xs uppercase tracking-widest rounded-full transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-800 pt-3 min-h-[44px] disabled:opacity-50"
         >
           {loading ? "Signing In..." : "Login"}
         </button>

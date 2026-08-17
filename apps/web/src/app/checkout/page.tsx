@@ -317,7 +317,8 @@ export default function CheckoutPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
               <Link
                 href={`/orders/${confirmedOrder.id}`}
-                className="w-full flex items-center justify-center py-3 bg-forest-800 hover:bg-forest-900 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-800"
+                className="w-full flex items-center justify-center py-3 bg-forest-800 hover:bg-forest-900 !text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-800"
+                style={{ color: "#ffffff" }}
               >
                 View Order
               </Link>
@@ -354,7 +355,8 @@ export default function CheckoutPage() {
           <p className="text-sm text-ink-500 mb-6">Add plants to your cart before proceeding to checkout.</p>
           <Link
             href="/categories"
-            className="inline-flex items-center justify-center px-6 py-3 bg-forest-800 hover:bg-forest-900 text-white font-semibold text-sm rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-forest-800"
+            className="inline-flex items-center justify-center px-6 py-3 bg-forest-800 hover:bg-forest-900 !text-white font-semibold text-sm rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-forest-800 shadow-sm"
+            style={{ color: "#ffffff" }}
           >
             Browse Plants
           </Link>

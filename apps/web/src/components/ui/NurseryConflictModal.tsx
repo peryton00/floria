@@ -70,7 +70,8 @@ export function NurseryConflictModal({
           <button
             type="button"
             onClick={onReplace}
-            className="w-full py-3 bg-forest-800 hover:bg-forest-900 text-white font-bold text-sm rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-forest-800"
+            className="w-full py-3 bg-forest-800 hover:bg-forest-900 !text-white font-bold text-sm rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-forest-800 shadow-sm"
+            style={{ color: "#ffffff" }}
           >
             Replace Cart
           </button>

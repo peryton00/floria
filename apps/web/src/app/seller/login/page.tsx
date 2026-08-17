@@ -113,7 +113,8 @@ export default function SellerLoginPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-3.5 bg-forest-700 hover:bg-forest-800 disabled:opacity-60 text-white font-bold text-xs uppercase tracking-widest rounded-full transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-700 min-h-[44px]"
+              style={{ color: "#ffffff" }}
+              className="w-full py-3.5 bg-forest-800 hover:bg-forest-900 disabled:opacity-60 !text-white font-bold text-xs uppercase tracking-widest rounded-full transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-800 min-h-[44px]"
             >
               {isSubmitting ? "Signing In…" : "Sign In"}
             </button>

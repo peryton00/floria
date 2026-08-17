@@ -206,7 +206,8 @@ export default function SellerRegisterPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-3 bg-forest-700 hover:bg-forest-800 text-white font-bold rounded-xl transition-colors uppercase tracking-wider disabled:opacity-50"
+              style={{ color: "#ffffff" }}
+              className="w-full py-3 bg-forest-800 hover:bg-forest-900 !text-white font-bold rounded-xl transition-colors uppercase tracking-wider disabled:opacity-50"
             >
               {isSubmitting ? "Submitting Application..." : "Submit Partner Application"}
             </button>

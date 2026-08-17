@@ -150,7 +150,8 @@ export function ProfileEditModal({
             </button>
             <button
               type="submit"
-              className="flex-1 py-2.5 bg-forest-800 hover:bg-forest-900 text-white font-bold text-xs uppercase rounded-xl transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-800 min-h-[44px]"
+              className="flex-1 py-2.5 bg-forest-800 hover:bg-forest-900 !text-white font-bold text-xs uppercase rounded-xl transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-800 min-h-[44px]"
+              style={{ color: "#ffffff" }}
             >
               Save Changes
             </button>

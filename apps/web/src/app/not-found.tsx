@@ -49,7 +49,8 @@ export default function NotFound() {
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
           <Link
             href="/"
-            className="inline-flex items-center justify-center px-6 py-3 bg-forest-700 hover:bg-forest-800 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-700"
+            style={{ color: "#ffffff" }}
+            className="inline-flex items-center justify-center px-6 py-3 bg-forest-800 hover:bg-forest-900 !text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-800"
           >
             Go to Home
           </Link>

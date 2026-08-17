@@ -107,7 +107,8 @@ export default function ContactPage() {
 
               <button
                 type="submit"
-                className="w-full py-3 bg-forest-700 hover:bg-forest-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-colors shadow-sm min-h-[44px]"
+                style={{ color: "#ffffff" }}
+                className="w-full py-3 bg-forest-800 hover:bg-forest-900 !text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-colors shadow-sm min-h-[44px]"
               >
                 Send Message &rarr;
               </button>

@@ -257,7 +257,8 @@ export default function WishlistPage() {
                         <button
                           onClick={() => handleMoveToCart(item)}
                           aria-label={`Move ${product.name} to cart`}
-                          className="w-full py-2.5 bg-forest-800 hover:bg-forest-900 active:bg-forest-950 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-xs hover:shadow-md active:scale-95 font-ui flex items-center justify-center gap-1.5"
+                          style={{ color: "#ffffff" }}
+                          className="w-full py-2.5 bg-forest-800 hover:bg-forest-900 active:bg-forest-950 !text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-xs hover:shadow-md active:scale-95 font-ui flex items-center justify-center gap-1.5"
                         >
                           <BagIcon size={13} className="text-white" />
                           <span>Move to Cart</span>

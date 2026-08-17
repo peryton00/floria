@@ -145,14 +145,15 @@ export function ProductCard({
               e.stopPropagation();
               addToCart(listing);
             }}
+            style={!isOutOfStock ? { color: "#ffffff" } : undefined}
             className={[
               "w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 shadow-xs focus:outline-none focus:ring-2 focus:ring-offset-1 flex-shrink-0",
               isOutOfStock
                 ? "bg-cream-300 text-ink-400 cursor-not-allowed"
-                : "bg-terracotta-700 hover:bg-terracotta-800 text-white hover:shadow-md hover:scale-105 active:scale-95 focus:ring-terracotta-700",
+                : "bg-terracotta-700 hover:bg-terracotta-800 !text-white hover:shadow-md hover:scale-105 active:scale-95 focus:ring-terracotta-700",
             ].join(" ")}
           >
-            <BagIcon size={14} />
+            <BagIcon size={14} className="text-white" />
           </button>
         </div>
       </Link>

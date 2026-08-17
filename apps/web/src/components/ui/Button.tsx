@@ -13,15 +13,15 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<Variant, string> = {
   cta:
-    "bg-terracotta-700 text-white hover:bg-terracotta-800 active:bg-terracotta-900 focus-visible:ring-terracotta-700 shadow-xs font-semibold",
+    "bg-terracotta-700 !text-white hover:bg-terracotta-800 active:bg-terracotta-900 focus-visible:ring-terracotta-700 shadow-xs font-semibold",
   action:
-    "bg-terracotta-700 text-white hover:bg-terracotta-800 active:bg-terracotta-900 focus-visible:ring-terracotta-700 shadow-xs font-semibold",
+    "bg-terracotta-700 !text-white hover:bg-terracotta-800 active:bg-terracotta-900 focus-visible:ring-terracotta-700 shadow-xs font-semibold",
   terracotta:
-    "bg-terracotta-700 text-white hover:bg-terracotta-800 active:bg-terracotta-900 focus-visible:ring-terracotta-700 shadow-xs font-semibold",
+    "bg-terracotta-700 !text-white hover:bg-terracotta-800 active:bg-terracotta-900 focus-visible:ring-terracotta-700 shadow-xs font-semibold",
   primary:
-    "bg-forest-800 text-white hover:bg-forest-900 active:bg-forest-900 focus-visible:ring-forest-800 shadow-xs font-semibold",
+    "bg-forest-800 !text-white hover:bg-forest-900 active:bg-forest-900 focus-visible:ring-forest-800 shadow-xs font-semibold",
   secondary:
-    "bg-sage-600 text-white hover:bg-sage-700 active:bg-sage-800 focus-visible:ring-sage-600 font-semibold",
+    "bg-sage-600 !text-white hover:bg-sage-700 active:bg-sage-800 focus-visible:ring-sage-600 font-semibold",
   muted:
     "bg-cream-200 text-ink-900 hover:bg-cream-300 active:bg-cream-400 focus-visible:ring-forest-800 border border-ink-150 font-medium",
   ghost:
@@ -29,7 +29,7 @@ const variantStyles: Record<Variant, string> = {
   outline:
     "bg-transparent border border-forest-800 text-forest-800 hover:bg-forest-50 active:bg-forest-100 focus-visible:ring-forest-800 font-semibold",
   destructive:
-    "bg-error-600 text-white hover:opacity-90 active:opacity-80 focus-visible:ring-error-600 font-semibold",
+    "bg-error-600 !text-white hover:opacity-90 active:opacity-80 focus-visible:ring-error-600 font-semibold",
 };
 
 const sizeStyles: Record<Size, string> = {
@@ -37,6 +37,8 @@ const sizeStyles: Record<Size, string> = {
   md: "h-11 px-5 text-sm gap-2",
   lg: "h-13 px-6 text-base gap-2",
 };
+
+const darkVariants = new Set<Variant>(["primary", "cta", "action", "terracotta", "secondary", "destructive"]);
 
 export function Button({
   variant = "primary",
@@ -46,15 +48,18 @@ export function Button({
   disabled,
   children,
   className = "",
+  style,
   ...props
 }: ButtonProps) {
   const isDisabled = disabled || loading;
+  const isDark = darkVariants.has(variant);
 
   return (
     <button
       {...props}
       disabled={isDisabled}
       aria-busy={loading}
+      style={isDark ? { color: "#ffffff", ...style } : style}
       className={[
         // Base
         "inline-flex items-center justify-center font-medium rounded-lg",

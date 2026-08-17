@@ -80,7 +80,8 @@ export default function HowItWorksPage() {
           <div className="pt-2">
             <Link
               href="/shop"
-              className="inline-flex items-center justify-center px-6 py-3 bg-forest-700 hover:bg-forest-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-colors shadow-sm"
+              style={{ color: "#ffffff" }}
+              className="inline-flex items-center justify-center px-6 py-3 bg-forest-800 hover:bg-forest-900 !text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-colors shadow-sm"
             >
               Start Shopping Plants &rarr;
             </Link>

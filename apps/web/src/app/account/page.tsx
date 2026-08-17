@@ -303,7 +303,8 @@ export default function AccountPage() {
 
             <Link
               href="/login"
-              className="w-full h-11 flex items-center justify-center bg-forest-800 hover:bg-forest-900 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-colors min-h-[44px]"
+              className="w-full h-11 flex items-center justify-center bg-forest-800 hover:bg-forest-900 !text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-colors min-h-[44px]"
+              style={{ color: "#ffffff" }}
             >
               Sign In with Email
             </Link>
@@ -470,7 +471,8 @@ export default function AccountPage() {
                     setEditingAddress(null);
                     setIsAddressModalOpen(true);
                   }}
-                  className="px-4 py-2 bg-forest-800 hover:bg-forest-900 text-white font-bold text-xs rounded-lg transition-colors mt-2"
+                  className="px-4 py-2 bg-forest-800 hover:bg-forest-900 !text-white font-bold text-xs rounded-lg transition-colors mt-2"
+                  style={{ color: "#ffffff" }}
                 >
                   Add Your First Address
                 </button>
@@ -734,7 +736,8 @@ export default function AccountPage() {
             </p>
             <Link
               href="/help"
-              className="inline-flex items-center justify-center w-full py-2.5 bg-forest-800 hover:bg-forest-900 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-colors shadow-sm"
+              className="inline-flex items-center justify-center w-full py-2.5 bg-forest-800 hover:bg-forest-900 !text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-colors shadow-sm"
+              style={{ color: "#ffffff" }}
             >
               Visit Help Center
             </Link>
@@ -830,7 +833,8 @@ export default function AccountPage() {
                 <button
                   type="submit"
                   disabled={updatingPassword}
-                  className="flex-1 py-2.5 bg-forest-800 hover:bg-forest-900 text-white font-bold text-xs uppercase rounded-xl transition-colors disabled:opacity-50"
+                  className="flex-1 py-2.5 bg-forest-800 hover:bg-forest-900 !text-white font-bold text-xs uppercase rounded-xl transition-colors disabled:opacity-50"
+                  style={{ color: "#ffffff" }}
                 >
                   {updatingPassword ? "Updating..." : "Update Password"}
                 </button>
@@ -1008,7 +1012,8 @@ export default function AccountPage() {
                 type="button"
                 disabled={savingReview}
                 onClick={handleSaveReview}
-                className="px-4 py-2 text-xs font-bold bg-forest-800 hover:bg-forest-900 text-white rounded-lg transition-colors shadow-sm disabled:opacity-50"
+                className="px-4 py-2 text-xs font-bold bg-forest-800 hover:bg-forest-900 !text-white rounded-lg transition-colors shadow-sm disabled:opacity-50"
+                style={{ color: "#ffffff" }}
               >
                 {savingReview ? "Saving…" : "Save Changes"}
               </button>

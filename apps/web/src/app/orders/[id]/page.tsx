@@ -214,7 +214,8 @@ export default function OrderDetailPage({ params }: Props) {
           </p>
           <Link
             href="/orders"
-            className="inline-flex items-center justify-center px-6 py-3 bg-forest-700 hover:bg-forest-800 text-white font-semibold text-sm rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-forest-700"
+            className="inline-flex items-center justify-center px-6 py-3 bg-forest-800 hover:bg-forest-900 !text-white font-semibold text-sm rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-forest-800 shadow-sm"
+            style={{ color: "#ffffff" }}
           >
             Back to Orders
           </Link>

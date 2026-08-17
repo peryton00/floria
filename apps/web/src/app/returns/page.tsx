@@ -46,7 +46,8 @@ export default function ReturnsPage() {
           <div className="pt-4 border-t border-ink-100 flex gap-4">
             <Link
               href="/contact"
-              className="px-5 py-2.5 bg-forest-700 hover:bg-forest-800 text-white font-bold rounded-xl uppercase text-[11px] tracking-wider"
+              style={{ color: "#ffffff" }}
+              className="px-5 py-2.5 bg-forest-800 hover:bg-forest-900 !text-white font-bold rounded-xl uppercase text-[11px] tracking-wider"
             >
               Contact Support
             </Link>

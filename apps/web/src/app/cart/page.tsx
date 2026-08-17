@@ -95,7 +95,8 @@ export default function CartPage() {
           </p>
           <Link
             href="/categories"
-            className="inline-flex items-center justify-center px-8 py-3.5 bg-terracotta-700 hover:bg-terracotta-800 text-white font-bold text-sm rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-terracotta-700 focus:ring-offset-2 shadow-xs"
+            className="inline-flex items-center justify-center px-8 py-3.5 bg-terracotta-700 hover:bg-terracotta-800 !text-white font-bold text-sm rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-terracotta-700 focus:ring-offset-2 shadow-xs"
+            style={{ color: "#ffffff" }}
           >
             Browse Plants
           </Link>
