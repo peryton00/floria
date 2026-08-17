@@ -69,16 +69,16 @@ export default function SellerAnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="max-w-5xl mx-auto py-12 space-y-6 animate-pulse">
-        <div className="h-10 w-48 bg-ink-100/70 rounded-lg" />
+      <div className="max-w-5xl mx-auto py-12 space-y-6 animate-pulse font-ui">
+        <div className="h-10 w-48 bg-floria-sand/70 rounded-xl border border-floria-border" />
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-24 bg-ink-100/70 rounded-xl w-full" />
+            <div key={i} className="h-24 bg-floria-sand/70 rounded-2xl w-full border border-floria-border" />
           ))}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="h-72 bg-ink-100/70 rounded-2xl w-full" />
-          <div className="h-72 bg-ink-100/70 rounded-2xl w-full" />
+          <div className="h-72 bg-floria-sand/70 rounded-3xl w-full border border-floria-border" />
+          <div className="h-72 bg-floria-sand/70 rounded-3xl w-full border border-floria-border" />
         </div>
       </div>
     );
@@ -86,8 +86,8 @@ export default function SellerAnalyticsPage() {
 
   if (error || !data) {
     return (
-      <div className="max-w-md mx-auto py-16 text-center space-y-4 bg-white rounded-2xl border border-ink-100 p-8 shadow-xs">
-        <AlertTriangle size={24} className="text-error-600 mx-auto" />
+      <div className="max-w-md mx-auto py-16 text-center space-y-4 bg-floria-linen rounded-3xl border border-floria-border p-8 shadow-xs font-ui">
+        <AlertTriangle size={28} className="text-rose-600 mx-auto" />
         <h1 className="font-serif text-lg font-bold text-ink-900">Analytics Offline</h1>
         <p className="text-xs text-ink-500">{error || "Could not retrieve live sales aggregations."}</p>
       </div>
@@ -98,22 +98,22 @@ export default function SellerAnalyticsPage() {
   const aov = summary.ordersCount > 0 ? summary.grossRevenuePaise / summary.ordersCount : 0;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 pb-12">
+    <div className="max-w-5xl mx-auto space-y-6 pb-12 font-ui">
       {/* Title & Range Switcher */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="font-serif text-2xl font-bold text-ink-900 leading-tight">Sales & Orders Analytics</h1>
-          <p className="text-xs text-ink-400 mt-0.5">Evaluate your nursery sales revenue growth and inventory category performance.</p>
+          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-ink-900 leading-tight">Sales & Orders Analytics</h1>
+          <p className="text-xs sm:text-sm text-ink-500 mt-0.5">Evaluate your nursery sales revenue growth and botanical variety performance.</p>
         </div>
 
         {/* Date Ranges */}
-        <div className="flex bg-cream-100/80 p-1 rounded-xl border border-ink-100/50">
+        <div className="flex bg-floria-sand/80 p-1 rounded-2xl border border-floria-border shadow-2xs">
           {(["today", "7d", "30d", "90d", "12m"] as const).map((r) => (
             <button
               key={r}
               type="button"
               onClick={() => setRange(r)}
-              className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors ${range === r ? "bg-white text-forest-900 shadow-xs" : "text-ink-500 hover:text-ink-900"}`}
+              className={`px-3.5 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${range === r ? "bg-floria-linen text-forest-900 shadow-xs border border-floria-border/80 font-extrabold" : "text-ink-500 hover:text-ink-900"}`}
             >
               {r === "today" ? "Today" : r === "12m" ? "12M" : r}
             </button>
@@ -122,23 +122,23 @@ export default function SellerAnalyticsPage() {
       </div>
 
       {/* Summary KPI Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4">
         {[
-          { label: "Gross Revenue", value: formatINR(summary.grossRevenuePaise), sub: "Total segment sales", icon: <TrendingUp size={16} />, color: "bg-forest-50 text-forest-800" },
-          { label: "Total Orders", value: summary.ordersCount, sub: "Unique orders", icon: <ShoppingBag size={16} />, color: "bg-blue-50 text-blue-800" },
-          { label: "Plants Sold", value: summary.unitsSold, sub: "Item quantities", icon: <Leaf size={16} />, color: "bg-purple-50 text-purple-800" },
-          { label: "Avg Order Value", value: formatINR(aov), sub: "Average transaction", icon: <Calendar size={16} />, color: "bg-warning-50 text-warning-800" }
+          { label: "Gross Revenue", value: formatINR(summary.grossRevenuePaise), sub: "Total sales volume", icon: <TrendingUp size={16} />, color: "bg-forest-50 text-forest-800 border-forest-200/70" },
+          { label: "Total Orders", value: summary.ordersCount, sub: "Verified orders", icon: <ShoppingBag size={16} />, color: "bg-sky-50 text-sky-800 border-sky-200/70" },
+          { label: "Plants Sold", value: summary.unitsSold, sub: "Item quantities", icon: <Leaf size={16} />, color: "bg-emerald-50 text-emerald-800 border-emerald-200/70" },
+          { label: "Avg Order Value", value: formatINR(aov), sub: "Per-order average", icon: <Calendar size={16} />, color: "bg-amber-50 text-amber-800 border-amber-200/70" }
         ].map((kpi) => (
-          <div key={kpi.label} className="bg-white rounded-2xl border border-ink-100 p-4 flex flex-col justify-between shadow-xs">
+          <div key={kpi.label} className="bg-floria-linen rounded-3xl border border-floria-border p-4 sm:p-5 flex flex-col justify-between shadow-xs">
             <div className="flex justify-between items-start">
-              <span className="text-[9px] font-bold uppercase tracking-wider text-ink-400 leading-tight">{kpi.label}</span>
-              <div className={`w-7 h-7 rounded-lg ${kpi.color} flex items-center justify-center`}>
+              <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-ink-500 leading-tight">{kpi.label}</span>
+              <div className={`w-8 h-8 rounded-xl ${kpi.color} border flex items-center justify-center shadow-2xs`}>
                 {kpi.icon}
               </div>
             </div>
-            <div className="mt-3">
-              <p className="text-xl font-serif font-bold text-ink-900 leading-tight">{kpi.value}</p>
-              <p className="text-[10px] text-ink-400 mt-0.5">{kpi.sub}</p>
+            <div className="mt-3.5">
+              <p className="text-xl sm:text-2xl font-serif font-bold text-ink-900 leading-tight">{kpi.value}</p>
+              <p className="text-[10px] text-ink-400 mt-1">{kpi.sub}</p>
             </div>
           </div>
         ))}
@@ -146,26 +146,26 @@ export default function SellerAnalyticsPage() {
 
       {/* SVG Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-2xl border border-ink-100 p-5 shadow-xs space-y-4">
-          <h2 className="font-serif text-sm font-bold text-ink-900">Revenue Growth Trend (₹)</h2>
+        <div className="bg-floria-linen rounded-3xl border border-floria-border p-6 shadow-xs space-y-4">
+          <h2 className="font-serif text-base font-bold text-ink-900">Revenue Growth Trend (₹)</h2>
           <div className="pt-2">
             <LineChart
               data={chartData.revenue}
               height={180}
-              strokeColor="#1b4332"
-              fillColor="rgba(27, 67, 50, 0.05)"
+              strokeColor="#1E3A2B"
+              fillColor="rgba(30, 58, 43, 0.08)"
               valueFormatter={(val) => `₹${Math.round(val)}`}
             />
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl border border-ink-100 p-5 shadow-xs space-y-4">
-          <h2 className="font-serif text-sm font-bold text-ink-900">Orders Frequency Trend</h2>
+        <div className="bg-floria-linen rounded-3xl border border-floria-border p-6 shadow-xs space-y-4">
+          <h2 className="font-serif text-base font-bold text-ink-900">Orders Frequency Trend</h2>
           <div className="pt-2">
             <BarChart
               data={chartData.orders}
               height={180}
-              barColor="#40916c"
+              barColor="#254A37"
               valueFormatter={(val) => `${Math.round(val)}`}
             />
           </div>
@@ -175,24 +175,24 @@ export default function SellerAnalyticsPage() {
       {/* Bottom Insights */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Top selling products */}
-        <div className="bg-white rounded-2xl border border-ink-100 p-5 shadow-xs space-y-3">
-          <h2 className="font-serif text-sm font-bold text-ink-900 flex items-center gap-1.5">
-            <Award size={16} className="text-warning-600" /> Best Performing Plants
+        <div className="bg-floria-linen rounded-3xl border border-floria-border p-6 shadow-xs space-y-4">
+          <h2 className="font-serif text-base font-bold text-ink-900 flex items-center gap-2">
+            <Award size={18} className="text-amber-700" /> Best Performing Botanical Varieties
           </h2>
           
           {topProducts.length === 0 ? (
-            <div className="p-8 text-center text-xs text-ink-400 bg-cream-50 rounded-xl">
-              No sales data recorded yet.
+            <div className="p-8 text-center text-xs font-medium text-ink-500 bg-floria-soft-sand rounded-2xl border border-floria-border">
+              No sales data recorded yet for this timeframe.
             </div>
           ) : (
-            <div className="divide-y divide-ink-100 text-xs">
+            <div className="divide-y divide-floria-border text-xs">
               {topProducts.map((p: any, idx: number) => (
-                <div key={idx} className="py-2.5 flex justify-between items-center">
+                <div key={idx} className="py-3 flex justify-between items-center">
                   <div>
-                    <span className="font-bold text-ink-900">{p.name}</span>
-                    <p className="text-[10px] text-ink-400 mt-0.5">{p.quantity} units sold</p>
+                    <span className="font-bold text-ink-900 text-xs sm:text-sm">{p.name}</span>
+                    <p className="text-[11px] text-ink-500 font-mono mt-0.5">{p.quantity} units sold</p>
                   </div>
-                  <span className="font-bold text-forest-800">{formatINR(p.revenuePaise)}</span>
+                  <span className="font-serif font-bold text-forest-800 text-xs sm:text-sm">{formatINR(p.revenuePaise)}</span>
                 </div>
               ))}
             </div>
@@ -200,24 +200,24 @@ export default function SellerAnalyticsPage() {
         </div>
 
         {/* Category distribution */}
-        <div className="bg-white rounded-2xl border border-ink-100 p-5 shadow-xs space-y-3">
-          <h2 className="font-serif text-sm font-bold text-ink-900 flex items-center gap-1.5">
-            <PieChart size={16} className="text-forest-700" /> Category Breakdown
+        <div className="bg-floria-linen rounded-3xl border border-floria-border p-6 shadow-xs space-y-4">
+          <h2 className="font-serif text-base font-bold text-ink-900 flex items-center gap-2">
+            <PieChart size={18} className="text-forest-800" /> Category Breakdown
           </h2>
           
           {categories.length === 0 ? (
-            <div className="p-8 text-center text-xs text-ink-400 bg-cream-50 rounded-xl">
-              No sales data recorded yet.
+            <div className="p-8 text-center text-xs font-medium text-ink-500 bg-floria-soft-sand rounded-2xl border border-floria-border">
+              No category sales recorded yet for this timeframe.
             </div>
           ) : (
-            <div className="divide-y divide-ink-100 text-xs">
+            <div className="divide-y divide-floria-border text-xs">
               {categories.map((c: any, idx: number) => (
-                <div key={idx} className="py-2.5 flex justify-between items-center">
+                <div key={idx} className="py-3 flex justify-between items-center">
                   <div>
-                    <span className="font-semibold text-ink-700">{c.name}</span>
-                    <p className="text-[10px] text-ink-400 mt-0.5">{c.quantity} plants sold</p>
+                    <span className="font-bold text-ink-800 text-xs sm:text-sm">{c.name}</span>
+                    <p className="text-[11px] text-ink-500 font-mono mt-0.5">{c.quantity} plants sold</p>
                   </div>
-                  <span className="font-bold text-forest-800">{formatINR(c.revenuePaise)}</span>
+                  <span className="font-serif font-bold text-forest-800 text-xs sm:text-sm">{formatINR(c.revenuePaise)}</span>
                 </div>
               ))}
             </div>

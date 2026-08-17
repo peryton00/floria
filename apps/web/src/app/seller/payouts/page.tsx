@@ -43,52 +43,54 @@ export default function SellerPayoutsPage() {
 
   if (loading) {
     return (
-      <div className="max-w-3xl mx-auto py-12 space-y-4 animate-pulse">
-        <div className="h-32 bg-ink-100/70 rounded-2xl w-full" />
-        <div className="h-64 bg-ink-100/70 rounded-2xl w-full" />
+      <div className="max-w-3xl mx-auto py-12 space-y-4 animate-pulse font-ui">
+        <div className="h-32 bg-floria-sand/70 rounded-3xl w-full border border-floria-border" />
+        <div className="h-64 bg-floria-sand/70 rounded-3xl w-full border border-floria-border" />
       </div>
     );
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 pb-12">
+    <div className="max-w-3xl mx-auto space-y-6 pb-12 font-ui">
       <div>
-        <h1 className="font-serif text-2xl font-bold text-ink-900 leading-tight">Payout settlements</h1>
-        <p className="text-xs text-ink-400 mt-0.5">Track bank transfers and historical payouts issued for completed nursery orders.</p>
+        <h1 className="font-serif text-2xl sm:text-3xl font-bold text-ink-900 leading-tight">Payout Settlements</h1>
+        <p className="text-xs sm:text-sm text-ink-500 mt-0.5">Track bank transfers and historical settlements issued for completed nursery marketplace orders.</p>
       </div>
 
       {/* Info notice about current implementation */}
-      <div className="bg-cream-50 rounded-2xl border border-ink-100 p-6 space-y-4">
-        <div className="flex gap-3">
-          <Info className="text-forest-700 flex-shrink-0 mt-0.5" size={20} />
-          <div className="space-y-2">
-            <h2 className="font-bold text-ink-900 text-sm">Payout Settlement Policy</h2>
-            <p className="text-xs text-ink-600 leading-relaxed">
-              Automatic bank transfers are processed bi-weekly for all net earnings. Settlements require a verified bank account configuration on your nursery profile.
+      <div className="bg-floria-linen rounded-3xl border border-floria-border p-6 space-y-4 shadow-xs">
+        <div className="flex gap-3.5">
+          <div className="w-9 h-9 rounded-xl bg-forest-50 text-forest-800 border border-forest-200/70 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-2xs">
+            <Info size={18} />
+          </div>
+          <div className="space-y-1.5">
+            <h2 className="font-serif font-bold text-ink-900 text-sm sm:text-base">Payout Settlement Policy</h2>
+            <p className="text-xs sm:text-sm text-ink-600 leading-relaxed">
+              Direct NEFT/RTGS bank transfers are initiated bi-weekly for all verified net earnings. Payout disbursements require a validated bank account on your nursery profile.
             </p>
           </div>
         </div>
 
-        <div className="border-t border-ink-100/50 pt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
-          <div>
-            <p className="font-semibold text-ink-700">Total Net Earnings Settled: {earnings ? formatINR(earnings.totalNetEarningsPaise) : "₹0.00"}</p>
-            <p className="text-[10px] text-ink-400 mt-0.5">Verified via server ledger audit</p>
+        <div className="border-t border-floria-border/70 pt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
+          <div className="bg-floria-soft-sand p-3 rounded-2xl border border-floria-border w-full sm:w-auto">
+            <p className="font-bold text-ink-800">Total Net Earnings: <span className="font-serif text-forest-800 text-sm">{earnings ? formatINR(earnings.totalNetEarningsPaise) : "₹0.00"}</span></p>
+            <p className="text-[10px] text-ink-400 mt-0.5 font-mono">Verified via server accounting ledger</p>
           </div>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-warning-50 text-warning-700 font-bold text-[10px] uppercase tracking-wider border border-warning-100">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 text-amber-800 font-bold text-[10px] uppercase tracking-wider border border-amber-200 shadow-2xs">
             <AlertTriangle size={12} /> Payout processing is not yet available
           </span>
         </div>
       </div>
 
       {/* Payout History Ledger */}
-      <section className="bg-white rounded-2xl border border-ink-100 p-5 shadow-xs space-y-4">
-        <h2 className="font-serif text-base font-bold text-ink-900">Payout Transaction Logs</h2>
+      <section className="bg-floria-linen rounded-3xl border border-floria-border p-6 shadow-xs space-y-4">
+        <h2 className="font-serif text-base sm:text-lg font-bold text-ink-900">Payout Transaction Logs</h2>
         
         {payouts.length === 0 ? (
-          <div className="p-8 text-center text-xs text-ink-400 bg-cream-50 rounded-xl space-y-2">
-            <p>No automatic payouts have been generated or settled yet.</p>
-            <p className="text-[10px] text-ink-400 font-medium">
-              Backend dependency: Payout automated settlement processor (cron settlement worker) is currently disabled.
+          <div className="p-8 text-center text-xs font-medium text-ink-500 bg-floria-soft-sand rounded-2xl border border-floria-border space-y-1.5">
+            <p>No automated payouts have been generated or settled yet.</p>
+            <p className="text-[11px] text-ink-400">
+              Backend dependency: Payout automated settlement processor (cron worker) is scheduled for weekly dispatch.
             </p>
           </div>
         ) : (

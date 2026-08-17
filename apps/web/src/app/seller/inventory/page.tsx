@@ -116,69 +116,69 @@ export default function SellerInventoryPage() {
   const countOutOfStock = inventory.filter((i) => i.stock_quantity <= 0).length;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 pb-12">
+    <div className="max-w-5xl mx-auto space-y-6 pb-12 font-ui">
       <div>
-        <h1 className="font-serif text-2xl font-bold text-ink-900 leading-tight">Inventory Control Center</h1>
-        <p className="text-xs text-ink-400 mt-0.5">Adjust price points, update plant stocks, and define low stock notification thresholds.</p>
+        <h1 className="font-serif text-2xl sm:text-3xl font-bold text-ink-900 leading-tight">Inventory Control Center</h1>
+        <p className="text-xs sm:text-sm text-ink-500 mt-0.5">Adjust price points, update live plant stocks, and define low stock threshold limits.</p>
       </div>
 
       {error && (
-        <div className="bg-error-50 border border-error-100 rounded-xl p-4 text-xs text-error-700 flex justify-between items-center">
+        <div className="bg-rose-50 border border-rose-200 rounded-2xl p-4 text-xs text-rose-800 flex justify-between items-center shadow-2xs">
           <span>{error}</span>
-          <button type="button" onClick={fetchInventory} className="font-bold underline">Retry</button>
+          <button type="button" onClick={fetchInventory} className="font-bold underline text-rose-900">Retry</button>
         </div>
       )}
 
       {/* Counters Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4">
         {[
-          { label: "Total Items", count: countAll, tab: "all" as const },
-          { label: "Healthy Stock", count: countInStock, tab: "in_stock" as const, color: "text-forest-700 bg-forest-50" },
-          { label: "Low Stock Alert", count: countLowStock, tab: "low_stock" as const, color: "text-warning-700 bg-warning-50" },
-          { label: "Out of Stock", count: countOutOfStock, tab: "out_of_stock" as const, color: "text-error-700 bg-error-50" }
+          { label: "Total Catalog Items", count: countAll, tab: "all" as const },
+          { label: "Healthy Stock", count: countInStock, tab: "in_stock" as const, color: "text-forest-800 bg-forest-50" },
+          { label: "Low Stock Alert", count: countLowStock, tab: "low_stock" as const, color: "text-amber-800 bg-amber-50" },
+          { label: "Out of Stock", count: countOutOfStock, tab: "out_of_stock" as const, color: "text-rose-800 bg-rose-50" }
         ].map((c) => (
           <button
             key={c.label}
             type="button"
             onClick={() => setFilterTab(c.tab)}
-            className={`p-4 rounded-xl border text-left transition-all ${filterTab === c.tab ? "border-forest-700 shadow-xs" : "border-ink-100 bg-white hover:border-ink-200"}`}
+            className={`p-4 sm:p-5 rounded-2xl border text-left transition-all shadow-xs ${filterTab === c.tab ? "border-forest-800 bg-floria-linen ring-1 ring-forest-800/30" : "border-floria-border bg-floria-linen hover:border-forest-700/50 hover:bg-floria-soft-sand"}`}
           >
-            <p className="text-[10px] font-bold uppercase tracking-wider text-ink-400">{c.label}</p>
-            <p className={`text-2xl font-bold mt-1 ${c.color || "text-ink-900"}`}>{c.count}</p>
+            <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-ink-500">{c.label}</p>
+            <p className={`text-2xl sm:text-3xl font-serif font-bold mt-1.5 ${c.color || "text-ink-900"}`}>{c.count}</p>
           </button>
         ))}
       </div>
 
       {/* Search Input */}
-      <div className="bg-white rounded-xl border border-ink-100 p-4 shadow-xs flex items-center">
+      <div className="bg-floria-linen rounded-2xl border border-floria-border p-3.5 sm:p-4 shadow-xs flex items-center">
         <div className="w-full relative">
           <input
             type="search"
-            placeholder="Search inventory by plant name or SKU..."
+            placeholder="Search inventory by plant variety name or SKU code..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-xs rounded-lg border border-ink-200 focus:outline-none focus:ring-1 focus:ring-forest-700"
+            className="w-full pl-9 pr-4 py-2.5 text-xs sm:text-sm rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen focus:outline-none focus:ring-2 focus:ring-forest-800/20 text-ink-900 placeholder:text-ink-400 font-medium"
           />
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-300" />
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400" />
         </div>
       </div>
 
       {/* Inventory Grid */}
-      <div className="bg-white rounded-2xl border border-ink-100 shadow-xs overflow-hidden">
+      <div className="bg-floria-linen rounded-3xl border border-floria-border shadow-xs overflow-hidden">
         {loading ? (
           <div className="py-12 flex justify-center">
-            <div className="w-8 h-8 border-2 border-forest-600 border-t-transparent rounded-full animate-spin" />
+            <div className="w-8 h-8 border-2 border-forest-800 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : filteredItems.length === 0 ? (
-          <div className="p-12 text-center text-xs text-ink-400">
-            No inventory records found.
+          <div className="p-12 text-center text-xs sm:text-sm text-ink-500">
+            No inventory records found matching your filters.
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left text-xs">
               <thead>
-                <tr className="bg-cream-100 text-ink-500 font-bold uppercase tracking-wider border-b border-ink-100">
-                  <th className="p-4">Plant Listing</th>
+                <tr className="bg-floria-soft-sand text-ink-600 font-bold uppercase tracking-wider border-b border-floria-border">
+                  <th className="p-4">Plant Variety</th>
                   <th className="p-4">SKU</th>
                   <th className="p-4">Selling Price</th>
                   <th className="p-4">Stock Quantity</th>
@@ -187,7 +187,7 @@ export default function SellerInventoryPage() {
                   <th className="p-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-ink-100">
+              <tbody className="divide-y divide-floria-border bg-floria-linen">
                 {filteredItems.map((item) => {
                   const qty = item.stock_quantity;
                   const thresh = item.low_stock_threshold || 5;
@@ -195,58 +195,58 @@ export default function SellerInventoryPage() {
 
                   // Status badge helper
                   let statusBadge = (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-success-50 text-success-700 border border-success-100">
-                      <CheckCircle size={10} /> In Stock
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-forest-50 text-forest-800 border border-forest-200">
+                      <CheckCircle size={11} /> In Stock
                     </span>
                   );
                   if (qty <= 0) {
                     statusBadge = (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-error-50 text-error-700 border border-error-100">
-                        <XCircle size={10} /> Out of Stock
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-50 text-rose-800 border border-rose-200">
+                        <XCircle size={11} /> Out of Stock
                       </span>
                     );
                   } else if (qty <= thresh) {
                     statusBadge = (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-warning-50 text-warning-700 border border-warning-100">
-                        <AlertTriangle size={10} /> Low Stock
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-50 text-amber-800 border border-amber-200">
+                        <AlertTriangle size={11} /> Low Stock
                       </span>
                     );
                   }
 
                   return (
-                    <tr key={item.id} className="hover:bg-cream-50/50">
+                    <tr key={item.id} className="hover:bg-floria-soft-sand/60 transition-colors">
                       <td className="p-4">
                         <div>
-                          <p className="font-bold text-ink-900 leading-tight">{item.product?.name || "Plant Product"}</p>
-                          <p className="text-[10px] text-ink-400 mt-0.5 font-mono">Product ID: {item.product_id}</p>
+                          <p className="font-bold text-ink-900 text-xs sm:text-sm leading-tight">{item.product?.name || "Plant Product"}</p>
+                          <p className="text-[10px] text-ink-400 mt-0.5 font-mono">ID: #{item.product_id?.slice(0, 8)}</p>
                         </div>
                       </td>
 
-                      <td className="p-4 font-mono text-ink-600">
+                      <td className="p-4 font-mono text-ink-700">
                         {isEditing ? (
                           <input
                             type="text"
                             value={skuInput}
                             onChange={(e) => setSkuInput(e.target.value)}
-                            className="w-24 px-2 py-1 border border-ink-300 rounded text-xs focus:ring-1 focus:ring-forest-700 outline-none"
+                            className="w-24 px-2 py-1 border border-floria-border bg-floria-sand/70 rounded-lg text-xs focus:ring-1 focus:ring-forest-800 outline-none font-mono"
                             placeholder="SKU"
                           />
                         ) : (
-                          item.sku || <span className="text-ink-300">Not set</span>
+                          item.sku || <span className="text-ink-400 italic">Not set</span>
                         )}
                       </td>
 
-                      <td className="p-4 font-bold text-forest-800">
+                      <td className="p-4 font-serif font-bold text-forest-800 text-xs sm:text-sm">
                         {isEditing ? (
                           <div className="flex items-center gap-1">
-                            <span className="text-ink-400">₹</span>
+                            <span className="text-ink-500 font-sans">₹</span>
                             <input
                               type="number"
                               step="0.01"
                               min="0"
                               value={priceInput}
                               onChange={(e) => setPriceInput(Number(e.target.value))}
-                              className="w-20 px-2 py-1 border border-ink-300 rounded text-xs focus:ring-1 focus:ring-forest-700 outline-none"
+                              className="w-20 px-2 py-1 border border-floria-border bg-floria-sand/70 rounded-lg text-xs focus:ring-1 focus:ring-forest-800 outline-none font-sans font-semibold"
                             />
                           </div>
                         ) : (
@@ -254,14 +254,14 @@ export default function SellerInventoryPage() {
                         )}
                       </td>
 
-                      <td className="p-4 font-semibold">
+                      <td className="p-4 font-semibold text-ink-800">
                         {isEditing ? (
                           <input
                             type="number"
                             min="0"
                             value={stockInput}
                             onChange={(e) => setStockInput(Number(e.target.value))}
-                            className="w-16 px-2 py-1 border border-ink-300 rounded text-xs focus:ring-1 focus:ring-forest-700 outline-none"
+                            className="w-16 px-2 py-1 border border-floria-border bg-floria-sand/70 rounded-lg text-xs focus:ring-1 focus:ring-forest-800 outline-none font-semibold"
                           />
                         ) : (
                           `${qty} units`
@@ -275,7 +275,7 @@ export default function SellerInventoryPage() {
                             min="0"
                             value={thresholdInput}
                             onChange={(e) => setThresholdInput(Number(e.target.value))}
-                            className="w-16 px-2 py-1 border border-ink-300 rounded text-xs focus:ring-1 focus:ring-forest-700 outline-none"
+                            className="w-16 px-2 py-1 border border-floria-border bg-floria-sand/70 rounded-lg text-xs focus:ring-1 focus:ring-forest-800 outline-none"
                           />
                         ) : (
                           `${thresh} units`
@@ -291,7 +291,8 @@ export default function SellerInventoryPage() {
                               type="button"
                               disabled={actionLoading}
                               onClick={() => handleSave(item.product_id)}
-                              className="p-1.5 bg-forest-700 hover:bg-forest-800 text-white rounded-lg transition-colors"
+                              style={{ color: "#ffffff" }}
+                              className="p-2 bg-forest-800 hover:bg-forest-900 !text-white rounded-xl transition-all shadow-2xs active:scale-95"
                               title="Save changes"
                             >
                               <Save size={14} />
@@ -299,7 +300,7 @@ export default function SellerInventoryPage() {
                             <button
                               type="button"
                               onClick={() => setEditingId(null)}
-                              className="p-1.5 border border-ink-200 hover:bg-cream-50 text-ink-600 rounded-lg transition-colors"
+                              className="p-2 border border-floria-border hover:bg-floria-sand text-ink-700 rounded-xl transition-colors"
                               title="Cancel"
                             >
                               <X size={14} />
@@ -310,9 +311,9 @@ export default function SellerInventoryPage() {
                             type="button"
                             disabled={!isApproved}
                             onClick={() => handleEdit(item)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-ink-200 hover:bg-cream-100 text-ink-700 font-bold text-[10px] uppercase tracking-wider transition-colors disabled:opacity-40"
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-floria-border hover:bg-floria-sand bg-floria-soft-sand text-ink-700 font-bold text-[10px] uppercase tracking-wider transition-all disabled:opacity-40 shadow-2xs active:scale-95"
                           >
-                            <Edit2 size={10} /> Edit
+                            <Edit2 size={11} /> Edit
                           </button>
                         )}
                       </td>

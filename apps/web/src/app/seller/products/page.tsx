@@ -142,90 +142,94 @@ export default function SellerProductsPage() {
   ];
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 pb-12">
+    <div className="max-w-5xl mx-auto space-y-6 pb-12 font-ui">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="font-serif text-2xl font-bold text-ink-900 leading-tight">Product Catalog</h1>
-          <p className="text-xs text-ink-400 mt-0.5">Manage nursery plant listings, pricing, and stock levels.</p>
+          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-ink-900 leading-tight">Product Catalog</h1>
+          <p className="text-xs sm:text-sm text-ink-500 mt-0.5">Manage nursery plant listings, pricing, and live inventory stock.</p>
         </div>
 
         {isApproved && (
           <Link
             href="/seller/products/new"
-            className="px-4 py-2 bg-forest-700 hover:bg-forest-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-colors shadow-xs"
+            style={{ color: "#ffffff" }}
+            className="px-5 py-2.5 bg-forest-800 hover:bg-forest-900 !text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-xs hover:shadow-md active:scale-95 flex items-center gap-1.5"
           >
-            + Add New Product
+            <span>+ Add New Product</span>
           </Link>
         )}
       </div>
 
       {error && (
-        <div className="bg-error-50 border border-error-100 rounded-xl p-4 text-xs text-error-700 flex justify-between items-center">
+        <div className="bg-rose-50 border border-rose-200 rounded-2xl p-4 text-xs text-rose-800 flex justify-between items-center shadow-2xs">
           <span>{error}</span>
-          <button type="button" onClick={fetchProducts} className="font-bold underline">Retry</button>
+          <button type="button" onClick={fetchProducts} className="font-bold underline text-rose-900">Retry</button>
         </div>
       )}
 
       {/* Tabs */}
-      <div className="flex border-b border-ink-100 space-x-2 overflow-x-auto">
-        {tabs.map((t) => (
-          <button
-            key={t.key}
-            type="button"
-            onClick={() => setActiveTab(t.key)}
-            className={[
-              "pb-3 px-2 text-xs font-bold uppercase tracking-wider transition-colors border-b-2 whitespace-nowrap flex items-center gap-1.5",
-              activeTab === t.key
-                ? "border-forest-700 text-forest-700"
-                : "border-transparent text-ink-400 hover:text-ink-900",
-            ].join(" ")}
-          >
-            <span>{t.label}</span>
-            <span className="px-2 py-0.5 rounded-full text-[10px] bg-cream-100 text-ink-600 font-mono">
-              {t.count}
-            </span>
-          </button>
-        ))}
+      <div className="flex border-b border-floria-border space-x-2 overflow-x-auto pb-0.5">
+        {tabs.map((t) => {
+          const isActive = activeTab === t.key;
+          return (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => setActiveTab(t.key)}
+              className={[
+                "pb-3 px-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 whitespace-nowrap flex items-center gap-2",
+                isActive
+                  ? "border-forest-800 text-forest-800"
+                  : "border-transparent text-ink-500 hover:text-ink-900",
+              ].join(" ")}
+            >
+              <span>{t.label}</span>
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${isActive ? "bg-forest-100 text-forest-800 font-bold" : "bg-floria-sand text-ink-600"}`}>
+                {t.count}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Search Input */}
-      <div className="bg-white rounded-xl border border-ink-100 p-4 shadow-xs flex items-center">
+      <div className="bg-floria-linen rounded-2xl border border-floria-border p-3.5 sm:p-4 shadow-xs flex items-center">
         <div className="w-full relative">
           <input
             type="search"
-            placeholder="Search products by name, category..."
+            placeholder="Search products by plant name, category, or ID..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-xs rounded-lg border border-ink-200 focus:outline-none focus:ring-1 focus:ring-forest-700"
+            className="w-full pl-9 pr-4 py-2.5 text-xs sm:text-sm rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen focus:outline-none focus:ring-2 focus:ring-forest-800/20 text-ink-900 placeholder:text-ink-400 font-medium"
           />
-          <SearchIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-300" />
+          <SearchIcon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400" />
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl border border-ink-100 shadow-xs overflow-hidden">
+      <div className="bg-floria-linen rounded-3xl border border-floria-border shadow-xs overflow-hidden">
         {loading ? (
           <div className="py-12 flex justify-center">
-            <div className="w-8 h-8 border-2 border-forest-600 border-t-transparent rounded-full animate-spin" />
+            <div className="w-8 h-8 border-2 border-forest-800 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : filteredListings.length === 0 ? (
-          <div className="p-12 text-center text-xs text-ink-400">
+          <div className="p-12 text-center text-xs sm:text-sm text-ink-500">
             No products found matching the criteria.
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left text-xs">
               <thead>
-                <tr className="bg-cream-100 text-ink-500 font-bold uppercase tracking-wider border-b border-ink-100">
-                  <th className="p-4">Product</th>
+                <tr className="bg-floria-soft-sand text-ink-600 font-bold uppercase tracking-wider border-b border-floria-border">
+                  <th className="p-4">Product Variety</th>
                   <th className="p-4">Category</th>
-                  <th className="p-4">Price</th>
-                  <th className="p-4">Stock</th>
+                  <th className="p-4">Seller Net / Base</th>
+                  <th className="p-4">Available Stock</th>
                   <th className="p-4">Status</th>
                   <th className="p-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-ink-100">
+              <tbody className="divide-y divide-floria-border bg-floria-linen">
                 {filteredListings.map((l) => {
                   const inv = Array.isArray(l.inventory) ? l.inventory[0] : l.inventory;
                   const qty = inv?.stock_quantity ?? 0;
@@ -236,23 +240,23 @@ export default function SellerProductsPage() {
                   const isEditingStock = editingStockId === l.id;
 
                   return (
-                    <tr key={l.id} className="hover:bg-cream-50/50">
+                    <tr key={l.id} className="hover:bg-floria-soft-sand/60 transition-colors">
                       <td className="p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-cream-100 overflow-hidden relative flex-shrink-0">
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-11 h-11 rounded-xl bg-floria-natural-sand overflow-hidden relative flex-shrink-0 border border-floria-border/60 shadow-2xs">
                             <Image src={imgUrl} alt={l.name} fill className="object-cover" />
                           </div>
                           <div>
-                            <p className="font-bold text-ink-900 leading-tight">{l.name}</p>
-                            <p className="text-[10px] text-ink-400 font-mono mt-0.5">{l.id}</p>
+                            <p className="font-bold text-ink-900 text-xs sm:text-sm leading-tight">{l.name}</p>
+                            <p className="text-[10px] text-ink-400 font-mono mt-0.5">ID: #{l.id?.slice(0, 8)}</p>
                           </div>
                         </div>
                       </td>
 
-                      <td className="p-4 text-ink-600 font-semibold">{l.category?.name || "Uncategorized"}</td>
+                      <td className="p-4 text-ink-700 font-semibold">{l.category?.name || "Uncategorized"}</td>
 
                       <td className="p-4 font-mono">
-                        <p className="font-bold text-forest-800">
+                        <p className="font-bold text-forest-800 text-xs sm:text-sm">
                           {formatINR(sellerNetPaise)}
                         </p>
                         <p className="text-[10px] text-ink-400">
@@ -262,40 +266,41 @@ export default function SellerProductsPage() {
 
                       <td className="p-4">
                         {isEditingStock ? (
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-1.5">
                             <input
                               type="number"
                               min="0"
                               value={stockInput}
                               onChange={(e) => setStockInput(Number(e.target.value))}
-                              className="w-16 px-2 py-1 border border-ink-300 rounded text-xs"
+                              className="w-16 px-2.5 py-1 border border-floria-border bg-floria-sand/70 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-forest-800"
                             />
                             <button
                               type="button"
                               disabled={actionLoading}
                               onClick={() => handleSaveStock(l.id)}
-                              className="px-2 py-1 bg-forest-700 text-white font-bold rounded text-[10px]"
+                              style={{ color: "#ffffff" }}
+                              className="px-2.5 py-1 bg-forest-800 hover:bg-forest-900 !text-white font-bold rounded-lg text-[10px] uppercase shadow-2xs"
                             >
                               Save
                             </button>
                             <button
                               type="button"
                               onClick={() => setEditingStockId(null)}
-                              className="px-2 py-1 border border-ink-200 text-ink-600 rounded text-[10px]"
+                              className="px-2 py-1 border border-floria-border hover:bg-floria-sand text-ink-600 rounded-lg text-[10px]"
                             >
                               ✕
                             </button>
                           </div>
                         ) : (
                           <div className="flex items-center gap-2">
-                            <span className={`font-bold ${qty === 0 ? "text-error-600" : qty <= thresh ? "text-warning-700" : "text-ink-700"}`}>
+                            <span className={`font-bold text-xs ${qty === 0 ? "text-rose-700" : qty <= thresh ? "text-amber-800" : "text-ink-800"}`}>
                               {qty === 0 ? "Out of Stock" : `${qty} units`}
                             </span>
                             <button
                               type="button"
                               disabled={!isApproved}
                               onClick={() => { setEditingStockId(l.id); setStockInput(qty); }}
-                              className="text-[10px] text-forest-700 underline font-bold hover:text-forest-900 disabled:opacity-40"
+                              className="text-[10px] text-forest-800 underline font-bold hover:text-forest-950 disabled:opacity-40"
                             >
                               Edit
                             </button>
@@ -304,24 +309,24 @@ export default function SellerProductsPage() {
                       </td>
 
                       <td className="p-4">
-                        <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${l.status === "active" ? "bg-success-50 text-success-700 border border-success-100" : "bg-ink-100 text-ink-600"}`}>
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${l.status === "active" ? "bg-forest-50 text-forest-800 border border-forest-200" : "bg-floria-sand text-ink-600 border border-floria-border"}`}>
                           {l.status}
                         </span>
                       </td>
 
-                      <td className="p-4 text-right space-x-2">
+                      <td className="p-4 text-right space-x-2 whitespace-nowrap">
                         <button
                           type="button"
                           disabled={!isApproved || actionLoading}
                           onClick={() => handleToggleStatus(l.id, l.status)}
-                          className="px-2.5 py-1 rounded-lg border border-ink-200 hover:bg-cream-100 text-ink-700 font-bold text-[10px] uppercase tracking-wider disabled:opacity-40"
+                          className="px-3 py-1.5 rounded-xl border border-floria-border hover:bg-floria-sand text-ink-700 font-bold text-[10px] uppercase tracking-wider disabled:opacity-40 transition-colors shadow-2xs"
                         >
                           {l.status === "active" ? "Set Draft" : "Publish"}
                         </button>
 
                         <Link
                           href={`/seller/products/${l.id}`}
-                          className="px-2.5 py-1 rounded-lg border border-ink-200 hover:bg-cream-100 text-ink-700 font-bold text-[10px] uppercase tracking-wider inline-block"
+                          className="px-3 py-1.5 rounded-xl border border-floria-border hover:bg-floria-sand text-ink-700 font-bold text-[10px] uppercase tracking-wider inline-block transition-colors shadow-2xs"
                         >
                           Edit
                         </Link>
@@ -330,7 +335,7 @@ export default function SellerProductsPage() {
                           type="button"
                           disabled={!isApproved || actionLoading}
                           onClick={() => setDeleteConfirmId(l.id)}
-                          className="px-2.5 py-1 rounded-lg border border-error-200 hover:bg-error-50 text-error-700 font-bold text-[10px] uppercase tracking-wider disabled:opacity-40"
+                          className="px-3 py-1.5 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-700 font-bold text-[10px] uppercase tracking-wider disabled:opacity-40 transition-colors shadow-2xs"
                         >
                           Archive
                         </button>
@@ -346,11 +351,11 @@ export default function SellerProductsPage() {
 
       {/* Delete Confirmation Modal */}
       {deleteConfirmId && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-ink-100 p-6 max-w-sm w-full shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 bg-ink-950/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-floria-linen rounded-3xl border border-floria-border p-6 max-w-sm w-full shadow-2xl space-y-4">
             <h3 className="font-serif text-lg font-bold text-ink-900">Archive Product Listing</h3>
-            <p className="text-xs text-ink-500">
-              Are you sure you want to archive this product? It will be unpublished from the customer catalog.
+            <p className="text-xs text-ink-500 leading-relaxed">
+              Are you sure you want to archive this product? It will be unpublished from the customer marketplace catalog.
             </p>
 
             <div className="flex gap-3 pt-2">
@@ -358,14 +363,15 @@ export default function SellerProductsPage() {
                 type="button"
                 disabled={actionLoading}
                 onClick={() => handleDelete(deleteConfirmId)}
-                className="flex-1 py-2.5 rounded-xl bg-error-600 hover:bg-error-700 text-white font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-50"
+                style={{ color: "#ffffff" }}
+                className="flex-1 py-2.5 rounded-xl bg-rose-700 hover:bg-rose-800 !text-white font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-50"
               >
                 Archive Product
               </button>
               <button
                 type="button"
                 onClick={() => setDeleteConfirmId(null)}
-                className="px-4 py-2.5 rounded-xl border border-ink-200 text-ink-600 font-bold text-xs uppercase tracking-wider hover:bg-cream-50"
+                className="px-4 py-2.5 rounded-xl border border-floria-border text-ink-700 font-bold text-xs uppercase tracking-wider hover:bg-floria-sand"
               >
                 Cancel
               </button>

@@ -8,10 +8,10 @@ interface SellerStatusBadgeProps {
 }
 
 const CONFIG: Record<SellerStatus, { label: string; classes: string }> = {
-  approved:  { label: "Approved",       classes: "bg-forest-100 text-forest-800 border border-forest-200" },
-  pending:   { label: "Pending Review", classes: "bg-warning-100 text-warning-600 border border-amber-200" },
-  suspended: { label: "Suspended",      classes: "bg-error-100 text-error-600 border border-red-200" },
-  rejected:  { label: "Rejected",       classes: "bg-error-100 text-error-600 border border-red-200" },
+  approved:  { label: "Approved",       classes: "bg-forest-50 text-forest-800 border border-forest-200" },
+  pending:   { label: "Pending Review", classes: "bg-amber-50 text-amber-800 border border-amber-200" },
+  suspended: { label: "Suspended",      classes: "bg-rose-50 text-rose-800 border border-rose-200" },
+  rejected:  { label: "Rejected",       classes: "bg-rose-50 text-rose-800 border border-rose-200" },
 };
 
 export function SellerStatusBadge({ status, size = "sm" }: SellerStatusBadgeProps) {

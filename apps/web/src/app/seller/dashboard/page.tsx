@@ -178,31 +178,33 @@ export default function SellerDashboardPage() {
   ];
 
   return (
-    <main className="max-w-5xl mx-auto space-y-6 pb-12 px-3 sm:px-6">
+    <main className="max-w-6xl mx-auto space-y-6 pb-12 font-ui">
       {/* Welcome Banner */}
-      <header className="bg-forest-900 rounded-2xl p-6 md:p-8 text-white relative overflow-hidden shadow-sm">
-        <div className="relative z-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <header className="bg-gradient-to-br from-[#183023] via-[#1E3A2B] to-[#254A37] rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden shadow-sm border border-forest-700/50">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative z-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5">
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-cream-200/70">
-                Seller Control Center
+            <div className="flex items-center gap-2.5 mb-2.5">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#DDE7DD]/80">
+                Nursery Studio Dashboard
               </span>
               <SellerStatusBadge status={sellerStatus} size="sm" />
             </div>
-            <h1 className="font-serif text-2xl md:text-3xl font-bold text-white leading-tight">
+            <h1 className="font-serif text-2xl sm:text-3xl md:text-4xl font-bold text-white leading-tight">
               Welcome back,{" "}
-              <span className="text-forest-200">
+              <span className="text-[#DDE7DD]">
                 {profile?.business_name || "Nursery Partner"}
               </span>
             </h1>
-            <p className="text-xs md:text-sm text-cream-100/80 mt-1 max-w-xl">
-              Real-time marketplace orders, inventory stock management, and fulfillment status.
+            <p className="text-xs sm:text-sm text-white/80 mt-1.5 max-w-xl leading-relaxed">
+              Real-time marketplace orders, live catalog stock management, and fulfillment status.
             </p>
           </div>
 
           <Link
             href="/seller/profile"
-            className="flex-shrink-0 px-4 py-2.5 bg-forest-800 hover:bg-forest-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl border border-forest-600 transition-colors focus:outline-none focus:ring-2 focus:ring-cream-200"
+            style={{ color: "#ffffff" }}
+            className="flex-shrink-0 px-5 py-3 bg-white/15 hover:bg-white/25 active:bg-white/10 !text-white font-bold text-xs uppercase tracking-wider rounded-2xl border border-white/20 transition-all shadow-xs hover:shadow-sm active:scale-95 focus:outline-none focus:ring-2 focus:ring-white/40"
           >
             Manage Profile →
           </Link>
@@ -211,22 +213,24 @@ export default function SellerDashboardPage() {
 
       {/* Restricted Status Banner */}
       {!isApproved && (
-        <section aria-label="Account Status Notice" className="bg-warning-50 border border-warning-200 rounded-xl p-4 flex items-start gap-3">
-          <AlertIcon size={20} className="text-warning-700 flex-shrink-0 mt-0.5" />
-          <div className="text-xs text-warning-900 leading-relaxed">
+        <section aria-label="Account Status Notice" className="bg-amber-50/80 border border-amber-200/90 rounded-2xl p-4 sm:p-5 flex items-start gap-3.5 shadow-2xs">
+          <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <AlertIcon size={18} />
+          </div>
+          <div className="text-xs sm:text-sm text-amber-950 leading-relaxed">
             {sellerStatus === "pending" && (
               <p>
-                <strong className="font-bold">Application Pending:</strong> Your nursery application is under verification by Floria Admin. You can view your catalog and update profile info, but new product creation and order fulfillment are restricted until approved.
+                <strong className="font-bold">Application Under Review:</strong> Your nursery details are being verified by the Floria horticultural team. You can explore your catalog and update profile info, while product creation and fulfillment will unlock upon approval.
               </p>
             )}
             {sellerStatus === "suspended" && (
               <p>
-                <strong className="font-bold">Account Suspended:</strong> Your seller profile has been suspended by administration. Product listings and order processing functions are currently locked.
+                <strong className="font-bold">Account Suspended:</strong> Your seller account has been temporarily locked by administration. Storefront visibility and order processing are paused.
               </p>
             )}
             {sellerStatus === "rejected" && (
               <p>
-                <strong className="font-bold">Application Rejected:</strong> Your seller application was not approved. Please review your submitted details or contact Floria support.
+                <strong className="font-bold">Application Not Approved:</strong> Your application was declined. Please review your submitted details or reach out to Floria support.
               </p>
             )}
           </div>
@@ -235,24 +239,24 @@ export default function SellerDashboardPage() {
 
       {/* Action Required Notices */}
       {actionRequired.length > 0 && (
-        <section aria-label="Action Required Alerts" className="space-y-2">
+        <section aria-label="Action Required Alerts" className="space-y-2.5">
           <h2 className="text-xs font-bold uppercase tracking-widest text-ink-500">Action Required</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             {actionRequired.map((action: any) => (
               <Link
                 key={action.id}
                 href={action.href}
-                className="bg-white rounded-xl border border-warning-200 hover:border-warning-400 p-4 shadow-xs flex items-center justify-between group transition-colors focus:outline-none focus:ring-2 focus:ring-forest-700"
+                className="bg-floria-linen rounded-2xl border border-amber-200/90 hover:border-amber-400 p-4 shadow-xs flex items-center justify-between group transition-all focus:outline-none focus:ring-2 focus:ring-forest-800"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-warning-100 text-warning-800 flex items-center justify-center flex-shrink-0">
-                    <AlertIcon size={16} />
+                  <div className="w-9 h-9 rounded-xl bg-amber-100/80 text-amber-800 flex items-center justify-center flex-shrink-0">
+                    <AlertIcon size={18} />
                   </div>
-                  <span className="text-xs font-bold text-ink-900 group-hover:text-warning-800 transition-colors">
+                  <span className="text-xs font-bold text-ink-900 group-hover:text-amber-900 transition-colors">
                     {action.title}
                   </span>
                 </div>
-                <span className="text-xs font-bold text-forest-700 uppercase tracking-wider group-hover:translate-x-0.5 transition-transform">
+                <span className="text-xs font-bold text-forest-800 uppercase tracking-wider group-hover:translate-x-1 transition-transform">
                   View →
                 </span>
               </Link>
@@ -263,29 +267,32 @@ export default function SellerDashboardPage() {
 
       {/* Real Seller KPI Cards Grid */}
       <section aria-label="Key Performance Indicators">
-        <h2 className="text-xs font-bold uppercase tracking-widest text-ink-500 mb-3">
-          Marketplace KPI Overview
-        </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-ink-500">
+            Marketplace KPI Overview
+          </h2>
+          <span className="text-[11px] font-semibold text-ink-400">Live Nursery Metrics</span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4">
           {kpiCards.map((card, idx) => (
             <Link
               key={idx}
               href={card.href}
-              className="bg-white rounded-xl border border-ink-100 p-4 shadow-xs hover:border-forest-300 hover:shadow-sm transition-all flex flex-col justify-between group focus:outline-none focus:ring-2 focus:ring-forest-700"
+              className="bg-floria-linen rounded-2xl border border-floria-border p-4 sm:p-5 shadow-xs hover:border-forest-700/60 hover:shadow-sm hover:scale-[1.01] active:scale-[0.99] transition-all flex flex-col justify-between group focus:outline-none focus:ring-2 focus:ring-forest-800"
             >
               <div className="flex justify-between items-start">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-ink-400 leading-tight">
+                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-ink-500 leading-tight">
                   {card.label}
                 </span>
-                <div className={`w-8 h-8 rounded-lg ${card.color} border flex items-center justify-center flex-shrink-0`}>
+                <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl ${card.color} border flex items-center justify-center flex-shrink-0 shadow-2xs`}>
                   {card.icon}
                 </div>
               </div>
-              <div className="mt-3">
-                <p className="text-xl sm:text-2xl font-bold text-ink-900 leading-tight">
+              <div className="mt-4">
+                <p className="text-xl sm:text-2xl font-serif font-bold text-ink-900 leading-tight">
                   {card.value}
                 </p>
-                <p className="text-[10px] text-ink-400 mt-0.5 group-hover:text-forest-700 transition-colors truncate">
+                <p className="text-[10px] sm:text-[11px] text-ink-400 mt-1 group-hover:text-forest-800 transition-colors truncate">
                   {card.subtext}
                 </p>
               </div>
@@ -295,30 +302,30 @@ export default function SellerDashboardPage() {
       </section>
 
       {/* Inventory Stock Alerts & Quick Adjustment */}
-      <section aria-label="Inventory Alerts" className="bg-white rounded-2xl border border-ink-100 p-5 shadow-xs space-y-4">
-        <div className="flex justify-between items-center border-b border-ink-100 pb-3">
+      <section aria-label="Inventory Alerts" className="bg-floria-linen rounded-3xl border border-floria-border p-5 sm:p-6 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-floria-border pb-3.5">
           <div>
-            <h2 className="font-serif text-base font-bold text-ink-900">Inventory Stock Alerts</h2>
-            <p className="text-xs text-ink-400">Products requiring immediate stock updates or reordering.</p>
+            <h2 className="font-serif text-base sm:text-lg font-bold text-ink-900">Inventory Stock Alerts</h2>
+            <p className="text-xs text-ink-500">Products requiring immediate inventory replenishment.</p>
           </div>
-          <Link href="/seller/products" className="text-xs font-bold text-forest-700 hover:text-forest-900">
-            View Catalog →
+          <Link href="/seller/products" className="text-xs font-bold text-forest-800 hover:text-forest-950 uppercase tracking-wider">
+            View Full Catalog →
           </Link>
         </div>
 
         {inventoryAlerts.length === 0 ? (
-          <div className="p-6 text-center text-xs text-ink-400 bg-cream-50 rounded-xl">
+          <div className="p-6 text-center text-xs font-medium text-ink-500 bg-floria-soft-sand rounded-2xl border border-floria-border">
             ✓ All product inventory levels are healthy and above reorder thresholds.
           </div>
         ) : (
-          <div className="divide-y divide-ink-100">
+          <div className="divide-y divide-floria-border">
             {inventoryAlerts.map((item: any) => (
-              <div key={item.id} className="py-3 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+              <div key={item.id} className="py-3.5 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
                 <div>
-                  <p className="font-bold text-xs text-ink-900">{item.name}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[10px] text-ink-500 font-bold">{formatINR(item.pricePaise)}</span>
-                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${item.status === "out_of_stock" ? "bg-error-50 text-error-700 border border-error-100" : "bg-warning-50 text-warning-700 border border-warning-100"}`}>
+                  <p className="font-bold text-xs sm:text-sm text-ink-900">{item.name}</p>
+                  <div className="flex items-center gap-2.5 mt-1">
+                    <span className="text-xs text-forest-800 font-bold">{formatINR(item.pricePaise)}</span>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.status === "out_of_stock" ? "bg-rose-50 text-rose-800 border border-rose-200" : "bg-amber-50 text-amber-800 border border-amber-200"}`}>
                       {item.status === "out_of_stock" ? "Out of Stock (0)" : `Low Stock (${item.stockQuantity} remaining)`}
                     </span>
                   </div>
@@ -328,7 +335,7 @@ export default function SellerDashboardPage() {
                   type="button"
                   disabled={!isApproved}
                   onClick={() => { setEditingStockItem(item); setNewStockQty(item.stockQuantity); }}
-                  className="self-start sm:self-auto px-3 py-1.5 rounded-lg border border-ink-200 hover:bg-cream-100 text-ink-800 font-bold text-[10px] uppercase tracking-wider transition-colors disabled:opacity-40"
+                  className="self-start sm:self-auto px-4 py-2 rounded-xl border border-floria-border hover:bg-floria-sand bg-floria-soft-sand text-ink-800 font-bold text-xs uppercase tracking-wider transition-all disabled:opacity-40 shadow-2xs active:scale-95"
                 >
                   Quick Stock Update
                 </button>
@@ -339,45 +346,45 @@ export default function SellerDashboardPage() {
       </section>
 
       {/* Recent Orders Overview */}
-      <section aria-label="Recent Seller Orders" className="bg-white rounded-2xl border border-ink-100 p-5 shadow-xs space-y-4">
-        <div className="flex justify-between items-center border-b border-ink-100 pb-3">
+      <section aria-label="Recent Seller Orders" className="bg-floria-linen rounded-3xl border border-floria-border p-5 sm:p-6 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-floria-border pb-3.5">
           <div>
-            <h2 className="font-serif text-base font-bold text-ink-900">Recent Customer Orders</h2>
-            <p className="text-xs text-ink-400">Incoming order items from Floria customers.</p>
+            <h2 className="font-serif text-base sm:text-lg font-bold text-ink-900">Recent Customer Orders</h2>
+            <p className="text-xs text-ink-500">Incoming nursery orders from verified Floria buyers.</p>
           </div>
-          <Link href="/seller/orders" className="text-xs font-bold text-forest-700 hover:text-forest-900">
-            All Seller Orders →
+          <Link href="/seller/orders" className="text-xs font-bold text-forest-800 hover:text-forest-950 uppercase tracking-wider">
+            All Orders Queue →
           </Link>
         </div>
 
         {recentOrders.length === 0 ? (
-          <div className="p-6 text-center text-xs text-ink-400 bg-cream-50 rounded-xl">
+          <div className="p-6 text-center text-xs font-medium text-ink-500 bg-floria-soft-sand rounded-2xl border border-floria-border">
             No customer orders recorded yet for your nursery.
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto rounded-2xl border border-floria-border">
             <table className="w-full border-collapse text-left text-xs">
               <thead>
-                <tr className="bg-cream-100 text-ink-500 font-bold uppercase tracking-wider border-b border-ink-100">
-                  <th className="p-3">Order ID</th>
-                  <th className="p-3">Customer</th>
-                  <th className="p-3">Items</th>
-                  <th className="p-3">Fulfillment Status</th>
-                  <th className="p-3 text-right">Subtotal</th>
+                <tr className="bg-floria-soft-sand text-ink-600 font-bold uppercase tracking-wider border-b border-floria-border">
+                  <th className="p-3.5">Order ID</th>
+                  <th className="p-3.5">Customer</th>
+                  <th className="p-3.5">Items</th>
+                  <th className="p-3.5">Fulfillment Status</th>
+                  <th className="p-3.5 text-right">Subtotal</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-ink-100">
+              <tbody className="divide-y divide-floria-border bg-floria-linen">
                 {recentOrders.map((o: any) => (
-                  <tr key={o.masterOrderId} className="hover:bg-cream-50/50">
-                    <td className="p-3 font-mono font-bold text-ink-900">{o.masterOrderId}</td>
-                    <td className="p-3 font-semibold text-ink-700">{o.customer?.name || "Customer"}</td>
-                    <td className="p-3 text-ink-500">{o.items?.length || 0} item(s)</td>
-                    <td className="p-3">
-                      <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-forest-50 text-forest-800 border border-forest-100">
+                  <tr key={o.masterOrderId} className="hover:bg-floria-soft-sand/60 transition-colors">
+                    <td className="p-3.5 font-mono font-bold text-ink-900">#{o.masterOrderId?.slice(0, 8)}</td>
+                    <td className="p-3.5 font-semibold text-ink-800">{o.customer?.name || "Customer"}</td>
+                    <td className="p-3.5 text-ink-600">{o.items?.length || 0} item(s)</td>
+                    <td className="p-3.5">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-forest-50 text-forest-800 border border-forest-200">
                         {o.status}
                       </span>
                     </td>
-                    <td className="p-3 font-bold text-forest-800 text-right">{formatINR(o.subtotalPaise || 0)}</td>
+                    <td className="p-3.5 font-bold text-forest-800 text-right">{formatINR(o.subtotalPaise || 0)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -388,34 +395,35 @@ export default function SellerDashboardPage() {
 
       {/* Profile Completeness Checklist Banner */}
       {profilePct < 100 && (
-        <section aria-label="Profile Completeness Banner" className="bg-white rounded-2xl border border-warning-200 p-6 shadow-xs space-y-3">
+        <section aria-label="Profile Completeness Banner" className="bg-floria-linen rounded-3xl border border-amber-200/90 p-6 shadow-xs space-y-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h2 className="font-serif text-base font-bold text-ink-900">Complete Nursery Profile Information</h2>
+              <h2 className="font-serif text-base sm:text-lg font-bold text-ink-900">Complete Nursery Profile Information</h2>
               <p className="text-xs text-ink-500 mt-0.5">
                 Complete profile details increase buyer conversion.{" "}
-                <strong className="text-ink-800">{completedCount}/{profileChecks.length} parameters set.</strong>
+                <strong className="text-ink-800">{completedCount}/{profileChecks.length} parameters configured.</strong>
               </p>
             </div>
             <Link
               href="/seller/profile"
-              className="px-4 py-2 bg-forest-700 hover:bg-forest-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-forest-700"
+              style={{ color: "#ffffff" }}
+              className="px-5 py-2.5 bg-forest-800 hover:bg-forest-900 !text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-xs hover:shadow-sm active:scale-95 focus:outline-none focus:ring-2 focus:ring-forest-800"
             >
               Complete Profile →
             </Link>
           </div>
 
-          <div className="h-2 bg-cream-100 rounded-full overflow-hidden">
-            <div className="h-full bg-forest-700 transition-all duration-500" style={{ width: `${profilePct}%` }} />
+          <div className="h-2.5 bg-floria-sand rounded-full overflow-hidden">
+            <div className="h-full bg-forest-800 transition-all duration-500" style={{ width: `${profilePct}%` }} />
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs pt-1">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 text-xs pt-1">
             {profileChecks.map((check, i) => (
-              <div key={i} className="flex items-center gap-1.5">
-                <span className={`text-[10px] ${check.done ? "text-success-600 font-bold" : "text-ink-400"}`}>
+              <div key={i} className="flex items-center gap-2 p-2 rounded-xl bg-floria-soft-sand border border-floria-border/60">
+                <span className={`text-xs ${check.done ? "text-forest-800 font-bold" : "text-ink-400"}`}>
                   {check.done ? "✓" : "○"}
                 </span>
-                <span className={check.done ? "text-ink-500 line-through" : "text-ink-800 font-medium"}>
+                <span className={check.done ? "text-ink-500 line-through truncate" : "text-ink-800 font-semibold truncate"}>
                   {check.label}
                 </span>
               </div>
@@ -426,71 +434,71 @@ export default function SellerDashboardPage() {
 
       {/* Quick Action Navigation Grid */}
       <section aria-label="Quick Actions Navigation">
-        <h2 className="text-xs font-bold uppercase tracking-widest text-ink-500 mb-3">Quick Control Actions</h2>
+        <h2 className="text-xs font-bold uppercase tracking-widest text-ink-500 mb-3.5">Quick Studio Actions</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Link
             href="/seller/products"
-            className="bg-white rounded-2xl border border-ink-100 hover:border-forest-300 p-5 shadow-xs flex flex-col justify-between group transition-all focus:outline-none focus:ring-2 focus:ring-forest-700"
+            className="bg-floria-linen rounded-2xl border border-floria-border hover:border-forest-700/60 p-5 shadow-xs flex flex-col justify-between group hover:shadow-sm hover:scale-[1.01] active:scale-[0.99] transition-all focus:outline-none focus:ring-2 focus:ring-forest-800"
           >
-            <div className="w-10 h-10 rounded-xl bg-forest-50 text-forest-700 flex items-center justify-center mb-3 group-hover:bg-forest-100 transition-colors">
+            <div className="w-10 h-10 rounded-xl bg-forest-50 text-forest-800 border border-forest-200/80 flex items-center justify-center mb-3 group-hover:bg-forest-100 transition-colors shadow-2xs">
               <GridIcon size={20} />
             </div>
             <div>
-              <h3 className="font-bold text-sm text-ink-900 mb-1">Catalog Listings</h3>
-              <p className="text-xs text-ink-500">Manage plant products, pricing, and active listings.</p>
+              <h3 className="font-serif font-bold text-sm text-ink-900 mb-1">Catalog Listings</h3>
+              <p className="text-xs text-ink-500">Manage plant varieties, pricing, and active marketplace status.</p>
             </div>
-            <span className="text-[11px] font-bold text-forest-700 uppercase tracking-wider mt-4">View Listings →</span>
+            <span className="text-[11px] font-bold text-forest-800 uppercase tracking-wider mt-4">View Listings →</span>
           </Link>
 
           <Link
             href="/seller/orders"
-            className="bg-white rounded-2xl border border-ink-100 hover:border-forest-300 p-5 shadow-xs flex flex-col justify-between group transition-all focus:outline-none focus:ring-2 focus:ring-forest-700"
+            className="bg-floria-linen rounded-2xl border border-floria-border hover:border-forest-700/60 p-5 shadow-xs flex flex-col justify-between group hover:shadow-sm hover:scale-[1.01] active:scale-[0.99] transition-all focus:outline-none focus:ring-2 focus:ring-forest-800"
           >
-            <div className="w-10 h-10 rounded-xl bg-forest-50 text-forest-700 flex items-center justify-center mb-3 group-hover:bg-forest-100 transition-colors">
+            <div className="w-10 h-10 rounded-xl bg-forest-50 text-forest-800 border border-forest-200/80 flex items-center justify-center mb-3 group-hover:bg-forest-100 transition-colors shadow-2xs">
               <OrderIcon size={20} />
             </div>
             <div>
-              <h3 className="font-bold text-sm text-ink-900 mb-1">Orders Queue</h3>
-              <p className="text-xs text-ink-500">Process and fulfill customer plant orders.</p>
+              <h3 className="font-serif font-bold text-sm text-ink-900 mb-1">Orders Queue</h3>
+              <p className="text-xs text-ink-500">Confirm, pack, and prepare customer orders for logistics pickup.</p>
             </div>
-            <span className="text-[11px] font-bold text-forest-700 uppercase tracking-wider mt-4">View Orders →</span>
+            <span className="text-[11px] font-bold text-forest-800 uppercase tracking-wider mt-4">View Orders →</span>
           </Link>
 
           <Link
             href="/seller/profile"
-            className="bg-white rounded-2xl border border-ink-100 hover:border-forest-300 p-5 shadow-xs flex flex-col justify-between group transition-all focus:outline-none focus:ring-2 focus:ring-forest-700"
+            className="bg-floria-linen rounded-2xl border border-floria-border hover:border-forest-700/60 p-5 shadow-xs flex flex-col justify-between group hover:shadow-sm hover:scale-[1.01] active:scale-[0.99] transition-all focus:outline-none focus:ring-2 focus:ring-forest-800"
           >
-            <div className="w-10 h-10 rounded-xl bg-forest-50 text-forest-700 flex items-center justify-center mb-3 group-hover:bg-forest-100 transition-colors">
+            <div className="w-10 h-10 rounded-xl bg-forest-50 text-forest-800 border border-forest-200/80 flex items-center justify-center mb-3 group-hover:bg-forest-100 transition-colors shadow-2xs">
               <UserIcon size={20} />
             </div>
             <div>
-              <h3 className="font-bold text-sm text-ink-900 mb-1">Nursery Profile</h3>
-              <p className="text-xs text-ink-500">Update business details, contact, and address.</p>
+              <h3 className="font-serif font-bold text-sm text-ink-900 mb-1">Nursery Profile</h3>
+              <p className="text-xs text-ink-500">Update business branding, contact details, and nursery pickup address.</p>
             </div>
-            <span className="text-[11px] font-bold text-forest-700 uppercase tracking-wider mt-4">Edit Profile →</span>
+            <span className="text-[11px] font-bold text-forest-800 uppercase tracking-wider mt-4">Edit Profile →</span>
           </Link>
 
           <Link
             href="/seller/payouts"
-            className="bg-white rounded-2xl border border-ink-100 hover:border-forest-300 p-5 shadow-xs flex flex-col justify-between group transition-all focus:outline-none focus:ring-2 focus:ring-forest-700"
+            className="bg-floria-linen rounded-2xl border border-floria-border hover:border-forest-700/60 p-5 shadow-xs flex flex-col justify-between group hover:shadow-sm hover:scale-[1.01] active:scale-[0.99] transition-all focus:outline-none focus:ring-2 focus:ring-forest-800"
           >
-            <div className="w-10 h-10 rounded-xl bg-forest-50 text-forest-700 flex items-center justify-center mb-3 group-hover:bg-forest-100 transition-colors">
+            <div className="w-10 h-10 rounded-xl bg-forest-50 text-forest-800 border border-forest-200/80 flex items-center justify-center mb-3 group-hover:bg-forest-100 transition-colors shadow-2xs">
               <PayoutIcon size={20} />
             </div>
             <div>
-              <h3 className="font-bold text-sm text-ink-900 mb-1">Earnings & Payouts</h3>
-              <p className="text-xs text-ink-500">Track sales revenue and settlement history.</p>
+              <h3 className="font-serif font-bold text-sm text-ink-900 mb-1">Earnings &amp; Payouts</h3>
+              <p className="text-xs text-ink-500">Track sales earnings, platform commissions, and settlement ledger.</p>
             </div>
-            <span className="text-[11px] font-bold text-forest-700 uppercase tracking-wider mt-4">View Payouts →</span>
+            <span className="text-[11px] font-bold text-forest-800 uppercase tracking-wider mt-4">View Payouts →</span>
           </Link>
         </div>
       </section>
 
       {/* Modal: Quick Stock Adjustment */}
       {editingStockItem && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-ink-100 p-6 max-w-sm w-full shadow-2xl space-y-4">
-            <div className="flex justify-between items-start border-b border-ink-100 pb-3">
+        <div className="fixed inset-0 z-50 bg-ink-950/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-floria-linen rounded-3xl border border-floria-border p-6 max-w-sm w-full shadow-2xl space-y-4">
+            <div className="flex justify-between items-start border-b border-floria-border pb-3">
               <div>
                 <h3 className="font-serif text-base font-bold text-ink-900">Update Inventory Stock</h3>
                 <p className="text-xs text-ink-500 mt-0.5">{editingStockItem.name}</p>
@@ -498,7 +506,7 @@ export default function SellerDashboardPage() {
               <button
                 type="button"
                 onClick={() => setEditingStockItem(null)}
-                className="text-ink-400 hover:text-ink-900 font-bold text-sm"
+                className="text-ink-400 hover:text-ink-900 font-bold text-sm p-1"
               >
                 ✕
               </button>
@@ -506,8 +514,8 @@ export default function SellerDashboardPage() {
 
             <form onSubmit={handleQuickStockUpdate} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-ink-700 mb-1">
-                  New Available Stock Quantity
+                <label className="block text-xs font-bold uppercase tracking-wider text-ink-700 mb-1.5">
+                  Available Stock Quantity
                 </label>
                 <input
                   type="number"
@@ -515,7 +523,7 @@ export default function SellerDashboardPage() {
                   required
                   value={newStockQty}
                   onChange={(e) => setNewStockQty(Number(e.target.value))}
-                  className="w-full px-3 py-2 text-sm rounded-xl border border-ink-200 focus:outline-none focus:ring-1 focus:ring-forest-700"
+                  className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen focus:outline-none focus:ring-2 focus:ring-forest-800/20 text-ink-900 font-semibold"
                 />
               </div>
 
@@ -523,14 +531,15 @@ export default function SellerDashboardPage() {
                 <button
                   type="submit"
                   disabled={stockUpdating}
-                  className="flex-1 py-2.5 rounded-xl bg-forest-700 hover:bg-forest-800 text-white font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-50"
+                  style={{ color: "#ffffff" }}
+                  className="flex-1 py-3 rounded-xl bg-forest-800 hover:bg-forest-900 !text-white font-bold text-xs uppercase tracking-wider transition-all shadow-xs hover:shadow-md active:scale-95 disabled:opacity-50"
                 >
                   {stockUpdating ? "Saving..." : "Save Stock"}
                 </button>
                 <button
                   type="button"
                   onClick={() => setEditingStockItem(null)}
-                  className="px-4 py-2.5 rounded-xl border border-ink-200 text-ink-600 font-bold text-xs uppercase tracking-wider hover:bg-cream-50"
+                  className="px-4 py-3 rounded-xl border border-floria-border text-ink-700 font-bold text-xs uppercase tracking-wider hover:bg-floria-sand transition-colors"
                 >
                   Cancel
                 </button>

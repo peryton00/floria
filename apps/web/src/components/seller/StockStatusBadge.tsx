@@ -21,18 +21,18 @@ export function StockStatusBadge({
   if (stockQuantity <= 0) {
     status = "out_of_stock";
     label = "Out of Stock";
-    classes = "bg-error-100 text-error-600";
-    dotBg = "bg-error-600";
+    classes = "bg-rose-50 text-rose-800 border border-rose-200";
+    dotBg = "bg-rose-600";
   } else if (stockQuantity <= lowStockThreshold) {
     status = "low_stock";
     label = `Low Stock (${stockQuantity})`;
-    classes = "bg-warning-100 text-warning-600";
-    dotBg = "bg-warning-600";
+    classes = "bg-amber-50 text-amber-800 border border-amber-200";
+    dotBg = "bg-amber-600";
   } else {
     status = "in_stock";
     label = `In Stock (${stockQuantity})`;
-    classes = "bg-success-100 text-success-600";
-    dotBg = "bg-success-600";
+    classes = "bg-forest-50 text-forest-800 border border-forest-200";
+    dotBg = "bg-forest-700";
   }
 
   const sizeClasses = size === "sm" ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-xs";

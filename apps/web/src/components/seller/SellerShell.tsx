@@ -29,10 +29,10 @@ export function SellerShell({ children }: SellerShellProps) {
   // Loading state — brief hydration flash prevention
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-cream-100 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-forest-700 border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs font-bold uppercase tracking-wider text-ink-400">Loading</p>
+      <div className="min-h-screen bg-floria-page flex items-center justify-center font-ui">
+        <div className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-floria-linen border border-floria-border shadow-xs">
+          <div className="w-8 h-8 border-2 border-forest-800 border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs font-bold uppercase tracking-widest text-ink-500">Loading Seller Portal</p>
         </div>
       </div>
     );
@@ -53,11 +53,11 @@ export function SellerShell({ children }: SellerShellProps) {
   if (isPending) {
     // Allow /seller/profile access for pending sellers so they can update info
     return (
-      <div className="min-h-screen bg-cream-100 flex">
+      <div className="min-h-screen bg-floria-page flex font-ui">
         {/* Mobile sidebar overlay */}
         {sidebarOpen && (
           <div
-            className="fixed inset-0 z-30 bg-black/50 lg:hidden"
+            className="fixed inset-0 z-30 bg-ink-950/40 backdrop-blur-xs lg:hidden"
             onClick={() => setSidebarOpen(false)}
             aria-hidden
           />
@@ -83,11 +83,11 @@ export function SellerShell({ children }: SellerShellProps) {
 
   // Approved — full portal
   return (
-    <div className="min-h-screen bg-cream-100 flex">
+    <div className="min-h-screen bg-floria-page flex font-ui">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
+          className="fixed inset-0 z-30 bg-ink-950/40 backdrop-blur-xs lg:hidden"
           onClick={() => setSidebarOpen(false)}
           aria-hidden
         />
@@ -108,7 +108,7 @@ export function SellerShell({ children }: SellerShellProps) {
         <SellerHeader onMenuToggle={() => setSidebarOpen((v) => !v)} />
         <main
           id="seller-main-content"
-          className="flex-1 p-4 md:p-6 overflow-y-auto"
+          className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto"
           tabIndex={-1}
         >
           {children}

@@ -101,55 +101,57 @@ export default function SellerDocumentsPage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 pb-12">
+    <div className="max-w-3xl mx-auto space-y-6 pb-12 font-ui">
       <div>
-        <h1 className="font-serif text-2xl font-bold text-ink-900 leading-tight">Verification Documents</h1>
-        <p className="text-xs text-ink-400 mt-0.5">Manage business registration certificates, trade licenses, and nursery verification files.</p>
+        <h1 className="font-serif text-2xl sm:text-3xl font-bold text-ink-900 leading-tight">Verification Documents</h1>
+        <p className="text-xs sm:text-sm text-ink-500 mt-0.5">Manage business registration certificates, botanical trade licenses, and nursery verification files.</p>
       </div>
 
       {/* Verification Status Banner */}
-      <div className="bg-forest-900 text-white rounded-2xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-xs">
-        <div className="flex gap-3">
-          <ShieldCheck className="text-forest-200 flex-shrink-0 mt-1" size={24} />
+      <div className="bg-gradient-to-br from-[#183023] via-[#1E3A2B] to-[#254A37] text-white rounded-3xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm border border-forest-700/50">
+        <div className="flex gap-3.5">
+          <div className="w-10 h-10 rounded-2xl bg-white/15 text-white flex items-center justify-center flex-shrink-0 mt-0.5 shadow-2xs">
+            <ShieldCheck size={22} />
+          </div>
           <div>
-            <h2 className="font-serif text-base font-bold text-white">
+            <h2 className="font-serif text-base sm:text-lg font-bold text-white">
               Nursery Account Status: {sellerProfile?.status ? sellerProfile.status.toUpperCase() : "PENDING"}
             </h2>
-            <p className="text-xs text-cream-100/80 leading-relaxed mt-1">
+            <p className="text-xs sm:text-sm text-white/80 leading-relaxed mt-1">
               {sellerProfile?.status === "approved"
-                ? "Your business onboarding credentials have been verified by Floria Administration. Your catalog is fully live for checkout."
-                : "Upload your business registration documents for Floria compliance verification."}
+                ? "Your business onboarding credentials have been verified by Floria Administration. Your catalog is fully live for marketplace checkout."
+                : "Upload your business registration documents for compliance verification by the Floria horticultural team."}
             </p>
           </div>
         </div>
       </div>
 
       {/* Upload Form */}
-      <section className="bg-white rounded-2xl border border-ink-100 p-5 shadow-xs space-y-4">
-        <h2 className="font-serif text-base font-bold text-ink-900 border-b border-ink-100 pb-3 flex items-center gap-2">
-          <Upload size={18} className="text-forest-700" /> Upload New Document
+      <section className="bg-floria-linen rounded-3xl border border-floria-border p-6 sm:p-7 shadow-xs space-y-5">
+        <h2 className="font-serif text-base sm:text-lg font-bold text-ink-900 border-b border-floria-border pb-3.5 flex items-center gap-2">
+          <Upload size={18} className="text-forest-800" /> Upload Verification Document
         </h2>
 
         {error && (
-          <div className="p-3 bg-error-50 border border-error-100 rounded-xl text-xs text-error-700">
+          <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-800 shadow-2xs">
             {error}
           </div>
         )}
 
         {uploadSuccess && (
-          <div className="p-3 bg-success-50 border border-success-100 rounded-xl text-xs text-success-700 font-medium">
-            Document submitted successfully for administration review!
+          <div className="p-3.5 bg-forest-50 border border-forest-200 rounded-2xl text-xs text-forest-800 font-bold shadow-2xs">
+            ✓ Document submitted successfully for administration review!
           </div>
         )}
 
         <form onSubmit={handleUpload} className="space-y-4 text-xs">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block font-bold text-ink-700 uppercase tracking-wider mb-1">Document Type *</label>
+              <label className="block font-bold text-ink-700 uppercase tracking-wider mb-1.5">Document Type *</label>
               <select
                 value={documentType}
                 onChange={(e) => setDocumentType(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl border border-ink-200 focus:outline-none focus:ring-1 focus:ring-forest-700"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-forest-800/20 text-ink-900"
               >
                 <option value="gstin">GSTIN Certificate</option>
                 <option value="business_license">Nursery Business License</option>
@@ -160,35 +162,36 @@ export default function SellerDocumentsPage() {
             </div>
 
             <div>
-              <label className="block font-bold text-ink-700 uppercase tracking-wider mb-1">Document Title *</label>
+              <label className="block font-bold text-ink-700 uppercase tracking-wider mb-1.5">Document Title *</label>
               <input
                 type="text"
                 required
                 value={fileName}
                 onChange={(e) => setFileName(e.target.value)}
                 placeholder="e.g. GSTIN_Raipur_Branch.pdf"
-                className="w-full px-3 py-2.5 rounded-xl border border-ink-200 focus:outline-none focus:ring-1 focus:ring-forest-700"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-forest-800/20 text-ink-900 placeholder:text-ink-400"
               />
             </div>
           </div>
 
           <div>
-            <label className="block font-bold text-ink-700 uppercase tracking-wider mb-1">Document URL / Storage Link *</label>
+            <label className="block font-bold text-ink-700 uppercase tracking-wider mb-1.5">Document URL / Storage Link *</label>
             <input
               type="text"
               required
               value={fileUrl}
               onChange={(e) => setFileUrl(e.target.value)}
-              placeholder="https://... or storage link"
-              className="w-full px-3 py-2.5 rounded-xl border border-ink-200 focus:outline-none focus:ring-1 focus:ring-forest-700"
+              placeholder="https://... or secure storage link"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen text-xs sm:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-forest-800/20 text-ink-900 placeholder:text-ink-400"
             />
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex justify-end pt-2">
             <button
               type="submit"
               disabled={isUploading}
-              className="px-5 py-2.5 bg-forest-900 hover:bg-forest-800 text-white rounded-xl font-bold uppercase tracking-wider transition-colors disabled:opacity-50 flex items-center gap-2"
+              style={{ color: "#ffffff" }}
+              className="px-6 py-3 bg-forest-800 hover:bg-forest-900 !text-white rounded-xl font-bold text-xs uppercase tracking-wider transition-all shadow-xs hover:shadow-md active:scale-95 disabled:opacity-50 flex items-center gap-2"
             >
               {isUploading ? <Loader2 size={14} className="animate-spin" /> : "Submit Document"}
             </button>
@@ -197,28 +200,28 @@ export default function SellerDocumentsPage() {
       </section>
 
       {/* Document List */}
-      <section className="bg-white rounded-2xl border border-ink-100 p-5 shadow-xs space-y-4">
-        <h2 className="font-serif text-base font-bold text-ink-900 border-b border-ink-100 pb-3">Uploaded Verification Credentials</h2>
+      <section className="bg-floria-linen rounded-3xl border border-floria-border p-6 shadow-xs space-y-4">
+        <h2 className="font-serif text-base sm:text-lg font-bold text-ink-900 border-b border-floria-border pb-3.5">Uploaded Verification Credentials</h2>
 
         {loading ? (
-          <div className="py-8 flex justify-center text-ink-400">
+          <div className="py-8 flex justify-center text-forest-800">
             <Loader2 className="animate-spin" size={24} />
           </div>
         ) : documents.length === 0 ? (
-          <div className="py-8 text-center text-xs text-ink-400">
+          <div className="py-8 text-center text-xs font-medium text-ink-500 bg-floria-soft-sand rounded-2xl border border-floria-border">
             No verification documents uploaded yet. Submit your GSTIN or business license above.
           </div>
         ) : (
-          <div className="divide-y divide-ink-100">
+          <div className="divide-y divide-floria-border">
             {documents.map((doc) => (
               <div key={doc.id} className="py-4 flex justify-between items-center text-xs">
-                <div className="flex gap-3 items-center">
-                  <div className="w-9 h-9 rounded-lg bg-cream-50 text-forest-700 flex items-center justify-center flex-shrink-0 border border-ink-100">
+                <div className="flex gap-3.5 items-center">
+                  <div className="w-10 h-10 rounded-xl bg-forest-50 text-forest-800 flex items-center justify-center flex-shrink-0 border border-forest-200/70 shadow-2xs">
                     <FileText size={18} />
                   </div>
                   <div>
-                    <p className="font-bold text-ink-900">{doc.file_name}</p>
-                    <p className="text-[10px] text-ink-400 mt-0.5">
+                    <p className="font-bold text-ink-900 text-xs sm:text-sm">{doc.file_name}</p>
+                    <p className="text-[10px] text-ink-400 mt-0.5 font-mono">
                       {doc.document_type.toUpperCase()} • {doc.mime_type}
                     </p>
                   </div>

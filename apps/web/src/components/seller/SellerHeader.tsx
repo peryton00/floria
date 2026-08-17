@@ -12,12 +12,12 @@ export function SellerHeader({ onMenuToggle }: SellerHeaderProps) {
   const { sellerProfile, sellerStatus, logout } = useSeller();
 
   return (
-    <header className="h-14 bg-white border-b border-ink-100 flex items-center justify-between px-4 lg:px-6 z-20 sticky top-0">
+    <header className="h-14 bg-floria-linen/90 backdrop-blur-md border-b border-floria-border flex items-center justify-between px-4 lg:px-6 z-20 sticky top-0 font-ui shadow-2xs">
       {/* Mobile hamburger */}
       <button
         type="button"
         onClick={onMenuToggle}
-        className="lg:hidden text-ink-500 hover:text-ink-900 p-1.5 -ml-1 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest-700"
+        className="lg:hidden text-ink-600 hover:text-ink-900 p-1.5 -ml-1 rounded-xl hover:bg-floria-sand transition-colors focus:outline-none focus:ring-2 focus:ring-forest-800"
         aria-label="Toggle navigation menu"
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -27,7 +27,7 @@ export function SellerHeader({ onMenuToggle }: SellerHeaderProps) {
 
       {/* Page context — visible on mobile when sidebar is hidden */}
       <div className="lg:hidden">
-        <span className="font-serif text-sm font-semibold text-ink-900">Seller Portal</span>
+        <span className="font-serif text-sm font-bold text-ink-900">Seller Studio</span>
       </div>
 
       {/* Right actions */}
@@ -51,8 +51,8 @@ export function SellerHeader({ onMenuToggle }: SellerHeaderProps) {
             <button
               type="button"
               onClick={logout}
-              title="Click to sign out (demo)"
-              className="w-8 h-8 rounded-full bg-forest-50 border border-forest-200 flex items-center justify-center font-bold text-xs text-forest-700 hover:bg-forest-100 transition-colors focus:outline-none focus:ring-2 focus:ring-forest-700"
+              title="Click to sign out"
+              className="w-9 h-9 rounded-xl bg-forest-50 border border-forest-200/80 flex items-center justify-center font-bold text-xs text-forest-800 hover:bg-forest-100 hover:scale-105 active:scale-95 transition-all shadow-2xs focus:outline-none focus:ring-2 focus:ring-forest-800"
               aria-label={`${sellerProfile.business_name} — click to sign out`}
             >
               {sellerProfile.business_name.charAt(0).toUpperCase()}
