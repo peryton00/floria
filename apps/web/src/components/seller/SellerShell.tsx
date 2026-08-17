@@ -83,34 +83,30 @@ export function SellerShell({ children }: SellerShellProps) {
 
   // Approved — full portal
   return (
-    <div className="min-h-screen bg-floria-page flex font-ui">
+    <div className="min-h-screen bg-[#F9F8F3] flex font-sans antialiased text-[#212529]">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-30 bg-ink-950/40 backdrop-blur-xs lg:hidden"
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs md:hidden flex"
           onClick={() => setSidebarOpen(false)}
           aria-hidden
-        />
+        >
+          <div className="w-64 bg-[#1E3A2B] text-white/80 flex flex-col h-full shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <SellerSidebar onClose={() => setSidebarOpen(false)} />
+          </div>
+          <div className="flex-1" onClick={() => setSidebarOpen(false)} />
+        </div>
       )}
 
-      {/* Sidebar */}
-      <div
-        className={[
-          "fixed inset-y-0 left-0 z-40 transition-transform duration-300 lg:static lg:translate-x-0",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full",
-        ].join(" ")}
-      >
+      {/* Desktop Sidebar */}
+      <div className="hidden md:flex flex-shrink-0">
         <SellerSidebar onClose={() => setSidebarOpen(false)} />
       </div>
 
-      {/* Content */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 bg-[#F9F8F3]">
         <SellerHeader onMenuToggle={() => setSidebarOpen((v) => !v)} />
-        <main
-          id="seller-main-content"
-          className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto"
-          tabIndex={-1}
-        >
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6">
           {children}
         </main>
       </div>

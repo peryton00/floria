@@ -79,16 +79,16 @@ function Field({
   placeholder, required, hint, autoComplete, textarea, rows = 3,
 }: FieldProps) {
   const base = [
-    "w-full px-4 py-3 text-xs sm:text-sm rounded-xl border transition-all font-medium",
-    "focus:outline-none focus:ring-2 focus:ring-forest-800/20 text-ink-900 placeholder:text-ink-400",
-    error ? "border-rose-600 bg-rose-50/50" : "border-floria-border bg-floria-sand/70 focus:bg-floria-linen",
+    "w-full px-3.5 py-2 text-xs rounded border transition-all font-medium",
+    "focus:outline-none focus:ring-1 focus:ring-[#1B4D3E] focus:border-[#1B4D3E] text-[#0F172A] placeholder:text-slate-400",
+    error ? "border-red-500 bg-red-50/50" : "border-[#E2E8F0] bg-[#F8FAFC] focus:bg-white",
   ].join(" ");
 
   return (
     <div>
-      <label htmlFor={id} className="block text-xs font-bold uppercase tracking-wider text-ink-700 mb-1.5">
+      <label htmlFor={id} className="block text-[11px] font-mono font-bold uppercase tracking-wider text-slate-600 mb-1">
         {label}
-        {required && <span className="text-rose-600 ml-0.5" aria-hidden>*</span>}
+        {required && <span className="text-red-500 ml-0.5" aria-hidden>*</span>}
       </label>
       {textarea ? (
         <textarea
@@ -117,12 +117,12 @@ function Field({
         />
       )}
       {error && (
-        <p id={`${id}-err`} role="alert" className="text-xs text-rose-600 font-semibold mt-1">
+        <p id={`${id}-err`} role="alert" className="text-xs text-red-600 font-semibold mt-1">
           {error}
         </p>
       )}
       {hint && !error && (
-        <p id={`${id}-hint`} className="text-xs text-ink-400 mt-1">{hint}</p>
+        <p id={`${id}-hint`} className="text-xs text-slate-400 mt-1">{hint}</p>
       )}
     </div>
   );
@@ -132,11 +132,11 @@ function Field({
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-floria-linen rounded-3xl border border-floria-border shadow-xs overflow-hidden">
-      <div className="px-6 py-4 border-b border-floria-border bg-floria-soft-sand/50">
-        <h2 className="font-serif font-bold text-base text-ink-900">{title}</h2>
+    <div className="bg-white rounded border border-[#E2E8F0] shadow-xs overflow-hidden">
+      <div className="px-5 py-3.5 border-b border-[#E2E8F0] bg-[#F8FAFC]">
+        <h2 className="font-sans font-bold text-sm text-[#0F172A]">{title}</h2>
       </div>
-      <div className="p-6 space-y-4">{children}</div>
+      <div className="p-5 space-y-4">{children}</div>
     </div>
   );
 }
@@ -184,15 +184,15 @@ function LogoUpload({
 
   return (
     <div>
-      <p className="text-xs font-bold uppercase tracking-wider text-ink-700 mb-2.5">Nursery Brand Logo</p>
+      <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-600 mb-2">Nursery Brand Logo</p>
       <div className="flex items-start gap-4">
         {/* Preview */}
-        <div className="w-20 h-20 rounded-2xl border-2 border-dashed border-floria-border flex items-center justify-center bg-floria-natural-sand flex-shrink-0 overflow-hidden shadow-2xs">
+        <div className="w-16 h-16 rounded border border-dashed border-[#E2E8F0] flex items-center justify-center bg-[#F8FAFC] flex-shrink-0 overflow-hidden shadow-xs">
           {preview ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={preview} alt="Nursery logo preview" className="w-full h-full object-cover" />
           ) : (
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-ink-400">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-slate-400">
               <rect x="3" y="3" width="18" height="18" rx="2" />
               <circle cx="8.5" cy="8.5" r="1.5" />
               <polyline points="21 15 16 10 5 21" />
@@ -200,17 +200,17 @@ function LogoUpload({
           )}
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
-            className="px-4 py-2 rounded-xl border border-floria-border hover:bg-floria-sand bg-floria-linen text-xs font-bold uppercase tracking-wider text-ink-700 hover:text-forest-800 transition-all focus:outline-none focus:ring-2 focus:ring-forest-800 shadow-2xs"
+            className="px-3 py-1.5 rounded border border-[#E2E8F0] hover:bg-[#F8FAFC] bg-white text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 hover:text-[#1B4D3E] transition-all"
             aria-label="Upload nursery logo"
           >
             {preview ? "Change Logo" : "Upload Logo"}
           </button>
-          <p className="text-[11px] text-ink-400">JPG, PNG, WebP or SVG · Max 2 MB</p>
-          {error && <p role="alert" className="text-xs text-rose-600 font-semibold">{error}</p>}
+          <p className="text-[11px] text-slate-400">JPG, PNG, WebP or SVG · Max 2 MB</p>
+          {error && <p role="alert" className="text-xs text-red-600 font-semibold">{error}</p>}
           <input
             ref={inputRef}
             type="file"
@@ -315,10 +315,22 @@ export default function SellerProfilePage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 pb-12 font-ui">
-      <div>
-        <h1 className="font-serif text-2xl sm:text-3xl font-bold text-ink-900 leading-tight">Nursery Profile & Storefront</h1>
-        <p className="text-xs sm:text-sm text-ink-500 mt-0.5">Manage your public nursery identity, customer contact information, and physical dispatch address.</p>
+    <div className="space-y-6 font-sans antialiased text-[#212529]">
+      {/* Title Header Banner */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded border border-[#E2E8F0] shadow-xs">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <h1 className="font-sans text-xl font-bold text-[#0F172A] tracking-tight">Nursery Profile &amp; Storefront</h1>
+          </div>
+          <p className="text-xs text-slate-500 mt-1">Manage your public nursery identity, customer contact information, and physical dispatch address.</p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded px-3 py-1">
+            Storefront Configuration
+          </span>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} noValidate className="space-y-6">
@@ -425,24 +437,24 @@ export default function SellerProfilePage() {
           />
         </Section>
 
-        <div className="flex items-center justify-between gap-4 bg-floria-linen/95 backdrop-blur-md rounded-2xl border border-floria-border px-6 py-4 sticky bottom-4 shadow-lg">
+        <div className="flex items-center justify-between gap-4 bg-white rounded border border-[#E2E8F0] p-4 shadow-xs">
           {saved ? (
-            <span className="flex items-center gap-1.5 text-xs font-bold text-forest-800 bg-forest-50 border border-forest-200 px-3 py-1 rounded-full shadow-2xs">
+            <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
               Profile saved successfully
             </span>
           ) : (
-            <span className="text-xs text-ink-500 font-medium">
-              All required fields must be completed.
+            <span className="text-xs text-slate-500 font-medium">
+              All required fields must be completed before saving.
             </span>
           )}
           <button
             type="submit"
             disabled={saving}
             style={{ color: "#ffffff" }}
-            className="px-7 py-3 rounded-xl bg-forest-800 hover:bg-forest-900 !text-white text-xs font-bold uppercase tracking-wider transition-all shadow-xs hover:shadow-md active:scale-95 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-forest-800"
+            className="px-5 py-2 rounded bg-[#1B4D3E] hover:bg-[#153e31] !text-white text-xs font-bold uppercase tracking-wider transition-colors shadow-xs disabled:opacity-60"
           >
             {saving ? "Saving Profile…" : "Save Profile"}
           </button>
@@ -451,3 +463,4 @@ export default function SellerProfilePage() {
     </div>
   );
 }
+

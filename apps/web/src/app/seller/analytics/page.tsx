@@ -98,22 +98,30 @@ export default function SellerAnalyticsPage() {
   const aov = summary.ordersCount > 0 ? summary.grossRevenuePaise / summary.ordersCount : 0;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 pb-12 font-ui">
-      {/* Title & Range Switcher */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-6 font-sans antialiased text-[#212529]">
+      {/* Title & Range Switcher Banner */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded border border-[#E2E8F0] shadow-xs">
         <div>
-          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-ink-900 leading-tight">Sales & Orders Analytics</h1>
-          <p className="text-xs sm:text-sm text-ink-500 mt-0.5">Evaluate your nursery sales revenue growth and botanical variety performance.</p>
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <h1 className="font-sans text-xl font-bold text-[#0F172A] tracking-tight">Sales &amp; Orders Analytics</h1>
+          </div>
+          <p className="text-xs text-slate-500 mt-1">Evaluate your nursery sales revenue growth and botanical variety performance.</p>
         </div>
 
         {/* Date Ranges */}
-        <div className="flex bg-floria-sand/80 p-1 rounded-2xl border border-floria-border shadow-2xs">
+        <div className="flex items-center gap-1.5 bg-[#F8FAFC] rounded border border-[#E2E8F0] p-1 shadow-xs">
           {(["today", "7d", "30d", "90d", "12m"] as const).map((r) => (
             <button
               key={r}
               type="button"
               onClick={() => setRange(r)}
-              className={`px-3.5 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${range === r ? "bg-floria-linen text-forest-900 shadow-xs border border-floria-border/80 font-extrabold" : "text-ink-500 hover:text-ink-900"}`}
+              className={[
+                "px-3 py-1 rounded text-[11px] font-mono font-bold uppercase tracking-wider transition-all",
+                range === r
+                  ? "bg-[#1B4D3E] text-white shadow-xs"
+                  : "text-slate-600 hover:text-[#0F172A] hover:bg-slate-200/60",
+              ].join(" ")}
             >
               {r === "today" ? "Today" : r === "12m" ? "12M" : r}
             </button>
@@ -122,23 +130,21 @@ export default function SellerAnalyticsPage() {
       </div>
 
       {/* Summary KPI Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: "Gross Revenue", value: formatINR(summary.grossRevenuePaise), sub: "Total sales volume", icon: <TrendingUp size={16} />, color: "bg-forest-50 text-forest-800 border-forest-200/70" },
-          { label: "Total Orders", value: summary.ordersCount, sub: "Verified orders", icon: <ShoppingBag size={16} />, color: "bg-sky-50 text-sky-800 border-sky-200/70" },
-          { label: "Plants Sold", value: summary.unitsSold, sub: "Item quantities", icon: <Leaf size={16} />, color: "bg-emerald-50 text-emerald-800 border-emerald-200/70" },
-          { label: "Avg Order Value", value: formatINR(aov), sub: "Per-order average", icon: <Calendar size={16} />, color: "bg-amber-50 text-amber-800 border-amber-200/70" }
+          { label: "Gross Revenue", value: formatINR(summary.grossRevenuePaise), sub: "Total sales volume", icon: <TrendingUp size={18} />, color: "bg-forest-50 text-forest-700 border border-forest-100" },
+          { label: "Total Orders", value: summary.ordersCount, sub: "Verified orders", icon: <ShoppingBag size={18} />, color: "bg-sky-50 text-sky-700 border border-sky-100" },
+          { label: "Plants Sold", value: summary.unitsSold, sub: "Item quantities", icon: <Leaf size={18} />, color: "bg-emerald-50 text-emerald-700 border border-emerald-100" },
+          { label: "Avg Order Value", value: formatINR(aov), sub: "Per-order average", icon: <Calendar size={18} />, color: "bg-amber-50 text-amber-700 border border-amber-100" }
         ].map((kpi) => (
-          <div key={kpi.label} className="bg-floria-linen rounded-3xl border border-floria-border p-4 sm:p-5 flex flex-col justify-between shadow-xs">
-            <div className="flex justify-between items-start">
-              <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-ink-500 leading-tight">{kpi.label}</span>
-              <div className={`w-8 h-8 rounded-xl ${kpi.color} border flex items-center justify-center shadow-2xs`}>
-                {kpi.icon}
-              </div>
+          <div key={kpi.label} className="bg-white rounded border border-[#E2E8F0] p-4 shadow-xs hover:border-slate-400 transition-all flex items-start justify-between">
+            <div className="min-w-0 flex-1 pr-2">
+              <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-slate-500 truncate">{kpi.label}</p>
+              <p className="font-mono text-xl font-bold text-[#0F172A] mt-1.5 tracking-tight truncate">{kpi.value}</p>
+              <p className="text-[11px] text-slate-400 mt-1 truncate">{kpi.sub}</p>
             </div>
-            <div className="mt-3.5">
-              <p className="text-xl sm:text-2xl font-serif font-bold text-ink-900 leading-tight">{kpi.value}</p>
-              <p className="text-[10px] text-ink-400 mt-1">{kpi.sub}</p>
+            <div className={`w-9 h-9 rounded ${kpi.color} flex items-center justify-center flex-shrink-0 shadow-xs`}>
+              {kpi.icon}
             </div>
           </div>
         ))}
@@ -146,26 +152,26 @@ export default function SellerAnalyticsPage() {
 
       {/* SVG Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-floria-linen rounded-3xl border border-floria-border p-6 shadow-xs space-y-4">
-          <h2 className="font-serif text-base font-bold text-ink-900">Revenue Growth Trend (₹)</h2>
+        <div className="bg-white rounded border border-[#E2E8F0] p-5 shadow-xs space-y-4">
+          <h2 className="font-sans text-sm font-bold text-[#0F172A]">Revenue Growth Trend (₹)</h2>
           <div className="pt-2">
             <LineChart
               data={chartData.revenue}
               height={180}
-              strokeColor="#1E3A2B"
-              fillColor="rgba(30, 58, 43, 0.08)"
+              strokeColor="#1B4D3E"
+              fillColor="rgba(27, 77, 62, 0.08)"
               valueFormatter={(val) => `₹${Math.round(val)}`}
             />
           </div>
         </div>
 
-        <div className="bg-floria-linen rounded-3xl border border-floria-border p-6 shadow-xs space-y-4">
-          <h2 className="font-serif text-base font-bold text-ink-900">Orders Frequency Trend</h2>
+        <div className="bg-white rounded border border-[#E2E8F0] p-5 shadow-xs space-y-4">
+          <h2 className="font-sans text-sm font-bold text-[#0F172A]">Orders Frequency Trend</h2>
           <div className="pt-2">
             <BarChart
               data={chartData.orders}
               height={180}
-              barColor="#254A37"
+              barColor="#1B4D3E"
               valueFormatter={(val) => `${Math.round(val)}`}
             />
           </div>
@@ -175,24 +181,26 @@ export default function SellerAnalyticsPage() {
       {/* Bottom Insights */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Top selling products */}
-        <div className="bg-floria-linen rounded-3xl border border-floria-border p-6 shadow-xs space-y-4">
-          <h2 className="font-serif text-base font-bold text-ink-900 flex items-center gap-2">
-            <Award size={18} className="text-amber-700" /> Best Performing Botanical Varieties
-          </h2>
+        <div className="bg-white rounded border border-[#E2E8F0] shadow-xs overflow-hidden">
+          <div className="p-4 sm:p-5 border-b border-[#E2E8F0] bg-[#F8FAFC]">
+            <h2 className="font-sans text-sm font-bold text-[#0F172A] flex items-center gap-2">
+              <Award size={16} className="text-amber-600" /> Best Performing Botanical Varieties
+            </h2>
+          </div>
           
           {topProducts.length === 0 ? (
-            <div className="p-8 text-center text-xs font-medium text-ink-500 bg-floria-soft-sand rounded-2xl border border-floria-border">
+            <div className="p-8 text-center text-xs font-semibold text-slate-500">
               No sales data recorded yet for this timeframe.
             </div>
           ) : (
-            <div className="divide-y divide-floria-border text-xs">
+            <div className="divide-y divide-[#E2E8F0] text-xs">
               {topProducts.map((p: any, idx: number) => (
-                <div key={idx} className="py-3 flex justify-between items-center">
+                <div key={idx} className="p-3.5 sm:px-5 flex justify-between items-center hover:bg-slate-50/80 transition-colors">
                   <div>
-                    <span className="font-bold text-ink-900 text-xs sm:text-sm">{p.name}</span>
-                    <p className="text-[11px] text-ink-500 font-mono mt-0.5">{p.quantity} units sold</p>
+                    <span className="font-bold text-[#0F172A]">{p.name}</span>
+                    <p className="text-[11px] text-slate-500 font-mono mt-0.5">{p.quantity} units sold</p>
                   </div>
-                  <span className="font-serif font-bold text-forest-800 text-xs sm:text-sm">{formatINR(p.revenuePaise)}</span>
+                  <span className="font-mono font-bold text-[#1B4D3E]">{formatINR(p.revenuePaise)}</span>
                 </div>
               ))}
             </div>
@@ -200,24 +208,26 @@ export default function SellerAnalyticsPage() {
         </div>
 
         {/* Category distribution */}
-        <div className="bg-floria-linen rounded-3xl border border-floria-border p-6 shadow-xs space-y-4">
-          <h2 className="font-serif text-base font-bold text-ink-900 flex items-center gap-2">
-            <PieChart size={18} className="text-forest-800" /> Category Breakdown
-          </h2>
+        <div className="bg-white rounded border border-[#E2E8F0] shadow-xs overflow-hidden">
+          <div className="p-4 sm:p-5 border-b border-[#E2E8F0] bg-[#F8FAFC]">
+            <h2 className="font-sans text-sm font-bold text-[#0F172A] flex items-center gap-2">
+              <PieChart size={16} className="text-[#1B4D3E]" /> Category Breakdown
+            </h2>
+          </div>
           
           {categories.length === 0 ? (
-            <div className="p-8 text-center text-xs font-medium text-ink-500 bg-floria-soft-sand rounded-2xl border border-floria-border">
+            <div className="p-8 text-center text-xs font-semibold text-slate-500">
               No category sales recorded yet for this timeframe.
             </div>
           ) : (
-            <div className="divide-y divide-floria-border text-xs">
+            <div className="divide-y divide-[#E2E8F0] text-xs">
               {categories.map((c: any, idx: number) => (
-                <div key={idx} className="py-3 flex justify-between items-center">
+                <div key={idx} className="p-3.5 sm:px-5 flex justify-between items-center hover:bg-slate-50/80 transition-colors">
                   <div>
-                    <span className="font-bold text-ink-800 text-xs sm:text-sm">{c.name}</span>
-                    <p className="text-[11px] text-ink-500 font-mono mt-0.5">{c.quantity} plants sold</p>
+                    <span className="font-bold text-slate-800">{c.name}</span>
+                    <p className="text-[11px] text-slate-500 font-mono mt-0.5">{c.quantity} plants sold</p>
                   </div>
-                  <span className="font-serif font-bold text-forest-800 text-xs sm:text-sm">{formatINR(c.revenuePaise)}</span>
+                  <span className="font-mono font-bold text-[#1B4D3E]">{formatINR(c.revenuePaise)}</span>
                 </div>
               ))}
             </div>
@@ -227,3 +237,4 @@ export default function SellerAnalyticsPage() {
     </div>
   );
 }
+

@@ -21,18 +21,18 @@ export function StockStatusBadge({
   if (stockQuantity <= 0) {
     status = "out_of_stock";
     label = "Out of Stock";
-    classes = "bg-rose-50 text-rose-800 border border-rose-200";
-    dotBg = "bg-rose-600";
+    classes = "bg-red-50 text-red-700 border border-red-200";
+    dotBg = "bg-red-500";
   } else if (stockQuantity <= lowStockThreshold) {
     status = "low_stock";
     label = `Low Stock (${stockQuantity})`;
     classes = "bg-amber-50 text-amber-800 border border-amber-200";
-    dotBg = "bg-amber-600";
+    dotBg = "bg-amber-500";
   } else {
     status = "in_stock";
     label = `In Stock (${stockQuantity})`;
-    classes = "bg-forest-50 text-forest-800 border border-forest-200";
-    dotBg = "bg-forest-700";
+    classes = "bg-emerald-50 text-emerald-800 border border-emerald-200";
+    dotBg = "bg-emerald-500";
   }
 
   const sizeClasses = size === "sm" ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-xs";
@@ -40,7 +40,7 @@ export function StockStatusBadge({
   return (
     <span
       className={[
-        "inline-flex items-center gap-1 rounded-full font-bold uppercase tracking-wider",
+        "inline-flex items-center gap-1 rounded border font-mono font-bold uppercase tracking-wider",
         sizeClasses,
         classes,
       ].join(" ")}
@@ -51,3 +51,4 @@ export function StockStatusBadge({
     </span>
   );
 }
+

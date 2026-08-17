@@ -149,67 +149,77 @@ function OrdersContent() {
   ];
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 pb-12 font-ui">
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+    <div className="space-y-6 font-sans antialiased text-[#212529]">
+      {/* Title Header Banner */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded border border-[#E2E8F0] shadow-xs">
         <div>
-          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-ink-900 leading-tight">Order Fulfillment Queue</h1>
-          <p className="text-xs sm:text-sm text-ink-500 mt-0.5">Manage and advance customer plant orders assigned to your nursery.</p>
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <h1 className="font-sans text-xl font-bold text-[#0F172A] tracking-tight">Order Fulfillment Queue</h1>
+          </div>
+          <p className="text-xs text-slate-500 mt-1">Manage and advance customer plant orders assigned to your nursery.</p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded px-3 py-1">
+            {orders.length} Nursery Orders
+          </span>
         </div>
       </div>
 
       {error && (
-        <div className="bg-rose-50 border border-rose-200 rounded-2xl p-4 text-xs text-rose-800 flex justify-between items-center shadow-2xs">
+        <div className="bg-red-50 border border-red-200 rounded p-4 text-xs font-semibold text-red-700 flex justify-between items-center">
           <span>{error}</span>
-          <button type="button" onClick={fetchOrders} className="font-bold underline text-rose-900">Retry</button>
+          <button type="button" onClick={fetchOrders} className="font-bold underline text-red-900">Retry</button>
         </div>
       )}
 
-      {/* Tabs Bar */}
-      <div className="flex border-b border-floria-border space-x-2 overflow-x-auto pb-0.5">
-        {tabs.map((t) => {
-          const isActive = statusParam === t.key || (statusParam === "all" && t.key === "all");
-          return (
-            <button
-              key={t.key}
-              type="button"
-              onClick={() => handleTabChange(t.key)}
-              className={[
-                "pb-3 px-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 whitespace-nowrap flex items-center gap-2",
-                isActive
-                  ? "border-forest-800 text-forest-800"
-                  : "border-transparent text-ink-500 hover:text-ink-900",
-              ].join(" ")}
-            >
-              <span>{t.label}</span>
-              <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${isActive ? "bg-forest-100 text-forest-800 font-bold" : "bg-floria-sand text-ink-600"}`}>
-                {t.count}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Search Input */}
-      <div className="bg-floria-linen rounded-2xl border border-floria-border p-3.5 sm:p-4 shadow-xs flex items-center">
-        <div className="w-full relative">
+      {/* Filter / Search Bar */}
+      <div className="bg-white rounded border border-[#E2E8F0] p-4 shadow-xs flex flex-col sm:flex-row gap-3 items-center justify-between">
+        <div className="w-full sm:w-96 relative">
           <input
             type="search"
-            placeholder="Search by Order ID, Customer Name, Plant Variety..."
+            placeholder="Search by Order ID, Customer, Plant Variety..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 text-xs sm:text-sm rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen focus:outline-none focus:ring-2 focus:ring-forest-800/20 text-ink-900 placeholder:text-ink-400 font-medium"
+            className="w-full pl-9 pr-4 py-2 font-mono text-xs rounded border border-[#E2E8F0] focus:outline-none focus:ring-1 focus:ring-[#1B4D3E] focus:border-[#1B4D3E] bg-[#F8FAFC] placeholder:text-slate-400 font-sans"
           />
-          <SearchIcon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400" />
+          <SearchIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+        </div>
+
+        {/* Tab Pills */}
+        <div className="flex items-center gap-1.5 bg-[#F8FAFC] rounded border border-[#E2E8F0] p-1 shadow-xs overflow-x-auto max-w-full">
+          {tabs.map((t) => {
+            const isActive = statusParam === t.key || (statusParam === "all" && t.key === "all");
+            return (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => handleTabChange(t.key)}
+                className={[
+                  "px-3 py-1 rounded text-[11px] font-mono font-bold uppercase tracking-wider transition-all whitespace-nowrap flex items-center gap-1.5",
+                  isActive
+                    ? "bg-[#1B4D3E] text-white shadow-xs"
+                    : "text-slate-600 hover:text-[#0F172A] hover:bg-slate-200/60",
+                ].join(" ")}
+              >
+                <span>{t.label}</span>
+                <span className={`px-1.5 py-0.2 rounded-full text-[9px] ${isActive ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
+                  {t.count}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* Orders List */}
       {loading ? (
         <div className="py-12 flex justify-center">
-          <div className="w-8 h-8 border-2 border-forest-800 border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-[#1B4D3E] border-t-transparent rounded-full animate-spin" />
         </div>
       ) : filteredOrders.length === 0 ? (
-        <div className="bg-floria-linen rounded-3xl border border-floria-border p-12 text-center text-xs sm:text-sm text-ink-500 shadow-xs">
+        <div className="bg-white rounded border border-[#E2E8F0] p-12 text-center text-xs font-semibold text-slate-500 shadow-xs">
           No customer orders found in this fulfillment status.
         </div>
       ) : (
@@ -219,55 +229,49 @@ function OrdersContent() {
             const actionLabel = getSellerActionLabel(order.status);
             const isUpdating = updatingId === order.masterOrderId;
 
-            return (
-              <div key={order.masterOrderId} className="bg-floria-linen rounded-3xl border border-floria-border p-5 sm:p-6 shadow-xs space-y-4 hover:border-forest-700/50 transition-colors">
-                {(() => {
-                  const netOrderTotal = (order.items || []).reduce(
-                    (sum: number, it: any) => sum + (it.seller_net_paise ?? it.pricePaise ?? 0) * it.quantity,
-                    0
-                  ) || order.seller_payout_paise || order.subtotalPaise;
+            const netOrderTotal = (order.items || []).reduce(
+              (sum: number, it: any) => sum + (it.seller_net_paise ?? it.pricePaise ?? 0) * it.quantity,
+              0
+            ) || order.seller_payout_paise || order.subtotalPaise;
 
-                  return (
-                    <>
-                      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-floria-border pb-3.5">
+            return (
+              <div key={order.masterOrderId} className="bg-white rounded border border-[#E2E8F0] p-5 shadow-xs space-y-4 hover:border-slate-400 transition-colors">
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-[#E2E8F0] pb-3.5">
+                  <div>
+                    <div className="flex items-center gap-2.5">
+                      <span className="font-mono font-bold text-[#0F172A] text-sm">#{order.masterOrderId?.slice(0, 10)}</span>
+                      <span className={`px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider border ${getStatusBadgeStyle(order.status)}`}>
+                        {order.status}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Ordered by <strong className="text-slate-800">{order.customer?.name || "Customer"}</strong> · {order.createdAt}
+                    </p>
+                  </div>
+
+                  <div className="text-left sm:text-right bg-[#F8FAFC] px-3 py-1.5 rounded border border-[#E2E8F0] self-start sm:self-auto">
+                    <p className="font-mono font-bold text-sm text-[#1B4D3E]">{formatINR(netOrderTotal)}</p>
+                    <p className="font-mono text-[9px] text-amber-800 font-bold uppercase tracking-wider">Net Payout</p>
+                  </div>
+                </div>
+
+                {/* Items List */}
+                <div className="space-y-2">
+                  {(order.items || []).map((item: any, i: number) => {
+                    const itemNetPrice = item.seller_net_paise ?? item.pricePaise ?? 0;
+                    return (
+                      <div key={i} className="flex justify-between items-center bg-[#F8FAFC] p-3 rounded border border-[#E2E8F0] text-xs">
                         <div>
-                          <div className="flex items-center gap-2.5">
-                            <span className="font-mono font-bold text-ink-900 text-sm sm:text-base">#{order.masterOrderId?.slice(0, 10)}</span>
-                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getStatusBadgeStyle(order.status)}`}>
-                              {order.status}
-                            </span>
-                          </div>
-                          <p className="text-xs text-ink-500 mt-1">
-                            Ordered by <strong className="text-ink-800">{order.customer?.name || "Customer"}</strong> · {order.createdAt}
+                          <p className="font-bold text-[#0F172A]">{item.product?.name || "Plant Variety"}</p>
+                          <p className="text-[11px] text-slate-500 font-mono mt-0.5">
+                            Qty: {item.quantity} · {formatINR(itemNetPrice)}/unit net
                           </p>
                         </div>
-
-                        <div className="text-left sm:text-right bg-floria-soft-sand px-3 py-1.5 rounded-xl border border-floria-border self-start sm:self-auto">
-                          <p className="font-serif font-bold text-sm sm:text-base text-forest-800">{formatINR(netOrderTotal)}</p>
-                          <p className="text-[10px] text-amber-800 font-bold uppercase tracking-wider">Net Payout</p>
-                        </div>
+                        <span className="font-mono font-bold text-[#1B4D3E] text-xs">{formatINR(itemNetPrice * item.quantity)}</span>
                       </div>
-
-                      {/* Items List */}
-                      <div className="space-y-2">
-                        {(order.items || []).map((item: any, i: number) => {
-                          const itemNetPrice = item.seller_net_paise ?? item.pricePaise ?? 0;
-                          return (
-                            <div key={i} className="flex justify-between items-center bg-floria-soft-sand p-3 sm:p-3.5 rounded-2xl border border-floria-border text-xs">
-                              <div>
-                                <p className="font-bold text-ink-900 text-xs sm:text-sm">{item.product?.name || "Plant Variety"}</p>
-                                <p className="text-[11px] text-ink-500 font-mono mt-0.5">
-                                  Qty: {item.quantity} · {formatINR(itemNetPrice)}/unit net
-                                </p>
-                              </div>
-                              <span className="font-serif font-bold text-forest-800 text-xs sm:text-sm">{formatINR(itemNetPrice * item.quantity)}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </>
-                  );
-                })()}
+                    );
+                  })}
+                </div>
 
                 {/* Seller Action Control */}
                 {actionLabel && (
@@ -277,7 +281,7 @@ function OrdersContent() {
                       disabled={!isApproved || isUpdating}
                       onClick={() => handleAdvanceStatus(order.masterOrderId, order.status)}
                       style={{ color: "#ffffff" }}
-                      className="px-5 py-2.5 rounded-xl bg-forest-800 hover:bg-forest-900 !text-white font-bold text-xs uppercase tracking-wider transition-all shadow-xs hover:shadow-md active:scale-95 disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-forest-800"
+                      className="px-4 py-2 rounded bg-[#1B4D3E] hover:bg-[#153e31] !text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-xs disabled:opacity-40"
                     >
                       {isUpdating ? "Advancing Status..." : actionLabel}
                     </button>
@@ -294,8 +298,9 @@ function OrdersContent() {
 
 export default function SellerOrdersPage() {
   return (
-    <Suspense fallback={<div className="py-12 text-center text-xs text-ink-400">Loading orders...</div>}>
+    <Suspense fallback={<div className="py-12 text-center text-xs text-slate-400">Loading orders...</div>}>
       <OrdersContent />
     </Suspense>
   );
 }
+

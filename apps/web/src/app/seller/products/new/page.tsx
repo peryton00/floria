@@ -103,29 +103,38 @@ export default function AddProductPage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 pb-12 font-ui">
-      <div className="flex items-center gap-2">
-        <Link href="/seller/products" className="text-xs font-bold text-forest-800 hover:underline inline-flex items-center gap-1">
-          ← Back to Catalog
-        </Link>
-      </div>
+    <div className="space-y-6 font-sans antialiased text-[#212529]">
+      {/* Title Header Banner */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded border border-[#E2E8F0] shadow-xs">
+        <div>
+          <Link href="/seller/products" className="text-xs font-bold text-[#1B4D3E] hover:underline mb-1.5 inline-flex items-center gap-1">
+            ← Back to Product Catalog
+          </Link>
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <h1 className="font-sans text-xl font-bold text-[#0F172A] tracking-tight">Add New Plant Product</h1>
+          </div>
+          <p className="text-xs text-slate-500 mt-1">List a new botanical variety or gardening supply in your nursery catalog.</p>
+        </div>
 
-      <div>
-        <h1 className="font-serif text-2xl sm:text-3xl font-bold text-ink-900 leading-tight">Add New Plant Product</h1>
-        <p className="text-xs sm:text-sm text-ink-500 mt-0.5">List a new botanical variety or gardening supply in your nursery catalog.</p>
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded px-3 py-1">
+            New Listing Draft
+          </span>
+        </div>
       </div>
 
       {apiError && (
-        <div className="bg-rose-50 border border-rose-200 rounded-2xl p-4 text-xs text-rose-800 flex items-center gap-2.5 shadow-2xs">
-          <AlertIcon size={18} />
+        <div className="bg-red-50 border border-red-200 rounded p-4 text-xs font-semibold text-red-700 flex items-center gap-2.5">
+          <AlertIcon size={16} />
           <span>{apiError}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-floria-linen rounded-3xl border border-floria-border p-6 sm:p-8 shadow-xs space-y-5">
+      <form onSubmit={handleSubmit} className="bg-white rounded border border-[#E2E8F0] p-5 sm:p-6 shadow-xs space-y-4">
         {/* Name */}
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-ink-700 mb-1.5">
+          <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-slate-600 mb-1">
             Product Variety Name *
           </label>
           <input
@@ -134,37 +143,37 @@ export default function AddProductPage() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. Monstera Deliciosa (Swiss Cheese Plant)"
-            className="w-full px-3.5 py-2.5 rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-forest-800/20 text-ink-900 placeholder:text-ink-400"
+            className="w-full px-3.5 py-2 rounded border border-[#E2E8F0] bg-[#F8FAFC] focus:bg-white text-xs font-medium focus:outline-none focus:ring-1 focus:ring-[#1B4D3E] text-[#0F172A] placeholder:text-slate-400"
           />
-          {errors.name && <p className="text-xs text-rose-600 font-semibold mt-1">{errors.name}</p>}
+          {errors.name && <p className="text-xs text-red-600 font-semibold mt-1">{errors.name}</p>}
         </div>
 
         {/* Category & Status */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-ink-700 mb-1.5">
+            <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-slate-600 mb-1">
               Category *
             </label>
             <select
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-forest-800/20 text-ink-900"
+              className="w-full px-3.5 py-2 rounded border border-[#E2E8F0] bg-[#F8FAFC] focus:bg-white text-xs font-medium focus:outline-none focus:ring-1 focus:ring-[#1B4D3E] text-[#0F172A]"
             >
               {categories.map((cat) => (
                 <option key={cat.id} value={cat.id}>{cat.name}</option>
               ))}
             </select>
-            {errors.category_id && <p className="text-xs text-rose-600 font-semibold mt-1">{errors.category_id}</p>}
+            {errors.category_id && <p className="text-xs text-red-600 font-semibold mt-1">{errors.category_id}</p>}
           </div>
 
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-ink-700 mb-1.5">
+            <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-slate-600 mb-1">
               Publish Status
             </label>
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value as any)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-forest-800/20 text-ink-900"
+              className="w-full px-3.5 py-2 rounded border border-[#E2E8F0] bg-[#F8FAFC] focus:bg-white text-xs font-medium focus:outline-none focus:ring-1 focus:ring-[#1B4D3E] text-[#0F172A]"
             >
               <option value="active">Active (Published to Store)</option>
               <option value="draft">Draft (Hidden from Catalog)</option>
@@ -175,7 +184,7 @@ export default function AddProductPage() {
         {/* Price & Stock */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-ink-700 mb-1.5">
+            <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-slate-600 mb-1">
               Base Price (₹) *
             </label>
             <input
@@ -185,13 +194,13 @@ export default function AddProductPage() {
               value={priceRupees}
               onChange={(e) => setPriceRupees(e.target.value)}
               placeholder="e.g. 499"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-forest-800/20 text-ink-900"
+              className="w-full px-3.5 py-2 rounded border border-[#E2E8F0] bg-[#F8FAFC] focus:bg-white text-xs font-mono font-bold focus:outline-none focus:ring-1 focus:ring-[#1B4D3E] text-[#0F172A]"
             />
-            {errors.price && <p className="text-xs text-rose-600 font-semibold mt-1">{errors.price}</p>}
+            {errors.price && <p className="text-xs text-red-600 font-semibold mt-1">{errors.price}</p>}
           </div>
 
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-ink-700 mb-1.5">
+            <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-slate-600 mb-1">
               Initial Stock *
             </label>
             <input
@@ -200,13 +209,13 @@ export default function AddProductPage() {
               required
               value={stock}
               onChange={(e) => setStock(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-forest-800/20 text-ink-900"
+              className="w-full px-3.5 py-2 rounded border border-[#E2E8F0] bg-[#F8FAFC] focus:bg-white text-xs font-mono font-semibold focus:outline-none focus:ring-1 focus:ring-[#1B4D3E] text-[#0F172A]"
             />
-            {errors.stock && <p className="text-xs text-rose-600 font-semibold mt-1">{errors.stock}</p>}
+            {errors.stock && <p className="text-xs text-red-600 font-semibold mt-1">{errors.stock}</p>}
           </div>
 
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-ink-700 mb-1.5">
+            <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-slate-600 mb-1">
               Low Stock Threshold
             </label>
             <input
@@ -214,14 +223,14 @@ export default function AddProductPage() {
               min="1"
               value={lowStockThreshold}
               onChange={(e) => setLowStockThreshold(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-forest-800/20 text-ink-900"
+              className="w-full px-3.5 py-2 rounded border border-[#E2E8F0] bg-[#F8FAFC] focus:bg-white text-xs font-mono focus:outline-none focus:ring-1 focus:ring-[#1B4D3E] text-[#0F172A]"
             />
           </div>
         </div>
 
         {/* SKU */}
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-ink-700 mb-1.5">
+          <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-slate-600 mb-1">
             SKU / Plant Code (Optional)
           </label>
           <input
@@ -229,13 +238,13 @@ export default function AddProductPage() {
             value={sku}
             onChange={(e) => setSku(e.target.value)}
             placeholder="FLORIA-MONSTERA-01"
-            className="w-full px-3.5 py-2.5 rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen text-xs sm:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-forest-800/20 text-ink-900"
+            className="w-full px-3.5 py-2 rounded border border-[#E2E8F0] bg-[#F8FAFC] focus:bg-white text-xs font-mono focus:outline-none focus:ring-1 focus:ring-[#1B4D3E] text-[#0F172A]"
           />
         </div>
 
         {/* Description */}
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-ink-700 mb-1.5">
+          <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-slate-600 mb-1">
             Plant Description
           </label>
           <textarea
@@ -243,13 +252,13 @@ export default function AddProductPage() {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Describe the plant species, growth characteristics, pot size, light and humidity requirements..."
-            className="w-full p-3.5 rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-forest-800/20 text-ink-900 resize-none"
+            className="w-full p-3 rounded border border-[#E2E8F0] bg-[#F8FAFC] focus:bg-white text-xs focus:outline-none focus:ring-1 focus:ring-[#1B4D3E] text-[#0F172A] resize-none"
           />
         </div>
 
         {/* Care Instructions */}
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-ink-700 mb-1.5">
+          <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-slate-600 mb-1">
             Botanical Care Instructions
           </label>
           <textarea
@@ -257,13 +266,13 @@ export default function AddProductPage() {
             value={careInstructions}
             onChange={(e) => setCareInstructions(e.target.value)}
             placeholder="Watering frequency, sunlight preferences, soil blend, fertilizer schedule..."
-            className="w-full p-3.5 rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-forest-800/20 text-ink-900 resize-none"
+            className="w-full p-3 rounded border border-[#E2E8F0] bg-[#F8FAFC] focus:bg-white text-xs focus:outline-none focus:ring-1 focus:ring-[#1B4D3E] text-[#0F172A] resize-none"
           />
         </div>
 
         {/* Image URL */}
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-ink-700 mb-1.5">
+          <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-slate-600 mb-1">
             Plant Photography URL
           </label>
           <input
@@ -271,22 +280,22 @@ export default function AddProductPage() {
             value={imageUrl}
             onChange={(e) => setImageUrl(e.target.value)}
             placeholder="/floria-logo.png or https://images.unsplash.com/..."
-            className="w-full px-3.5 py-2.5 rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen text-xs sm:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-forest-800/20 text-ink-900"
+            className="w-full px-3.5 py-2 rounded border border-[#E2E8F0] bg-[#F8FAFC] focus:bg-white text-xs font-mono focus:outline-none focus:ring-1 focus:ring-[#1B4D3E] text-[#0F172A]"
           />
         </div>
 
-        <div className="flex gap-3 pt-4 border-t border-floria-border">
+        <div className="flex gap-3 pt-3 border-t border-[#E2E8F0]">
           <button
             type="submit"
             disabled={!isApproved || isSubmitting}
             style={{ color: "#ffffff" }}
-            className="flex-1 py-3 rounded-xl bg-forest-800 hover:bg-forest-900 !text-white font-bold text-xs uppercase tracking-wider transition-all shadow-xs hover:shadow-md active:scale-95 disabled:opacity-50"
+            className="flex-1 py-2.5 rounded bg-[#1B4D3E] hover:bg-[#153e31] !text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-xs disabled:opacity-50"
           >
             {isSubmitting ? "Publishing Product..." : "Create Product Listing"}
           </button>
           <Link
             href="/seller/products"
-            className="px-5 py-3 rounded-xl border border-floria-border text-ink-700 font-bold text-xs uppercase tracking-wider hover:bg-floria-sand transition-colors"
+            className="px-5 py-2.5 rounded border border-[#E2E8F0] text-slate-700 font-bold text-xs uppercase tracking-wider hover:bg-[#F8FAFC] transition-colors"
           >
             Cancel
           </Link>
@@ -295,3 +304,4 @@ export default function AddProductPage() {
     </div>
   );
 }
+

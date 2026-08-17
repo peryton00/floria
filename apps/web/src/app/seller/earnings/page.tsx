@@ -69,98 +69,107 @@ export default function SellerEarningsPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-12 font-ui">
-      <div>
-        <h1 className="font-serif text-2xl sm:text-3xl font-bold text-ink-900 leading-tight">Nursery Earnings Ledger</h1>
-        <p className="text-xs sm:text-sm text-ink-500 mt-0.5">Historical order revenues, platform commission deductions, and net payouts settled to your nursery account.</p>
+    <div className="space-y-6 font-sans antialiased text-[#212529]">
+      {/* Title Header Banner */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded border border-[#E2E8F0] shadow-xs">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <h1 className="font-sans text-xl font-bold text-[#0F172A] tracking-tight">Nursery Earnings Ledger</h1>
+          </div>
+          <p className="text-xs text-slate-500 mt-1">Historical order revenues, platform commission deductions, and net payouts settled to your nursery account.</p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded px-3 py-1">
+            {earnings.ordersCount} Completed Orders
+          </span>
+        </div>
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-floria-linen rounded-3xl border border-floria-border p-5 sm:p-6 shadow-xs flex flex-col justify-between">
-          <div className="flex justify-between items-start">
-            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-ink-500">Gross Sales Revenue</span>
-            <div className="w-8 h-8 rounded-xl bg-forest-50 text-forest-800 border border-forest-200/70 flex items-center justify-center shadow-2xs">
-              <TrendingUp size={16} />
-            </div>
+        <div className="bg-white rounded border border-[#E2E8F0] p-4 shadow-xs hover:border-slate-400 transition-all flex items-start justify-between">
+          <div className="min-w-0 flex-1 pr-2">
+            <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-slate-500">Gross Sales Revenue</p>
+            <p className="font-mono text-xl font-bold text-[#0F172A] mt-1.5 tracking-tight">{formatINR(earnings.totalGrossRevenuePaise)}</p>
+            <p className="text-[11px] text-slate-400 mt-1">From {earnings.ordersCount} completed order(s)</p>
           </div>
-          <div className="mt-4">
-            <p className="text-2xl sm:text-3xl font-serif font-bold text-ink-900">{formatINR(earnings.totalGrossRevenuePaise)}</p>
-            <p className="text-[10px] sm:text-[11px] text-ink-400 mt-1">From {earnings.ordersCount} completed order(s)</p>
+          <div className="w-9 h-9 rounded bg-forest-50 text-forest-700 border border-forest-100 flex items-center justify-center flex-shrink-0 shadow-xs">
+            <TrendingUp size={18} />
           </div>
         </div>
 
-        <div className="bg-floria-linen rounded-3xl border border-floria-border p-5 sm:p-6 shadow-xs flex flex-col justify-between">
-          <div className="flex justify-between items-start">
-            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-ink-500">Platform Commission</span>
-            <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-800 border border-amber-200/70 flex items-center justify-center shadow-2xs">
-              <Percent size={16} />
-            </div>
+        <div className="bg-white rounded border border-[#E2E8F0] p-4 shadow-xs hover:border-slate-400 transition-all flex items-start justify-between">
+          <div className="min-w-0 flex-1 pr-2">
+            <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-slate-500">Platform Commission</p>
+            <p className="font-mono text-xl font-bold text-amber-700 mt-1.5 tracking-tight">{formatINR(earnings.totalCommissionPaise)}</p>
+            <p className="text-[11px] text-slate-400 mt-1">Aggregated per-order fee snapshot</p>
           </div>
-          <div className="mt-4">
-            <p className="text-2xl sm:text-3xl font-serif font-bold text-amber-800">{formatINR(earnings.totalCommissionPaise)}</p>
-            <p className="text-[10px] sm:text-[11px] text-ink-400 mt-1">Aggregated per-order fee snapshot</p>
+          <div className="w-9 h-9 rounded bg-amber-50 text-amber-700 border border-amber-100 flex items-center justify-center flex-shrink-0 shadow-xs">
+            <Percent size={18} />
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-[#183023] via-[#1E3A2B] to-[#254A37] text-white rounded-3xl p-5 sm:p-6 shadow-sm border border-forest-700/50 flex flex-col justify-between">
-          <div className="flex justify-between items-start">
-            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#DDE7DD]/80">Net Seller Earnings</span>
-            <div className="w-8 h-8 rounded-xl bg-white/15 text-white flex items-center justify-center shadow-2xs">
-              <DollarSign size={16} />
-            </div>
+        <div className="bg-white rounded border border-[#E2E8F0] p-4 shadow-xs hover:border-slate-400 transition-all flex items-start justify-between">
+          <div className="min-w-0 flex-1 pr-2">
+            <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-slate-500">Net Seller Earnings</p>
+            <p className="font-mono text-xl font-bold text-[#1B4D3E] mt-1.5 tracking-tight">{formatINR(earnings.totalNetEarningsPaise)}</p>
+            <p className="text-[11px] text-slate-400 mt-1">Total eligible for settlement payout</p>
           </div>
-          <div className="mt-4">
-            <p className="text-2xl sm:text-3xl font-serif font-bold text-[#DDE7DD]">{formatINR(earnings.totalNetEarningsPaise)}</p>
-            <p className="text-[10px] sm:text-[11px] text-white/70 mt-1">Total eligible for settlement payout</p>
+          <div className="w-9 h-9 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center justify-center flex-shrink-0 shadow-xs">
+            <DollarSign size={18} />
           </div>
         </div>
       </div>
 
       {/* Breakdowns List */}
-      <section className="bg-floria-linen rounded-3xl border border-floria-border p-5 sm:p-6 shadow-xs space-y-4">
-        <div className="border-b border-floria-border pb-3.5 flex justify-between items-center">
+      <div className="bg-white rounded border border-[#E2E8F0] shadow-xs overflow-hidden">
+        <div className="p-4 sm:p-5 flex justify-between items-center border-b border-[#E2E8F0] bg-[#F8FAFC]">
           <div>
-            <h2 className="font-serif text-base sm:text-lg font-bold text-ink-900">Per-Order Fee Breakdown</h2>
-            <p className="text-xs text-ink-500">Itemized list of order segment revenues and commission snapshot deductions.</p>
+            <h2 className="font-sans text-sm font-bold text-[#0F172A]">Per-Order Fee Breakdown</h2>
+            <p className="text-xs text-slate-500 mt-0.5">Itemized list of order segment revenues and commission snapshot deductions.</p>
           </div>
-          <span className="text-xs text-ink-500 font-mono flex items-center gap-1.5 bg-floria-soft-sand px-2.5 py-1 rounded-full border border-floria-border">
-            <Calendar size={13} /> Live Sync
+          <span className="text-[11px] font-mono font-bold text-slate-600 flex items-center gap-1.5 bg-white px-2.5 py-1 rounded border border-[#E2E8F0]">
+            <Calendar size={12} /> Live Accounting Sync
           </span>
         </div>
 
         {orders.length === 0 ? (
-          <div className="p-8 text-center text-xs font-medium text-ink-500 bg-floria-soft-sand rounded-2xl border border-floria-border">
+          <div className="p-8 text-center text-xs font-semibold text-slate-500">
             No transaction records recorded yet.
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-2xl border border-floria-border">
+          <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left text-xs">
               <thead>
-                <tr className="bg-floria-soft-sand text-ink-600 font-bold uppercase tracking-wider border-b border-floria-border">
+                <tr className="bg-[#F8FAFC] text-slate-600 font-mono text-[10px] font-bold uppercase tracking-wider border-b border-[#E2E8F0]">
                   <th className="p-3.5">Order ID</th>
                   <th className="p-3.5">Date</th>
-                  <th className="p-3.5">Gross Segment</th>
-                  <th className="p-3.5">Commission Rate</th>
-                  <th className="p-3.5">Fee Deducted</th>
-                  <th className="p-3.5 text-right">Net Earnings</th>
+                  <th className="p-3.5">Gross Revenue</th>
+                  <th className="p-3.5">Platform Fee</th>
+                  <th className="p-3.5">Net Seller Payout</th>
+                  <th className="p-3.5 text-right">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-floria-border bg-floria-linen">
+              <tbody className="divide-y divide-[#E2E8F0] bg-white">
                 {orders.map((o) => {
-                  const gross = o.subtotalPaise || 0;
-                  const commission = (o as any).commissionPaise ?? (o.commissionRateSnapshot !== undefined ? Math.round(gross * o.commissionRateSnapshot) : 0);
-                  const net = (o as any).sellerPayoutPaise ?? (gross - commission);
-                  const rateStr = o.commissionRateSnapshot !== undefined ? `${(o.commissionRateSnapshot * 100).toFixed(1)}%` : "—";
+                  const gross = (o.items || []).reduce((s: number, it: any) => s + (it.pricePaise || 0) * it.quantity, 0) || o.subtotalPaise || 0;
+                  const net = (o.items || []).reduce((s: number, it: any) => s + (it.seller_net_paise ?? it.pricePaise ?? 0) * it.quantity, 0) || o.seller_payout_paise || gross;
+                  const comm = gross - net;
 
                   return (
-                    <tr key={o.masterOrderId} className="hover:bg-floria-soft-sand/60 transition-colors">
-                      <td className="p-3.5 font-mono font-bold text-ink-900">#{o.masterOrderId?.slice(0, 10)}</td>
-                      <td className="p-3.5 text-ink-600">{o.createdAt}</td>
-                      <td className="p-3.5 font-semibold text-ink-800">{formatINR(gross)}</td>
-                      <td className="p-3.5 font-mono text-ink-500">{rateStr}</td>
-                      <td className="p-3.5 text-amber-800 font-semibold">-{formatINR(commission)}</td>
-                      <td className="p-3.5 font-serif font-bold text-forest-800 text-right text-xs sm:text-sm">{formatINR(net)}</td>
+                    <tr key={o.masterOrderId} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="p-3.5 font-mono font-bold text-[#0F172A]">#{o.masterOrderId?.slice(0, 10)}</td>
+                      <td className="p-3.5 text-slate-600">{o.createdAt}</td>
+                      <td className="p-3.5 font-mono font-semibold text-slate-800">{formatINR(gross)}</td>
+                      <td className="p-3.5 font-mono text-amber-700">-{formatINR(comm)}</td>
+                      <td className="p-3.5 font-mono font-bold text-[#1B4D3E]">{formatINR(net)}</td>
+                      <td className="p-3.5 text-right">
+                        <span className="px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-200">
+                          {o.status}
+                        </span>
+                      </td>
                     </tr>
                   );
                 })}
@@ -168,7 +177,7 @@ export default function SellerEarningsPage() {
             </table>
           </div>
         )}
-      </section>
+      </div>
     </div>
   );
 }

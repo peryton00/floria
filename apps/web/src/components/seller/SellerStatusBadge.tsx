@@ -8,10 +8,10 @@ interface SellerStatusBadgeProps {
 }
 
 const CONFIG: Record<SellerStatus, { label: string; classes: string }> = {
-  approved:  { label: "Approved",       classes: "bg-forest-50 text-forest-800 border border-forest-200" },
-  pending:   { label: "Pending Review", classes: "bg-amber-50 text-amber-800 border border-amber-200" },
-  suspended: { label: "Suspended",      classes: "bg-rose-50 text-rose-800 border border-rose-200" },
-  rejected:  { label: "Rejected",       classes: "bg-rose-50 text-rose-800 border border-rose-200" },
+  approved:  { label: "Approved",       classes: "bg-emerald-50 text-emerald-800 border-emerald-200" },
+  pending:   { label: "Pending Review", classes: "bg-amber-50 text-amber-800 border-amber-200" },
+  suspended: { label: "Suspended",      classes: "bg-red-50 text-red-700 border-red-200" },
+  rejected:  { label: "Rejected",       classes: "bg-red-50 text-red-700 border-red-200" },
 };
 
 export function SellerStatusBadge({ status, size = "sm" }: SellerStatusBadgeProps) {
@@ -22,7 +22,7 @@ export function SellerStatusBadge({ status, size = "sm" }: SellerStatusBadgeProp
   return (
     <span
       className={[
-        "inline-flex items-center gap-1 rounded-full font-bold uppercase tracking-wider",
+        "inline-flex items-center gap-1 rounded border font-mono font-bold uppercase tracking-wider",
         sizeClasses,
         classes,
       ].join(" ")}
@@ -31,7 +31,7 @@ export function SellerStatusBadge({ status, size = "sm" }: SellerStatusBadgeProp
       <span
         className={[
           "w-1.5 h-1.5 rounded-full flex-shrink-0",
-          status === "approved" ? "bg-success-600" : status === "pending" ? "bg-warning-600" : "bg-error-600",
+          status === "approved" ? "bg-emerald-500 animate-pulse" : status === "pending" ? "bg-amber-500" : "bg-red-500",
         ].join(" ")}
         aria-hidden
       />
@@ -39,3 +39,4 @@ export function SellerStatusBadge({ status, size = "sm" }: SellerStatusBadgeProp
     </span>
   );
 }
+

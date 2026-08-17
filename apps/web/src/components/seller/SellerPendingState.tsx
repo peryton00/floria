@@ -8,33 +8,33 @@ export function SellerPendingState() {
   const { sellerProfile } = useSeller();
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] bg-floria-page flex flex-col items-center justify-center px-4 py-12 font-ui">
-      <div className="max-w-lg w-full bg-floria-linen rounded-3xl border border-floria-border shadow-xs p-8 sm:p-10 text-center">
+    <div className="min-h-[calc(100vh-3.5rem)] bg-[#F9F8F3] flex flex-col items-center justify-center px-4 py-12 font-sans antialiased text-[#212529]">
+      <div className="max-w-lg w-full bg-white rounded border border-[#E2E8F0] shadow-xs p-8 sm:p-10 text-center">
         {/* Icon */}
-        <div className="w-16 h-16 rounded-2xl bg-amber-50 border border-amber-200/80 flex items-center justify-center mx-auto mb-5 text-amber-700 shadow-2xs">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <div className="w-14 h-14 rounded bg-amber-50 border border-amber-200 flex items-center justify-center mx-auto mb-4 text-amber-700 shadow-xs">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="12" cy="12" r="10" />
             <path d="M12 6v6l4 2" />
           </svg>
         </div>
 
-        <div className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-800 border border-amber-200/80 px-3.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mb-4">
+        <div className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-800 border border-amber-200 px-3 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider mb-4">
           <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
           Verification in Progress
         </div>
 
-        <h1 className="font-serif text-2xl sm:text-3xl font-bold text-ink-900 mb-3 leading-tight">
-          Nursery Application<br />Under Review
+        <h1 className="font-sans text-xl sm:text-2xl font-bold text-[#0F172A] mb-2 tracking-tight">
+          Nursery Application Under Review
         </h1>
-        <p className="text-xs sm:text-sm text-ink-500 leading-relaxed mb-6 max-w-md mx-auto">
+        <p className="text-xs text-slate-500 leading-relaxed mb-6 max-w-md mx-auto">
           Thanks for joining Floria. Our horticultural team is verifying your nursery details.
           You&apos;ll be notified once approved — typically within 1–2 business days.
         </p>
 
         {/* Submitted info summary */}
         {sellerProfile && (
-          <div className="bg-floria-soft-sand rounded-2xl border border-floria-border p-5 text-left space-y-2.5 mb-6">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-ink-500 mb-2">
+          <div className="bg-[#F8FAFC] rounded border border-[#E2E8F0] p-4 text-left space-y-2 mb-6">
+            <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 mb-2">
               Submitted Nursery Profile
             </p>
             <InfoRow label="Business Name" value={sellerProfile.business_name} />
@@ -54,23 +54,23 @@ export function SellerPendingState() {
           <Link
             href="/seller/profile"
             style={{ color: "#ffffff" }}
-            className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-forest-800 hover:bg-forest-900 !text-white text-xs font-bold uppercase tracking-wider transition-all shadow-xs hover:shadow-md active:scale-95 focus:outline-none focus:ring-2 focus:ring-forest-800"
+            className="inline-flex items-center justify-center px-5 py-2.5 rounded bg-[#1B4D3E] hover:bg-[#153e31] !text-white text-xs font-bold uppercase tracking-wider transition-colors shadow-xs"
           >
             Edit Nursery Profile
           </Link>
           <Link
             href="/"
-            className="inline-flex items-center justify-center px-6 py-3 rounded-xl border border-floria-border hover:bg-floria-sand text-ink-700 text-xs font-bold uppercase tracking-wider transition-all focus:outline-none"
+            className="inline-flex items-center justify-center px-5 py-2.5 rounded border border-[#E2E8F0] hover:bg-[#F8FAFC] text-slate-700 text-xs font-bold uppercase tracking-wider transition-colors"
           >
             Back to Store
           </Link>
         </div>
 
-        <p className="text-xs text-ink-400 mt-6">
+        <p className="text-xs text-slate-400 mt-6">
           Need immediate assistance? Contact{" "}
           <a
             href="mailto:support@floria.in"
-            className="text-forest-800 hover:underline font-bold"
+            className="text-[#1B4D3E] hover:underline font-bold"
           >
             support@floria.in
           </a>
@@ -83,10 +83,11 @@ export function SellerPendingState() {
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-start gap-3">
-      <span className="text-[10px] font-bold uppercase tracking-wider text-ink-400 w-24 flex-shrink-0 pt-px">
+      <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 w-24 flex-shrink-0 pt-px">
         {label}
       </span>
-      <span className="text-xs text-ink-700 font-medium flex-1">{value}</span>
+      <span className="text-xs text-[#0F172A] font-medium flex-1">{value}</span>
     </div>
   );
 }
+

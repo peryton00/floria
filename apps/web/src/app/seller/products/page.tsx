@@ -142,18 +142,22 @@ export default function SellerProductsPage() {
   ];
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 pb-12 font-ui">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-6 font-sans antialiased text-[#212529]">
+      {/* Title Header Banner */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded border border-[#E2E8F0] shadow-xs">
         <div>
-          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-ink-900 leading-tight">Product Catalog</h1>
-          <p className="text-xs sm:text-sm text-ink-500 mt-0.5">Manage nursery plant listings, pricing, and live inventory stock.</p>
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <h1 className="font-sans text-xl font-bold text-[#0F172A] tracking-tight">Nursery Product Catalog</h1>
+          </div>
+          <p className="text-xs text-slate-500 mt-1">Manage botanical plant listings, retail pricing, and live inventory stock.</p>
         </div>
 
         {isApproved && (
           <Link
             href="/seller/products/new"
             style={{ color: "#ffffff" }}
-            className="px-5 py-2.5 bg-forest-800 hover:bg-forest-900 !text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-xs hover:shadow-md active:scale-95 flex items-center gap-1.5"
+            className="px-4 py-2 bg-[#1B4D3E] hover:bg-[#153e31] !text-white font-bold text-xs uppercase tracking-wider rounded shadow-xs transition-colors flex items-center gap-1.5"
           >
             <span>+ Add New Product</span>
           </Link>
@@ -161,75 +165,75 @@ export default function SellerProductsPage() {
       </div>
 
       {error && (
-        <div className="bg-rose-50 border border-rose-200 rounded-2xl p-4 text-xs text-rose-800 flex justify-between items-center shadow-2xs">
+        <div className="bg-red-50 border border-red-200 rounded p-4 text-xs font-semibold text-red-700 flex justify-between items-center">
           <span>{error}</span>
-          <button type="button" onClick={fetchProducts} className="font-bold underline text-rose-900">Retry</button>
+          <button type="button" onClick={fetchProducts} className="font-bold underline text-red-900">Retry</button>
         </div>
       )}
 
-      {/* Tabs */}
-      <div className="flex border-b border-floria-border space-x-2 overflow-x-auto pb-0.5">
-        {tabs.map((t) => {
-          const isActive = activeTab === t.key;
-          return (
-            <button
-              key={t.key}
-              type="button"
-              onClick={() => setActiveTab(t.key)}
-              className={[
-                "pb-3 px-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 whitespace-nowrap flex items-center gap-2",
-                isActive
-                  ? "border-forest-800 text-forest-800"
-                  : "border-transparent text-ink-500 hover:text-ink-900",
-              ].join(" ")}
-            >
-              <span>{t.label}</span>
-              <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${isActive ? "bg-forest-100 text-forest-800 font-bold" : "bg-floria-sand text-ink-600"}`}>
-                {t.count}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Search Input */}
-      <div className="bg-floria-linen rounded-2xl border border-floria-border p-3.5 sm:p-4 shadow-xs flex items-center">
-        <div className="w-full relative">
+      {/* Filter / Search Bar */}
+      <div className="bg-white rounded border border-[#E2E8F0] p-4 shadow-xs flex flex-col sm:flex-row gap-3 items-center justify-between">
+        <div className="w-full sm:w-96 relative">
           <input
             type="search"
             placeholder="Search products by plant name, category, or ID..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 text-xs sm:text-sm rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen focus:outline-none focus:ring-2 focus:ring-forest-800/20 text-ink-900 placeholder:text-ink-400 font-medium"
+            className="w-full pl-9 pr-4 py-2 font-mono text-xs rounded border border-[#E2E8F0] focus:outline-none focus:ring-1 focus:ring-[#1B4D3E] focus:border-[#1B4D3E] bg-[#F8FAFC] placeholder:text-slate-400 font-sans"
           />
-          <SearchIcon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400" />
+          <SearchIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+        </div>
+
+        {/* Tab Pills */}
+        <div className="flex items-center gap-1.5 bg-[#F8FAFC] rounded border border-[#E2E8F0] p-1 shadow-xs overflow-x-auto max-w-full">
+          {tabs.map((t) => {
+            const isActive = activeTab === t.key;
+            return (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => setActiveTab(t.key)}
+                className={[
+                  "px-3 py-1 rounded text-[11px] font-mono font-bold uppercase tracking-wider transition-all whitespace-nowrap flex items-center gap-1.5",
+                  isActive
+                    ? "bg-[#1B4D3E] text-white shadow-xs"
+                    : "text-slate-600 hover:text-[#0F172A] hover:bg-slate-200/60",
+                ].join(" ")}
+              >
+                <span>{t.label}</span>
+                <span className={`px-1.5 py-0.2 rounded-full text-[9px] ${isActive ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
+                  {t.count}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-floria-linen rounded-3xl border border-floria-border shadow-xs overflow-hidden">
+      <div className="bg-white rounded border border-[#E2E8F0] shadow-xs overflow-hidden">
         {loading ? (
           <div className="py-12 flex justify-center">
-            <div className="w-8 h-8 border-2 border-forest-800 border-t-transparent rounded-full animate-spin" />
+            <div className="w-8 h-8 border-2 border-[#1B4D3E] border-t-transparent rounded-full animate-spin" />
           </div>
         ) : filteredListings.length === 0 ? (
-          <div className="p-12 text-center text-xs sm:text-sm text-ink-500">
+          <div className="p-12 text-center text-xs font-semibold text-slate-500">
             No products found matching the criteria.
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left text-xs">
               <thead>
-                <tr className="bg-floria-soft-sand text-ink-600 font-bold uppercase tracking-wider border-b border-floria-border">
-                  <th className="p-4">Product Variety</th>
-                  <th className="p-4">Category</th>
-                  <th className="p-4">Seller Net / Base</th>
-                  <th className="p-4">Available Stock</th>
-                  <th className="p-4">Status</th>
-                  <th className="p-4 text-right">Actions</th>
+                <tr className="bg-[#F8FAFC] text-slate-600 font-mono text-[10px] font-bold uppercase tracking-wider border-b border-[#E2E8F0]">
+                  <th className="p-3.5">Product Variety</th>
+                  <th className="p-3.5">Category</th>
+                  <th className="p-3.5">Seller Net / Base</th>
+                  <th className="p-3.5">Available Stock</th>
+                  <th className="p-3.5">Status</th>
+                  <th className="p-3.5 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-floria-border bg-floria-linen">
+              <tbody className="divide-y divide-[#E2E8F0] bg-white">
                 {filteredListings.map((l) => {
                   const inv = Array.isArray(l.inventory) ? l.inventory[0] : l.inventory;
                   const qty = inv?.stock_quantity ?? 0;
@@ -240,31 +244,31 @@ export default function SellerProductsPage() {
                   const isEditingStock = editingStockId === l.id;
 
                   return (
-                    <tr key={l.id} className="hover:bg-floria-soft-sand/60 transition-colors">
-                      <td className="p-4">
-                        <div className="flex items-center gap-3.5">
-                          <div className="w-11 h-11 rounded-xl bg-floria-natural-sand overflow-hidden relative flex-shrink-0 border border-floria-border/60 shadow-2xs">
+                    <tr key={l.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="p-3.5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded bg-[#F8FAFC] overflow-hidden relative flex-shrink-0 border border-[#E2E8F0]">
                             <Image src={imgUrl} alt={l.name} fill className="object-cover" />
                           </div>
                           <div>
-                            <p className="font-bold text-ink-900 text-xs sm:text-sm leading-tight">{l.name}</p>
-                            <p className="text-[10px] text-ink-400 font-mono mt-0.5">ID: #{l.id?.slice(0, 8)}</p>
+                            <p className="font-bold text-[#0F172A] text-xs sm:text-sm leading-tight">{l.name}</p>
+                            <p className="text-[10px] text-slate-400 font-mono mt-0.5">ID: #{l.id?.slice(0, 8)}</p>
                           </div>
                         </div>
                       </td>
 
-                      <td className="p-4 text-ink-700 font-semibold">{l.category?.name || "Uncategorized"}</td>
+                      <td className="p-3.5 text-slate-700 font-semibold">{l.category?.name || "Uncategorized"}</td>
 
-                      <td className="p-4 font-mono">
-                        <p className="font-bold text-forest-800 text-xs sm:text-sm">
+                      <td className="p-3.5 font-mono">
+                        <p className="font-bold text-[#1B4D3E] text-xs">
                           {formatINR(sellerNetPaise)}
                         </p>
-                        <p className="text-[10px] text-ink-400">
+                        <p className="text-[10px] text-slate-400">
                           (Base: {formatINR(pricePaise)})
                         </p>
                       </td>
 
-                      <td className="p-4">
+                      <td className="p-3.5">
                         {isEditingStock ? (
                           <div className="flex items-center gap-1.5">
                             <input
@@ -272,35 +276,35 @@ export default function SellerProductsPage() {
                               min="0"
                               value={stockInput}
                               onChange={(e) => setStockInput(Number(e.target.value))}
-                              className="w-16 px-2.5 py-1 border border-floria-border bg-floria-sand/70 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-forest-800"
+                              className="w-16 px-2 py-1 border border-[#E2E8F0] bg-[#F8FAFC] rounded text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#1B4D3E]"
                             />
                             <button
                               type="button"
                               disabled={actionLoading}
                               onClick={() => handleSaveStock(l.id)}
                               style={{ color: "#ffffff" }}
-                              className="px-2.5 py-1 bg-forest-800 hover:bg-forest-900 !text-white font-bold rounded-lg text-[10px] uppercase shadow-2xs"
+                              className="px-2.5 py-1 bg-[#1B4D3E] hover:bg-[#153e31] !text-white font-bold rounded text-[10px] uppercase shadow-xs"
                             >
                               Save
                             </button>
                             <button
                               type="button"
                               onClick={() => setEditingStockId(null)}
-                              className="px-2 py-1 border border-floria-border hover:bg-floria-sand text-ink-600 rounded-lg text-[10px]"
+                              className="px-2 py-1 border border-[#E2E8F0] hover:bg-[#F8FAFC] text-slate-600 rounded text-[10px]"
                             >
                               ✕
                             </button>
                           </div>
                         ) : (
                           <div className="flex items-center gap-2">
-                            <span className={`font-bold text-xs ${qty === 0 ? "text-rose-700" : qty <= thresh ? "text-amber-800" : "text-ink-800"}`}>
+                            <span className={`font-mono font-bold text-xs ${qty === 0 ? "text-red-700" : qty <= thresh ? "text-amber-700" : "text-slate-800"}`}>
                               {qty === 0 ? "Out of Stock" : `${qty} units`}
                             </span>
                             <button
                               type="button"
                               disabled={!isApproved}
                               onClick={() => { setEditingStockId(l.id); setStockInput(qty); }}
-                              className="text-[10px] text-forest-800 underline font-bold hover:text-forest-950 disabled:opacity-40"
+                              className="text-[10px] font-mono text-[#1B4D3E] underline font-bold hover:text-[#153e31] disabled:opacity-40"
                             >
                               Edit
                             </button>
@@ -308,25 +312,25 @@ export default function SellerProductsPage() {
                         )}
                       </td>
 
-                      <td className="p-4">
-                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${l.status === "active" ? "bg-forest-50 text-forest-800 border border-forest-200" : "bg-floria-sand text-ink-600 border border-floria-border"}`}>
+                      <td className="p-3.5">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider border ${l.status === "active" ? "bg-emerald-50 text-emerald-800 border-emerald-200" : "bg-slate-100 text-slate-600 border-slate-200"}`}>
                           {l.status}
                         </span>
                       </td>
 
-                      <td className="p-4 text-right space-x-2 whitespace-nowrap">
+                      <td className="p-3.5 text-right space-x-2 whitespace-nowrap">
                         <button
                           type="button"
                           disabled={!isApproved || actionLoading}
                           onClick={() => handleToggleStatus(l.id, l.status)}
-                          className="px-3 py-1.5 rounded-xl border border-floria-border hover:bg-floria-sand text-ink-700 font-bold text-[10px] uppercase tracking-wider disabled:opacity-40 transition-colors shadow-2xs"
+                          className="px-2.5 py-1 rounded border border-[#E2E8F0] hover:bg-[#F8FAFC] text-slate-700 font-bold text-[10px] uppercase tracking-wider disabled:opacity-40 transition-colors"
                         >
                           {l.status === "active" ? "Set Draft" : "Publish"}
                         </button>
 
                         <Link
                           href={`/seller/products/${l.id}`}
-                          className="px-3 py-1.5 rounded-xl border border-floria-border hover:bg-floria-sand text-ink-700 font-bold text-[10px] uppercase tracking-wider inline-block transition-colors shadow-2xs"
+                          className="px-2.5 py-1 rounded border border-[#E2E8F0] hover:bg-[#F8FAFC] text-slate-700 font-bold text-[10px] uppercase tracking-wider inline-block transition-colors"
                         >
                           Edit
                         </Link>
@@ -335,7 +339,7 @@ export default function SellerProductsPage() {
                           type="button"
                           disabled={!isApproved || actionLoading}
                           onClick={() => setDeleteConfirmId(l.id)}
-                          className="px-3 py-1.5 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-700 font-bold text-[10px] uppercase tracking-wider disabled:opacity-40 transition-colors shadow-2xs"
+                          className="px-2.5 py-1 rounded border border-red-200 hover:bg-red-50 text-red-700 font-bold text-[10px] uppercase tracking-wider disabled:opacity-40 transition-colors"
                         >
                           Archive
                         </button>
@@ -351,10 +355,10 @@ export default function SellerProductsPage() {
 
       {/* Delete Confirmation Modal */}
       {deleteConfirmId && (
-        <div className="fixed inset-0 z-50 bg-ink-950/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-floria-linen rounded-3xl border border-floria-border p-6 max-w-sm w-full shadow-2xl space-y-4">
-            <h3 className="font-serif text-lg font-bold text-ink-900">Archive Product Listing</h3>
-            <p className="text-xs text-ink-500 leading-relaxed">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded border border-[#E2E8F0] p-6 max-w-sm w-full shadow-2xl space-y-4">
+            <h3 className="font-sans text-sm font-bold text-[#0F172A]">Archive Product Listing</h3>
+            <p className="text-xs text-slate-500 leading-relaxed">
               Are you sure you want to archive this product? It will be unpublished from the customer marketplace catalog.
             </p>
 
@@ -364,14 +368,14 @@ export default function SellerProductsPage() {
                 disabled={actionLoading}
                 onClick={() => handleDelete(deleteConfirmId)}
                 style={{ color: "#ffffff" }}
-                className="flex-1 py-2.5 rounded-xl bg-rose-700 hover:bg-rose-800 !text-white font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-50"
+                className="flex-1 py-2 rounded bg-red-700 hover:bg-red-800 !text-white font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-50"
               >
                 Archive Product
               </button>
               <button
                 type="button"
                 onClick={() => setDeleteConfirmId(null)}
-                className="px-4 py-2.5 rounded-xl border border-floria-border text-ink-700 font-bold text-xs uppercase tracking-wider hover:bg-floria-sand"
+                className="px-4 py-2 rounded border border-[#E2E8F0] text-slate-700 font-bold text-xs uppercase tracking-wider hover:bg-[#F8FAFC]"
               >
                 Cancel
               </button>
@@ -382,3 +386,4 @@ export default function SellerProductsPage() {
     </div>
   );
 }
+
