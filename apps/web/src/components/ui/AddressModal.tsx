@@ -174,8 +174,8 @@ export function AddressModal({
       aria-modal="true"
       aria-labelledby="address-modal-title"
     >
-      <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 border border-ink-100 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between pb-4 border-b border-ink-100 mb-4">
+      <div className="bg-floria-linen rounded-2xl shadow-xl max-w-lg w-full p-6 border border-floria-border max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between pb-4 border-b border-floria-border mb-4">
           <h2 id="address-modal-title" className="font-serif text-lg font-bold text-ink-900">
             {initialAddress ? "Edit Delivery Address" : "Add New Delivery Address"}
           </h2>
@@ -194,7 +194,7 @@ export function AddressModal({
           type="button"
           disabled={isLocating}
           onClick={handleDetectLocation}
-          className="w-full py-2.5 px-4 bg-forest-50 hover:bg-forest-100 text-forest-800 border border-forest-200 font-bold text-xs uppercase tracking-wider rounded-xl transition-colors flex items-center justify-center gap-2 mb-4 disabled:opacity-50 min-h-[44px]"
+          className="w-full py-2.5 px-4 bg-floria-soft-sand hover:bg-floria-sand text-forest-800 border border-floria-border font-bold text-xs uppercase tracking-wider rounded-xl transition-colors flex items-center justify-center gap-2 mb-4 disabled:opacity-50 min-h-[44px]"
         >
           {isLocating ? (
             <>
@@ -235,7 +235,7 @@ export function AddressModal({
                 value={formData.full_name}
                 onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
                 placeholder="Enter full name"
-                className="w-full px-3 py-2 text-xs rounded-xl border border-ink-200 focus:outline-none focus:ring-2 focus:ring-forest-700"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen text-ink-900 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-forest-800/20"
               />
               {errors.full_name && <p className="text-[11px] text-red-600 mt-1">{errors.full_name}</p>}
             </div>
@@ -250,7 +250,7 @@ export function AddressModal({
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 placeholder="Enter phone number"
-                className="w-full px-3 py-2 text-xs rounded-xl border border-ink-200 focus:outline-none focus:ring-2 focus:ring-forest-700"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen text-ink-900 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-forest-800/20"
               />
               {errors.phone && <p className="text-[11px] text-red-600 mt-1">{errors.phone}</p>}
             </div>
@@ -267,7 +267,7 @@ export function AddressModal({
               value={formData.line1}
               onChange={(e) => setFormData({ ...formData, line1: e.target.value })}
               placeholder="e.g. House 42, Green Avenue"
-              className="w-full px-3 py-2 text-xs rounded-xl border border-ink-200 focus:outline-none focus:ring-2 focus:ring-forest-700"
+              className="w-full px-3 py-2 text-xs rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen text-ink-900 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-forest-800/20"
             />
             {errors.line1 && <p className="text-[11px] text-red-600 mt-1">{errors.line1}</p>}
           </div>
@@ -283,7 +283,7 @@ export function AddressModal({
               value={formData.line2}
               onChange={(e) => setFormData({ ...formData, line2: e.target.value })}
               placeholder="e.g. Near Reshma Park"
-              className="w-full px-3 py-2 text-xs rounded-xl border border-ink-200 focus:outline-none focus:ring-2 focus:ring-forest-700"
+              className="w-full px-3 py-2 text-xs rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen text-ink-900 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-forest-800/20"
             />
           </div>
 
@@ -298,7 +298,7 @@ export function AddressModal({
                 type="text"
                 value={formData.city}
                 onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-ink-200 focus:outline-none focus:ring-2 focus:ring-forest-700"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen text-ink-900 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-forest-800/20"
               />
               {errors.city && <p className="text-[11px] text-red-600 mt-1">{errors.city}</p>}
             </div>
@@ -312,7 +312,7 @@ export function AddressModal({
                 type="text"
                 value={formData.state}
                 onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-ink-200 focus:outline-none focus:ring-2 focus:ring-forest-700"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen text-ink-900 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-forest-800/20"
               />
               {errors.state && <p className="text-[11px] text-red-600 mt-1">{errors.state}</p>}
             </div>
@@ -327,7 +327,7 @@ export function AddressModal({
                 value={formData.pincode}
                 onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
                 placeholder="492001"
-                className="w-full px-3 py-2 text-xs rounded-xl border border-ink-200 focus:outline-none focus:ring-2 focus:ring-forest-700"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen text-ink-900 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-forest-800/20"
               />
               {errors.pincode && <p className="text-[11px] text-red-600 mt-1">{errors.pincode}</p>}
             </div>
@@ -344,7 +344,7 @@ export function AddressModal({
               value={formData.instructions}
               onChange={(e) => setFormData({ ...formData, instructions: e.target.value })}
               placeholder="e.g. Leave with security guard"
-              className="w-full px-3 py-2 text-xs rounded-xl border border-ink-200 focus:outline-none focus:ring-2 focus:ring-forest-700"
+              className="w-full px-3 py-2 text-xs rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen text-ink-900 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-forest-800/20"
             />
           </div>
 
@@ -355,7 +355,7 @@ export function AddressModal({
               type="checkbox"
               checked={formData.is_default}
               onChange={(e) => setFormData({ ...formData, is_default: e.target.checked })}
-              className="w-4 h-4 text-forest-700 rounded border-ink-300 focus:ring-forest-700 accent-forest-700"
+              className="w-4 h-4 text-forest-800 rounded border-floria-border focus:ring-forest-800 accent-forest-800"
             />
             <label htmlFor="is_default" className="text-xs font-semibold text-ink-700 select-none">
               Make this my default delivery address
@@ -363,17 +363,17 @@ export function AddressModal({
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3 pt-4 border-t border-ink-100">
+          <div className="flex gap-3 pt-4 border-t border-floria-border">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2.5 border border-ink-200 hover:border-ink-400 text-ink-700 font-bold text-xs uppercase rounded-xl transition-colors min-h-[44px]"
+              className="flex-1 py-2.5 border border-floria-border hover:bg-floria-soft-sand text-ink-700 font-bold text-xs uppercase rounded-xl transition-colors min-h-[44px]"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 py-2.5 bg-forest-700 hover:bg-forest-800 text-white font-bold text-xs uppercase rounded-xl transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-700 min-h-[44px]"
+              className="flex-1 py-2.5 bg-forest-800 hover:bg-forest-900 text-white font-bold text-xs uppercase rounded-xl transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-800 min-h-[44px]"
             >
               Save Address
             </button>

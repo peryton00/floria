@@ -52,7 +52,7 @@ export function ReviewList({ reviews, total, summary, productId, page, onPageCha
     <div className="space-y-4">
       {/* Summary bar */}
       {summary && summary.review_count > 0 && (
-        <div className="flex items-center gap-4 p-3 bg-cream-50 rounded-xl border border-ink-100">
+        <div className="flex items-center gap-4 p-3 bg-floria-soft-sand rounded-xl border border-floria-border">
           <div className="text-center shrink-0">
             <p className="font-serif text-3xl font-bold text-ink-900">
               {summary.avg_rating.toFixed(1)}
@@ -67,7 +67,7 @@ export function ReviewList({ reviews, total, summary, productId, page, onPageCha
               return (
                 <div key={star} className="flex items-center gap-2">
                   <span className="text-[10px] text-ink-500 w-2 shrink-0">{star}</span>
-                  <div className="flex-1 h-1.5 bg-ink-100 rounded-full overflow-hidden">
+                  <div className="flex-1 h-1.5 bg-floria-sand rounded-full overflow-hidden">
                     <div
                       className="h-full bg-amber-400 rounded-full transition-all duration-500"
                       style={{ width: `${pct}%` }}
@@ -82,7 +82,7 @@ export function ReviewList({ reviews, total, summary, productId, page, onPageCha
       )}
 
       {/* Review list */}
-      <div className="divide-y divide-ink-100">
+      <div className="divide-y divide-floria-border">
         {reviews.map((rev) => (
           <div key={rev.id} className="py-3 space-y-1.5">
             <div className="flex items-start justify-between gap-2">

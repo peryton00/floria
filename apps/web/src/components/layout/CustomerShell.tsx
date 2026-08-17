@@ -16,7 +16,7 @@ interface CustomerShellProps {
  */
 export function CustomerShell({ children, fullWidth = false }: CustomerShellProps) {
   return (
-    <div className="min-h-dvh flex flex-col">
+    <div className="min-h-dvh flex flex-col bg-floria-page text-floria-text-primary">
       <Header />
       <main
         id="main-content"

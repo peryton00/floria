@@ -41,7 +41,7 @@ export default async function NurseriesPage() {
         </div>
 
         {nurseries.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-ink-100 p-12 text-center shadow-xs max-w-lg mx-auto">
+          <div className="bg-floria-linen rounded-2xl border border-floria-border p-12 text-center shadow-xs max-w-lg mx-auto">
             <p className="font-serif text-lg font-bold text-ink-900">No nurseries available yet</p>
             <p className="text-xs text-ink-500 mt-2">Check back soon as our network of verified nurseries grows.</p>
           </div>
@@ -57,9 +57,9 @@ export default async function NurseriesPage() {
               return (
                 <div
                   key={nursery.id}
-                  className="bg-white rounded-2xl border border-ink-100 p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col sm:flex-row gap-6 items-start"
+                  className="bg-floria-linen rounded-2xl border border-floria-border p-6 shadow-sm hover:border-forest-400 transition-all flex flex-col sm:flex-row gap-6 items-start"
                 >
-                  <div className="relative w-full sm:w-36 h-36 rounded-xl overflow-hidden bg-cream-100 shrink-0">
+                  <div className="relative w-full sm:w-36 h-36 rounded-xl overflow-hidden bg-floria-natural-sand shrink-0 border border-floria-border">
                     {nursery.logo_url ? (
                       <Image
                         src={nursery.logo_url}
@@ -68,7 +68,7 @@ export default async function NurseriesPage() {
                         className="object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-forest-300">
+                      <div className="w-full h-full flex items-center justify-center text-forest-800/40">
                         <LeafIcon size={40} />
                       </div>
                     )}
@@ -110,7 +110,7 @@ export default async function NurseriesPage() {
                     <div className="pt-2">
                       <Link
                         href={`/shop?nursery=${nursery.id}`}
-                        className="inline-flex items-center text-xs font-bold text-forest-700 hover:text-forest-900 transition-colors"
+                        className="inline-flex items-center text-xs font-bold text-forest-800 hover:text-forest-950 transition-colors"
                       >
                         View Plant Catalog &rarr;
                       </Link>

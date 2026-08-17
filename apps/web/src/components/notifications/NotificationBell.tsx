@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Bell } from "lucide-react";
 import { api } from "@/lib/api";
+import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { NotificationDrawer } from "./NotificationDrawer";
 
 interface NotificationBellProps {
@@ -15,6 +16,12 @@ export function NotificationBell({ userRole = "customer" }: NotificationBellProp
 
   const fetchUnreadCount = useCallback(async () => {
     try {
+      const supabase = getSupabaseBrowserClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        setUnreadCount(0);
+        return;
+      }
       const res = await api.getUnreadNotificationCount();
       if (res.success && res.data) {
         setUnreadCount(res.data.unreadCount || 0);
@@ -26,9 +33,28 @@ export function NotificationBell({ userRole = "customer" }: NotificationBellProp
 
   useEffect(() => {
     fetchUnreadCount();
-    // Poll unread count every 15 seconds
-    const interval = setInterval(fetchUnreadCount, 15000);
-    return () => clearInterval(interval);
+
+    let unsubscribe = () => {};
+    try {
+      const supabase = getSupabaseBrowserClient();
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        if (session?.access_token) {
+          fetchUnreadCount();
+        } else {
+          setUnreadCount(0);
+        }
+      });
+      unsubscribe = () => subscription.unsubscribe();
+    } catch {
+      // Ignore if Supabase is unavailable in current context
+    }
+
+    const interval = setInterval(fetchUnreadCount, 30000);
+
+    return () => {
+      unsubscribe();
+      clearInterval(interval);
+    };
   }, [fetchUnreadCount]);
 
   return (

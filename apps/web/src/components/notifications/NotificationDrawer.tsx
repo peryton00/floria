@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { api, NotificationItem } from "@/lib/api";
+import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import {
   Bell,
   CheckCheck,
@@ -42,6 +43,13 @@ export function NotificationDrawer({
     try {
       setLoading(true);
       setError(null);
+      const supabase = getSupabaseBrowserClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        setNotifications([]);
+        setLoading(false);
+        return;
+      }
       const res = await api.getNotifications({ limit: 20 });
       if (res.success && res.data) {
         setNotifications(res.data.notifications || []);
@@ -122,9 +130,9 @@ export function NotificationDrawer({
 
   return createPortal(
     <div className="fixed inset-0 z-[99999] overflow-hidden bg-black/40 backdrop-blur-xs flex justify-end">
-      <div className="w-full max-w-sm bg-white h-full shadow-2xl flex flex-col justify-between animate-in slide-in-from-right duration-200">
+      <div className="w-full max-w-sm bg-floria-linen h-full shadow-2xl flex flex-col justify-between animate-in slide-in-from-right duration-200 border-l border-floria-border">
         {/* Header */}
-        <div className="p-4 border-b border-ink-100 flex justify-between items-center bg-cream-50/50">
+        <div className="p-4 border-b border-floria-border flex justify-between items-center bg-floria-soft-sand/60">
           <div className="flex items-center gap-2">
             <Bell size={18} className="text-forest-700" />
             <h2 className="font-serif text-base font-bold text-ink-900">Notifications</h2>
@@ -141,7 +149,7 @@ export function NotificationDrawer({
             <button
               type="button"
               onClick={onClose}
-              className="p-1 rounded-lg text-ink-400 hover:text-ink-900 hover:bg-cream-100 transition-colors"
+              className="p-1 rounded-lg text-ink-400 hover:text-ink-900 hover:bg-floria-soft-sand transition-colors"
             >
               <X size={18} />
             </button>
@@ -176,8 +184,8 @@ export function NotificationDrawer({
                   key={item.id}
                   className={`p-3.5 rounded-xl border transition-all relative group ${
                     isUnread
-                      ? "bg-cream-50/80 border-forest-200 shadow-2xs"
-                      : "bg-white border-ink-100 opacity-80"
+                      ? "bg-floria-soft-sand/90 border-forest-200 shadow-2xs"
+                      : "bg-floria-linen border-floria-border opacity-85"
                   }`}
                 >
                   <Link
@@ -190,7 +198,7 @@ export function NotificationDrawer({
                   >
                     <div className="flex justify-between items-start gap-2">
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-lg bg-white border border-ink-100 flex items-center justify-center flex-shrink-0 shadow-2xs">
+                        <div className="w-7 h-7 rounded-lg bg-floria-sand/80 border border-floria-border flex items-center justify-center flex-shrink-0 shadow-2xs">
                           {getIcon(item.type)}
                         </div>
                         <h3 className="font-bold text-xs text-ink-900 leading-snug">{item.title}</h3>
@@ -216,7 +224,7 @@ export function NotificationDrawer({
         </div>
 
         {/* Footer */}
-        <div className="p-3 border-t border-ink-100 bg-cream-50/40 text-center text-[10px] text-ink-400">
+        <div className="p-3 border-t border-floria-border bg-floria-soft-sand/40 text-center text-[10px] text-ink-400">
           <span>Floria Notification Dispatch Engine</span>
         </div>
       </div>

@@ -25,17 +25,22 @@
   --floria-sage:           #4A5D4E; /* Secondary Brand / Olive Sage */
   --floria-botanical:      #DDE7DD; /* Light Accent / Soft Botanical Green */
 
-  /* --- Surface Tokens --- */
-  --floria-background:     #F9F8F3; /* Main Background / Warm Cream */
-  --floria-surface:        #FFFFFF; /* Card Surface / Pure White */
-  --floria-muted-surface:  #EFECE4; /* Muted Surface / Sand Beige */
+  /* --- Surface Tokens (Warm Sand Surface Hierarchy) --- */
+  --floria-page:           #F9F8F3; /* Main Page Background / Warm Cream */
+  --floria-linen:          #FBF8F1; /* Elevated Linen / Cards, Modals, Drawers, Dropdowns, Floating panels */
+  --floria-soft-sand:      #F6F1E7; /* Soft Sand / Secondary cards, sections, content blocks, filter areas */
+  --floria-sand:           #EFE8DC; /* Sand / Inputs, search fields, filter controls, muted surfaces, category blocks */
+  --floria-natural-sand:   #E9E1D3; /* Natural Sand / Product image containers, media surfaces, placeholders */
+  --floria-border:         #E2D9CC; /* Border / Divider Linen / Card outlines / Table separators */
+
+  /* Legacy surface aliases mapped to Phase 3.25 hierarchy */
+  --floria-background:     var(--floria-page);
+  --floria-surface:        var(--floria-linen);
+  --floria-muted-surface:  var(--floria-sand);
 
   /* --- Typography Tokens --- */
   --floria-text-primary:   #212529; /* Text Primary / Charcoal */
   --floria-text-secondary: #6C756F; /* Text Secondary / Muted Gray-Green */
-
-  /* --- Border Token --- */
-  --floria-border:         #E2DDD5; /* Border / Divider Linen */
 
   /* --- Functional Semantic Aliases --- */
   --color-primary:         var(--floria-forest);
@@ -45,9 +50,9 @@
   --color-secondary:       var(--floria-sage);
   --color-secondary-hover: #3D4D40;
   --color-botanical:       var(--floria-botanical);
-  --color-page:            var(--floria-background);
-  --color-surface:         var(--floria-surface);
-  --color-muted-surface:   var(--floria-muted-surface);
+  --color-page:            var(--floria-page);
+  --color-surface:         var(--floria-linen);
+  --color-muted-surface:   var(--floria-sand);
   --color-text:            var(--floria-text-primary);
   --color-text-secondary:  var(--floria-text-secondary);
   --color-border:          var(--floria-border);
@@ -88,12 +93,12 @@
   --color-sage-800: #2C382F;
   --color-sage-900: #1C241E;
 
-  /* --- Scales: Cream & Muted Surfaces --- */
-  --color-cream-50:  #FFFFFF;
-  --color-cream-100: #F9F8F3; /* Main background canvas */
-  --color-cream-200: #EFECE4; /* Sand beige muted surface */
-  --color-cream-300: #E2DDD5; /* Border / Divider */
-  --color-cream-400: #D5CFC5;
+  /* --- Scales: Warm Sand & Cream Surfaces (Phase 3.25) --- */
+  --color-cream-50:  #FBF8F1; /* Elevated Linen */
+  --color-cream-100: #F9F8F3; /* Main Page Background */
+  --color-cream-200: #F6F1E7; /* Soft Sand */
+  --color-cream-300: #EFE8DC; /* Sand */
+  --color-cream-400: #E9E1D3; /* Natural Sand (image containers) */
 
   /* --- Scales: Text Ink --- */
   --color-ink-900: #212529; /* Text Primary / Charcoal */
@@ -102,9 +107,9 @@
   --color-ink-500: #6C756F; /* Text Secondary / Muted Gray-Green */
   --color-ink-400: #868E96;
   --color-ink-300: #ADB5BD;
-  --color-ink-200: #CED4DA;
-  --color-ink-150: #E2DDD5;
-  --color-ink-100: #E2DDD5; /* Dividers */
+  --color-ink-200: #D8D0C2;
+  --color-ink-150: #E2D9CC; /* Border */
+  --color-ink-100: #E2D9CC; /* Dividers */
   --color-ink-50:  #F9F8F3;
 
   /* --- Color: Neutrals --- */
@@ -195,7 +200,14 @@
    Tailwind v4 — Theme extension via CSS
    ============================================================ */
 @theme {
-  /* Floria Semantic & Core Colors */
+  /* Floria Semantic & Core Colors (Phase 3.25) */
+  --color-floria-page:           var(--floria-page);
+  --color-floria-linen:          var(--floria-linen);
+  --color-floria-soft-sand:      var(--floria-soft-sand);
+  --color-floria-sand:           var(--floria-sand);
+  --color-floria-natural-sand:   var(--floria-natural-sand);
+  --color-floria-border:         var(--floria-border);
+
   --color-floria-forest:         var(--floria-forest);
   --color-floria-terracotta:     var(--floria-terracotta);
   --color-floria-sage:           var(--floria-sage);
@@ -205,7 +217,6 @@
   --color-floria-muted-surface:  var(--floria-muted-surface);
   --color-floria-text-primary:   var(--floria-text-primary);
   --color-floria-text-secondary: var(--floria-text-secondary);
-  --color-floria-border:         var(--floria-border);
 
   /* Scale extensions */
   --color-forest-*: initial;
@@ -373,8 +384,7 @@ p {
    Focus styles (accessibility)
    ============================================================ */
 :focus-visible {
-  outline: 2px solid var(--color-forest-600);
-  outline-offset: 2px;
+  outline: none;
   border-radius: var(--radius-sm);
 }
 

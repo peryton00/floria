@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Grid, Search, ShoppingBag, User } from "lucide-react";
+import { Home, LayoutGrid, Search, ShoppingBag, User } from "lucide-react";
 
 interface NavItem {
   href: string;
@@ -19,7 +19,7 @@ const NAV_ITEMS: readonly NavItem[] = [
   {
     href: "/categories",
     label: "Categories",
-    IconComponent: Grid,
+    IconComponent: LayoutGrid,
   },
   {
     href: "/search",
@@ -49,20 +49,9 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Main navigation"
-      className={[
-        // Fixed bottom, full width, above content
-        "fixed bottom-0 left-0 right-0 z-50",
-        // Height and background
-        "h-16 bg-white/95 backdrop-blur-md",
-        // Border top
-        "border-t border-ink-150 shadow-xs",
-        // Safe area for iOS home indicator
-        "pb-safe",
-        // Hide on md+
-        "md:hidden",
-      ].join(" ")}
+      className="fixed bottom-0 left-0 right-0 z-50 h-[62px] bg-floria-linen/95 backdrop-blur-xl border-t border-floria-border shadow-[0_-4px_16px_rgba(0,0,0,0.04)] pb-safe md:hidden"
     >
-      <ul className="flex h-full" role="list">
+      <ul className="flex h-full items-center justify-around px-1" role="list">
         {NAV_ITEMS.map(({ href, label, IconComponent }) => {
           const active = isActive(href, pathname);
           return (
@@ -72,17 +61,35 @@ export function BottomNav() {
                 aria-label={label}
                 aria-current={active ? "page" : undefined}
                 className={[
-                  "flex items-center justify-center h-full",
-                  "transition-colors duration-150",
-                  "focus-visible:outline-none focus-visible:bg-cream-200",
-                  active ? "text-forest-800 font-bold" : "text-ink-500 hover:text-ink-900",
+                  "flex flex-col items-center justify-center h-full w-full py-1.5",
+                  "transition-all duration-200 active:scale-90",
+                  "focus-visible:outline-none focus-visible:bg-floria-soft-sand rounded-xl",
+                  active ? "text-forest-800" : "text-ink-400 hover:text-ink-800",
                 ].join(" ")}
               >
-                <span className="flex-shrink-0">
+                {/* Icon with Active Pill Container */}
+                <div
+                  className={[
+                    "relative flex items-center justify-center transition-all duration-200",
+                    active
+                      ? "w-11 h-7 rounded-full bg-forest-100/90 text-forest-800 shadow-2xs"
+                      : "w-11 h-7 rounded-full text-ink-500",
+                  ].join(" ")}
+                >
                   <IconComponent
-                    size={24}
-                    className={active ? "fill-forest-800/15 text-forest-800" : "text-ink-500"}
+                    size={19}
+                    className={active ? "text-forest-800 stroke-[2.2]" : "text-ink-500 stroke-[1.8]"}
                   />
+                </div>
+
+                {/* Micro Label */}
+                <span
+                  className={[
+                    "text-[10px] leading-tight font-ui mt-0.5 tracking-tight transition-all",
+                    active ? "font-bold text-forest-800" : "font-medium text-ink-500",
+                  ].join(" ")}
+                >
+                  {label}
                 </span>
               </Link>
             </li>

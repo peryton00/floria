@@ -283,7 +283,7 @@ export default function AccountPage() {
   if (!isAuthenticated) {
     return (
       <CustomerShell>
-        <div className="max-w-md mx-auto py-16 px-6 bg-white rounded-2xl border border-ink-100 shadow-sm text-center my-8 space-y-6">
+        <div className="max-w-md mx-auto py-16 px-6 bg-floria-linen rounded-2xl border border-floria-border shadow-sm text-center my-8 space-y-6">
           <div className="w-16 h-16 rounded-full bg-forest-50 text-forest-700 flex items-center justify-center mx-auto">
             <UserIcon size={32} />
           </div>
@@ -296,20 +296,20 @@ export default function AccountPage() {
             <GoogleOAuthButton label="Sign in with Google" />
             
             <div className="relative flex py-1 items-center">
-              <div className="flex-grow border-t border-ink-100"></div>
+              <div className="flex-grow border-t border-floria-border"></div>
               <span className="flex-shrink mx-4 text-[10px] font-bold text-ink-400 uppercase tracking-widest">or</span>
-              <div className="flex-grow border-t border-ink-100"></div>
+              <div className="flex-grow border-t border-floria-border"></div>
             </div>
 
             <Link
               href="/login"
-              className="w-full h-11 flex items-center justify-center bg-forest-700 hover:bg-forest-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-colors min-h-[44px]"
+              className="w-full h-11 flex items-center justify-center bg-forest-800 hover:bg-forest-900 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-colors min-h-[44px]"
             >
               Sign In with Email
             </Link>
             <Link
               href="/signup"
-              className="w-full h-11 flex items-center justify-center border border-ink-200 text-ink-800 hover:border-forest-700 hover:text-forest-700 font-bold text-xs uppercase tracking-wider rounded-xl transition-colors min-h-[44px]"
+              className="w-full h-11 flex items-center justify-center border border-floria-border text-ink-800 hover:bg-floria-soft-sand font-bold text-xs uppercase tracking-wider rounded-xl transition-colors min-h-[44px]"
             >
               Create New Account
             </Link>
@@ -346,15 +346,15 @@ export default function AccountPage() {
         <div className="space-y-6">
 
           {/* 1. PERSONAL INFORMATION CARD */}
-          <section aria-labelledby="section-profile" className="bg-white rounded-2xl border border-ink-100 p-6 shadow-sm space-y-4">
-            <div className="flex items-center justify-between pb-4 border-b border-ink-100">
+          <section aria-labelledby="section-profile" className="bg-floria-linen rounded-2xl border border-floria-border p-6 shadow-sm space-y-4">
+            <div className="flex items-center justify-between pb-4 border-b border-floria-border">
               <h2 id="section-profile" className="font-serif text-lg font-bold text-ink-900">
                 Personal Information
               </h2>
               <button
                 type="button"
                 onClick={() => setIsProfileModalOpen(true)}
-                className="text-xs font-bold text-forest-700 hover:text-forest-900 transition-colors"
+                className="text-xs font-bold text-forest-800 hover:text-forest-950 transition-colors"
               >
                 Edit Details
               </button>
@@ -431,7 +431,7 @@ export default function AccountPage() {
             )}
 
             {/* Relocated Sign Out Button inside Personal Information */}
-            <div className="pt-3 border-t border-ink-100">
+            <div className="pt-3 border-t border-floria-border">
               <button
                 type="button"
                 onClick={() => setShowLogoutModal(true)}
@@ -443,8 +443,8 @@ export default function AccountPage() {
           </section>
 
           {/* 2. SAVED ADDRESSES SECTION (Shared with Checkout) */}
-          <section aria-labelledby="section-addresses" className="bg-white rounded-2xl border border-ink-100 p-6 shadow-sm">
-            <div className="flex items-center justify-between pb-4 border-b border-ink-100 mb-4">
+          <section aria-labelledby="section-addresses" className="bg-floria-linen rounded-2xl border border-floria-border p-6 shadow-sm">
+            <div className="flex items-center justify-between pb-4 border-b border-floria-border mb-4">
               <h2 id="section-addresses" className="font-serif text-lg font-bold text-ink-900">
                 Saved Delivery Addresses ({addresses.length})
               </h2>
@@ -454,14 +454,14 @@ export default function AccountPage() {
                   setEditingAddress(null);
                   setIsAddressModalOpen(true);
                 }}
-                className="text-xs font-bold text-forest-700 hover:text-forest-900 transition-colors"
+                className="text-xs font-bold text-forest-800 hover:text-forest-950 transition-colors"
               >
                 + Add New Address
               </button>
             </div>
 
             {addresses.length === 0 ? (
-              <div className="p-6 text-center bg-cream-50 rounded-xl border border-dashed border-ink-200 space-y-2">
+              <div className="p-6 text-center bg-floria-soft-sand rounded-xl border border-dashed border-floria-border space-y-2">
                 <p className="text-xs font-bold text-ink-700">No saved delivery addresses</p>
                 <p className="text-[11px] text-ink-400">Add an address to speed up your checkout process.</p>
                 <button
@@ -470,7 +470,7 @@ export default function AccountPage() {
                     setEditingAddress(null);
                     setIsAddressModalOpen(true);
                   }}
-                  className="px-4 py-2 bg-forest-700 hover:bg-forest-800 text-white font-bold text-xs rounded-lg transition-colors mt-2"
+                  className="px-4 py-2 bg-forest-800 hover:bg-forest-900 text-white font-bold text-xs rounded-lg transition-colors mt-2"
                 >
                   Add Your First Address
                 </button>
@@ -480,13 +480,13 @@ export default function AccountPage() {
                 {addresses.map((addr) => (
                   <div
                     key={addr.id}
-                    className="p-4 rounded-xl border border-ink-100 bg-white hover:border-ink-200 transition-all"
+                    className="p-4 rounded-xl border border-floria-border bg-floria-linen hover:border-forest-400 transition-all"
                   >
                     <div className="flex items-start justify-between gap-2 mb-1">
                       <div className="flex items-center gap-2">
                         <span className="font-sans text-sm font-bold text-ink-900">{addr.full_name}</span>
                         {addr.is_default && (
-                          <span className="text-[10px] font-bold text-forest-700 bg-forest-50 px-1.5 py-0.5 rounded uppercase">
+                          <span className="text-[10px] font-bold text-forest-800 bg-forest-100 px-1.5 py-0.5 rounded uppercase">
                             Default
                           </span>
                         )}
@@ -499,7 +499,7 @@ export default function AccountPage() {
                             setEditingAddress(addr);
                             setIsAddressModalOpen(true);
                           }}
-                          className="text-ink-400 hover:text-forest-700 transition-colors"
+                          className="text-ink-400 hover:text-forest-800 transition-colors"
                         >
                           Edit
                         </button>
@@ -536,13 +536,13 @@ export default function AccountPage() {
           {/* 3. QUICK NAVIGATION CARDS */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Orders Shortcut */}
-            <div className="p-5 bg-white rounded-2xl border border-ink-100 shadow-sm flex flex-col justify-between">
+            <div className="p-5 bg-floria-linen rounded-2xl border border-floria-border shadow-sm flex flex-col justify-between">
               <div className="space-y-2 mb-4">
                 <div className="flex items-center justify-between">
-                  <div className="w-10 h-10 rounded-full bg-forest-50 text-forest-700 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-forest-100 text-forest-800 flex items-center justify-center">
                     <BagIcon size={20} />
                   </div>
-                  <span className="text-xs font-bold text-forest-700 bg-forest-50 px-2 py-0.5 rounded-full">
+                  <span className="text-xs font-bold text-forest-800 bg-forest-100 px-2 py-0.5 rounded-full">
                     {orders.length} {orders.length === 1 ? "Order" : "Orders"}
                   </span>
                 </div>
@@ -553,14 +553,14 @@ export default function AccountPage() {
               </div>
               <Link
                 href="/orders"
-                className="w-full flex items-center justify-center py-2.5 border border-ink-200 hover:border-forest-700 hover:text-forest-700 text-ink-800 font-bold text-xs uppercase tracking-wider rounded-xl transition-all text-center"
+                className="w-full flex items-center justify-center py-2.5 border border-floria-border hover:bg-floria-soft-sand text-ink-800 font-bold text-xs uppercase tracking-wider rounded-xl transition-all text-center"
               >
                 View Orders &rarr;
               </Link>
             </div>
 
             {/* Wishlist Shortcut */}
-            <div className="p-5 bg-white rounded-2xl border border-ink-100 shadow-sm flex flex-col justify-between">
+            <div className="p-5 bg-floria-linen rounded-2xl border border-floria-border shadow-sm flex flex-col justify-between">
               <div className="space-y-2 mb-4">
                 <div className="flex items-center justify-between">
                   <div className="w-10 h-10 rounded-full bg-red-50 text-red-600 flex items-center justify-center">
@@ -577,7 +577,7 @@ export default function AccountPage() {
               </div>
               <Link
                 href="/wishlist"
-                className="w-full flex items-center justify-center py-2.5 border border-ink-200 hover:border-forest-700 hover:text-forest-700 text-ink-800 font-bold text-xs uppercase tracking-wider rounded-xl transition-all text-center"
+                className="w-full flex items-center justify-center py-2.5 border border-floria-border hover:bg-floria-soft-sand text-ink-800 font-bold text-xs uppercase tracking-wider rounded-xl transition-all text-center"
               >
                 View Wishlist &rarr;
               </Link>
@@ -585,34 +585,34 @@ export default function AccountPage() {
           </div>
 
           {/* 4. MY PRODUCT REVIEWS SECTION (Edit Reviews from Account) */}
-          <section aria-labelledby="section-reviews" className="bg-white rounded-2xl border border-ink-100 p-6 shadow-sm">
-            <div className="flex items-center justify-between pb-4 border-b border-ink-100 mb-4">
+          <section aria-labelledby="section-reviews" className="bg-floria-linen rounded-2xl border border-floria-border p-6 shadow-sm">
+            <div className="flex items-center justify-between pb-4 border-b border-floria-border mb-4">
               <h2 id="section-reviews" className="font-serif text-lg font-bold text-ink-900">
                 My Product Reviews &amp; Ratings ({myReviews.length})
               </h2>
             </div>
 
             {myReviews.length === 0 ? (
-              <div className="p-5 text-center bg-cream-50 rounded-xl border border-dashed border-ink-200 space-y-1 font-ui">
+              <div className="p-5 text-center bg-floria-soft-sand rounded-xl border border-dashed border-floria-border space-y-1 font-ui">
                 <p className="text-xs font-bold text-ink-700">No product reviews yet</p>
                 <p className="text-[11px] text-ink-400">Reviews for delivered products will appear here. You can edit them anytime.</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {myReviews.map((rev) => (
-                  <div key={rev.id} className="p-4 rounded-xl border border-ink-100 bg-white hover:border-forest-200 transition-all font-ui space-y-2">
+                  <div key={rev.id} className="p-4 rounded-xl border border-floria-border bg-floria-linen hover:border-forest-400 transition-all font-ui space-y-2">
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <Link
                           href={`/products/${rev.product?.slug || rev.product_id}`}
-                          className="font-sans text-sm font-bold text-ink-900 hover:text-forest-700 transition-colors"
+                          className="font-sans text-sm font-bold text-ink-900 hover:text-forest-800 transition-colors"
                         >
                           {rev.product?.name || "Product"}
                         </Link>
                         <div className="flex items-center gap-1.5 mt-1">
                           <StarRating rating={rev.rating} size="sm" />
                           <span className="text-xs font-bold text-ink-800">{rev.rating}/5</span>
-                          <span className="text-[10px] text-forest-700 bg-forest-50 px-1.5 py-0.5 rounded border border-forest-200 font-semibold ml-1">
+                          <span className="text-[10px] text-forest-800 bg-forest-100 px-1.5 py-0.5 rounded border border-forest-200 font-semibold ml-1">
                             Verified Purchase
                           </span>
                         </div>
@@ -625,7 +625,7 @@ export default function AccountPage() {
                           setEditTitle(rev.title || "");
                           setEditBody(rev.body || "");
                         }}
-                        className="px-3 py-1.5 text-xs font-bold text-forest-700 hover:text-forest-900 bg-forest-50 hover:bg-forest-100 rounded-lg transition-colors border border-forest-200 flex-shrink-0"
+                        className="px-3 py-1.5 text-xs font-bold text-forest-800 hover:text-forest-950 bg-forest-100 hover:bg-forest-200 rounded-lg transition-colors border border-forest-200 flex-shrink-0"
                       >
                         Edit Review
                       </button>
@@ -644,8 +644,8 @@ export default function AccountPage() {
         <div className="space-y-6">
 
           {/* 4. ACCOUNT SETTINGS SECTION */}
-          <section aria-labelledby="section-settings" className="bg-white rounded-2xl border border-ink-100 p-6 shadow-sm">
-            <h2 id="section-settings" className="font-serif text-lg font-bold text-ink-900 pb-3 border-b border-ink-100 mb-4">
+          <section aria-labelledby="section-settings" className="bg-floria-linen rounded-2xl border border-floria-border p-6 shadow-sm">
+            <h2 id="section-settings" className="font-serif text-lg font-bold text-ink-900 pb-3 border-b border-floria-border mb-4">
               Preferences &amp; Settings
             </h2>
 
@@ -660,7 +660,7 @@ export default function AccountPage() {
                   type="button"
                   onClick={() => handleToggleSetting("orderAlerts")}
                   className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors ${
-                    settings.orderAlerts ? "bg-forest-700 justify-end" : "bg-ink-200 justify-start"
+                    settings.orderAlerts ? "bg-forest-800 justify-end" : "bg-floria-sand justify-start"
                   }`}
                   aria-label="Toggle Order Updates"
                 >
@@ -669,7 +669,7 @@ export default function AccountPage() {
               </div>
 
               {/* Marketing Preferences */}
-              <div className="flex items-center justify-between gap-3 pt-2 border-t border-ink-50">
+              <div className="flex items-center justify-between gap-3 pt-2 border-t border-floria-border">
                 <div>
                   <p className="text-xs font-bold text-ink-900">Offers &amp; Plant Care Tips</p>
                   <p className="text-[11px] text-ink-400">Seasonal care tips and nursery discounts</p>
@@ -678,7 +678,7 @@ export default function AccountPage() {
                   type="button"
                   onClick={() => handleToggleSetting("promotionalEmail")}
                   className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors ${
-                    settings.promotionalEmail ? "bg-forest-700 justify-end" : "bg-ink-200 justify-start"
+                    settings.promotionalEmail ? "bg-forest-800 justify-end" : "bg-floria-sand justify-start"
                   }`}
                   aria-label="Toggle Offers and Care Tips"
                 >
@@ -688,7 +688,7 @@ export default function AccountPage() {
 
               {/* Password & Security Button (Only for email/password users; hidden for Google OAuth users) */}
               {!isGoogleUser && (
-                <div className="pt-2 border-t border-ink-50">
+                <div className="pt-2 border-t border-floria-border">
                   <button
                     type="button"
                     onClick={() => {
@@ -697,7 +697,7 @@ export default function AccountPage() {
                       setConfirmPassword("");
                       setShowPasswordModal(true);
                     }}
-                    className="w-full flex items-center justify-between text-xs font-bold text-ink-800 hover:text-forest-700 py-1 transition-colors text-left"
+                    className="w-full flex items-center justify-between text-xs font-bold text-ink-800 hover:text-forest-800 py-1 transition-colors text-left"
                   >
                     <span>Password &amp; Security</span>
                     <span className="text-ink-400">&rarr;</span>
@@ -706,7 +706,7 @@ export default function AccountPage() {
               )}
 
               {/* Delete Account Button */}
-              <div className="pt-2 border-t border-ink-50">
+              <div className="pt-2 border-t border-floria-border">
                 <button
                   type="button"
                   onClick={() => {
@@ -724,7 +724,7 @@ export default function AccountPage() {
           </section>
 
           {/* 5. HELP & SUPPORT BANNER */}
-          <div className="p-6 bg-cream-50 rounded-2xl border border-ink-100 shadow-sm space-y-3">
+          <div className="p-6 bg-floria-soft-sand rounded-2xl border border-floria-border shadow-sm space-y-3">
             <div className="flex items-center gap-2">
               <LeafIcon size={18} className="text-forest-700" />
               <h3 className="font-serif font-bold text-ink-900 text-base">Help &amp; Support</h3>
@@ -734,7 +734,7 @@ export default function AccountPage() {
             </p>
             <Link
               href="/help"
-              className="inline-flex items-center justify-center w-full py-2.5 bg-forest-700 hover:bg-forest-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-colors shadow-sm"
+              className="inline-flex items-center justify-center w-full py-2.5 bg-forest-800 hover:bg-forest-900 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-colors shadow-sm"
             >
               Visit Help Center
             </Link>
@@ -762,8 +762,8 @@ export default function AccountPage() {
       {/* 3. Password & Security Modal */}
       {showPasswordModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-900/40 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full border border-ink-100 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-ink-100 pb-3">
+          <div className="bg-floria-linen rounded-2xl p-6 max-w-md w-full border border-floria-border shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-floria-border pb-3">
               <div className="flex items-center gap-2 text-forest-700">
                 <ShieldIcon size={20} />
                 <h3 className="font-serif font-bold text-ink-900 text-base">Password &amp; Security</h3>
@@ -800,7 +800,7 @@ export default function AccountPage() {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="Enter new password (min. 6 characters)"
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-ink-200 focus:outline-none focus:ring-2 focus:ring-forest-700"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen text-ink-900 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-forest-800/20"
                 />
               </div>
 
@@ -815,7 +815,7 @@ export default function AccountPage() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Confirm new password"
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-ink-200 focus:outline-none focus:ring-2 focus:ring-forest-700"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen text-ink-900 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-forest-800/20"
                 />
               </div>
 
@@ -823,14 +823,14 @@ export default function AccountPage() {
                 <button
                   type="button"
                   onClick={() => setShowPasswordModal(false)}
-                  className="flex-1 py-2.5 border border-ink-200 text-ink-700 font-bold text-xs uppercase rounded-xl hover:border-ink-400 transition-colors"
+                  className="flex-1 py-2.5 border border-floria-border text-ink-700 font-bold text-xs uppercase rounded-xl hover:bg-floria-soft-sand transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={updatingPassword}
-                  className="flex-1 py-2.5 bg-forest-700 hover:bg-forest-800 text-white font-bold text-xs uppercase rounded-xl transition-colors disabled:opacity-50"
+                  className="flex-1 py-2.5 bg-forest-800 hover:bg-forest-900 text-white font-bold text-xs uppercase rounded-xl transition-colors disabled:opacity-50"
                 >
                   {updatingPassword ? "Updating..." : "Update Password"}
                 </button>
@@ -843,8 +843,8 @@ export default function AccountPage() {
       {/* 4. Real Logout Confirmation Modal */}
       {showLogoutModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-900/40 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full border border-ink-100 text-center shadow-xl space-y-4">
-            <div className="w-12 h-12 rounded-full bg-cream-100 text-ink-700 flex items-center justify-center mx-auto">
+          <div className="bg-floria-linen rounded-2xl p-6 max-w-sm w-full border border-floria-border text-center shadow-xl space-y-4">
+            <div className="w-12 h-12 rounded-full bg-floria-soft-sand text-ink-700 flex items-center justify-center mx-auto">
               <UserIcon size={24} />
             </div>
             <div>
@@ -857,7 +857,7 @@ export default function AccountPage() {
               <button
                 type="button"
                 onClick={() => setShowLogoutModal(false)}
-                className="flex-1 py-2.5 border border-ink-200 text-ink-700 font-bold text-xs uppercase rounded-xl"
+                className="flex-1 py-2.5 border border-floria-border text-ink-700 font-bold text-xs uppercase rounded-xl hover:bg-floria-soft-sand"
               >
                 Cancel
               </button>
@@ -877,8 +877,8 @@ export default function AccountPage() {
       {/* 5. Delete Account Confirmation Modal */}
       {showDeleteAccountModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-900/40 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full border border-ink-100 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-ink-100 pb-3">
+          <div className="bg-floria-linen rounded-2xl p-6 max-w-md w-full border border-floria-border shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-floria-border pb-3">
               <h3 className="font-serif font-bold text-red-700 text-base">Delete Account Permanently</h3>
               <button
                 type="button"
@@ -911,7 +911,7 @@ export default function AccountPage() {
                   value={deleteConfirmationText}
                   onChange={(e) => setDeleteConfirmationText(e.target.value)}
                   placeholder='Type "DELETE"'
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-ink-200 focus:outline-none focus:ring-2 focus:ring-red-600 font-mono"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen text-ink-900 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-red-600 font-mono"
                 />
               </div>
 
@@ -919,7 +919,7 @@ export default function AccountPage() {
                 <button
                   type="button"
                   onClick={() => setShowDeleteAccountModal(false)}
-                  className="flex-1 py-2.5 border border-ink-200 text-ink-700 font-bold text-xs uppercase rounded-xl"
+                  className="flex-1 py-2.5 border border-floria-border text-ink-700 font-bold text-xs uppercase rounded-xl hover:bg-floria-soft-sand"
                 >
                   Cancel
                 </button>
@@ -939,8 +939,8 @@ export default function AccountPage() {
       {/* Edit Review Modal */}
       {editingReview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-900/60 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl border border-ink-100 shadow-xl max-w-md w-full p-6 space-y-4 font-ui">
-            <div className="flex items-center justify-between pb-3 border-b border-ink-100">
+          <div className="bg-floria-linen rounded-2xl border border-floria-border shadow-xl max-w-md w-full p-6 space-y-4 font-ui">
+            <div className="flex items-center justify-between pb-3 border-b border-floria-border">
               <h3 className="font-serif font-bold text-lg text-ink-900">Edit Your Review</h3>
               <button
                 type="button"
@@ -980,7 +980,7 @@ export default function AccountPage() {
                   value={editTitle}
                   onChange={(e) => setEditTitle(e.target.value)}
                   maxLength={120}
-                  className="w-full px-3 py-2 text-sm rounded-lg border border-ink-200 focus:outline-none focus:ring-2 focus:ring-forest-500 text-ink-900"
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-floria-border bg-floria-sand/70 focus:bg-floria-linen text-ink-900 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-forest-800/20"
                 />
               </div>
 
@@ -991,12 +991,12 @@ export default function AccountPage() {
                   onChange={(e) => setEditBody(e.target.value)}
                   maxLength={2000}
                   rows={3}
-                  className="w-full px-3 py-2 text-sm rounded-lg border border-ink-200 focus:outline-none focus:ring-2 focus:ring-forest-500 text-ink-900 resize-none"
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-floria-border bg-floria-sand/70 focus:bg-floria-linen text-ink-900 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-forest-800/20 resize-none"
                 />
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-ink-100">
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-floria-border">
               <button
                 type="button"
                 onClick={() => setEditingReview(null)}
@@ -1008,7 +1008,7 @@ export default function AccountPage() {
                 type="button"
                 disabled={savingReview}
                 onClick={handleSaveReview}
-                className="px-4 py-2 text-xs font-bold bg-forest-700 hover:bg-forest-800 text-white rounded-lg transition-colors shadow-sm disabled:opacity-50"
+                className="px-4 py-2 text-xs font-bold bg-forest-800 hover:bg-forest-900 text-white rounded-lg transition-colors shadow-sm disabled:opacity-50"
               >
                 {savingReview ? "Saving…" : "Save Changes"}
               </button>

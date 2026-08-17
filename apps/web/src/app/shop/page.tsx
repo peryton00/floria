@@ -45,20 +45,32 @@ export default async function ShopPage({ searchParams }: Props) {
   return (
     <CustomerShell>
       {/* Breadcrumb */}
-      <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-ink-400 mb-6">
-        <Link href="/" className="hover:text-forest-700 transition-colors">Home</Link>
+      <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-ink-500 mb-6 font-ui flex-wrap">
+        <Link href="/" className="hover:text-forest-800 transition-colors">Home</Link>
         <span aria-hidden="true" className="select-none text-ink-300">/</span>
-        <span className="text-ink-700 font-medium">Shop</span>
+        <span className="text-ink-900 font-semibold">Shop</span>
       </nav>
 
-      {/* Page Header */}
-      <div className="mb-6">
-        <h1 className="font-serif text-2xl md:text-3xl font-bold text-ink-900 mb-1">
-          Shop Marketplace
-        </h1>
-        <p className="text-xs text-ink-400">
-          Discover handpicked plants, clay pots, and organic fertilizers direct from local nurseries.
-        </p>
+      {/* Page Header Banner */}
+      <div className="flex flex-wrap items-end justify-between gap-4 mb-8 pb-6 border-b border-floria-border">
+        <div>
+          <span className="inline-flex items-center px-2.5 py-1 mb-2 text-[10px] font-bold uppercase tracking-widest text-forest-800 bg-forest-100/90 border border-forest-200/80 rounded-full font-ui">
+            Verified Marketplace
+          </span>
+          <h1 className="font-serif text-3xl md:text-4xl font-bold text-ink-900 tracking-tight leading-tight">
+            Shop Marketplace
+          </h1>
+          <p className="text-xs md:text-sm text-ink-500 mt-1 max-w-xl leading-relaxed">
+            Discover handpicked botanical plants, artisan planters, and organic care essentials direct from local nursery partners.
+          </p>
+        </div>
+        <Link
+          href="/categories"
+          className="text-xs font-bold text-forest-800 hover:text-forest-900 flex items-center gap-1.5 transition-colors uppercase tracking-wider font-ui"
+        >
+          <span>Browse Categories</span>
+          <span>&rarr;</span>
+        </Link>
       </div>
 
       {/* Main Layout Grid */}

@@ -149,7 +149,7 @@ export function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
   if (userReview || submitted) {
     const rev = userReview || { rating, title, body };
     return (
-      <div className="rounded-xl bg-cream-50/80 border border-ink-100 p-4 space-y-2 font-ui">
+      <div className="rounded-xl bg-floria-soft-sand border border-floria-border p-4 space-y-2 font-ui">
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold text-forest-800 uppercase tracking-wider">
             Your Rating for this Product
@@ -180,7 +180,7 @@ export function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
   // If user has NOT purchased and received the product, do NOT show the review form block
   if (!isEligible) {
     return (
-      <div className="rounded-xl bg-cream-50/70 border border-ink-100 p-3.5 text-center text-xs text-ink-500 font-ui space-y-0.5">
+      <div className="rounded-xl bg-floria-soft-sand/70 border border-floria-border p-3.5 text-center text-xs text-ink-500 font-ui space-y-0.5">
         <p className="font-semibold text-ink-700">Verified Customer Reviews Only</p>
         <p className="text-ink-400">You can only review products you have purchased and received.</p>
       </div>
@@ -189,7 +189,7 @@ export function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
 
   // Render review form block ONLY for verified buyers who received the item and haven't reviewed it yet
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 bg-cream-50 rounded-xl border border-ink-100 p-4">
+    <form onSubmit={handleSubmit} className="space-y-4 bg-floria-linen rounded-xl border border-floria-border p-4">
       <p className="text-xs font-bold uppercase tracking-wider text-ink-600">Write a Review</p>
 
       {/* Star rating picker */}
@@ -229,7 +229,7 @@ export function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         maxLength={120}
-        className="w-full px-3 py-2 text-sm rounded-lg border border-ink-200 bg-white focus:outline-none focus:ring-2 focus:ring-forest-500 text-ink-900 placeholder:text-ink-300 font-ui"
+        className="w-full px-3 py-2 text-sm rounded-lg border border-floria-border bg-floria-sand/70 focus:bg-floria-linen focus:outline-none focus:ring-2 focus:ring-forest-800/20 text-ink-900 placeholder:text-ink-400 font-ui"
       />
 
       <textarea
@@ -238,7 +238,7 @@ export function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
         onChange={(e) => setBody(e.target.value)}
         maxLength={2000}
         rows={3}
-        className="w-full px-3 py-2 text-sm rounded-lg border border-ink-200 bg-white focus:outline-none focus:ring-2 focus:ring-forest-500 text-ink-900 placeholder:text-ink-300 resize-none font-ui"
+        className="w-full px-3 py-2 text-sm rounded-lg border border-floria-border bg-floria-sand/70 focus:bg-floria-linen focus:outline-none focus:ring-2 focus:ring-forest-800/20 text-ink-900 placeholder:text-ink-400 resize-none font-ui"
       />
 
       {error && <p className="text-xs text-red-600 font-ui">{error}</p>}
@@ -246,7 +246,7 @@ export function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
       <button
         type="submit"
         disabled={submitting || rating === 0}
-        className="px-4 py-2 text-xs font-bold rounded-lg bg-forest-700 text-white hover:bg-forest-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className="px-4 py-2 text-xs font-bold rounded-lg bg-forest-800 text-white hover:bg-forest-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
         {submitting ? "Submitting…" : "Submit Review"}
       </button>

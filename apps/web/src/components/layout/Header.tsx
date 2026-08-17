@@ -48,7 +48,7 @@ export function Header() {
     "flex items-center transition-all duration-400",
     isHome && !isScrolled
       ? "h-20 bg-transparent border-b border-transparent"
-      : "h-16 bg-white/95 backdrop-blur-md border-b border-ink-150 shadow-xs",
+      : "h-16 bg-floria-linen/95 backdrop-blur-md border-b border-floria-border shadow-xs",
   ].join(" ");
 
   const logoTextClass = [
@@ -62,12 +62,12 @@ export function Header() {
   ].join(" ");
 
   const navLinkClass = [
-    "font-medium text-ink-500 hover:text-ink-900 whitespace-nowrap transition-all duration-300 rounded-md hover:bg-cream-200 flex items-center gap-1",
+    "font-medium text-ink-500 hover:text-ink-900 whitespace-nowrap transition-all duration-300 rounded-md hover:bg-floria-soft-sand flex items-center gap-1",
     isHome && !isScrolled ? "text-[14px] px-3.5 py-2.5" : "text-[13px] px-3 py-2",
   ].join(" ");
 
   const iconLinkClass = [
-    "rounded-lg text-ink-500 hover:text-ink-900 hover:bg-cream-200 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-800",
+    "rounded-lg text-ink-500 hover:text-ink-900 hover:bg-floria-soft-sand transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-800",
     isHome && !isScrolled ? "p-2.5" : "p-2",
   ].join(" ");
 

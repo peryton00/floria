@@ -39,15 +39,20 @@ export function ValueSummary({
   const displayedItems = items.slice(0, 3);
 
   return (
-    <div className={`rounded-xl bg-cream-50/80 border border-ink-100 p-3.5 space-y-2 text-xs text-ink-700 font-ui ${className}`}>
-      <p className="font-bold text-ink-900 uppercase tracking-wider text-[10px] text-forest-800">
-        Floria Value &amp; Quality Assurance
-      </p>
-      <ul className="space-y-1.5">
+    <div className={`rounded-2xl bg-floria-soft-sand border border-floria-border p-4 space-y-2.5 text-xs text-ink-700 font-ui shadow-2xs ${className}`}>
+      <div className="flex items-center gap-2">
+        <span className="w-1.5 h-1.5 rounded-full bg-forest-800" />
+        <p className="font-bold text-forest-800 uppercase tracking-widest text-[10px]">
+          Floria Quality &amp; Care Assurance
+        </p>
+      </div>
+      <ul className="grid grid-cols-1 gap-1.5">
         {displayedItems.map((item, idx) => (
-          <li key={idx} className="flex items-center gap-2">
-            <span className="text-forest-700 font-bold">✓</span>
-            <span>{item}</span>
+          <li key={idx} className="flex items-center gap-2 text-ink-700">
+            <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-forest-100 text-forest-800 text-[10px] font-bold flex-shrink-0">
+              ✓
+            </span>
+            <span className="font-medium text-xs">{item}</span>
           </li>
         ))}
       </ul>

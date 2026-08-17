@@ -28,6 +28,9 @@ import {
   PottedPlant,
   Flask,
   Wrench,
+  Flower,
+  Cactus,
+  Sun,
 } from "@phosphor-icons/react";
 import {
   IconLayoutGrid,
@@ -139,6 +142,18 @@ export function FlaskIcon({ size = 20, className, ...props }: IconProps) {
 
 export function ToolsIcon({ size = 20, className, ...props }: IconProps) {
   return <Wrench size={size} className={className} {...props} />;
+}
+
+export function FlowerIcon({ size = 20, className, ...props }: IconProps) {
+  return <Flower size={size} className={className} {...props} />;
+}
+
+export function CactusIcon({ size = 20, className, ...props }: IconProps) {
+  return <Cactus size={size} className={className} {...props} />;
+}
+
+export function SunIcon({ size = 20, className, ...props }: IconProps) {
+  return <Sun size={size} className={className} {...props} />;
 }
 
 // ── 3. SELLER / ADMIN DASHBOARD ICONS (TABLER) ────────────────────────────

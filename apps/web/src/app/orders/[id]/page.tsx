@@ -253,8 +253,8 @@ export default function OrderDetailPage({ params }: Props) {
         <div className="space-y-8">
 
           {/* VISUAL TRACKING TIMELINE */}
-          <section aria-labelledby="section-tracking" className="bg-white rounded-2xl border border-ink-100 p-6 shadow-sm">
-            <div className="flex items-center justify-between pb-4 border-b border-ink-100 mb-6">
+          <section aria-labelledby="section-tracking" className="bg-floria-linen rounded-2xl border border-floria-border p-6 shadow-sm">
+            <div className="flex items-center justify-between pb-4 border-b border-floria-border mb-6">
               <h2 id="section-tracking" className="font-serif text-lg font-bold text-ink-900">
                 Order Tracking Status
               </h2>
@@ -270,7 +270,7 @@ export default function OrderDetailPage({ params }: Props) {
               </div>
             ) : (
               <div className="relative pl-4 sm:pl-6">
-                <ol className="relative border-l-2 border-ink-100 ml-2 space-y-6 sm:space-y-7" role="list">
+                <ol className="relative border-l-2 border-floria-border ml-2 space-y-6 sm:space-y-7" role="list">
                   {ORDER_STATUS_TIMELINE.map((stepStatus, idx) => {
                     const isCompleted = currentTimelineIndex > idx;
                     const isCurrent = currentTimelineIndex === idx;
@@ -282,10 +282,10 @@ export default function OrderDetailPage({ params }: Props) {
                           className={[
                             "absolute -left-[13px] top-0.5 w-6 h-6 rounded-full border flex items-center justify-center transition-all",
                             isCurrent
-                              ? "border-forest-700 bg-forest-700 text-white ring-4 ring-forest-700/20"
+                              ? "border-forest-800 bg-forest-800 text-white ring-4 ring-forest-800/15"
                               : isCompleted
-                              ? "border-forest-700 bg-forest-700 text-white"
-                              : "border-ink-200 bg-white text-ink-300",
+                              ? "border-forest-800 bg-forest-800 text-white"
+                              : "border-floria-border bg-floria-linen text-ink-300",
                           ].join(" ")}
                         >
                           {isCompleted ? (
@@ -321,8 +321,8 @@ export default function OrderDetailPage({ params }: Props) {
           </section>
 
           {/* ORDER ITEMS GROUPED BY NURSERY */}
-          <section aria-labelledby="section-items" className="bg-white rounded-2xl border border-ink-100 p-6 shadow-sm">
-            <div className="flex items-center justify-between pb-4 border-b border-ink-100 mb-4">
+          <section aria-labelledby="section-items" className="bg-floria-linen rounded-2xl border border-floria-border p-6 shadow-sm">
+            <div className="flex items-center justify-between pb-4 border-b border-floria-border mb-4">
               <h2 id="section-items" className="font-serif text-lg font-bold text-ink-900">
                 Items Purchased ({order.totalItemsCount} {order.totalItemsCount === 1 ? "Item" : "Items"})
               </h2>
@@ -333,27 +333,27 @@ export default function OrderDetailPage({ params }: Props) {
 
             <div className="space-y-6">
               {order.nurseryGroups.map((group) => (
-                <div key={group.sellerId} className="border border-ink-100 rounded-2xl overflow-hidden">
+                <div key={group.sellerId} className="border border-floria-border rounded-2xl overflow-hidden bg-floria-linen">
                   {/* Nursery Header */}
-                  <div className="bg-forest-50 px-4 py-3 border-b border-ink-100 flex items-center justify-between">
+                  <div className="bg-floria-soft-sand px-4 py-3 border-b border-floria-border flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <LeafIcon size={16} className="text-forest-700" />
                       <span className="text-xs font-bold text-forest-800 uppercase tracking-wider">
                         {group.sellerName}
                       </span>
                     </div>
-                    <span className="text-[11px] font-bold text-forest-700 bg-white px-2 py-0.5 rounded border border-forest-100">
+                    <span className="text-[11px] font-bold text-forest-800 bg-floria-linen px-2 py-0.5 rounded border border-floria-border">
                       ✓ {group.status || "Confirmed"}
                     </span>
                   </div>
 
                   {/* Nursery Items List */}
-                  <div className="p-4 divide-y divide-ink-50">
+                  <div className="p-4 divide-y divide-floria-border">
                     {group.items.map((item) => (
                       <div key={item.product.id} className="py-3 first:pt-0 last:pb-0 flex items-center gap-4">
                         {/* Image */}
                         <Link href={`/products/${item.product.slug}`} className="flex-shrink-0">
-                          <div className="relative w-16 h-16 rounded-xl bg-cream-50 border border-ink-100">
+                          <div className="relative w-16 h-16 rounded-xl bg-floria-natural-sand border border-floria-border">
                             <div className="relative w-full h-full rounded-xl overflow-hidden">
                               <Image
                                 src={item.primary_image?.url || "/floria-logo.png"}
@@ -364,7 +364,7 @@ export default function OrderDetailPage({ params }: Props) {
                               />
                             </div>
                             {item.quantity > 1 && (
-                              <span className="absolute -top-1.5 -right-1.5 min-w-5 h-5 px-1 bg-forest-700 text-white font-bold text-[10px] rounded-full flex items-center justify-center border border-white shadow-sm">
+                              <span className="absolute -top-1.5 -right-1.5 min-w-5 h-5 px-1 bg-forest-800 text-white font-bold text-[10px] rounded-full flex items-center justify-center border border-white shadow-sm">
                                 {item.quantity}
                               </span>
                             )}
@@ -374,7 +374,7 @@ export default function OrderDetailPage({ params }: Props) {
                         {/* Details */}
                         <div className="flex-1 min-w-0">
                           <Link href={`/products/${item.product.slug}`}>
-                            <h3 className="font-sans text-xs sm:text-sm font-bold text-ink-900 hover:text-forest-700 transition-colors truncate">
+                            <h3 className="font-sans text-xs sm:text-sm font-bold text-ink-900 hover:text-forest-800 transition-colors truncate">
                               {item.product.name}
                             </h3>
                           </Link>
@@ -406,8 +406,8 @@ export default function OrderDetailPage({ params }: Props) {
           </section>
 
           {/* READ-ONLY DELIVERY ADDRESS */}
-          <section aria-labelledby="section-address-snapshot" className="bg-white rounded-2xl border border-ink-100 p-6 shadow-sm">
-            <h2 id="section-address-snapshot" className="font-serif text-lg font-bold text-ink-900 pb-3 border-b border-ink-100 mb-3">
+          <section aria-labelledby="section-address-snapshot" className="bg-floria-linen rounded-2xl border border-floria-border p-6 shadow-sm">
+            <h2 id="section-address-snapshot" className="font-serif text-lg font-bold text-ink-900 pb-3 border-b border-floria-border mb-3">
               Deliver To
             </h2>
 
@@ -427,8 +427,8 @@ export default function OrderDetailPage({ params }: Props) {
         <div className="space-y-4 lg:sticky lg:top-24">
 
           {/* PRICE SUMMARY */}
-          <div className="p-5 bg-white rounded-2xl border border-ink-100 shadow-sm space-y-4">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-ink-900 pb-3 border-b border-ink-100">
+          <div className="p-5 bg-floria-linen rounded-2xl border border-floria-border shadow-sm space-y-4">
+            <h2 className="text-xs font-bold uppercase tracking-widest text-ink-900 pb-3 border-b border-floria-border">
               Payment Summary
             </h2>
 
@@ -461,16 +461,16 @@ export default function OrderDetailPage({ params }: Props) {
                 </div>
               )}
 
-              <div className="flex justify-between pt-3 border-t border-ink-100 text-ink-900 font-bold text-base">
+              <div className="flex justify-between pt-3 border-t border-floria-border text-ink-900 font-bold text-base">
                 <span>Total Paid</span>
                 <span className="text-forest-800">{formatINR(order.totalPaise || order.subtotalPaise + (order.deliveryFeePaise || 0) + (order.maintenanceFeePaise || 0))}</span>
               </div>
             </div>
 
             {/* Payment Method Badge */}
-            <div className="p-3 bg-cream-50 rounded-xl border border-ink-100 flex items-center justify-between text-xs">
+            <div className="p-3 bg-floria-soft-sand rounded-xl border border-floria-border flex items-center justify-between text-xs">
               <span className="text-ink-500 font-medium">Method</span>
-              <span className="font-bold text-forest-700">{order.paymentMethod}</span>
+              <span className="font-bold text-forest-800">{order.paymentMethod}</span>
             </div>
 
             <div className="flex items-center gap-1.5 justify-center text-[11px] text-ink-400 pt-1">
@@ -481,7 +481,7 @@ export default function OrderDetailPage({ params }: Props) {
             <div className="pt-2">
               <Link
                 href="/categories"
-                className="w-full flex items-center justify-center py-3 border border-ink-200 hover:border-ink-400 text-ink-700 font-bold text-xs uppercase tracking-widest rounded-xl transition-colors focus:outline-none"
+                className="w-full flex items-center justify-center py-3 border border-floria-border hover:bg-floria-soft-sand text-ink-700 font-bold text-xs uppercase tracking-widest rounded-xl transition-colors focus:outline-none"
               >
                 Back to Shopping
               </Link>

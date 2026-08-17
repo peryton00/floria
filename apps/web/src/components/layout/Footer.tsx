@@ -2,30 +2,40 @@
 import Link from "next/link";
 import Image from "next/image";
 import { NewsletterForm } from "@/components/ui/NewsletterForm";
-import { LeafIcon } from "@/components/ui/Icons";
+import {
+  LeafIcon,
+  ShieldIcon,
+  TruckIcon,
+  VerifiedIcon,
+  SproutIcon,
+} from "@/components/ui/Icons";
 
 const SHOP_LINKS = [
-  { label: "Plants",           href: "/categories/indoor-plants" },
-  { label: "Seeds",            href: "/categories/herbs-edibles" },
-  { label: "Fertilizers",      href: "/categories/soil-fertilizers" },
-  { label: "Pots & Planners",  href: "/categories/planters-pots" },
-  { label: "Gardening Tools",  href: "/categories/tools-accessories" },
+  { label: "Indoor Plants",     href: "/categories/indoor-plants" },
+  { label: "Outdoor Plants",    href: "/categories/outdoor-plants" },
+  { label: "Succulents & Cacti",href: "/categories/succulents-cacti" },
+  { label: "Flowering Plants",  href: "/categories/flowering-plants" },
+  { label: "Herbs & Edibles",   href: "/categories/herbs-edibles" },
+  { label: "Pots & Planters",   href: "/categories/planters-pots" },
+  { label: "Soil & Nutrients",  href: "/categories/soil-fertilizers" },
+  { label: "Gardening Tools",   href: "/categories/tools-accessories" },
 ];
 
 const COMPANY_LINKS = [
-  { label: "About Us",     href: "/about" },
-  { label: "Nurseries",    href: "/nurseries" },
-  { label: "How It Works", href: "/how-it-works" },
-  { label: "Careers",      href: "/careers" },
+  { label: "About Floria", href: "/about" },
+  { label: "Partner Nurseries", href: "/nurseries" },
+  { label: "How Floria Works", href: "/how-it-works" },
+  { label: "Seller Onboarding", href: "/seller/register" },
+  { label: "Careers", href: "/careers" },
 ];
 
 const HELP_LINKS = [
-  { label: "FAQ",                 href: "/faq" },
-  { label: "Shipping & Delivery", href: "/shipping" },
-  { label: "Returns & Refunds",   href: "/returns" },
-  { label: "Terms & Conditions",  href: "/terms" },
-  { label: "Privacy Policy",      href: "/privacy" },
-  { label: "Contact Us",          href: "/contact" },
+  { label: "Help & FAQ", href: "/faq" },
+  { label: "Shipping & Transit", href: "/shipping" },
+  { label: "Freshness & Returns", href: "/returns" },
+  { label: "Terms of Service", href: "/terms" },
+  { label: "Privacy Policy", href: "/privacy" },
+  { label: "Contact Botanical Support", href: "/contact" },
 ];
 
 const SOCIAL = [
@@ -34,46 +44,108 @@ const SOCIAL = [
   { label: "X/Twitter", href: "https://twitter.com", viewBox: "0 0 24 24", path: "M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" },
 ];
 
+const VALUE_PROPS = [
+  {
+    icon: VerifiedIcon,
+    title: "100% Verified Nurseries",
+    description: "Sourced directly from local nursery growers across India",
+  },
+  {
+    icon: TruckIcon,
+    title: "Safe Plant Delivery",
+    description: "Shockproof, climate-safe, eco-friendly plant packaging",
+  },
+  {
+    icon: LeafIcon,
+    title: "Freshness & Growth Guarantee",
+    description: "Healthy plant arrival promise with expert care guides",
+  },
+  {
+    icon: ShieldIcon,
+    title: "Fair Trade & Transparent",
+    description: "Direct nursery payouts and verified customer reviews",
+  },
+];
+
 export function Footer() {
   return (
-    <footer style={{ backgroundColor: "var(--color-canopy-900)" }} aria-label="Site footer">
-      <div className="max-w-screen-xl mx-auto px-4 md:px-6 py-14 md:py-20">
+    <>
+      {/* Botanical Trust & Assurance Ribbon */}
+      <section
+        aria-label="Floria Trust and Quality Guarantee"
+        className="bg-forest-700 text-white border-t border-b border-forest-900/60 shadow-inner"
+      >
+        <div className="max-w-screen-xl mx-auto px-4 md:px-6 py-8 md:py-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 divide-white/20 sm:gap-6 lg:gap-0 lg:divide-x">
+            {VALUE_PROPS.map((prop, idx) => {
+              const Icon = prop.icon;
+              return (
+                <div
+                  key={prop.title}
+                  className={`flex items-start gap-3.5 pt-5 pb-5 first:pt-0 last:pb-0 sm:py-0 ${
+                    idx > 0 ? "lg:pl-6" : ""
+                  } ${idx < VALUE_PROPS.length - 1 ? "lg:pr-6" : ""}`}
+                >
+                  <div className="w-11 h-11 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center text-white flex-shrink-0 shadow-2xs backdrop-blur-xs">
+                    <Icon size={22} />
+                  </div>
+                  <div>
+                    <p className="text-xs sm:text-sm font-bold font-ui !text-white leading-snug">
+                      {prop.title}
+                    </p>
+                    <p className="text-xs text-white/80 mt-1 leading-relaxed">
+                      {prop.description}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Main Dark Canopy Footer */}
+      <footer style={{ backgroundColor: "var(--color-canopy-900)" }} aria-label="Site footer" className="text-white">
+        <div className="max-w-screen-xl mx-auto px-4 md:px-6 py-12 md:py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-14">
 
           {/* Brand + Newsletter */}
           <div className="lg:col-span-2">
-            <Link href="/" className="flex items-center gap-2.5 mb-5" aria-label="Floria home">
-              <Image
-                src="/floria-logo.png"
-                alt="Floria"
-                width={28}
-                height={28}
-                className="object-contain brightness-0 invert opacity-90"
-              />
+            <Link href="/" className="inline-flex items-center gap-2.5 mb-4 group" aria-label="Floria home">
+              <div className="w-8 h-8 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center p-1.5 shadow-2xs group-hover:bg-white/15 transition-colors">
+                <Image
+                  src="/floria-logo.png"
+                  alt="Floria"
+                  width={24}
+                  height={24}
+                  className="object-contain brightness-0 invert opacity-95"
+                />
+              </div>
               <span
-                className="font-serif text-lg font-bold tracking-tight"
-                style={{ color: "rgba(255,255,255,0.95)" }}
+                className="font-serif text-xl font-bold tracking-tight text-white"
               >
                 FLORIA
               </span>
             </Link>
 
             <p
-              className="text-sm leading-relaxed mb-8 max-w-xs"
-              style={{ color: "rgba(255,255,255,0.78)" }}
+              className="text-xs sm:text-sm leading-relaxed mb-6 max-w-sm"
+              style={{ color: "rgba(255,255,255,0.75)" }}
             >
-              Your one-stop marketplace for plants and gardening essentials from trusted local nurseries across India.
+              India&apos;s curated botanical marketplace connecting plant lovers directly with verified regional nurseries, handcrafted planters, and organic plant care.
             </p>
 
-            <p
-              className="text-[10px] font-bold uppercase tracking-widest mb-3"
-              style={{ color: "rgba(255,255,255,0.60)", letterSpacing: "0.14em" }}
-            >
-              NEWSLETTER
-            </p>
-            <NewsletterForm />
+            <div className="mb-6">
+              <p
+                className="text-[10px] font-bold uppercase tracking-widest mb-2.5 font-ui"
+                style={{ color: "rgba(255,255,255,0.65)", letterSpacing: "0.14em" }}
+              >
+                JOIN THE FLORIA PLANT CLUB
+              </p>
+              <NewsletterForm />
+            </div>
 
-            <div className="flex items-center gap-3 mt-7">
+            <div className="flex items-center gap-2.5 pt-2">
               {SOCIAL.map(({ label, href, viewBox, path }) => (
                 <a
                   key={label}
@@ -81,10 +153,10 @@ export function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={label}
-                  className="w-8 h-8 flex items-center justify-center rounded-full transition-all hover:scale-110"
-                  style={{ backgroundColor: "rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.90)" }}
+                  className="w-8 h-8 flex items-center justify-center rounded-xl transition-all hover:scale-110 shadow-2xs"
+                  style={{ backgroundColor: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.90)", border: "1px solid rgba(255,255,255,0.12)" }}
                 >
-                  <svg viewBox={viewBox} width="14" height="14" fill="currentColor" aria-hidden="true">
+                  <svg viewBox={viewBox} width="13" height="13" fill="currentColor" aria-hidden="true">
                     <path d={path} />
                   </svg>
                 </a>
@@ -92,25 +164,26 @@ export function Footer() {
             </div>
           </div>
 
-          <FooterColumn title="SHOP"    links={SHOP_LINKS} />
+          <FooterColumn title="COLLECTIONS" links={SHOP_LINKS} />
           <FooterColumn title="COMPANY" links={COMPANY_LINKS} />
-          <FooterColumn title="HELP"    links={HELP_LINKS} />
+          <FooterColumn title="HELP & SUPPORT" links={HELP_LINKS} />
         </div>
       </div>
 
       {/* Bottom strip */}
-      <div className="border-t" style={{ borderColor: "rgba(255,255,255,0.12)" }}>
-        <div className="max-w-screen-xl mx-auto px-4 md:px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.65)" }}>
+      <div className="border-t" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
+        <div className="max-w-screen-xl mx-auto px-4 md:px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 font-ui">
+          <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.60)" }}>
             &copy; {new Date().getFullYear()} Floria Technologies Pvt. Ltd. All rights reserved.
           </p>
-          <div className="flex items-center gap-1.5 text-[12px]" style={{ color: "rgba(255,255,255,0.65)" }}>
-            <span>Grown with care, delivered with love</span>
-            <LeafIcon size={12} className="opacity-80" />
+          <div className="flex items-center gap-1.5 text-[11px]" style={{ color: "rgba(255,255,255,0.65)" }}>
+            <span>Nurtured with care &amp; delivered nationwide</span>
+            <LeafIcon size={13} className="text-emerald-400 opacity-90" />
           </div>
         </div>
       </div>
     </footer>
+    </>
   );
 }
 
@@ -124,18 +197,18 @@ function FooterColumn({
   return (
     <div>
       <p
-        className="text-[12px] font-bold uppercase mb-5"
-        style={{ color: "#DDE7DD", letterSpacing: "0.13em" }}
+        className="text-[11px] font-bold uppercase mb-4 font-ui tracking-widest"
+        style={{ color: "#DDE7DD", letterSpacing: "0.14em" }}
       >
         {title}
       </p>
-      <ul className="space-y-3">
+      <ul className="space-y-2.5 font-ui">
         {links.map(({ label, href }) => (
           <li key={href}>
             <Link
               href={href}
-              className="text-[12.5px] leading-snug transition-colors hover:text-white"
-              style={{ color: "rgba(255,255,255,0.78)" }}
+              className="text-xs leading-snug transition-all duration-200 hover:text-white hover:translate-x-0.5 inline-block"
+              style={{ color: "rgba(255,255,255,0.72)" }}
             >
               {label}
             </Link>

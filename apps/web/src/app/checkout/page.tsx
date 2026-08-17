@@ -237,8 +237,8 @@ export default function CheckoutPage() {
             </p>
 
             {/* Order Meta Box */}
-            <div className="bg-cream-50 rounded-xl p-4 mb-6 border border-ink-100 text-left space-y-3">
-              <div className="flex flex-wrap justify-between items-center text-xs pb-3 border-b border-ink-100 gap-2">
+            <div className="bg-floria-soft-sand rounded-xl p-4 mb-6 border border-floria-border text-left space-y-3">
+              <div className="flex flex-wrap justify-between items-center text-xs pb-3 border-b border-floria-border gap-2">
                 <div>
                   <span className="text-ink-400 uppercase tracking-wider block text-[10px] font-bold">Order ID</span>
                   <span className="font-mono font-bold text-ink-900 text-sm">#{confirmedOrder.id}</span>
@@ -274,21 +274,21 @@ export default function CheckoutPage() {
 
               <div className="space-y-4">
                 {confirmedOrder.nurseryGroups.map((group: any) => (
-                  <div key={group.sellerId} className="border border-ink-100 rounded-xl overflow-hidden">
-                    <div className="bg-forest-50 px-3 py-2 border-b border-ink-100 flex items-center gap-2">
+                  <div key={group.sellerId} className="border border-floria-border rounded-xl overflow-hidden bg-floria-linen">
+                    <div className="bg-floria-soft-sand px-3 py-2 border-b border-floria-border flex items-center gap-2">
                       <LeafIcon size={14} className="text-forest-700" />
                       <span className="text-xs font-bold text-forest-800 uppercase tracking-wider">
                         {group.sellerName}
                       </span>
                     </div>
-                    <div className="p-3 divide-y divide-ink-50">
+                    <div className="p-3 divide-y divide-floria-border">
                       {group.items.map((item: any) => {
                         const { listing, quantity } = item;
                         const { product, inventory, primary_image } = listing;
                         return (
                           <div key={product.id} className="py-2 first:pt-0 last:pb-0 flex items-center justify-between text-xs">
                             <div className="flex items-center gap-3">
-                              <div className="relative w-10 h-10 rounded bg-cream-50 overflow-hidden flex-shrink-0 border border-ink-100">
+                              <div className="relative w-10 h-10 rounded bg-floria-natural-sand overflow-hidden flex-shrink-0 border border-floria-border">
                                 <Image
                                   src={primary_image?.url || "/floria-logo.png"}
                                   alt={product.name}
@@ -317,13 +317,13 @@ export default function CheckoutPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
               <Link
                 href={`/orders/${confirmedOrder.id}`}
-                className="w-full flex items-center justify-center py-3 bg-forest-700 hover:bg-forest-800 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-700"
+                className="w-full flex items-center justify-center py-3 bg-forest-800 hover:bg-forest-900 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-800"
               >
                 View Order
               </Link>
               <Link
                 href="/categories"
-                className="w-full flex items-center justify-center py-3 border border-ink-200 hover:border-ink-400 text-ink-700 font-bold text-xs uppercase tracking-widest rounded-xl transition-colors focus:outline-none"
+                className="w-full flex items-center justify-center py-3 border border-floria-border hover:bg-floria-soft-sand text-ink-700 font-bold text-xs uppercase tracking-widest rounded-xl transition-colors focus:outline-none"
               >
                 Continue Shopping
               </Link>
@@ -346,7 +346,7 @@ export default function CheckoutPage() {
           <span className="text-ink-700 font-medium">Checkout</span>
         </nav>
 
-        <div className="text-center py-16 bg-white rounded-2xl border border-ink-100 shadow-sm max-w-md mx-auto p-6">
+        <div className="text-center py-16 bg-floria-linen rounded-2xl border border-floria-border shadow-sm max-w-md mx-auto p-6">
           <div className="w-16 h-16 rounded-full bg-forest-50 flex items-center justify-center mx-auto mb-4 text-forest-700">
             <WishlistIcon size={28} className="text-forest-700" />
           </div>
@@ -354,7 +354,7 @@ export default function CheckoutPage() {
           <p className="text-sm text-ink-500 mb-6">Add plants to your cart before proceeding to checkout.</p>
           <Link
             href="/categories"
-            className="inline-flex items-center justify-center px-6 py-3 bg-forest-700 hover:bg-forest-800 text-white font-semibold text-sm rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-forest-700"
+            className="inline-flex items-center justify-center px-6 py-3 bg-forest-800 hover:bg-forest-900 text-white font-semibold text-sm rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-forest-800"
           >
             Browse Plants
           </Link>
@@ -409,10 +409,10 @@ export default function CheckoutPage() {
         <div className="space-y-8">
 
           {/* 1. DELIVERY ADDRESS SECTION */}
-          <section aria-labelledby="section-address" className="bg-white rounded-2xl border border-ink-100 p-6 shadow-sm">
-            <div className="flex items-center justify-between pb-4 border-b border-ink-100 mb-4">
+          <section aria-labelledby="section-address" className="bg-floria-linen rounded-2xl border border-floria-border p-6 shadow-sm">
+            <div className="flex items-center justify-between pb-4 border-b border-floria-border mb-4">
               <div className="flex items-center gap-2">
-                <span className="w-6 h-6 rounded-full bg-forest-700 text-white font-bold text-xs flex items-center justify-center">1</span>
+                <span className="w-6 h-6 rounded-full bg-forest-800 text-white font-bold text-xs flex items-center justify-center">1</span>
                 <h2 id="section-address" className="font-serif text-lg font-bold text-ink-900">
                   Delivery Address
                 </h2>
@@ -420,7 +420,7 @@ export default function CheckoutPage() {
               <button
                 type="button"
                 onClick={handleOpenAddModal}
-                className="text-xs font-bold text-forest-700 hover:text-forest-900 flex items-center gap-1 transition-colors"
+                className="text-xs font-bold text-forest-800 hover:text-forest-950 flex items-center gap-1 transition-colors"
               >
                 + Add New Address
               </button>
@@ -436,8 +436,8 @@ export default function CheckoutPage() {
                     className={[
                       "p-4 rounded-xl border cursor-pointer transition-all relative",
                       isSelected
-                        ? "border-forest-700 bg-forest-50/20 ring-2 ring-forest-700/20"
-                        : "border-ink-100 hover:border-ink-200 bg-white",
+                        ? "border-forest-800 bg-floria-soft-sand ring-2 ring-forest-800/15"
+                        : "border-floria-border hover:border-forest-400 bg-floria-linen",
                     ].join(" ")}
                   >
                     <div className="flex items-start justify-between gap-2 mb-1">
@@ -447,11 +447,11 @@ export default function CheckoutPage() {
                           name="delivery_address"
                           checked={isSelected}
                           onChange={() => handleSelectAddress(addr.id)}
-                          className="w-4 h-4 text-forest-700 focus:ring-forest-700 accent-forest-700"
+                          className="w-4 h-4 text-forest-800 focus:ring-forest-800 accent-forest-800"
                         />
                         <span className="font-sans text-sm font-bold text-ink-900">{addr.full_name}</span>
                         {addr.is_default && (
-                          <span className="text-[10px] font-bold text-forest-700 bg-forest-50 px-1.5 py-0.5 rounded uppercase">
+                          <span className="text-[10px] font-bold text-forest-800 bg-forest-100 px-1.5 py-0.5 rounded uppercase">
                             Default
                           </span>
                         )}
@@ -462,7 +462,7 @@ export default function CheckoutPage() {
                         <button
                           type="button"
                           onClick={(e) => handleOpenEditModal(addr, e)}
-                          className="text-ink-400 hover:text-forest-700 transition-colors"
+                          className="text-ink-400 hover:text-forest-800 transition-colors"
                         >
                           Edit
                         </button>
@@ -500,23 +500,23 @@ export default function CheckoutPage() {
           </section>
 
           {/* 2. ORDER REVIEW (GROUPED BY NURSERY) */}
-          <section aria-labelledby="section-review" className="bg-white rounded-2xl border border-ink-100 p-6 shadow-sm">
-            <div className="flex items-center justify-between pb-4 border-b border-ink-100 mb-4">
+          <section aria-labelledby="section-review" className="bg-floria-linen rounded-2xl border border-floria-border p-6 shadow-sm">
+            <div className="flex items-center justify-between pb-4 border-b border-floria-border mb-4">
               <div className="flex items-center gap-2">
-                <span className="w-6 h-6 rounded-full bg-forest-700 text-white font-bold text-xs flex items-center justify-center">2</span>
+                <span className="w-6 h-6 rounded-full bg-forest-800 text-white font-bold text-xs flex items-center justify-center">2</span>
                 <h2 id="section-review" className="font-serif text-lg font-bold text-ink-900">
                   Order Review
                 </h2>
               </div>
-              <Link href="/cart" className="text-xs font-bold text-forest-700 hover:text-forest-900 transition-colors">
+              <Link href="/cart" className="text-xs font-bold text-forest-800 hover:text-forest-950 transition-colors">
                 Edit Cart
               </Link>
             </div>
 
             <div className="space-y-4">
               {nurseryGroups.map((group) => (
-                <div key={group.sellerId} className="border border-ink-100 rounded-xl overflow-hidden">
-                  <div className="bg-forest-50 px-3.5 py-2.5 border-b border-ink-100 flex items-center justify-between">
+                <div key={group.sellerId} className="border border-floria-border rounded-xl overflow-hidden bg-floria-linen">
+                  <div className="bg-floria-soft-sand px-3.5 py-2.5 border-b border-floria-border flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <LeafIcon size={14} className="text-forest-700" />
                       <span className="text-xs font-bold text-forest-800 uppercase tracking-wider">
@@ -528,14 +528,14 @@ export default function CheckoutPage() {
                     </span>
                   </div>
 
-                  <div className="p-3.5 divide-y divide-ink-50">
+                  <div className="p-3.5 divide-y divide-floria-border">
                     {group.items.map((item) => {
                       const { listing, quantity } = item;
                       const { product, inventory, primary_image, pricing } = listing;
                       const itemUnitPricePaise = pricing?.sellingPricePaise ?? inventory.price_paise ?? 0;
                       return (
                         <div key={product.id} className="py-2.5 first:pt-0 last:pb-0 flex items-center gap-3">
-                          <div className="relative w-12 h-12 rounded-lg bg-cream-50 overflow-hidden flex-shrink-0 border border-ink-100">
+                          <div className="relative w-12 h-12 rounded-lg bg-floria-natural-sand overflow-hidden flex-shrink-0 border border-floria-border">
                             <Image
                               src={primary_image?.url || "/floria-logo.png"}
                               alt={product.name}
@@ -565,9 +565,9 @@ export default function CheckoutPage() {
           </section>
 
           {/* 3. PAYMENT METHOD SECTION */}
-          <section aria-labelledby="section-payment" className="bg-white rounded-2xl border border-ink-100 p-6 shadow-sm">
-            <div className="flex items-center gap-2 pb-4 border-b border-ink-100 mb-4">
-              <span className="w-6 h-6 rounded-full bg-forest-700 text-white font-bold text-xs flex items-center justify-center">3</span>
+          <section aria-labelledby="section-payment" className="bg-floria-linen rounded-2xl border border-floria-border p-6 shadow-sm">
+            <div className="flex items-center gap-2 pb-4 border-b border-floria-border mb-4">
+              <span className="w-6 h-6 rounded-full bg-forest-800 text-white font-bold text-xs flex items-center justify-center">3</span>
               <h2 id="section-payment" className="font-serif text-lg font-bold text-ink-900">
                 Payment Method
               </h2>
@@ -579,8 +579,8 @@ export default function CheckoutPage() {
                 className={[
                   "flex items-start gap-4 p-4 rounded-xl border cursor-pointer transition-all",
                   paymentMethod === "online"
-                    ? "border-forest-700 bg-forest-50/20 ring-2 ring-forest-700/20"
-                    : "border-ink-100 hover:border-ink-200 bg-white",
+                    ? "border-forest-800 bg-floria-soft-sand ring-2 ring-forest-800/15"
+                    : "border-floria-border hover:border-forest-400 bg-floria-linen",
                 ].join(" ")}
               >
                 <input
@@ -588,15 +588,15 @@ export default function CheckoutPage() {
                   name="payment_option"
                   checked={paymentMethod === "online"}
                   onChange={() => setPaymentMethod("online")}
-                  className="w-4 h-4 text-forest-700 focus:ring-forest-700 accent-forest-700 mt-0.5"
+                  className="w-4 h-4 text-forest-800 focus:ring-forest-800 accent-forest-800 mt-0.5"
                 />
-                <div className="w-9 h-9 rounded-full bg-forest-50 flex items-center justify-center flex-shrink-0 text-forest-700">
+                <div className="w-9 h-9 rounded-full bg-forest-100 flex items-center justify-center flex-shrink-0 text-forest-800">
                   <CreditCardIcon size={18} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-bold text-ink-900">Online Payment</p>
-                    <span className="text-[10px] font-bold text-forest-700 bg-forest-50 px-2 py-0.5 rounded uppercase">
+                    <span className="text-[10px] font-bold text-forest-800 bg-forest-100 px-2 py-0.5 rounded uppercase">
                       Fast & Secure
                     </span>
                   </div>
@@ -611,8 +611,8 @@ export default function CheckoutPage() {
                 className={[
                   "flex items-start gap-4 p-4 rounded-xl border cursor-pointer transition-all",
                   paymentMethod === "cod"
-                    ? "border-forest-700 bg-forest-50/20 ring-2 ring-forest-700/20"
-                    : "border-ink-100 hover:border-ink-200 bg-white",
+                    ? "border-forest-800 bg-floria-soft-sand ring-2 ring-forest-800/15"
+                    : "border-floria-border hover:border-forest-400 bg-floria-linen",
                 ].join(" ")}
               >
                 <input
@@ -620,9 +620,9 @@ export default function CheckoutPage() {
                   name="payment_option"
                   checked={paymentMethod === "cod"}
                   onChange={() => setPaymentMethod("cod")}
-                  className="w-4 h-4 text-forest-700 focus:ring-forest-700 accent-forest-700 mt-0.5"
+                  className="w-4 h-4 text-forest-800 focus:ring-forest-800 accent-forest-800 mt-0.5"
                 />
-                <div className="w-9 h-9 rounded-full bg-forest-50 flex items-center justify-center flex-shrink-0 text-forest-700">
+                <div className="w-9 h-9 rounded-full bg-forest-100 flex items-center justify-center flex-shrink-0 text-forest-800">
                   <LeafIcon size={18} />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -638,8 +638,8 @@ export default function CheckoutPage() {
 
         {/* ── RIGHT COLUMN: PRICE SUMMARY & FINAL CTA ──────────────────────── */}
         <div className="space-y-4 lg:sticky lg:top-24">
-          <div className="p-5 bg-white rounded-2xl border border-ink-100 shadow-sm space-y-4">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-ink-900 pb-3 border-b border-ink-100">
+          <div className="p-5 bg-floria-linen rounded-2xl border border-floria-border shadow-sm space-y-4">
+            <h2 className="text-xs font-bold uppercase tracking-widest text-ink-900 pb-3 border-b border-floria-border">
               Price Details
             </h2>
 
@@ -678,7 +678,7 @@ export default function CheckoutPage() {
                 </div>
               )}
 
-              <div className="flex justify-between pt-3 border-t border-ink-100 text-ink-900 font-bold text-base">
+              <div className="flex justify-between pt-3 border-t border-floria-border text-ink-900 font-bold text-base">
                 <span>Total</span>
                 <span className="text-forest-800">
                   {formatINR(estimatedTotalPaise)} (estimated)
@@ -692,11 +692,12 @@ export default function CheckoutPage() {
                 type="button"
                 disabled={outOfStockItems.length > 0 || isPlacingOrder}
                 onClick={handlePlaceOrder}
+                style={{ color: "#ffffff" }}
                 className={[
                   "w-full py-3.5 font-bold text-sm uppercase tracking-wider rounded-xl transition-all shadow-xs focus:outline-none focus:ring-2 focus:ring-offset-2",
                   outOfStockItems.length > 0 || isPlacingOrder
-                    ? "bg-cream-300 text-ink-400 cursor-not-allowed"
-                    : "bg-terracotta-700 hover:bg-terracotta-800 text-white focus:ring-terracotta-700 active:scale-[0.98]",
+                    ? "bg-floria-sand text-ink-400 cursor-not-allowed"
+                    : "bg-terracotta-700 hover:bg-terracotta-800 !text-white focus:ring-terracotta-700 active:scale-[0.98]",
                 ].join(" ")}
               >
                 {isPlacingOrder

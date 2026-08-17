@@ -42,7 +42,7 @@ export function ProductCard({
   const badges: Array<{ key: string; label: string; className: string }> = [];
 
   if (isOutOfStock) {
-    badges.push({ key: "stock", label: "OUT OF STOCK", className: "bg-ink-500 text-white" });
+    badges.push({ key: "stock", label: "OUT OF STOCK", className: "bg-ink-900/80 text-white" });
   }
 
   if (discountPercent && discountPercent > 0 && originalPricePaise && originalPricePaise > sellingPricePaise) {
@@ -58,34 +58,38 @@ export function ProductCard({
   }
 
   return (
-    <div className="group flex flex-col bg-white rounded-xl overflow-hidden border border-ink-150 shadow-xs hover:shadow-md hover:border-forest-300 transition-all duration-250 ease-out focus-within:ring-2 focus-within:ring-forest-800">
+    <div className="group relative flex flex-col bg-floria-linen rounded-2xl overflow-hidden border border-floria-border shadow-xs hover:shadow-lg hover:-translate-y-1 hover:border-forest-400 transition-all duration-300 ease-out focus-within:ring-2 focus-within:ring-forest-800">
       {/* Image */}
       <Link href={`/products/${product.slug}`} className="focus-visible:outline-none">
-        <div className="relative overflow-hidden bg-cream-200" style={{ paddingBottom: "100%" }}>
+        <div className="relative overflow-hidden bg-floria-natural-sand" style={{ paddingBottom: "100%" }}>
           <Image
             src={primary_image?.url || "/floria-logo.png"}
             alt={primary_image?.alt_text || product.name}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className="object-cover group-hover:scale-[1.025] transition-transform duration-300 ease-out"
+            className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
           />
-          {/* Capped Badges (Max 2) */}
-          <div className="absolute top-2.5 left-2.5 flex flex-col gap-1 font-ui">
+          {/* Subtle hover gradient */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+          {/* Capped Micro Badges (Max 2) */}
+          <div className="absolute top-2.5 left-2.5 flex flex-col gap-1 font-ui z-10">
             {badges.map((b) => (
               <span
                 key={b.key}
-                className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded ${b.className}`}
+                className={`px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wider rounded-md shadow-xs backdrop-blur-xs ${b.className}`}
               >
                 {b.label}
               </span>
             ))}
           </div>
 
-          {/* Wishlist heart */}
-          <div className="absolute top-1.5 right-1.5 z-10">
+          {/* Wishlist glass heart button */}
+          <div className="absolute top-2 right-2 z-10">
             <WishlistHeartButton
               active={wishlisted}
               size={14}
+              className="w-8 h-8 flex items-center justify-center bg-white/85 hover:bg-white backdrop-blur-md shadow-xs border border-white/60 text-ink-400 hover:text-red-600 transition-transform active:scale-90"
               onToggle={() => toggleWishlist(listing)}
             />
           </div>
@@ -99,23 +103,30 @@ export function ProductCard({
           {reviewCount > 0 ? (
             <StarRating rating={avgRating} count={reviewCount} size="sm" />
           ) : (
-            <span className="text-[11px] text-ink-500 font-ui font-medium">No reviews yet</span>
+            <span className="text-[11px] text-ink-400 font-ui font-medium">New arrival</span>
           )}
         </div>
 
         {/* Name */}
-        <p className="font-sans text-[13px] font-semibold text-ink-900 leading-snug line-clamp-2 mb-0.5 group-hover:text-forest-800 transition-colors">
+        <p className="font-sans text-[13.5px] font-semibold text-ink-900 leading-snug line-clamp-2 mb-1 group-hover:text-forest-800 transition-colors">
           {product.name}
         </p>
 
         {/* Seller / Nursery */}
-        <p className="text-[11px] text-ink-500 mb-2 font-ui flex items-center gap-1">
-          <span>{seller.business_name}</span>
-          {seller.is_verified && <span className="text-forest-800 font-bold" title="Verified Nursery Partner">✓</span>}
+        <p className="text-[11px] text-ink-500 mb-3 font-ui flex items-center gap-1">
+          <span className="truncate">{seller.business_name}</span>
+          {seller.is_verified && (
+            <span
+              className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-forest-100 text-forest-800 text-[9px] font-bold flex-shrink-0"
+              title="Verified Nursery Partner"
+            >
+              ✓
+            </span>
+          )}
         </p>
 
         {/* Price & Cart button row */}
-        <div className="mt-auto flex items-end justify-between pt-1">
+        <div className="mt-auto flex items-center justify-between pt-2 border-t border-ink-100/60">
           <ProductPriceBlock
             sellingPricePaise={sellingPricePaise}
             originalPricePaise={originalPricePaise}
@@ -124,7 +135,7 @@ export function ProductCard({
             showSavings={false}
           />
 
-          {/* Cart Icon circle */}
+          {/* Cart Icon button */}
           <button
             type="button"
             aria-label={isOutOfStock ? `${product.name} is out of stock` : `Add ${product.name} to cart`}
@@ -135,10 +146,10 @@ export function ProductCard({
               addToCart(listing);
             }}
             className={[
-              "w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-xs focus:outline-none focus:ring-2 focus:ring-offset-1 flex-shrink-0",
+              "w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 shadow-xs focus:outline-none focus:ring-2 focus:ring-offset-1 flex-shrink-0",
               isOutOfStock
                 ? "bg-cream-300 text-ink-400 cursor-not-allowed"
-                : "bg-terracotta-700 hover:bg-terracotta-800 text-white focus:ring-terracotta-700 active:scale-95",
+                : "bg-terracotta-700 hover:bg-terracotta-800 text-white hover:shadow-md hover:scale-105 active:scale-95 focus:ring-terracotta-700",
             ].join(" ")}
           >
             <BagIcon size={14} />

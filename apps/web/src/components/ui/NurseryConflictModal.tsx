@@ -27,7 +27,7 @@ export function NurseryConflictModal({
       aria-modal="true"
       aria-labelledby="nursery-conflict-title"
     >
-      <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 border border-ink-100">
+      <div className="bg-floria-linen rounded-2xl shadow-xl max-w-sm w-full p-6 border border-floria-border">
         {/* Icon */}
         <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-4">
           <svg
@@ -70,14 +70,14 @@ export function NurseryConflictModal({
           <button
             type="button"
             onClick={onReplace}
-            className="w-full py-3 bg-forest-700 hover:bg-forest-800 text-white font-bold text-sm rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-forest-700 focus:ring-offset-2"
+            className="w-full py-3 bg-forest-800 hover:bg-forest-900 text-white font-bold text-sm rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-forest-800"
           >
             Replace Cart
           </button>
           <button
             type="button"
             onClick={onKeep}
-            className="w-full py-3 border border-ink-200 hover:border-ink-400 text-ink-700 font-bold text-sm rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-ink-400 focus:ring-offset-2"
+            className="w-full py-3 border border-floria-border hover:bg-floria-soft-sand text-ink-700 font-bold text-sm rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-forest-800/20"
           >
             Keep Current Cart
           </button>

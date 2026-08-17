@@ -127,9 +127,9 @@ export default function CartPage() {
         {/* ── LEFT: Nursery-grouped items ─────────────────────────────────── */}
         <div className="space-y-6">
           {nurseryGroups.map((group) => (
-            <div key={group.sellerId} className="bg-white rounded-2xl border border-ink-100 shadow-sm overflow-hidden">
+            <div key={group.sellerId} className="bg-floria-linen rounded-2xl border border-floria-border shadow-sm overflow-hidden">
               {/* Nursery header */}
-              <div className="flex items-center gap-2.5 px-4 py-3 bg-forest-50 border-b border-ink-100">
+              <div className="flex items-center gap-2.5 px-4 py-3 bg-floria-soft-sand border-b border-floria-border">
                 <LeafIcon size={14} className="text-forest-700 flex-shrink-0" />
                 <span className="text-xs font-bold text-forest-800 uppercase tracking-wider">
                   {group.sellerName}
@@ -141,7 +141,7 @@ export default function CartPage() {
               </div>
 
               {/* Items in this nursery */}
-              <div className="divide-y divide-ink-50">
+              <div className="divide-y divide-floria-border">
                 {group.items.map((item) => {
                   const { listing, quantity } = item;
                   const { product, inventory, primary_image, category } = listing;
@@ -161,7 +161,7 @@ export default function CartPage() {
                     >
                       {/* Image */}
                       <Link href={`/products/${product.slug}`} className="flex-shrink-0">
-                        <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-cream-50 border border-ink-100">
+                        <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-floria-natural-sand border border-floria-border">
                           <Image
                             src={primary_image?.url || "/floria-logo.png"}
                             alt={primary_image?.alt_text || product.name}
@@ -219,13 +219,13 @@ export default function CartPage() {
                         <div className="mt-auto flex flex-wrap items-center justify-between gap-2">
                           <div className="flex items-center gap-2.5">
                             {/* Quantity */}
-                            <div className="flex items-center border border-ink-200 rounded-lg overflow-hidden bg-white">
+                            <div className="flex items-center border border-floria-border rounded-lg overflow-hidden bg-floria-sand/60">
                               <button
                                 type="button"
                                 aria-label={`Decrease quantity of ${product.name}`}
                                 disabled={isOOS || quantity <= 1}
                                 onClick={() => handleQtyChange(product.id, quantity, -1, inventory.stock_quantity)}
-                                className="w-8 h-8 flex items-center justify-center text-ink-500 hover:bg-cream-100 font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none"
+                                className="w-8 h-8 flex items-center justify-center text-ink-500 hover:bg-floria-soft-sand font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none"
                               >
                                 −
                               </button>
@@ -237,7 +237,7 @@ export default function CartPage() {
                                 aria-label={`Increase quantity of ${product.name}`}
                                 disabled={isOOS || quantity >= inventory.stock_quantity}
                                 onClick={() => handleQtyChange(product.id, quantity, +1, inventory.stock_quantity)}
-                                className="w-8 h-8 flex items-center justify-center text-ink-500 hover:bg-cream-100 font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none"
+                                className="w-8 h-8 flex items-center justify-center text-ink-500 hover:bg-floria-soft-sand font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none"
                               >
                                 +
                               </button>
@@ -285,11 +285,9 @@ export default function CartPage() {
 
         {/* ── RIGHT: Order Summary ─────────────────────────────────────────── */}
         <div className="space-y-4 lg:sticky lg:top-24">
-
-
           {/* Price breakdown */}
-          <div className="p-5 bg-white rounded-2xl border border-ink-150 shadow-xs">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-ink-900 pb-3 border-b border-ink-150 mb-4">
+          <div className="p-5 bg-floria-linen rounded-2xl border border-floria-border shadow-xs">
+            <h2 className="text-xs font-bold uppercase tracking-widest text-ink-900 pb-3 border-b border-floria-border mb-4">
               Price Details
             </h2>
 
@@ -310,7 +308,7 @@ export default function CartPage() {
                 <span>Delivery</span>
                 <span className="text-ink-500 font-medium italic text-xs">Calculated at checkout</span>
               </div>
-              <div className="flex justify-between pt-3 border-t border-ink-150 text-ink-900 font-bold text-base">
+              <div className="flex justify-between pt-3 border-t border-floria-border text-ink-900 font-bold text-base">
                 <span>Subtotal</span>
                 <span className="text-forest-800">{formatINR(subtotalPaise)}</span>
               </div>
@@ -326,13 +324,14 @@ export default function CartPage() {
               <Link
                 href="/checkout"
                 aria-label="Proceed to checkout"
-                className="w-full flex items-center justify-center py-3.5 bg-terracotta-700 hover:bg-terracotta-800 text-white font-bold text-sm uppercase tracking-wider rounded-xl transition-all shadow-xs focus:outline-none focus:ring-2 focus:ring-terracotta-700 focus:ring-offset-2"
+                style={{ color: "#ffffff" }}
+                className="w-full flex items-center justify-center py-3.5 bg-terracotta-700 hover:bg-terracotta-800 !text-white font-bold text-sm uppercase tracking-wider rounded-xl transition-all shadow-xs focus:outline-none focus:ring-2 focus:ring-terracotta-700 focus:ring-offset-2"
               >
                 Proceed to Checkout
               </Link>
               <Link
                 href="/categories"
-                className="w-full flex items-center justify-center py-3 border border-ink-150 hover:bg-cream-200 text-ink-800 font-semibold text-sm rounded-xl transition-colors focus:outline-none"
+                className="w-full flex items-center justify-center py-3 border border-floria-border hover:bg-floria-soft-sand text-ink-800 font-semibold text-sm rounded-xl transition-colors focus:outline-none"
               >
                 Continue Shopping
               </Link>
@@ -340,7 +339,7 @@ export default function CartPage() {
           </div>
 
           {/* Trust note */}
-          <div className="px-4 py-3 bg-white rounded-xl border border-ink-150 shadow-xs">
+          <div className="px-4 py-3 bg-floria-linen rounded-xl border border-floria-border shadow-xs">
             <div className="flex items-center gap-2 text-[11px] text-ink-500">
               <LeafIcon size={14} className="text-forest-800 flex-shrink-0" />
               <span>All plants are quality-checked from trusted nurseries</span>

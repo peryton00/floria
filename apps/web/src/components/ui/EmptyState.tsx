@@ -41,7 +41,7 @@ export function EmptyState({
   return (
     <div
       className={[
-        "relative overflow-hidden bg-white rounded-2xl border border-ink-150 p-8 sm:p-12 text-center shadow-xs my-4",
+        "relative overflow-hidden bg-floria-linen rounded-3xl border border-floria-border p-8 sm:p-12 text-center shadow-xs my-4",
         "flex flex-col items-center justify-center",
         className,
       ].join(" ")}
@@ -91,7 +91,8 @@ export function EmptyState({
             primaryAction.href ? (
               <Link
                 href={primaryAction.href}
-                className="flex-1 min-w-[140px] py-2.5 px-5 bg-terracotta-700 hover:bg-terracotta-800 active:bg-terracotta-900 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-xs text-center focus:outline-none focus:ring-2 focus:ring-terracotta-700 focus:ring-offset-2"
+                style={{ color: "#FFFFFF" }}
+                className="flex-1 min-w-[140px] py-2.5 px-5 bg-terracotta-700 hover:bg-terracotta-800 active:bg-terracotta-900 !text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-xs text-center focus:outline-none focus:ring-2 focus:ring-terracotta-700 focus:ring-offset-2"
               >
                 {primaryAction.label}
               </Link>
@@ -99,7 +100,8 @@ export function EmptyState({
               <button
                 type="button"
                 onClick={primaryAction.onClick}
-                className="flex-1 min-w-[140px] py-2.5 px-5 bg-terracotta-700 hover:bg-terracotta-800 active:bg-terracotta-900 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-xs text-center focus:outline-none focus:ring-2 focus:ring-terracotta-700 focus:ring-offset-2"
+                style={{ color: "#FFFFFF" }}
+                className="flex-1 min-w-[140px] py-2.5 px-5 bg-terracotta-700 hover:bg-terracotta-800 active:bg-terracotta-900 !text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-xs text-center focus:outline-none focus:ring-2 focus:ring-terracotta-700 focus:ring-offset-2"
               >
                 {primaryAction.label}
               </button>
@@ -110,7 +112,7 @@ export function EmptyState({
             secondaryAction.href ? (
               <Link
                 href={secondaryAction.href}
-                className="flex-1 min-w-[140px] py-2.5 px-5 bg-cream-200 hover:bg-cream-300 active:bg-cream-400 text-ink-800 border border-ink-150 font-semibold text-xs rounded-xl transition-all text-center focus:outline-none focus:ring-2 focus:ring-forest-800"
+                className="flex-1 min-w-[140px] py-2.5 px-5 bg-floria-sand hover:bg-floria-sand/80 text-ink-800 border border-floria-border font-semibold text-xs rounded-xl transition-all text-center focus:outline-none focus:ring-2 focus:ring-forest-800"
               >
                 {secondaryAction.label}
               </Link>
@@ -118,7 +120,7 @@ export function EmptyState({
               <button
                 type="button"
                 onClick={secondaryAction.onClick}
-                className="flex-1 min-w-[140px] py-2.5 px-5 bg-cream-200 hover:bg-cream-300 active:bg-cream-400 text-ink-800 border border-ink-150 font-semibold text-xs rounded-xl transition-all text-center focus:outline-none focus:ring-2 focus:ring-forest-800"
+                className="flex-1 min-w-[140px] py-2.5 px-5 bg-floria-sand hover:bg-floria-sand/80 text-ink-800 border border-floria-border font-semibold text-xs rounded-xl transition-all text-center focus:outline-none focus:ring-2 focus:ring-forest-800"
               >
                 {secondaryAction.label}
               </button>
@@ -129,7 +131,7 @@ export function EmptyState({
 
       {/* Suggested Quick Category Pills */}
       {suggestions && suggestions.length > 0 && (
-        <div className="pt-4 border-t border-ink-150/70 w-full max-w-md flex flex-col items-center gap-2">
+        <div className="pt-4 border-t border-floria-border w-full max-w-md flex flex-col items-center gap-2">
           <p className="text-[11px] font-semibold text-ink-400 uppercase tracking-wider">
             Popular Collections
           </p>

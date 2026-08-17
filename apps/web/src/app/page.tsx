@@ -14,6 +14,8 @@ import {
   TruckIcon,
   ReturnIcon,
   StarIcon,
+  VerifiedIcon,
+  MapPinIcon,
 } from "@/components/ui/Icons";
 
 export const metadata: Metadata = {
@@ -72,7 +74,11 @@ async function fetchRankedNurseries(): Promise<NurserySummary[]> {
   }
 }
 
-import { FadeUp, AnimatedSection, BotanicalAmbient } from "@/components/ui/motion";
+import {
+  FadeUp,
+  AnimatedSection,
+  BotanicalAmbient,
+} from "@/components/ui/motion";
 
 export default async function HomePage() {
   const [allListings, nurseries] = await Promise.all([
@@ -86,7 +92,7 @@ export default async function HomePage() {
       {/* ── HERO ─────────────────────────────────────────────── */}
       <section
         aria-labelledby="hero-heading"
-        style={{ backgroundColor: "#F7F4EF" }}
+        style={{ backgroundColor: "#F9F8F3" }}
         className="w-full relative overflow-hidden min-h-[calc(100vh-4rem)] md:h-screen flex flex-col justify-between pt-0"
       >
         {/* Main Content */}
@@ -142,7 +148,9 @@ export default async function HomePage() {
                     style={{ backgroundColor: "#1E3E26", color: "#ffffff" }}
                   >
                     <span>Explore Plants</span>
-                    <span className="text-[13px] leading-none mb-0.5 group-hover:translate-x-0.5 transition-transform">→</span>
+                    <span className="text-[13px] leading-none mb-0.5 group-hover:translate-x-0.5 transition-transform">
+                      →
+                    </span>
                   </Link>
                   <Link
                     href="/search"
@@ -278,53 +286,71 @@ export default async function HomePage() {
       </section>
 
       {/* ── SHOP BY CATEGORY ────────────────────────────────── */}
-      <section aria-labelledby="categories-heading" className="py-10 md:py-14">
+      <section aria-labelledby="categories-heading" className="py-12 md:py-16">
         <div className="max-w-screen-xl mx-auto px-4 md:px-6 lg:px-8">
-          <div className="flex items-end justify-between mb-1.5">
+          <div className="flex flex-wrap items-end justify-between gap-4 mb-8 pb-4 border-b border-floria-border">
             <div>
+              <span className="inline-flex items-center px-2.5 py-1 mb-2 text-[10px] font-bold uppercase tracking-widest text-forest-800 bg-forest-100/90 border border-forest-200/80 rounded-full font-ui">
+                Curated Flora &amp; Essentials
+              </span>
               <h2
                 id="categories-heading"
-                className="font-serif font-semibold text-ink-900"
-                style={{ fontSize: "clamp(1.25rem, 2.5vw, 1.625rem)" }}
+                className="font-serif font-bold text-ink-900 tracking-tight"
+                style={{ fontSize: "clamp(1.35rem, 2.5vw, 1.85rem)" }}
               >
                 Shop by Category
               </h2>
-              <p className="text-xs text-ink-400 mt-0.5 font-medium">
-                Explore our wide range of plants and gardening essentials.
+              <p className="text-xs md:text-sm text-ink-500 mt-1 font-medium max-w-lg">
+                Explore our curated botanical collections, from air-purifying
+                foliage to handcrafted planters.
               </p>
             </div>
             <Link
               href="/categories"
-              className="text-xs font-bold uppercase tracking-wider text-forest-700 hover:text-forest-900 transition-colors flex-shrink-0 ml-4"
+              className="text-xs font-bold uppercase tracking-wider text-forest-800 hover:text-forest-950 flex items-center gap-1.5 transition-all font-ui group flex-shrink-0"
             >
-              VIEW ALL
+              <span>View All Categories</span>
+              <span className="group-hover:translate-x-1 transition-transform duration-200">
+                &rarr;
+              </span>
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mt-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4 md:gap-5">
             {CATEGORIES.map((cat) => (
               <Link
                 key={cat.slug}
                 href={`/categories/${cat.slug}`}
-                className="group flex flex-col bg-white rounded-xl overflow-hidden border border-ink-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-700"
+                className="group flex flex-col bg-floria-linen rounded-2xl sm:rounded-3xl overflow-hidden border border-floria-border shadow-xs hover:shadow-xl hover:-translate-y-1.5 hover:border-forest-400 transition-all duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-800"
               >
-                {/* Photo Container */}
-                <div className="relative aspect-[4/3] w-full bg-cream-50 overflow-hidden">
+                {/* Photo Frame with subtle gradient */}
+                <div className="relative aspect-[4/3] w-full bg-floria-natural-sand overflow-hidden border-b border-floria-border">
                   <Image
                     src={cat.image}
                     alt={cat.name}
                     fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                    className="object-cover group-hover:scale-108 transition-transform duration-500 ease-out"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent pointer-events-none" />
                 </div>
-                {/* Text Area */}
-                <div className="p-3 bg-white flex flex-col flex-1 border-t border-ink-100/50">
-                  <p className="font-sans text-xs font-bold text-ink-900 leading-tight group-hover:text-forest-700 transition-colors">
+
+                {/* Text & Explore prompt */}
+                <div className="p-3 sm:p-4 bg-floria-linen flex flex-col flex-1">
+                  <p className="font-serif text-xs sm:text-sm font-bold text-ink-900 leading-tight group-hover:text-forest-800 transition-colors">
                     {cat.name}
                   </p>
-                  <p className="text-[10px] text-ink-400 leading-snug mt-1 font-medium">
+                  <p className="text-[10px] sm:text-[11px] text-ink-500 leading-snug mt-1 font-medium font-ui line-clamp-1">
                     {cat.subtitle}
                   </p>
+                  <div className="mt-auto pt-2.5 sm:pt-3 border-t border-floria-border flex items-center justify-between font-ui text-[10px] sm:text-[11px] font-bold text-forest-800">
+                    <span className="group-hover:text-forest-900 transition-colors">
+                      Explore
+                    </span>
+                    <span className="group-hover:translate-x-1 transition-transform duration-200">
+                      &rarr;
+                    </span>
+                  </div>
                 </div>
               </Link>
             ))}
@@ -335,8 +361,7 @@ export default async function HomePage() {
       {/* ── BEST SELLERS ──────────────────────────────────────── */}
       <section
         aria-labelledby="best-sellers-heading"
-        className="py-10 md:py-14"
-        style={{ backgroundColor: "#FAFAF7" }}
+        className="py-10 md:py-14 bg-floria-soft-sand/70 border-y border-floria-border"
       >
         <div className="max-w-screen-xl mx-auto px-4 md:px-6 lg:px-8">
           <div className="flex items-end justify-between mb-6">
@@ -376,82 +401,120 @@ export default async function HomePage() {
       {/* ── FROM TRUSTED NURSERIES ──────────────────────────── */}
       <section
         aria-labelledby="nurseries-heading"
-        className="py-10 md:py-14"
-        style={{ backgroundColor: "var(--color-canopy-900)" }}
+        className="py-12 md:py-16 bg-floria-soft-sand/90 border-b border-floria-border"
       >
         <div className="max-w-screen-xl mx-auto px-4 md:px-6 lg:px-8">
-          <div className="flex items-end justify-between mb-6">
+          <div className="flex flex-wrap items-end justify-between gap-4 mb-8 pb-4 border-b border-floria-border">
             <div>
+              <span className="inline-flex items-center px-2.5 py-1 mb-2 text-[10px] font-bold uppercase tracking-widest text-forest-800 bg-forest-100/90 border border-forest-200/80 rounded-full font-ui">
+                Regional Nursery Network
+              </span>
               <h2
                 id="nurseries-heading"
-                className="font-serif font-semibold"
-                style={{ fontSize: "clamp(1.25rem, 2.5vw, 1.625rem)", color: "var(--color-forest-100)" }}
+                className="font-serif font-bold text-ink-900 tracking-tight"
+                style={{ fontSize: "clamp(1.35rem, 2.5vw, 1.85rem)" }}
               >
-                From Trusted Nurseries
+                From Trusted Local Nurseries
               </h2>
-              <p className="text-xs text-white/60 mt-0.5 font-medium">
-                Curated products from verified nurseries you can trust.
+              <p className="text-xs md:text-sm text-ink-500 mt-1 font-medium max-w-lg">
+                Freshly cultivated plants and botanical supplies direct from
+                certified regional growers across India.
               </p>
             </div>
             <Link
               href="/nurseries"
-              className="text-xs font-bold uppercase tracking-wider text-white hover:text-white/80 transition-colors flex-shrink-0 ml-4"
+              className="text-xs font-bold uppercase tracking-wider text-forest-800 hover:text-forest-950 flex items-center gap-1.5 transition-all font-ui group flex-shrink-0"
             >
-              VIEW ALL
+              <span>View All Nurseries</span>
+              <span className="group-hover:translate-x-1 transition-transform duration-200">
+                &rarr;
+              </span>
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
             {nurseries.slice(0, 4).map((nursery, i) => {
-              const rs = Array.isArray(nursery.rating_summary) ? nursery.rating_summary[0] : nursery.rating_summary;
+              const rs = Array.isArray(nursery.rating_summary)
+                ? nursery.rating_summary[0]
+                : nursery.rating_summary;
               const rating = rs?.avg_rating ?? 0;
               const count = rs?.review_count ?? 0;
+              const fallbackImages = [
+                "/nursery-1.png",
+                "/nursery-2.png",
+                "/nursery-3.png",
+                "/nursery-4.png",
+              ];
+              const displayImage =
+                nursery.logo_url ||
+                fallbackImages[i % fallbackImages.length] ||
+                "/nursery-1.png";
+
               return (
                 <Link
                   key={nursery.id}
                   href={`/shop?nursery=${nursery.id}`}
-                  className="group flex flex-col bg-white rounded-xl overflow-hidden border border-ink-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-700"
+                  className="group flex flex-col bg-floria-linen rounded-3xl overflow-hidden border border-floria-border shadow-xs hover:shadow-lg hover:-translate-y-1 hover:border-forest-400 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-800"
                 >
-                  {/* Photo Container */}
-                  <div className="relative aspect-[16/10] w-full overflow-hidden bg-cream-100">
-                    {nursery.logo_url ? (
-                      <Image
-                        src={nursery.logo_url}
-                        alt={nursery.business_name}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-forest-700 font-serif font-bold text-lg">
-                        {nursery.business_name.substring(0, 2).toUpperCase()}
-                      </div>
-                    )}
+                  {/* Photo Frame with Verified Chip */}
+                  <div className="relative aspect-[16/10] w-full overflow-hidden bg-floria-natural-sand border-b border-floria-border">
+                    <Image
+                      src={displayImage}
+                      alt={nursery.business_name}
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                      className="object-cover group-hover:scale-108 transition-transform duration-500 ease-out"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
+                    <div className="absolute top-2.5 left-2.5 z-10">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[9.5px] font-bold text-forest-800 bg-white/95 backdrop-blur-md rounded-full shadow-2xs font-ui">
+                        <VerifiedIcon size={11} className="text-forest-800" />
+                        <span>Verified</span>
+                      </span>
+                    </div>
                   </div>
-                  {/* Info */}
-                  <div className="p-3 bg-white flex flex-col flex-1">
-                    <p className="font-sans text-xs font-bold text-ink-900 group-hover:text-forest-700 transition-colors leading-tight">
+
+                  {/* Nursery Info */}
+                  <div className="p-4 flex flex-col flex-1">
+                    <p className="font-serif text-sm sm:text-base font-bold text-ink-900 group-hover:text-forest-800 transition-colors leading-snug">
                       {nursery.business_name}
                     </p>
-                    <p className="text-[10px] text-ink-400 mt-1 font-medium truncate">
-                      {nursery.address || "Verified Local Partner"}
+                    <p className="text-[11px] text-ink-500 mt-1 font-medium truncate flex items-center gap-1 font-ui">
+                      <MapPinIcon
+                        size={12}
+                        className="text-ink-400 flex-shrink-0"
+                      />
+                      <span className="truncate">
+                        {nursery.address || "Verified Partner Nursery"}
+                      </span>
                     </p>
-                    <div className="flex items-center gap-1 mt-2">
-                      {count > 0 ? (
-                        <>
-                          <StarIcon
-                            size={10}
-                            className="text-amber-400 fill-amber-400"
-                          />
-                          <span className="text-[10px] font-bold text-ink-700">
-                            {rating.toFixed(1)}
+
+                    {/* Rating and Explore Link */}
+                    <div className="mt-auto pt-3 border-t border-ink-100/80 flex items-center justify-between font-ui">
+                      <div className="flex items-center gap-1">
+                        {count > 0 ? (
+                          <>
+                            <StarIcon
+                              size={11}
+                              className="text-amber-400 fill-amber-400"
+                            />
+                            <span className="text-[11px] font-bold text-ink-800">
+                              {rating.toFixed(1)}
+                            </span>
+                            <span className="text-[10px] text-ink-400 font-medium">
+                              ({count})
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-[10px] text-forest-800 font-bold uppercase tracking-wider bg-forest-50 px-2 py-0.5 rounded-md border border-forest-200/60">
+                            Partner
                           </span>
-                          <span className="text-[10px] text-ink-300 font-medium">
-                            ({count})
-                          </span>
-                        </>
-                      ) : (
-                        <span className="text-[10px] text-ink-400 font-medium">New Nursery</span>
-                      )}
+                        )}
+                      </div>
+                      <span className="text-[11px] font-bold text-forest-800 group-hover:translate-x-1 transition-transform duration-200 flex items-center gap-0.5">
+                        <span>Shop</span>
+                        <span>&rarr;</span>
+                      </span>
                     </div>
                   </div>
                 </Link>
