@@ -68,6 +68,16 @@ export interface CustomerProfile {
 
 export type SellerStatus = "pending" | "approved" | "suspended" | "rejected";
 
+export type BusinessType =
+  | "nursery"
+  | "plant_shop"
+  | "garden_centre"
+  | "landscaping"
+  | "gardening_supplier"
+  | "other";
+
+export type PreferredContactMethod = "phone" | "whatsapp" | "email";
+
 export interface SellerProfile {
   id: UUID;
   user_id: UUID;
@@ -79,9 +89,51 @@ export interface SellerProfile {
   logo_url: string | null;
   status: SellerStatus;
   is_active: boolean;
+
+  // Nursery Onboarding & Profile Attributes
+  business_type?: BusinessType | string | null;
+  owner_name?: string | null;
+  year_established?: number | null;
+
+  primary_contact_person?: string | null;
+  whatsapp_number?: string | null;
+  whatsapp_available?: boolean;
+  alternate_phone?: string | null;
+  preferred_contact_method?: PreferredContactMethod | string | null;
+
+  address_line1?: string | null;
+  address_line2?: string | null;
+  landmark?: string | null;
+  locality?: string | null;
+  city?: string | null;
+  district?: string | null;
+  state?: string | null;
+  pincode?: string | null;
+  country?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+
+  nursery_category?: string | null;
+  plant_categories?: string[] | null;
+  specializations?: string[] | null;
+  nursery_size?: string | null;
+  years_experience?: number | null;
+  short_description?: string | null;
+  detailed_description?: string | null;
+  seasonal_availability?: string | null;
+  bulk_orders_supported?: boolean;
+  custom_requirements_supported?: boolean;
+  landscaping_services?: boolean;
+  gardening_services?: boolean;
+
+  is_profile_completed?: boolean;
+  onboarding_step?: number;
+  profile_completed_at?: Timestamp | null;
+
   created_at: Timestamp;
   updated_at: Timestamp;
 }
+
 
 export interface SellerDocument {
   id: UUID;

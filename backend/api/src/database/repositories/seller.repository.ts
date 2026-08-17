@@ -31,10 +31,37 @@ export class SellerRepository {
 
   async updateProfile(sellerId: string, updates: Partial<SellerProfile>): Promise<SellerProfile | null> {
     const db = getAdminDb();
-    const payload = {
+
+    // Auto-sync address string if structured components are updated
+    let address = updates.address;
+    if (!address && (updates.address_line1 || updates.city || updates.state || updates.pincode)) {
+      address = [
+        updates.address_line1,
+        updates.address_line2,
+        updates.locality,
+        updates.landmark,
+        updates.city,
+        updates.district,
+        updates.state,
+        updates.pincode,
+        updates.country || "India",
+      ]
+        .filter((part): part is string => typeof part === "string" && part.trim().length > 0)
+        .join(", ");
+    }
+
+    const payload: any = {
       ...updates,
       updated_at: new Date().toISOString(),
     };
+
+    if (address) {
+      payload.address = address;
+    }
+
+    if (updates.is_profile_completed && !updates.profile_completed_at) {
+      payload.profile_completed_at = new Date().toISOString();
+    }
 
     const { data, error } = await db
       .from("seller_profiles")
@@ -46,6 +73,7 @@ export class SellerRepository {
     if (error || !data) return null;
     return data as SellerProfile;
   }
+
 
   async submitApplication(userId: string, appData: any): Promise<SellerProfile> {
     const db = getAdminDb();

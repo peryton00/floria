@@ -13,6 +13,7 @@ export interface SellerContextType {
   isApproved: boolean;
   isPending: boolean;
   isSuspended: boolean;
+  isProfileCompleted: boolean;
   login: () => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (updates: Partial<SellerProfile>) => Promise<void>;
@@ -84,6 +85,18 @@ export function SellerProvider({ children }: { children: React.ReactNode }) {
 
   const sellerStatus = sellerProfile?.status ?? null;
 
+  const isProfileCompleted = Boolean(
+    sellerProfile?.is_profile_completed ||
+    (sellerProfile &&
+      sellerProfile.business_name &&
+      sellerProfile.business_name !== "New Nursery" &&
+      sellerProfile.business_name !== "Nursery Partner" &&
+      sellerProfile.contact_phone &&
+      sellerProfile.contact_email &&
+      (sellerProfile.address_line1 || sellerProfile.address) &&
+      (sellerProfile.owner_name || sellerProfile.primary_contact_person))
+  );
+
   return (
     <SellerContext.Provider
       value={{
@@ -94,6 +107,7 @@ export function SellerProvider({ children }: { children: React.ReactNode }) {
         isApproved: sellerStatus === "approved",
         isPending: sellerStatus === "pending",
         isSuspended: sellerStatus === "suspended",
+        isProfileCompleted,
         login,
         logout,
         updateProfile,
@@ -104,6 +118,7 @@ export function SellerProvider({ children }: { children: React.ReactNode }) {
     </SellerContext.Provider>
   );
 }
+
 
 export function useSeller(): SellerContextType {
   const context = useContext(SellerContext);
