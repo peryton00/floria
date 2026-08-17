@@ -196,14 +196,7 @@ export class SellerRepository {
 
     const { data } = await (typeof q.order === "function" ? q.order("created_at", { ascending: false }) : q);
 
-    let results = data && data.length > 0 ? data : [];
-    if (results.length === 0) {
-      const qAll = db.from("products").select(PRODUCT_LISTING_SELECT);
-      const { data: allProds } = await (typeof qAll.order === "function"
-        ? qAll.order("created_at", { ascending: false }).limit(50)
-        : qAll);
-      results = allProds || [];
-    }
+    let results = data || [];
 
     results = results.filter((p: any) => p.status !== "deleted");
     if (filters?.stock === "low") {
@@ -510,68 +503,7 @@ export class SellerRepository {
       });
     }
 
-    // Fallback: If no orders matched targetSellerId/targetUserId, fetch recent orders from database so test/seed orders display
-    if (orderMap.size === 0) {
-      const { data: allOrders } = await db
-        .from("orders")
-        .select("*, order_items(*, product:products(name,slug,seller_id))")
-        .order("created_at", { ascending: false })
-        .limit(20);
-
-      (allOrders || []).forEach((order: any) => {
-        const lineItems = (order.order_items || []).map((item: any) => {
-          const pricePaise = item.unit_price_paise_snapshot || 0;
-          const basePrice = item.base_price_paise_snapshot ?? item.unit_price_paise_snapshot ?? 0;
-          const commRate = item.commission_rate_snapshot ?? (order.commission_rate ?? 0);
-          const commPaise = item.commission_paise_snapshot ?? Math.round(basePrice * commRate);
-          const sellerNetPaise = basePrice - commPaise;
-
-          return {
-            product: {
-              id: item.product_id,
-              name: item.product_name_snapshot || item.product?.name || "Plant",
-              slug: item.product?.slug || "plant",
-            },
-            quantity: item.quantity,
-            pricePaise,
-            base_price_paise: basePrice,
-            seller_net_paise: sellerNetPaise,
-            commission_paise: commPaise,
-          };
-        });
-
-        const subtotalPaise = lineItems.reduce((sum: number, it: any) => sum + it.pricePaise * it.quantity, 0) || order.subtotal_paise || 0;
-        const sellerPayoutPaise = lineItems.reduce((sum: number, it: any) => sum + it.seller_net_paise * it.quantity, 0);
-
-        orderMap.set(order.id, {
-          masterOrderId: order.id,
-          sellerId: targetSellerId,
-          sellerName,
-          customer: {
-            name: order.delivery_address_snapshot?.full_name || "Customer",
-            phone: order.delivery_address_snapshot?.phone || "",
-            address: typeof order.delivery_address_snapshot === "string" 
-              ? order.delivery_address_snapshot 
-              : [order.delivery_address_snapshot?.line1, order.delivery_address_snapshot?.line2, order.delivery_address_snapshot?.city, order.delivery_address_snapshot?.state, order.delivery_address_snapshot?.pincode].filter(Boolean).join(", ") || "Raipur, Chhattisgarh",
-            addressSnapshot: order.delivery_address_snapshot || {},
-          },
-          items: lineItems,
-          subtotalPaise,
-          seller_payout_paise: sellerPayoutPaise,
-          discountPaise: 0,
-          totalPaise: subtotalPaise,
-          status: order.status === "preparing" ? "Preparing" : "Order Placed",
-          masterStatus: order.status,
-          paymentMethod: order.notes?.includes("COD") ? "Cash on Delivery" : "Online Payment",
-          createdAt: new Date(order.created_at || Date.now()).toLocaleDateString("en-IN", {
-            day: "numeric",
-            month: "short",
-            year: "numeric",
-          }),
-          createdAtTimestamp: new Date(order.created_at || Date.now()).getTime(),
-        });
-      });
-    }
+    // ponytail: fallback intentionally removed — sellers with no orders see an empty list (correct tenant isolation)
 
     let results = Array.from(orderMap.values());
     if (filters?.status && filters.status !== "all") {
