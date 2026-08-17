@@ -113,9 +113,9 @@ const NURSERY_CATEGORIES = [
   "Hydroponic & Controlled Environment Nursery",
 ];
 
-// ── Logo Upload Component ─────────────────────────────────────────
+// ── Nursery Storefront / Showcase Image Upload Component ────────────
 
-function LogoUpload({
+function NurseryImageUpload({
   currentUrl,
   onSelect,
 }: {
@@ -157,29 +157,44 @@ function LogoUpload({
   }
 
   return (
-    <div>
-      <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-600 mb-2">
-        Nursery Brand Logo / Image
-      </p>
-      <div className="flex items-center gap-4">
-        <div className="w-16 h-16 rounded border border-dashed border-[#E2E8F0] flex items-center justify-center bg-[#F8FAFC] flex-shrink-0 overflow-hidden shadow-xs">
+    <div className="bg-emerald-50/60 p-4.5 rounded border border-emerald-200 space-y-3 shadow-xs">
+      <div>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-emerald-950 flex items-center gap-1.5">
+            <Store size={14} className="text-[#1B4D3E]" /> Nursery Showcase Image (Visible to Customers) *
+          </p>
+          <span className="text-[10px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-300 px-2 py-0.5 rounded font-mono">
+            Public Customer View
+          </span>
+        </div>
+        <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+          This image will be displayed directly to customers on the public Nursery Directory (<span className="font-mono text-emerald-800 font-bold">/nurseries</span>), marketplace storefront cards, and plant catalog. Upload a clean, high-quality photo of your nursery premises, greenhouse, or official brand logo.
+        </p>
+      </div>
+
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4 pt-1">
+        <div className="w-32 h-20 rounded-lg border border-dashed border-[#1B4D3E]/40 flex items-center justify-center bg-white flex-shrink-0 overflow-hidden shadow-xs relative">
           {preview ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={preview} alt="Nursery logo preview" className="w-full h-full object-cover" />
+            <img src={preview} alt="Nursery storefront preview" className="w-full h-full object-cover" />
           ) : (
-            <Store className="text-slate-400" size={24} />
+            <div className="text-center p-2">
+              <Store className="text-emerald-700/50 mx-auto" size={22} />
+              <span className="text-[9px] font-mono text-slate-500 block mt-1 font-bold">Storefront Photo</span>
+            </div>
           )}
         </div>
 
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
-            className="px-3 py-1.5 rounded border border-[#E2E8F0] hover:bg-[#F8FAFC] bg-white text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 hover:text-[#1B4D3E] transition-all flex items-center gap-1.5"
+            style={{ color: "#ffffff" }}
+            className="px-4 py-2 rounded bg-[#1B4D3E] hover:bg-[#153e31] !text-white text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 shadow-xs"
           >
-            <Upload size={13} /> {preview ? "Change Logo" : "Upload Brand Logo"}
+            <Upload size={14} /> {preview ? "Change Nursery Image" : "Upload Nursery Image (Customer View)"}
           </button>
-          <p className="text-[10px] text-slate-400">JPG, PNG, WebP or SVG · Max 2 MB</p>
+          <p className="text-[10px] text-slate-500 font-mono">JPG, PNG, WebP or SVG · Max 2 MB · Recommended aspect ratio 16:9 or 4:3</p>
           {error && <p role="alert" className="text-xs text-red-600 font-semibold">{error}</p>}
           <input
             ref={inputRef}
@@ -187,7 +202,7 @@ function LogoUpload({
             accept="image/jpeg,image/png,image/webp,image/svg+xml"
             onChange={handleChange}
             className="sr-only"
-            aria-label="Logo file input"
+            aria-label="Nursery image file input"
             tabIndex={-1}
           />
         </div>
@@ -195,6 +210,7 @@ function LogoUpload({
     </div>
   );
 }
+
 
 // ── Onboarding Steps Navigation Bar ───────────────────────────────
 
@@ -872,7 +888,8 @@ export default function SellerProfilePage() {
               <p className="text-xs text-slate-500 mt-0.5">Tell us about your business name, structure, and brand representation.</p>
             </div>
 
-            <LogoUpload currentUrl={logoUrl} onSelect={(url) => setLogoUrl(url)} />
+            <NurseryImageUpload currentUrl={logoUrl} onSelect={(url) => setLogoUrl(url)} />
+
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
