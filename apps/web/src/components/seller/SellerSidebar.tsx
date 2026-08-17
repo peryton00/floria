@@ -54,18 +54,18 @@ export function SellerSidebar({ onClose }: SellerSidebarProps) {
 
   return (
     <aside
-      className="w-64 bg-[#1E3A2B] text-white/80 flex flex-col flex-shrink-0 min-h-screen border-r border-white/10 font-sans antialiased"
+      className="w-64 bg-[#1E3A2B] text-white/80 flex flex-col h-screen max-h-screen border-r border-white/10 font-sans antialiased flex-shrink-0 select-none"
       aria-label="Seller navigation"
     >
-      {/* Brand Header */}
-      <div className="p-5 border-b border-white/10 flex items-center justify-between">
+      {/* Brand Header — Fixed top */}
+      <div className="p-5 border-b border-white/10 flex items-center justify-between flex-shrink-0">
         <Link
           href="/"
-          className="flex items-center gap-2.5"
+          className="flex items-center gap-2.5 group"
           aria-label="Floria seller dashboard home"
           onClick={onClose}
         >
-          <div className="w-8 h-8 rounded bg-[#274D39] border border-[#DDE7DD]/20 flex items-center justify-center p-1.5 flex-shrink-0">
+          <div className="w-8 h-8 rounded bg-[#274D39] border border-[#DDE7DD]/20 flex items-center justify-center p-1.5 flex-shrink-0 group-hover:bg-[#2e5942] transition-colors">
             <Image
               src="/floria-logo.png"
               alt="Floria Logo"
@@ -84,7 +84,7 @@ export function SellerSidebar({ onClose }: SellerSidebarProps) {
           </div>
         </Link>
 
-        {/* Mobile close */}
+        {/* Mobile close button */}
         {onClose && (
           <button
             type="button"
@@ -97,9 +97,9 @@ export function SellerSidebar({ onClose }: SellerSidebarProps) {
         )}
       </div>
 
-      {/* Nursery Quick Status Pill */}
+      {/* Nursery Quick Status Pill — Fixed top */}
       {sellerProfile && (
-        <div className="px-4 py-3 border-b border-white/10 bg-black/15 flex items-center justify-between">
+        <div className="px-4 py-3 border-b border-white/10 bg-black/15 flex items-center justify-between flex-shrink-0">
           <div className="min-w-0 pr-2">
             <p className="text-xs font-bold text-white truncate leading-tight">
               {businessName}
@@ -112,8 +112,11 @@ export function SellerSidebar({ onClose }: SellerSidebarProps) {
         </div>
       )}
 
-      {/* Navigation Links */}
-      <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto" aria-label="Seller portal navigation">
+      {/* Navigation Links — Scrollable middle content */}
+      <nav
+        className="flex-1 p-3 space-y-0.5 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 hover:scrollbar-thumb-white/20"
+        aria-label="Seller portal navigation"
+      >
         {NAV_ITEMS.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
 
@@ -137,8 +140,8 @@ export function SellerSidebar({ onClose }: SellerSidebarProps) {
         })}
       </nav>
 
-      {/* User Info Footer */}
-      <div className="p-4 border-t border-white/10 flex items-center justify-between bg-black/10">
+      {/* User Info & Logout Footer — Fixed bottom */}
+      <div className="p-4 border-t border-white/10 flex items-center justify-between bg-black/20 flex-shrink-0">
         <div className="min-w-0 pr-2">
           <p className="text-xs font-bold text-white truncate leading-tight">{businessName}</p>
           <p className="font-mono text-[9px] uppercase tracking-wider text-[#DDE7DD] font-medium truncate mt-0.5 leading-none">
@@ -149,7 +152,7 @@ export function SellerSidebar({ onClose }: SellerSidebarProps) {
           type="button"
           onClick={logout}
           title="Sign out of seller portal"
-          className="p-1.5 rounded hover:bg-white/10 text-white/70 hover:text-white transition-colors"
+          className="p-2 rounded hover:bg-red-900/40 text-white/70 hover:text-red-200 transition-colors flex items-center gap-1.5 text-xs font-medium"
           aria-label="Sign out"
         >
           <LogoutIcon size={16} />
@@ -158,3 +161,4 @@ export function SellerSidebar({ onClose }: SellerSidebarProps) {
     </aside>
   );
 }
+

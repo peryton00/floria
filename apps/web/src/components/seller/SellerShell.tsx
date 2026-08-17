@@ -98,10 +98,11 @@ export function SellerShell({ children }: SellerShellProps) {
         </div>
       )}
 
-      {/* Desktop Sidebar */}
-      <div className="hidden md:flex flex-shrink-0">
+      {/* Desktop Sidebar — Fixed viewport height */}
+      <div className="hidden md:flex flex-shrink-0 sticky top-0 h-screen">
         <SellerSidebar onClose={() => setSidebarOpen(false)} />
       </div>
+
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 bg-[#F9F8F3]">
