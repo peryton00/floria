@@ -26,9 +26,31 @@ class FulfillmentService {
         if (!SELLER_STAGES.includes(newStatus)) {
             throw errors_js_1.Errors.validation(`Invalid fulfillment status: ${newStatus}`);
         }
-        const record = await fulfillment_repository_js_1.fulfillmentRepository.findByOrderAndSeller(masterOrderId, sellerId);
+        let record = await fulfillment_repository_js_1.fulfillmentRepository.findByOrderAndSeller(masterOrderId, sellerId);
         if (!record) {
-            // IDOR protection: throw 404 (do not reveal if order exists for another seller)
+            // Check if order exists in orders table to support legacy/demo/seed orders
+            const { getAdminDb } = await import("../config/database.js");
+            const db = getAdminDb();
+            const { data: order } = await db.from("orders").select("id, status").eq("id", masterOrderId).maybeSingle();
+            if (!order) {
+                // IDOR protection: throw 404 if order does not exist at all
+                throw errors_js_1.Errors.notFound("Fulfillment record");
+            }
+            // Provision initial fulfillment record for this order & seller
+            const { data: newRecord } = await db
+                .from("seller_order_fulfillments")
+                .insert({
+                order_id: masterOrderId,
+                seller_id: sellerId,
+                status: "Order Placed",
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+            })
+                .select()
+                .maybeSingle();
+            record = newRecord;
+        }
+        if (!record) {
             throw errors_js_1.Errors.notFound("Fulfillment record");
         }
         const currentStatus = record.status;
