@@ -60,3 +60,14 @@ export const publicCatalogRateLimiter = rateLimit({
     next(Errors.rateLimited("Public catalog rate limit reached. Please slow down."));
   },
 });
+
+export const mediaUploadRateLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30,
+  keyGenerator: (req) => req.user?.id || req.ip || "unknown",
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (_req, _res, next) => {
+    next(Errors.rateLimited("Media upload rate limit reached. Maximum 30 uploads per minute allowed."));
+  },
+});

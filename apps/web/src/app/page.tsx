@@ -24,36 +24,38 @@ export const metadata: Metadata = {
     "Discover. Choose. Grow. Shop premium plants and gardening products from trusted local nurseries. Floria handles packing and delivery.",
 };
 
+import { getSystemMediaUrl } from "@/lib/services/systemMedia";
+
 const CATEGORIES = [
   {
     name: "Plants",
     slug: "indoor-plants",
     subtitle: "Bring life to your space.",
-    image: "/cat-plants.png",
+    image: getSystemMediaUrl("/cat-plants.png", "banner"),
   },
   {
     name: "Seeds",
     slug: "herbs-edibles",
     subtitle: "Start something beautiful.",
-    image: "/cat-seeds.png",
+    image: getSystemMediaUrl("/cat-seeds.png", "banner"),
   },
   {
     name: "Pots & Planters",
     slug: "planters-pots",
     subtitle: "The perfect home for your plants.",
-    image: "/cat-pots.png",
+    image: getSystemMediaUrl("/cat-pots.png", "banner"),
   },
   {
     name: "Fertilizers & Soil",
     slug: "soil-fertilizers",
     subtitle: "Nourish your plants the right way.",
-    image: "/cat-fertilizers.png",
+    image: getSystemMediaUrl("/cat-fertilizers.png", "banner"),
   },
   {
     name: "Gardening Tools",
     slug: "tools-accessories",
     subtitle: "Everything you need to garden better.",
-    image: "/cat-tools.png",
+    image: getSystemMediaUrl("/cat-tools.png", "banner"),
   },
 ] as const;
 
@@ -177,7 +179,7 @@ export default async function HomePage() {
             {/* Main image wrapped in subtle botanical float */}
             <BotanicalAmbient className="w-full h-full relative">
               <Image
-                src="/hero-plants.png"
+                src={getSystemMediaUrl("/hero-plants.png", "cover")}
                 alt="Plants from Floria nurseries"
                 fill
                 priority
@@ -440,15 +442,15 @@ export default async function HomePage() {
               const rating = rs?.avg_rating ?? 0;
               const count = rs?.review_count ?? 0;
               const fallbackImages = [
-                "/nursery-1.png",
-                "/nursery-2.png",
-                "/nursery-3.png",
-                "/nursery-4.png",
+                getSystemMediaUrl("/nursery-1.png", "card"),
+                getSystemMediaUrl("/nursery-2.png", "card"),
+                getSystemMediaUrl("/nursery-3.png", "card"),
+                getSystemMediaUrl("/nursery-4.png", "card"),
               ];
               const displayImage =
                 nursery.logo_url ||
                 fallbackImages[i % fallbackImages.length] ||
-                "/nursery-1.png";
+                getSystemMediaUrl("/nursery-1.png", "card");
 
               return (
                 <Link

@@ -1,0 +1,1495 @@
+[
+  {
+    "relPath": "apps/web/public/cat-fertilizers.png",
+    "filename": "cat-fertilizers.png",
+    "ext": ".png",
+    "sizeBytes": 685226,
+    "formattedSize": "669.17 KB",
+    "width": null,
+    "height": null,
+    "format": "Raster (PNG)",
+    "isVector": false,
+    "classification": "CATEGORY_IMAGE",
+    "targetClassification": "MIGRATE_TO_SUPABASE_STORAGE",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "apps/web/src/app/page.tsx",
+        "line": 50
+      }
+    ]
+  },
+  {
+    "relPath": "apps/web/public/cat-plants.png",
+    "filename": "cat-plants.png",
+    "ext": ".png",
+    "sizeBytes": 660261,
+    "formattedSize": "644.79 KB",
+    "width": null,
+    "height": null,
+    "format": "Raster (PNG)",
+    "isVector": false,
+    "classification": "CATEGORY_IMAGE",
+    "targetClassification": "MIGRATE_TO_SUPABASE_STORAGE",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "apps/web/src/app/page.tsx",
+        "line": 32
+      }
+    ]
+  },
+  {
+    "relPath": "apps/web/public/cat-pots.png",
+    "filename": "cat-pots.png",
+    "ext": ".png",
+    "sizeBytes": 555287,
+    "formattedSize": "542.27 KB",
+    "width": null,
+    "height": null,
+    "format": "Raster (PNG)",
+    "isVector": false,
+    "classification": "CATEGORY_IMAGE",
+    "targetClassification": "MIGRATE_TO_SUPABASE_STORAGE",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "apps/web/src/app/page.tsx",
+        "line": 44
+      }
+    ]
+  },
+  {
+    "relPath": "apps/web/public/cat-seeds.png",
+    "filename": "cat-seeds.png",
+    "ext": ".png",
+    "sizeBytes": 599240,
+    "formattedSize": "585.2 KB",
+    "width": null,
+    "height": null,
+    "format": "Raster (PNG)",
+    "isVector": false,
+    "classification": "CATEGORY_IMAGE",
+    "targetClassification": "MIGRATE_TO_SUPABASE_STORAGE",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "apps/web/src/app/page.tsx",
+        "line": 38
+      }
+    ]
+  },
+  {
+    "relPath": "apps/web/public/cat-tools.png",
+    "filename": "cat-tools.png",
+    "ext": ".png",
+    "sizeBytes": 622011,
+    "formattedSize": "607.43 KB",
+    "width": null,
+    "height": null,
+    "format": "Raster (PNG)",
+    "isVector": false,
+    "classification": "CATEGORY_IMAGE",
+    "targetClassification": "MIGRATE_TO_SUPABASE_STORAGE",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "apps/web/src/app/page.tsx",
+        "line": 56
+      }
+    ]
+  },
+  {
+    "relPath": "apps/web/public/file.svg",
+    "filename": "file.svg",
+    "ext": ".svg",
+    "sizeBytes": 391,
+    "formattedSize": "391 B",
+    "width": 16,
+    "height": 16,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "APPLICATION_ASSET",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "apps/web/public/floria-logo.png",
+    "filename": "floria-logo.png",
+    "ext": ".png",
+    "sizeBytes": 646866,
+    "formattedSize": "631.71 KB",
+    "width": 2000,
+    "height": 2000,
+    "format": "Raster (PNG)",
+    "isVector": false,
+    "classification": "LOGO",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 37,
+    "references": [
+      {
+        "file": "apps/web/src/app/admin/login/page.tsx",
+        "line": 90
+      },
+      {
+        "file": "apps/web/src/app/cart/page.tsx",
+        "line": 167
+      },
+      {
+        "file": "apps/web/src/app/checkout/page.tsx",
+        "line": 293
+      },
+      {
+        "file": "apps/web/src/app/checkout/page.tsx",
+        "line": 542
+      },
+      {
+        "file": "apps/web/src/app/operations/login/page.tsx",
+        "line": 58
+      },
+      {
+        "file": "apps/web/src/app/orders/page.tsx",
+        "line": 180
+      },
+      {
+        "file": "apps/web/src/app/orders/[id]/page.tsx",
+        "line": 360
+      },
+      {
+        "file": "apps/web/src/app/seller/login/page.tsx",
+        "line": 38
+      },
+      {
+        "file": "apps/web/src/app/seller/products/new/page.tsx",
+        "line": 31
+      },
+      {
+        "file": "apps/web/src/app/seller/products/new/page.tsx",
+        "line": 282
+      },
+      {
+        "file": "apps/web/src/app/seller/products/page.tsx",
+        "line": 243
+      },
+      {
+        "file": "apps/web/src/app/seller/register/page.tsx",
+        "line": 115
+      },
+      {
+        "file": "apps/web/src/app/wishlist/page.tsx",
+        "line": 167
+      },
+      {
+        "file": "apps/web/src/components/admin/AdminShell.tsx",
+        "line": 162
+      },
+      {
+        "file": "apps/web/src/components/admin/AdminShell.tsx",
+        "line": 217
+      },
+      {
+        "file": "apps/web/src/components/layout/Footer.tsx",
+        "line": 139
+      },
+      {
+        "file": "apps/web/src/components/layout/Header.tsx",
+        "line": 84
+      },
+      {
+        "file": "apps/web/src/components/operations/OperationsShell.tsx",
+        "line": 128
+      },
+      {
+        "file": "apps/web/src/components/operations/OperationsShell.tsx",
+        "line": 181
+      },
+      {
+        "file": "apps/web/src/components/seller/SellerSidebar.tsx",
+        "line": 70
+      },
+      {
+        "file": "apps/web/src/components/ui/ProductCard.tsx",
+        "line": 66
+      },
+      {
+        "file": "apps/web/src/components/ui/ProductDetailsInteractive.tsx",
+        "line": 152
+      },
+      {
+        "file": "apps/web/src/lib/contexts/SellerProductContext.tsx",
+        "line": 79
+      },
+      {
+        "file": "apps/web/src/lib/contexts/SellerProductContext.tsx",
+        "line": 80
+      },
+      {
+        "file": "apps/web/src/lib/contexts/SellerProductContext.tsx",
+        "line": 283
+      },
+      {
+        "file": "apps/web/src/lib/services/storefront.ts",
+        "line": 46
+      },
+      {
+        "file": "apps/web/src/lib/services/storefront.ts",
+        "line": 47
+      },
+      {
+        "file": "apps/web/src/lib/services/storefront.ts",
+        "line": 48
+      },
+      {
+        "file": "apps/web/src/lib/services/storefront.ts",
+        "line": 49
+      },
+      {
+        "file": "apps/web/src/lib/services/storefront.ts",
+        "line": 50
+      },
+      {
+        "file": "apps/web/src/lib/services/storefront.ts",
+        "line": 51
+      },
+      {
+        "file": "apps/web/src/lib/services/storefront.ts",
+        "line": 52
+      },
+      {
+        "file": "apps/web/src/lib/services/storefront.ts",
+        "line": 53
+      },
+      {
+        "file": "apps/web/src/lib/services/storefront.ts",
+        "line": 54
+      },
+      {
+        "file": "apps/web/src/lib/services/storefront.ts",
+        "line": 55
+      },
+      {
+        "file": "apps/web/src/lib/services/storefront.ts",
+        "line": 56
+      },
+      {
+        "file": "apps/web/src/lib/services/storefront.ts",
+        "line": 57
+      }
+    ]
+  },
+  {
+    "relPath": "apps/web/public/globe.svg",
+    "filename": "globe.svg",
+    "ext": ".svg",
+    "sizeBytes": 1035,
+    "formattedSize": "1.01 KB",
+    "width": 16,
+    "height": 16,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "APPLICATION_ASSET",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": false,
+    "referenceCount": 0,
+    "references": []
+  },
+  {
+    "relPath": "apps/web/public/hero-plants.png",
+    "filename": "hero-plants.png",
+    "ext": ".png",
+    "sizeBytes": 666021,
+    "formattedSize": "650.41 KB",
+    "width": null,
+    "height": null,
+    "format": "Raster (PNG)",
+    "isVector": false,
+    "classification": "BANNER",
+    "targetClassification": "MIGRATE_TO_SUPABASE_STORAGE",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "apps/web/src/app/page.tsx",
+        "line": 180
+      }
+    ]
+  },
+  {
+    "relPath": "apps/web/public/next.svg",
+    "filename": "next.svg",
+    "ext": ".svg",
+    "sizeBytes": 1375,
+    "formattedSize": "1.34 KB",
+    "width": 394,
+    "height": 80,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "APPLICATION_ASSET",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": false,
+    "referenceCount": 0,
+    "references": []
+  },
+  {
+    "relPath": "apps/web/public/nursery-1.png",
+    "filename": "nursery-1.png",
+    "ext": ".png",
+    "sizeBytes": 1251939,
+    "formattedSize": "1.19 MB",
+    "width": null,
+    "height": null,
+    "format": "Raster (PNG)",
+    "isVector": false,
+    "classification": "NURSERY_IMAGE",
+    "targetClassification": "MIGRATE_TO_SUPABASE_STORAGE",
+    "isReferenced": true,
+    "referenceCount": 2,
+    "references": [
+      {
+        "file": "apps/web/src/app/page.tsx",
+        "line": 443
+      },
+      {
+        "file": "apps/web/src/app/page.tsx",
+        "line": 451
+      }
+    ]
+  },
+  {
+    "relPath": "apps/web/public/nursery-2.png",
+    "filename": "nursery-2.png",
+    "ext": ".png",
+    "sizeBytes": 1312294,
+    "formattedSize": "1.25 MB",
+    "width": null,
+    "height": null,
+    "format": "Raster (PNG)",
+    "isVector": false,
+    "classification": "NURSERY_IMAGE",
+    "targetClassification": "MIGRATE_TO_SUPABASE_STORAGE",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "apps/web/src/app/page.tsx",
+        "line": 444
+      }
+    ]
+  },
+  {
+    "relPath": "apps/web/public/nursery-3.png",
+    "filename": "nursery-3.png",
+    "ext": ".png",
+    "sizeBytes": 1232142,
+    "formattedSize": "1.18 MB",
+    "width": null,
+    "height": null,
+    "format": "Raster (PNG)",
+    "isVector": false,
+    "classification": "NURSERY_IMAGE",
+    "targetClassification": "MIGRATE_TO_SUPABASE_STORAGE",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "apps/web/src/app/page.tsx",
+        "line": 445
+      }
+    ]
+  },
+  {
+    "relPath": "apps/web/public/nursery-4.png",
+    "filename": "nursery-4.png",
+    "ext": ".png",
+    "sizeBytes": 1279142,
+    "formattedSize": "1.22 MB",
+    "width": null,
+    "height": null,
+    "format": "Raster (PNG)",
+    "isVector": false,
+    "classification": "NURSERY_IMAGE",
+    "targetClassification": "MIGRATE_TO_SUPABASE_STORAGE",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "apps/web/src/app/page.tsx",
+        "line": 446
+      }
+    ]
+  },
+  {
+    "relPath": "apps/web/public/vercel.svg",
+    "filename": "vercel.svg",
+    "ext": ".svg",
+    "sizeBytes": 128,
+    "formattedSize": "128 B",
+    "width": 1155,
+    "height": 1000,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "APPLICATION_ASSET",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": false,
+    "referenceCount": 0,
+    "references": []
+  },
+  {
+    "relPath": "apps/web/public/window.svg",
+    "filename": "window.svg",
+    "ext": ".svg",
+    "sizeBytes": 385,
+    "formattedSize": "385 B",
+    "width": 16,
+    "height": 16,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "APPLICATION_ASSET",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": false,
+    "referenceCount": 0,
+    "references": []
+  },
+  {
+    "relPath": "apps/web/src/app/favicon.ico",
+    "filename": "favicon.ico",
+    "ext": ".ico",
+    "sizeBytes": 25931,
+    "formattedSize": "25.32 KB",
+    "width": null,
+    "height": null,
+    "format": "Icon (ICO)",
+    "isVector": false,
+    "classification": "APPLICATION_ASSET",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "apps/web/src/proxy.ts",
+        "line": 200
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/actions/arrow-left.svg",
+    "filename": "arrow-left.svg",
+    "ext": ".svg",
+    "sizeBytes": 291,
+    "formattedSize": "291 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/actions/arrow-right.svg",
+    "filename": "arrow-right.svg",
+    "ext": ".svg",
+    "sizeBytes": 291,
+    "formattedSize": "291 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/actions/check.svg",
+    "filename": "check.svg",
+    "ext": ".svg",
+    "sizeBytes": 284,
+    "formattedSize": "284 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/actions/chevron-down.svg",
+    "filename": "chevron-down.svg",
+    "ext": ".svg",
+    "sizeBytes": 283,
+    "formattedSize": "283 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/actions/close.svg",
+    "filename": "close.svg",
+    "ext": ".svg",
+    "sizeBytes": 284,
+    "formattedSize": "284 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/actions/delete.svg",
+    "filename": "delete.svg",
+    "ext": ".svg",
+    "sizeBytes": 321,
+    "formattedSize": "321 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/actions/edit.svg",
+    "filename": "edit.svg",
+    "ext": ".svg",
+    "sizeBytes": 345,
+    "formattedSize": "345 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/actions/filter.svg",
+    "filename": "filter.svg",
+    "ext": ".svg",
+    "sizeBytes": 288,
+    "formattedSize": "288 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/actions/minus.svg",
+    "filename": "minus.svg",
+    "ext": ".svg",
+    "sizeBytes": 272,
+    "formattedSize": "272 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/actions/more.svg",
+    "filename": "more.svg",
+    "ext": ".svg",
+    "sizeBytes": 343,
+    "formattedSize": "343 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/actions/plus.svg",
+    "filename": "plus.svg",
+    "ext": ".svg",
+    "sizeBytes": 279,
+    "formattedSize": "279 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/actions/refresh.svg",
+    "filename": "refresh.svg",
+    "ext": ".svg",
+    "sizeBytes": 384,
+    "formattedSize": "384 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/actions/share.svg",
+    "filename": "share.svg",
+    "ext": ".svg",
+    "sizeBytes": 391,
+    "formattedSize": "391 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/actions/sort.svg",
+    "filename": "sort.svg",
+    "ext": ".svg",
+    "sizeBytes": 304,
+    "formattedSize": "304 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/admin/add-product.svg",
+    "filename": "add-product.svg",
+    "ext": ".svg",
+    "sizeBytes": 331,
+    "formattedSize": "331 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/admin/analytics.svg",
+    "filename": "analytics.svg",
+    "ext": ".svg",
+    "sizeBytes": 363,
+    "formattedSize": "363 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/admin/customers.svg",
+    "filename": "customers.svg",
+    "ext": ".svg",
+    "sizeBytes": 396,
+    "formattedSize": "396 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/admin/dashboard.svg",
+    "filename": "dashboard.svg",
+    "ext": ".svg",
+    "sizeBytes": 468,
+    "formattedSize": "468 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/admin/inventory.svg",
+    "filename": "inventory.svg",
+    "ext": ".svg",
+    "sizeBytes": 378,
+    "formattedSize": "378 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/admin/orders.svg",
+    "filename": "orders.svg",
+    "ext": ".svg",
+    "sizeBytes": 328,
+    "formattedSize": "328 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/admin/products.svg",
+    "filename": "products.svg",
+    "ext": ".svg",
+    "sizeBytes": 341,
+    "formattedSize": "341 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/admin/settings.svg",
+    "filename": "settings.svg",
+    "ext": ".svg",
+    "sizeBytes": 745,
+    "formattedSize": "745 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/botanical/fertilizer.svg",
+    "filename": "fertilizer.svg",
+    "ext": ".svg",
+    "sizeBytes": 288,
+    "formattedSize": "288 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/botanical/flower.svg",
+    "filename": "flower.svg",
+    "ext": ".svg",
+    "sizeBytes": 492,
+    "formattedSize": "492 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/botanical/garden-tools.svg",
+    "filename": "garden-tools.svg",
+    "ext": ".svg",
+    "sizeBytes": 405,
+    "formattedSize": "405 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/botanical/plant.svg",
+    "filename": "plant.svg",
+    "ext": ".svg",
+    "sizeBytes": 365,
+    "formattedSize": "365 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/botanical/pot.svg",
+    "filename": "pot.svg",
+    "ext": ".svg",
+    "sizeBytes": 340,
+    "formattedSize": "340 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/botanical/seedling.svg",
+    "filename": "seedling.svg",
+    "ext": ".svg",
+    "sizeBytes": 420,
+    "formattedSize": "420 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/botanical/soil.svg",
+    "filename": "soil.svg",
+    "ext": ".svg",
+    "sizeBytes": 437,
+    "formattedSize": "437 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/botanical/sun.svg",
+    "filename": "sun.svg",
+    "ext": ".svg",
+    "sizeBytes": 408,
+    "formattedSize": "408 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/botanical/tree.svg",
+    "filename": "tree.svg",
+    "ext": ".svg",
+    "sizeBytes": 347,
+    "formattedSize": "347 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/botanical/watering-can.svg",
+    "filename": "watering-can.svg",
+    "ext": ".svg",
+    "sizeBytes": 448,
+    "formattedSize": "448 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/commerce/credit-card.svg",
+    "filename": "credit-card.svg",
+    "ext": ".svg",
+    "sizeBytes": 342,
+    "formattedSize": "342 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/commerce/delivery.svg",
+    "filename": "delivery.svg",
+    "ext": ".svg",
+    "sizeBytes": 392,
+    "formattedSize": "392 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/commerce/discount.svg",
+    "filename": "discount.svg",
+    "ext": ".svg",
+    "sizeBytes": 343,
+    "formattedSize": "343 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/commerce/package.svg",
+    "filename": "package.svg",
+    "ext": ".svg",
+    "sizeBytes": 354,
+    "formattedSize": "354 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/commerce/store.svg",
+    "filename": "store.svg",
+    "ext": ".svg",
+    "sizeBytes": 406,
+    "formattedSize": "406 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/commerce/tag.svg",
+    "filename": "tag.svg",
+    "ext": ".svg",
+    "sizeBytes": 354,
+    "formattedSize": "354 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/navigation/cart.svg",
+    "filename": "cart.svg",
+    "ext": ".svg",
+    "sizeBytes": 385,
+    "formattedSize": "385 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/navigation/categories.svg",
+    "filename": "categories.svg",
+    "ext": ".svg",
+    "sizeBytes": 461,
+    "formattedSize": "461 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/navigation/home.svg",
+    "filename": "home.svg",
+    "ext": ".svg",
+    "sizeBytes": 356,
+    "formattedSize": "356 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/navigation/location.svg",
+    "filename": "location.svg",
+    "ext": ".svg",
+    "sizeBytes": 351,
+    "formattedSize": "351 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/navigation/menu.svg",
+    "filename": "menu.svg",
+    "ext": ".svg",
+    "sizeBytes": 289,
+    "formattedSize": "289 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/navigation/notification.svg",
+    "filename": "notification.svg",
+    "ext": ".svg",
+    "sizeBytes": 378,
+    "formattedSize": "378 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/navigation/orders.svg",
+    "filename": "orders.svg",
+    "ext": ".svg",
+    "sizeBytes": 341,
+    "formattedSize": "341 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/navigation/profile.svg",
+    "filename": "profile.svg",
+    "ext": ".svg",
+    "sizeBytes": 347,
+    "formattedSize": "347 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/navigation/search.svg",
+    "filename": "search.svg",
+    "ext": ".svg",
+    "sizeBytes": 319,
+    "formattedSize": "319 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "relPath": "floria-svg-icon-system/navigation/wishlist.svg",
+    "filename": "wishlist.svg",
+    "ext": ".svg",
+    "sizeBytes": 363,
+    "formattedSize": "363 B",
+    "width": 24,
+    "height": 24,
+    "format": "Vector (SVG)",
+    "isVector": true,
+    "classification": "ICON",
+    "targetClassification": "KEEP_IN_REPOSITORY",
+    "isReferenced": true,
+    "referenceCount": 1,
+    "references": [
+      {
+        "file": "floria-svg-icon-system/preview.html",
+        "line": 10
+      }
+    ]
+  }
+]

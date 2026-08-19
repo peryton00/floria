@@ -23,6 +23,7 @@ import paymentsRoutes from "./payments/payments.routes.js";
 import notificationsRoutes from "./notifications/notifications.routes.js";
 import reportsRoutes from "./reports/reports.routes.js";
 import reviewsRoutes from "./reviews/reviews.routes.js";
+import mediaRoutes from "./media/media.routes.js";
 
 export function createApp() {
   const app = express();
@@ -91,6 +92,7 @@ export function createApp() {
   apiV1.use("/payments", paymentsRoutes);
   apiV1.use("/notifications", notificationsRoutes);
   apiV1.use("/reports", reportsRoutes);
+  apiV1.use("/media", mediaRoutes);
   app.use("/api/v1", reviewsRoutes); // reviews routes self-contain full paths
 
   app.use("/api/v1", apiV1);
