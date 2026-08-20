@@ -108,6 +108,7 @@ class MediaService {
             upload: {
                 method: "PUT",
                 url: uploadUrl,
+                token: urlData?.token || null,
             },
         };
     }

@@ -112,6 +112,22 @@ export function ReviewList({ reviews, total, summary, productId, page, onPageCha
               <p className="text-xs text-ink-500 leading-relaxed">{rev.body}</p>
             )}
 
+            {/* Customer Review Images */}
+            {rev.images && rev.images.length > 0 && (
+              <div className="flex flex-wrap gap-2 pt-1">
+                {rev.images.map((img: any, idx: number) => (
+                  <div key={img.id || idx} className="w-16 h-16 rounded-lg overflow-hidden border border-floria-border bg-floria-sand shadow-2xs relative">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={img.variants?.medium || img.variants?.thumbnail || img.url}
+                      alt={`Review photo ${idx + 1}`}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+
             {/* Seller reply */}
             {rev.seller_reply && (
               <div className="mt-2 pl-3 border-l-2 border-forest-200 bg-forest-50/50 rounded-r-lg p-2 space-y-0.5">

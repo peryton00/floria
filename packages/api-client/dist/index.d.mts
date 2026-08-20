@@ -110,6 +110,11 @@ interface ProductReview {
         name: string;
         slug: string;
     };
+    images?: Array<{
+        id: string;
+        url: string;
+        variants?: Record<string, string>;
+    }>;
 }
 interface ReviewSummary {
     product_id: string;

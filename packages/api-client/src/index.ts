@@ -114,6 +114,7 @@ export interface ProductReview {
   updated_at?: string;
   customer?: { full_name: string | null };
   product?: { id: string; name: string; slug: string };
+  images?: Array<{ id: string; url: string; variants?: Record<string, string> }>;
 }
 
 export interface ReviewSummary {

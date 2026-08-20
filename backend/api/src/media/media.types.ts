@@ -28,6 +28,7 @@ export interface UploadSessionDto {
   upload: {
     method: "PUT";
     url: string;
+    token?: string | null;
   };
 }
 

@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useSeller } from "@/lib/contexts/SellerContext";
 import { SellerStatusBadge } from "@/components/seller/SellerStatusBadge";
+import { MediaUploader, MediaUploadResult } from "@/components/media/MediaUploader";
+import { api } from "@/lib/api";
 import {
   Building2,
   Phone,
@@ -117,100 +119,48 @@ const NURSERY_CATEGORIES = [
 
 function NurseryImageUpload({
   currentUrl,
-  onSelect,
+  onUploadSuccess,
 }: {
   currentUrl: string | null;
-  onSelect: (dataUrl: string) => void;
+  onUploadSuccess: (url: string) => void;
 }) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [preview, setPreview] = useState<string | null>(currentUrl);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    setPreview(currentUrl);
-  }, [currentUrl]);
-
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setError("");
-
-    const ALLOWED = ["image/jpeg", "image/png", "image/webp", "image/svg+xml"];
-    const MAX_MB = 2;
-
-    if (!ALLOWED.includes(file.type)) {
-      setError("Please upload a JPG, PNG, WebP, or SVG file.");
-      return;
-    }
-    if (file.size > MAX_MB * 1024 * 1024) {
-      setError(`Image must be under ${MAX_MB} MB.`);
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const url = ev.target?.result as string;
-      setPreview(url);
-      onSelect(url);
-    };
-    reader.readAsDataURL(file);
-  }
+  const [logoAssetUrl, setLogoAssetUrl] = useState<string | null>(currentUrl);
 
   return (
     <div className="bg-emerald-50/60 p-4.5 rounded border border-emerald-200 space-y-3 shadow-xs">
       <div>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-emerald-950 flex items-center gap-1.5">
-            <Store size={14} className="text-[#1B4D3E]" /> Nursery Showcase Image (Visible to Customers) *
+            <Store size={14} className="text-[#1B4D3E]" /> Nursery Logo & Storefront Showcase (Visible to Customers) *
           </p>
           <span className="text-[10px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-300 px-2 py-0.5 rounded font-mono">
             Public Customer View
           </span>
         </div>
         <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-          This image will be displayed directly to customers on the public Nursery Directory (<span className="font-mono text-emerald-800 font-bold">/nurseries</span>), marketplace storefront cards, and plant catalog. Upload a clean, high-quality photo of your nursery premises, greenhouse, or official brand logo.
+          This image will be displayed directly to customers on the public Nursery Directory (<span className="font-mono text-emerald-800 font-bold">/nurseries</span>), marketplace storefront cards, and plant catalog.
         </p>
       </div>
 
       <div className="flex flex-col sm:flex-row sm:items-center gap-4 pt-1">
-        <div className="w-32 h-20 rounded-lg border border-dashed border-[#1B4D3E]/40 flex items-center justify-center bg-white flex-shrink-0 overflow-hidden shadow-xs relative">
-          {preview ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={preview} alt="Nursery storefront preview" className="w-full h-full object-cover" />
-          ) : (
-            <div className="text-center p-2">
-              <Store className="text-emerald-700/50 mx-auto" size={22} />
-              <span className="text-[9px] font-mono text-slate-500 block mt-1 font-bold">Storefront Photo</span>
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <button
-            type="button"
-            onClick={() => inputRef.current?.click()}
-            style={{ color: "#ffffff" }}
-            className="px-4 py-2 rounded bg-[#1B4D3E] hover:bg-[#153e31] !text-white text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 shadow-xs"
-          >
-            <Upload size={14} /> {preview ? "Change Nursery Image" : "Upload Nursery Image (Customer View)"}
-          </button>
-          <p className="text-[10px] text-slate-500 font-mono">JPG, PNG, WebP or SVG · Max 2 MB · Recommended aspect ratio 16:9 or 4:3</p>
-          {error && <p role="alert" className="text-xs text-red-600 font-semibold">{error}</p>}
-          <input
-            ref={inputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp,image/svg+xml"
-            onChange={handleChange}
-            className="sr-only"
-            aria-label="Nursery image file input"
-            tabIndex={-1}
-          />
-        </div>
+        <MediaUploader
+          profile="SELLER_LOGO"
+          currentUrl={logoAssetUrl || undefined}
+          label="Upload Nursery Logo / Showcase"
+          onUploadSuccess={async (res: MediaUploadResult) => {
+            setLogoAssetUrl(res.url);
+            onUploadSuccess(res.url);
+            try {
+              await api.updateSellerLogo(res.assetId);
+            } catch (err) {
+              console.warn("Seller logo sync warning:", err);
+            }
+          }}
+        />
       </div>
     </div>
   );
 }
-
 
 // ── Onboarding Steps Navigation Bar ───────────────────────────────
 
@@ -888,7 +838,7 @@ export default function SellerProfilePage() {
               <p className="text-xs text-slate-500 mt-0.5">Tell us about your business name, structure, and brand representation.</p>
             </div>
 
-            <NurseryImageUpload currentUrl={logoUrl} onSelect={(url) => setLogoUrl(url)} />
+            <NurseryImageUpload currentUrl={logoUrl} onUploadSuccess={(url) => setLogoUrl(url)} />
 
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

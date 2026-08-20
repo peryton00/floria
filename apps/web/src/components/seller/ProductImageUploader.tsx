@@ -93,17 +93,56 @@ export function ProductImageUploader({
 
         const { sessionId, stagingPath, assetId: provisionalAssetId } = sessionRes.data;
 
-        // 3. Upload binary to Supabase media-staging
-        const supabase = getSupabaseBrowserClient();
-        const { error: uploadErr } = await supabase.storage
-          .from("media-staging")
-          .upload(stagingPath, file, {
-            contentType: file.type || "image/jpeg",
-            upsert: true,
-          });
+        // 3. Upload binary to Supabase media-staging via presigned signed upload URL
+        const uploadTarget = sessionRes.data.upload;
+        let uploadSuccess = false;
+        let uploadErrText = "";
 
-        if (uploadErr) {
-          throw new Error(`Staging upload failed: ${uploadErr.message}`);
+        if (uploadTarget?.url) {
+          try {
+            const putRes = await fetch(uploadTarget.url, {
+              method: "PUT",
+              headers: {
+                "Content-Type": file.type || "image/jpeg",
+              },
+              body: file,
+            });
+
+            if (putRes.ok) {
+              uploadSuccess = true;
+            } else {
+              const errBody = await putRes.text();
+              uploadErrText = `HTTP ${putRes.status}: ${errBody}`;
+            }
+          } catch (fErr: any) {
+            uploadErrText = fErr.message || "Network error during upload";
+          }
+        }
+
+        if (!uploadSuccess) {
+          const supabase = getSupabaseBrowserClient();
+          const token = (uploadTarget as any)?.token;
+          if (token) {
+            const { error: sErr } = await supabase.storage
+              .from("media-staging")
+              .uploadToSignedUrl(stagingPath, token, file, {
+                contentType: file.type || "image/jpeg",
+              });
+            if (sErr) {
+              throw new Error(`Staging upload failed: ${sErr.message}`);
+            }
+          } else {
+            const { error: uploadErr } = await supabase.storage
+              .from("media-staging")
+              .upload(stagingPath, file, {
+                contentType: file.type || "image/jpeg",
+                upsert: true,
+              });
+
+            if (uploadErr) {
+              throw new Error(`Staging upload failed: ${uploadErr.message || uploadErrText}`);
+            }
+          }
         }
 
         // Update UI status to PROCESSING
