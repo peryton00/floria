@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ReviewList } from "@/components/ui/ReviewList";
 import { ReviewForm } from "@/components/ui/ReviewForm";
 import { StarRating } from "@/components/ui/StarRating";
@@ -34,6 +34,44 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
   const [selectedImage, setSelectedImage] = useState(images[0] || null);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState("description");
+
+  // Smooth Auto-Change Slideshow States & Controls
+  const [isHovered, setIsHovered] = useState(false);
+  const pausedUntilRef = useRef<number>(0);
+
+  // Sync selectedImage if images array updates dynamically
+  useEffect(() => {
+    if (images && images.length > 0 && (!selectedImage || !images.some((img: any) => img.url === selectedImage.url))) {
+      setSelectedImage(images[0]);
+    }
+  }, [images, selectedImage]);
+
+  // Auto-switch image slideshow timer (runs when >1 image uploaded)
+  useEffect(() => {
+    if (!images || images.length <= 1) return;
+
+    const AUTO_PLAY_INTERVAL = 3500; // Switch image every 3.5 seconds
+
+    const timer = setInterval(() => {
+      // Pause slideshow if user is hovering or clicked an image within the last 30s
+      if (isHovered) return;
+      if (Date.now() < pausedUntilRef.current) return;
+
+      setSelectedImage((prev: any) => {
+        const currentIndex = images.findIndex((img: any) => img.url === (prev?.url || images[0]?.url));
+        const nextIndex = (currentIndex + 1) % images.length;
+        return images[nextIndex];
+      });
+    }, AUTO_PLAY_INTERVAL);
+
+    return () => clearInterval(timer);
+  }, [images, isHovered]);
+
+  const handleSelectImage = (img: any) => {
+    setSelectedImage(img);
+    // User explicitly selected an image: pause auto-switch animation for at least 30 seconds
+    pausedUntilRef.current = Date.now() + 30000;
+  };
 
   const { isWishlisted, toggleWishlist } = useWishlist();
   const { addToCart, cartItems } = useCart();
@@ -146,15 +184,21 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-12 items-start">
       {/* LEFT — Images & Badges */}
       <div>
-        {/* Main Image Container */}
-        <div className="relative aspect-square w-full rounded-3xl overflow-hidden bg-floria-natural-sand border border-floria-border mb-4 shadow-xs">
+        {/* Main Image Container with Touch & Hover Interruption Listeners */}
+        <div
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          onTouchStart={() => setIsHovered(true)}
+          onTouchEnd={() => setIsHovered(false)}
+          className="relative aspect-square w-full rounded-3xl overflow-hidden bg-floria-natural-sand border border-floria-border mb-4 shadow-xs group"
+        >
           <Image
             src={selectedImage?.url || "/floria-logo.png"}
             alt={selectedImage?.alt_text || product.name}
             fill
             sizes="(max-width: 768px) 100vw, 50vw"
             priority
-            className="object-cover transition-all duration-300"
+            className="object-cover transition-all duration-500 ease-in-out group-hover:scale-105"
           />
           {isOutOfStock && (
             <div className="absolute top-4 left-4 z-10">
@@ -180,15 +224,19 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
 
         {/* Thumbnail Row */}
         {images.length > 0 && (
-          <div className="flex gap-2.5 overflow-x-auto pb-1 mb-8">
+          <div
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            className="flex gap-2.5 overflow-x-auto pb-1 mb-8"
+          >
             {images.map((img: any, i: number) => (
               <button
                 key={i}
-                onClick={() => setSelectedImage(img)}
+                onClick={() => handleSelectImage(img)}
                 className={[
                   "relative flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition-all focus:outline-none bg-floria-natural-sand",
                   selectedImage?.url === img.url
-                    ? "border-forest-800 ring-2 ring-forest-800/20 shadow-xs"
+                    ? "border-forest-800 ring-2 ring-forest-800/20 shadow-xs scale-105"
                     : "border-floria-border hover:border-forest-400 opacity-75 hover:opacity-100",
                 ].join(" ")}
               >
