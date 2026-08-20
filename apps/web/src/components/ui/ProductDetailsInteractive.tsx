@@ -192,16 +192,39 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
           onTouchEnd={() => setIsHovered(false)}
           className="relative aspect-square w-full rounded-3xl overflow-hidden bg-floria-natural-sand border border-floria-border mb-4 shadow-xs group"
         >
-          <Image
-            src={selectedImage?.url || "/floria-logo.png"}
-            alt={selectedImage?.alt_text || product.name}
-            fill
-            sizes="(max-width: 768px) 100vw, 50vw"
-            priority
-            className="object-cover transition-all duration-500 ease-in-out group-hover:scale-105"
-          />
+          {images && images.length > 0 ? (
+            images.map((img: any, idx: number) => {
+              const isSelected = selectedImage?.url === img.url || (idx === 0 && !selectedImage);
+              return (
+                <Image
+                  key={img.url || idx}
+                  src={img.url}
+                  alt={img.alt_text || `${product.name} image ${idx + 1}`}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  priority={idx === 0}
+                  className={[
+                    "object-cover transition-all duration-700 ease-in-out group-hover:scale-105",
+                    isSelected
+                      ? "opacity-100 z-10 scale-100"
+                      : "opacity-0 z-0 pointer-events-none scale-102",
+                  ].join(" ")}
+                />
+              );
+            })
+          ) : (
+            <Image
+              src="/floria-logo.png"
+              alt={product.name}
+              fill
+              sizes="(max-width: 768px) 100vw, 50vw"
+              priority
+              className="object-cover transition-all duration-500 ease-in-out group-hover:scale-105"
+            />
+          )}
+
           {isOutOfStock && (
-            <div className="absolute top-4 left-4 z-10">
+            <div className="absolute top-4 left-4 z-20">
               <Badge variant="error">Out of Stock</Badge>
             </div>
           )}
@@ -212,7 +235,7 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
             aria-label={wishlisted ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
             onClick={() => toggleWishlist(listing)}
             className={[
-              "absolute bottom-4 right-4 w-12 h-12 flex items-center justify-center rounded-full transition-all shadow-md focus:outline-none focus:ring-2 focus:ring-forest-800 z-10",
+              "absolute bottom-4 right-4 w-12 h-12 flex items-center justify-center rounded-full transition-all shadow-md focus:outline-none focus:ring-2 focus:ring-forest-800 z-20",
               wishlisted
                 ? "bg-red-50 text-red-600 hover:bg-red-100 border border-red-200/80 scale-105"
                 : "bg-white/90 hover:bg-white backdrop-blur-md text-ink-400 hover:text-red-600 border border-white/80 active:scale-95",
