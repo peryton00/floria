@@ -25,34 +25,66 @@ export class ProductRepository {
 
     try {
       const db = getAdminDb();
-      const { data: variantsData } = await db
-        .from("media_variants")
-        .select("asset_id, variant_name, format, width, height, storage_bucket, storage_path")
-        .in("asset_id", assetIds);
+      const [{ data: assetsData }, { data: variantsData }] = await Promise.all([
+        db
+          .from("media_assets")
+          .select("id, original_filename, mime_type, file_size_bytes, sha256_hash, status, is_system_seeded, created_at, width, height, storage_bucket")
+          .in("id", assetIds),
+        db
+          .from("media_variants")
+          .select("asset_id, variant_name, format, width, height, file_size_bytes, storage_bucket, storage_path")
+          .in("asset_id", assetIds),
+      ]);
 
-      if (!variantsData || variantsData.length === 0) return products;
+      const assetMap = new Map<string, any>();
+      if (Array.isArray(assetsData)) {
+        for (const a of assetsData) {
+          assetMap.set(a.id, a);
+        }
+      }
 
       const supabaseUrl = process.env.SUPABASE_URL || "https://supabase.co";
       const variantMap = new Map<string, Record<string, string>>();
+      const variantDetailsMap = new Map<string, any[]>();
 
-      for (const v of variantsData) {
-        const publicUrl = `${supabaseUrl}/storage/v1/object/public/${v.storage_bucket}/${v.storage_path}`;
-        const existing = variantMap.get(v.asset_id) || {};
-        existing[v.variant_name] = publicUrl;
-        variantMap.set(v.asset_id, existing);
+      if (Array.isArray(variantsData)) {
+        for (const v of variantsData) {
+          const publicUrl = `${supabaseUrl}/storage/v1/object/public/${v.storage_bucket}/${v.storage_path}`;
+          const existingVars = variantMap.get(v.asset_id) || {};
+          existingVars[v.variant_name] = publicUrl;
+          variantMap.set(v.asset_id, existingVars);
+
+          const existingDetails = variantDetailsMap.get(v.asset_id) || [];
+          existingDetails.push({
+            variant_name: v.variant_name,
+            format: v.format,
+            width: v.width,
+            height: v.height,
+            file_size_bytes: v.file_size_bytes,
+            storage_bucket: v.storage_bucket,
+            storage_path: v.storage_path,
+            url: publicUrl,
+          });
+          variantDetailsMap.set(v.asset_id, existingDetails);
+        }
       }
 
       // Enrich product images
       for (const p of products) {
         if (Array.isArray(p.images)) {
           p.images = p.images.map((img: any) => {
-            if (img.asset_id && variantMap.has(img.asset_id)) {
-              const vars = variantMap.get(img.asset_id)!;
+            if (img.asset_id) {
+              const vars = variantMap.get(img.asset_id) || {};
+              const variantDetails = variantDetailsMap.get(img.asset_id) || [];
+              const assetMeta = assetMap.get(img.asset_id) || null;
               const preferredUrl = vars.medium || vars.large || vars.thumbnail || img.url;
+
               return {
                 ...img,
                 url: preferredUrl,
                 variants: vars,
+                variant_details: variantDetails,
+                asset: assetMeta,
               };
             }
             return img;
