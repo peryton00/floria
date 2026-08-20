@@ -474,9 +474,11 @@ export class MediaService {
       }
     }
 
-    // Fallback: If no variants generated yet, provide staging public URL so frontend never falls back to blob URL
-    if (!variants.medium && !variants.thumbnail && !variants.original && session.staging_path) {
-      variants.original = `${supabaseUrl}/storage/v1/object/public/media-staging/${session.staging_path}`;
+    // Fallback: If variants are not in media_variants table yet, provide canonical public-media WebP URL
+    if (!variants.medium && !variants.thumbnail && targetAssetId) {
+      const sellerSegment = session.uploaded_by_seller_id || "system";
+      variants.medium = `${supabaseUrl}/storage/v1/object/public/public-media/products/${sellerSegment}/${targetAssetId}/medium.webp`;
+      variants.thumbnail = `${supabaseUrl}/storage/v1/object/public/public-media/products/${sellerSegment}/${targetAssetId}/thumbnail.webp`;
     }
 
     return {

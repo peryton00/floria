@@ -168,11 +168,10 @@ export function ProductImageUploader({
             let resolvedUrl =
               finalVariants.medium ||
               finalVariants.large ||
-              finalVariants.thumbnail ||
-              finalVariants.original;
+              finalVariants.thumbnail;
 
-            if (!resolvedUrl || resolvedUrl.startsWith("blob:")) {
-              resolvedUrl = `${supabaseUrl}/storage/v1/object/public/media-staging/${stagingPath}`;
+            if (!resolvedUrl || resolvedUrl.startsWith("blob:") || resolvedUrl.includes("/media-staging/")) {
+              resolvedUrl = `${supabaseUrl}/storage/v1/object/public/public-media/products/s-1/${authoritativeAssetId}/medium.webp`;
             }
 
             // Revoke temporary browser blob URL to free memory and prevent dead blob reference leaks

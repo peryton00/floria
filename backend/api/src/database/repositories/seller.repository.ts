@@ -1,6 +1,9 @@
 // Floria API — Seller Profile & Dashboard Repository
 import { getAdminDb } from "../../config/database.js";
 import type { SellerProfile } from "@floria/types";
+import { ProductRepository } from "./product.repository.js";
+
+const productRepo = new ProductRepository();
 
 const PRODUCT_LISTING_SELECT = `*, category:categories(id,name,slug), seller:seller_profiles(id,business_name), inventory:inventory(id,price_paise,stock_quantity,low_stock_threshold,sku,updated_at), images:product_images(*)`;
 
@@ -212,6 +215,22 @@ export class SellerRepository {
       });
     }
 
+    results = await productRepo.enrichProductImages(results);
+
+    // Self-heal any stale media-staging URLs in product_images
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "https://supabase.co";
+    for (const p of results) {
+      if (Array.isArray(p.images)) {
+        for (const img of p.images) {
+          if (img.asset_id && img.url?.includes("/media-staging/")) {
+            const cleanUrl = `${supabaseUrl}/storage/v1/object/public/public-media/products/${sellerId}/${img.asset_id}/medium.webp`;
+            img.url = cleanUrl;
+            await db.from("product_images").update({ url: cleanUrl }).eq("id", img.id);
+          }
+        }
+      }
+    }
+
     return results;
   }
 
@@ -226,7 +245,19 @@ export class SellerRepository {
       .maybeSingle();
 
     if (error || !data) return null;
-    return data;
+
+    const [enriched] = await productRepo.enrichProductImages([data]);
+    if (enriched && Array.isArray(enriched.images)) {
+      const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "https://supabase.co";
+      for (const img of enriched.images) {
+        if (img.asset_id && img.url?.includes("/media-staging/")) {
+          const cleanUrl = `${supabaseUrl}/storage/v1/object/public/public-media/products/${sellerId}/${img.asset_id}/medium.webp`;
+          img.url = cleanUrl;
+          await db.from("product_images").update({ url: cleanUrl }).eq("id", img.id);
+        }
+      }
+    }
+    return enriched || data;
   }
 
   async createProduct(sellerId: string, productData: any): Promise<any> {
@@ -272,17 +303,28 @@ export class SellerRepository {
     });
 
     // Primary & Additional Images Support
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "https://supabase.co";
+    const resolveSanitizedUrl = (aId: string | null, rUrl: string | null): string => {
+      if (aId) {
+        return `${supabaseUrl}/storage/v1/object/public/public-media/products/${sellerId}/${aId}/medium.webp`;
+      }
+      if (!rUrl || rUrl.includes("/media-staging/")) {
+        return "/floria-logo.png";
+      }
+      return rUrl;
+    };
+
     if (Array.isArray(productData.images) && productData.images.length > 0) {
       for (let i = 0; i < productData.images.length; i++) {
         const imgObj = productData.images[i];
         const assetId = typeof imgObj === "string" ? imgObj : (imgObj.asset_id || imgObj.assetId || null);
-        const imgUrl = typeof imgObj === "string" ? imgObj : (imgObj.url || productData.image_url || "/floria-logo.png");
+        const rawUrl = typeof imgObj === "string" ? imgObj : (imgObj.url || productData.image_url || "/floria-logo.png");
         const isPrimary = typeof imgObj === "object" && imgObj.is_primary !== undefined ? imgObj.is_primary : i === 0;
 
         await db.from("product_images").insert({
           product_id: prod.id,
           asset_id: assetId,
-          url: imgUrl,
+          url: resolveSanitizedUrl(assetId, rawUrl),
           alt_text: prod.name,
           display_order: i + 1,
           is_primary: isPrimary,
@@ -290,10 +332,12 @@ export class SellerRepository {
         });
       }
     } else if (productData.asset_id || productData.image_url) {
+      const aId = productData.asset_id || null;
+      const rUrl = productData.image_url || "/floria-logo.png";
       await db.from("product_images").insert({
         product_id: prod.id,
-        asset_id: productData.asset_id || null,
-        url: productData.image_url || "/floria-logo.png",
+        asset_id: aId,
+        url: resolveSanitizedUrl(aId, rUrl),
         alt_text: prod.name,
         display_order: 1,
         is_primary: true,
@@ -338,6 +382,7 @@ export class SellerRepository {
 
     // Update Primary image if image_url or asset_id provided
     if (updates.asset_id || updates.image_url) {
+      const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "https://supabase.co";
       const { data: primaryImg } = await db
         .from("product_images")
         .select("id")
@@ -345,16 +390,23 @@ export class SellerRepository {
         .eq("is_primary", true)
         .maybeSingle();
 
+      const aId = updates.asset_id || null;
+      const rawUrl = updates.image_url || "/floria-logo.png";
+      const cleanUrl = aId
+        ? `${supabaseUrl}/storage/v1/object/public/public-media/products/${sellerId}/${aId}/medium.webp`
+        : rawUrl.includes("/media-staging/")
+        ? "/floria-logo.png"
+        : rawUrl;
+
       if (primaryImg) {
-        const imgPayload: Record<string, any> = {};
-        if (updates.asset_id) imgPayload["asset_id"] = updates.asset_id;
-        if (updates.image_url) imgPayload["url"] = updates.image_url;
+        const imgPayload: Record<string, any> = { url: cleanUrl };
+        if (aId) imgPayload["asset_id"] = aId;
         await db.from("product_images").update(imgPayload).eq("id", primaryImg.id);
       } else {
         await db.from("product_images").insert({
           product_id: productId,
-          asset_id: updates.asset_id || null,
-          url: updates.image_url || "/floria-logo.png",
+          asset_id: aId,
+          url: cleanUrl,
           alt_text: existing.name,
           display_order: 1,
           is_primary: true,
