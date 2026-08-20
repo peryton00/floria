@@ -17,7 +17,10 @@ import {
   Store,
   Users,
   FolderTree,
-  FileText
+  FileText,
+  HardDrive,
+  Image as ImageIcon,
+  CheckCircle2
 } from "lucide-react";
 
 export default function AdminSystemHealthPage() {
@@ -267,6 +270,76 @@ export default function AdminSystemHealthPage() {
                     <span className="text-[10px] font-bold uppercase tracking-wider text-ink-600">Audit Logs</span>
                   </div>
                   <p className="text-lg font-bold font-mono text-ink-900">{dbRecords?.auditLogs ?? 0}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Supabase Storage Fulfillment & Image Engine Telemetry */}
+            <div className="bg-white rounded-2xl border border-ink-100 p-5 shadow-xs space-y-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <div>
+                  <h2 className="font-serif text-base font-bold text-ink-900 flex items-center gap-2">
+                    <HardDrive size={18} className="text-emerald-700" /> Supabase Storage Fulfillment & Image Engine Diagnostics
+                  </h2>
+                  <p className="text-xs text-ink-400 mt-0.5">
+                    Real-time metrics on bucket usage, binary compression status, Sharp WebP variants, and quota capacity.
+                  </p>
+                </div>
+                <span className="px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1.5">
+                  <CheckCircle2 size={12} className="text-emerald-600" /> Sharp Engine Active
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="p-4 bg-cream-50 rounded-xl border border-ink-100 space-y-1">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-ink-500">Storage Used</span>
+                  <p className="text-xl font-bold font-mono text-ink-900">
+                    {metrics?.mediaStorage?.totalSizeMb ?? 0} <span className="text-xs font-normal">MB</span>
+                  </p>
+                  <p className="text-[10px] text-ink-400 font-mono">
+                    Quota: {metrics?.mediaStorage?.quotaMb ?? 1024} MB (1 GB)
+                  </p>
+                </div>
+
+                <div className="p-4 bg-cream-50 rounded-xl border border-ink-100 space-y-1">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-ink-500">Storage Fulfillment</span>
+                  <p className="text-xl font-bold font-mono text-emerald-700">
+                    {metrics?.mediaStorage?.fulfillmentPercentage ?? 0}%
+                  </p>
+                  <p className="text-[10px] text-ink-400 font-mono">
+                    Remaining: {metrics?.mediaStorage?.remainingMb ?? 1024} MB free
+                  </p>
+                </div>
+
+                <div className="p-4 bg-cream-50 rounded-xl border border-ink-100 space-y-1">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-ink-500">Media Assets</span>
+                  <p className="text-xl font-bold font-mono text-ink-900">
+                    {metrics?.mediaStorage?.readyAssets ?? 0} / {metrics?.mediaStorage?.totalAssets ?? 0}
+                  </p>
+                  <p className="text-[10px] text-emerald-600 font-medium">Assets Ready in Storage</p>
+                </div>
+
+                <div className="p-4 bg-cream-50 rounded-xl border border-ink-100 space-y-1">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-ink-500">Processed WebP Variants</span>
+                  <p className="text-xl font-bold font-mono text-purple-800">
+                    {metrics?.mediaStorage?.totalVariants ?? 0}
+                  </p>
+                  <p className="text-[10px] text-ink-400 font-mono">
+                    HEIC Decoder: {metrics?.mediaStorage?.imageEngine?.heicSupported ? "Enabled" : "Standard"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-2 space-y-1.5">
+                <div className="flex justify-between text-xs font-bold font-mono">
+                  <span className="text-ink-600">Storage Quota Consumption ({metrics?.mediaStorage?.fulfillmentPercentage ?? 0}%)</span>
+                  <span className="text-emerald-800">{metrics?.mediaStorage?.totalSizeMb ?? 0} MB / {metrics?.mediaStorage?.quotaMb ?? 1024} MB</span>
+                </div>
+                <div className="w-full bg-cream-100 rounded-full h-3 overflow-hidden">
+                  <div
+                    className="bg-emerald-600 h-full rounded-full transition-all duration-500"
+                    style={{ width: `${Math.max(1, Math.min(100, metrics?.mediaStorage?.fulfillmentPercentage || 0))}%` }}
+                  />
                 </div>
               </div>
             </div>

@@ -4,6 +4,8 @@ import { adminService } from "./admin.service.js";
 import os from "os";
 import { getAdminDb } from "../config/database.js";
 
+import { ImageEngine } from "../media/image-engine/image-engine.js";
+
 export class AdminController {
   async getHealth(_req: Request, res: Response): Promise<void> {
     try {
@@ -22,6 +24,10 @@ export class AdminController {
         { count: pendingSellersCount },
         { count: preparingOrdersCount },
         { count: lowStockCount },
+        { count: mediaAssetCount },
+        { count: mediaVariantCount },
+        { count: readyMediaAssetCount },
+        { data: variantSizes },
       ] = await Promise.all([
         db.from("categories").select("id").limit(1),
         db.from("products").select("*", { count: "exact", head: true }),
@@ -33,9 +39,20 @@ export class AdminController {
         db.from("seller_profiles").select("*", { count: "exact", head: true }).eq("status", "pending"),
         db.from("seller_order_fulfillments").select("*", { count: "exact", head: true }).eq("status", "preparing"),
         db.from("inventory").select("*", { count: "exact", head: true }).lte("stock_quantity", 5),
+        db.from("media_assets").select("*", { count: "exact", head: true }),
+        db.from("media_variants").select("*", { count: "exact", head: true }),
+        db.from("media_assets").select("*", { count: "exact", head: true }).eq("status", "READY"),
+        db.from("media_variants").select("size_bytes"),
       ]);
 
       const dbPing = Date.now() - start;
+
+      const totalStorageBytes = Array.isArray(variantSizes)
+        ? variantSizes.reduce((acc, row) => acc + (Number(row.size_bytes) || 0), 0)
+        : 0;
+      const totalStorageMb = parseFloat((totalStorageBytes / (1024 * 1024)).toFixed(2));
+      const storageQuotaMb = 1024; // 1 GB standard Supabase project tier
+      const storageFulfillmentPercent = parseFloat(((totalStorageBytes / (1024 * 1024 * 1024)) * 100).toFixed(2));
 
       const freeMem = os.freemem();
       const totalMem = os.totalmem();
@@ -77,6 +94,23 @@ export class AdminController {
               users: userCount ?? 0,
               categories: categoryCount ?? 0,
               auditLogs: auditLogCount ?? 0,
+              mediaAssets: mediaAssetCount ?? 0,
+              mediaVariants: mediaVariantCount ?? 0,
+            },
+          },
+          mediaStorage: {
+            totalAssets: mediaAssetCount ?? 0,
+            readyAssets: readyMediaAssetCount ?? 0,
+            totalVariants: mediaVariantCount ?? 0,
+            totalSizeBytes: totalStorageBytes,
+            totalSizeMb: totalStorageMb,
+            quotaMb: storageQuotaMb,
+            fulfillmentPercentage: storageFulfillmentPercent,
+            remainingMb: parseFloat((storageQuotaMb - totalStorageMb).toFixed(2)),
+            imageEngine: {
+              status: "active",
+              sharpEngine: "v8.x WebP Engine",
+              heicSupported: ImageEngine.isHeicSupported(),
             },
           },
           operationalQueues: {

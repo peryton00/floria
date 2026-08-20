@@ -7,13 +7,14 @@ exports.adminController = exports.AdminController = void 0;
 const admin_service_js_1 = require("./admin.service.js");
 const os_1 = __importDefault(require("os"));
 const database_js_1 = require("../config/database.js");
+const image_engine_js_1 = require("../media/image-engine/image-engine.js");
 class AdminController {
     async getHealth(_req, res) {
         try {
             const start = Date.now();
             const db = (0, database_js_1.getAdminDb)();
             // Ping DB and execute table count aggregations in parallel
-            const [_, { count: productCount }, { count: orderCount }, { count: sellerCount }, { count: userCount }, { count: categoryCount }, { count: auditLogCount }, { count: pendingSellersCount }, { count: preparingOrdersCount }, { count: lowStockCount },] = await Promise.all([
+            const [_, { count: productCount }, { count: orderCount }, { count: sellerCount }, { count: userCount }, { count: categoryCount }, { count: auditLogCount }, { count: pendingSellersCount }, { count: preparingOrdersCount }, { count: lowStockCount }, { count: mediaAssetCount }, { count: mediaVariantCount }, { count: readyMediaAssetCount }, { data: variantSizes },] = await Promise.all([
                 db.from("categories").select("id").limit(1),
                 db.from("products").select("*", { count: "exact", head: true }),
                 db.from("orders").select("*", { count: "exact", head: true }),
@@ -24,8 +25,18 @@ class AdminController {
                 db.from("seller_profiles").select("*", { count: "exact", head: true }).eq("status", "pending"),
                 db.from("seller_order_fulfillments").select("*", { count: "exact", head: true }).eq("status", "preparing"),
                 db.from("inventory").select("*", { count: "exact", head: true }).lte("stock_quantity", 5),
+                db.from("media_assets").select("*", { count: "exact", head: true }),
+                db.from("media_variants").select("*", { count: "exact", head: true }),
+                db.from("media_assets").select("*", { count: "exact", head: true }).eq("status", "READY"),
+                db.from("media_variants").select("size_bytes"),
             ]);
             const dbPing = Date.now() - start;
+            const totalStorageBytes = Array.isArray(variantSizes)
+                ? variantSizes.reduce((acc, row) => acc + (Number(row.size_bytes) || 0), 0)
+                : 0;
+            const totalStorageMb = parseFloat((totalStorageBytes / (1024 * 1024)).toFixed(2));
+            const storageQuotaMb = 1024; // 1 GB standard Supabase project tier
+            const storageFulfillmentPercent = parseFloat(((totalStorageBytes / (1024 * 1024 * 1024)) * 100).toFixed(2));
             const freeMem = os_1.default.freemem();
             const totalMem = os_1.default.totalmem();
             const usedMem = totalMem - freeMem;
@@ -65,6 +76,23 @@ class AdminController {
                             users: userCount ?? 0,
                             categories: categoryCount ?? 0,
                             auditLogs: auditLogCount ?? 0,
+                            mediaAssets: mediaAssetCount ?? 0,
+                            mediaVariants: mediaVariantCount ?? 0,
+                        },
+                    },
+                    mediaStorage: {
+                        totalAssets: mediaAssetCount ?? 0,
+                        readyAssets: readyMediaAssetCount ?? 0,
+                        totalVariants: mediaVariantCount ?? 0,
+                        totalSizeBytes: totalStorageBytes,
+                        totalSizeMb: totalStorageMb,
+                        quotaMb: storageQuotaMb,
+                        fulfillmentPercentage: storageFulfillmentPercent,
+                        remainingMb: parseFloat((storageQuotaMb - totalStorageMb).toFixed(2)),
+                        imageEngine: {
+                            status: "active",
+                            sharpEngine: "v8.x WebP Engine",
+                            heicSupported: image_engine_js_1.ImageEngine.isHeicSupported(),
                         },
                     },
                     operationalQueues: {
