@@ -45,16 +45,19 @@ export function ProductImageUploader({
     setError(null);
     setUploading(true);
 
+    let workingImages = [...images];
+    const tasks: { file: File; tempIndex: number }[] = [];
+
+    const validTypes = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/webp",
+      "image/heic",
+      "image/heif",
+    ];
+
     for (const file of files) {
-      // 1. Local validation
-      const validTypes = [
-        "image/jpeg",
-        "image/jpg",
-        "image/png",
-        "image/webp",
-        "image/heic",
-        "image/heif",
-      ];
       if (!validTypes.includes(file.type.toLowerCase())) {
         setError(`File '${file.name}' has unsupported type. Allowed: JPEG, PNG, WebP, HEIC.`);
         continue;
@@ -65,143 +68,160 @@ export function ProductImageUploader({
         continue;
       }
 
-      try {
-        // Temporary pending item in UI
-        const tempId = `temp-${Date.now()}-${Math.random()}`;
-        const tempItem: ImageItem = {
-          assetId: "",
-          url: URL.createObjectURL(file),
-          altText: file.name,
-          isPrimary: images.length === 0,
-          status: "UPLOADING",
-        };
+      const tempIndex = workingImages.length;
+      const tempItem: ImageItem = {
+        assetId: "",
+        url: URL.createObjectURL(file),
+        altText: file.name,
+        isPrimary: tempIndex === 0,
+        status: "UPLOADING",
+      };
 
-        let currentImages = [...images, tempItem];
-        onChange(currentImages);
+      workingImages.push(tempItem);
+      tasks.push({ file, tempIndex });
+    }
 
-        // 2. Request Media Upload Session
-        const sessionRes = await api.createMediaUploadSession({
-          profile: "PRODUCT",
-          filename: file.name,
-          mimeType: file.type || "image/jpeg",
-          sizeBytes: file.size,
-        });
+    onChange([...workingImages]);
 
-        if (!sessionRes.success || !sessionRes.data) {
-          throw new Error(sessionRes.error?.message || "Failed to create upload session");
-        }
-
-        const { sessionId, stagingPath, assetId: provisionalAssetId } = sessionRes.data;
-
-        // 3. Upload binary to Supabase media-staging via presigned signed upload URL
-        const uploadTarget = sessionRes.data.upload;
-        let uploadSuccess = false;
-        let uploadErrText = "";
-
-        if (uploadTarget?.url) {
-          try {
-            const putRes = await fetch(uploadTarget.url, {
-              method: "PUT",
-              headers: {
-                "Content-Type": file.type || "image/jpeg",
-              },
-              body: file,
-            });
-
-            if (putRes.ok) {
-              uploadSuccess = true;
-            } else {
-              const errBody = await putRes.text();
-              uploadErrText = `HTTP ${putRes.status}: ${errBody}`;
-            }
-          } catch (fErr: any) {
-            uploadErrText = fErr.message || "Network error during upload";
-          }
-        }
-
-        if (!uploadSuccess) {
-          const supabase = getSupabaseBrowserClient();
-          const token = (uploadTarget as any)?.token;
-          if (token) {
-            const { error: sErr } = await supabase.storage
-              .from("media-staging")
-              .uploadToSignedUrl(stagingPath, token, file, {
-                contentType: file.type || "image/jpeg",
-              });
-            if (sErr) {
-              throw new Error(`Staging upload failed: ${sErr.message}`);
-            }
-          } else {
-            const { error: uploadErr } = await supabase.storage
-              .from("media-staging")
-              .upload(stagingPath, file, {
-                contentType: file.type || "image/jpeg",
-                upsert: true,
-              });
-
-            if (uploadErr) {
-              throw new Error(`Staging upload failed: ${uploadErr.message || uploadErrText}`);
-            }
-          }
-        }
-
-        // Update UI status to PROCESSING
-        tempItem.status = "PROCESSING";
-        tempItem.sessionId = sessionId;
-        onChange([...currentImages]);
-
-        // 4. Complete session
-        const compRes = await api.completeMediaUploadSession(sessionId);
-        if (!compRes.success || !compRes.data) {
-          throw new Error(compRes.error?.message || "Failed to finalize upload session");
-        }
-
-        const authoritativeAssetId = compRes.data.assetId;
-        tempItem.assetId = authoritativeAssetId;
-
-        // 5. Poll status until READY
-        let assetReady = compRes.data.assetStatus === "READY";
-        let attempts = 0;
-        let finalVariants: Record<string, string> = {};
-
-        while (!assetReady && attempts < 20) {
-          await new Promise((r) => setTimeout(r, 1000));
-          const statusRes = await api.getMediaUploadSessionStatus(sessionId);
-          if (statusRes.success && statusRes.data) {
-            if (statusRes.data.assetStatus === "READY") {
-              assetReady = true;
-              finalVariants = statusRes.data.variants || {};
-            } else if (statusRes.data.assetStatus === "FAILED") {
-              throw new Error(statusRes.data.failureReason || "Async image processing failed");
-            }
-          }
-          attempts++;
-        }
-
-        // 6. Update UI with READY asset
-        const resolvedUrl = finalVariants.medium || finalVariants.large || finalVariants.thumbnail || tempItem.url;
-        tempItem.url = resolvedUrl;
-        tempItem.status = "READY";
-
-        // If editing existing product, attach to product immediately via API
-        if (productId) {
-          const attachRes = await api.attachProductImage(productId, {
-            assetId: authoritativeAssetId,
-            altText: file.name,
-            isPrimary: tempItem.isPrimary,
+    await Promise.all(
+      tasks.map(async ({ file, tempIndex }) => {
+        try {
+          // 1. Request Media Upload Session
+          const sessionRes = await api.createMediaUploadSession({
+            profile: "PRODUCT",
+            filename: file.name,
+            mimeType: file.type || "image/jpeg",
+            sizeBytes: file.size,
           });
 
-          if (!attachRes.success) {
-            throw new Error(attachRes.error?.message || "Failed to attach image to product");
+          if (!sessionRes.success || !sessionRes.data) {
+            throw new Error(sessionRes.error?.message || "Failed to create upload session");
+          }
+
+          const { sessionId, stagingPath } = sessionRes.data;
+
+          // 2. Upload binary to Supabase media-staging via presigned signed upload URL
+          const uploadTarget = sessionRes.data.upload;
+          let uploadSuccess = false;
+          let uploadErrText = "";
+
+          if (uploadTarget?.url) {
+            try {
+              const putRes = await fetch(uploadTarget.url, {
+                method: "PUT",
+                headers: {
+                  "Content-Type": file.type || "image/jpeg",
+                },
+                body: file,
+              });
+
+              if (putRes.ok) {
+                uploadSuccess = true;
+              } else {
+                const errBody = await putRes.text();
+                uploadErrText = `HTTP ${putRes.status}: ${errBody}`;
+              }
+            } catch (fErr: any) {
+              uploadErrText = fErr.message || "Network error during upload";
+            }
+          }
+
+          if (!uploadSuccess) {
+            const supabase = getSupabaseBrowserClient();
+            const token = (uploadTarget as any)?.token;
+            if (token) {
+              const { error: sErr } = await supabase.storage
+                .from("media-staging")
+                .uploadToSignedUrl(stagingPath, token, file, {
+                  contentType: file.type || "image/jpeg",
+                });
+              if (sErr) {
+                throw new Error(`Staging upload failed: ${sErr.message}`);
+              }
+            } else {
+              const { error: uploadErr } = await supabase.storage
+                .from("media-staging")
+                .upload(stagingPath, file, {
+                  contentType: file.type || "image/jpeg",
+                  upsert: true,
+                });
+
+              if (uploadErr) {
+                throw new Error(`Staging upload failed: ${uploadErr.message || uploadErrText}`);
+              }
+            }
+          }
+
+          // Update UI status to PROCESSING
+          const item = workingImages[tempIndex];
+          if (item) {
+            item.status = "PROCESSING";
+            item.sessionId = sessionId;
+            onChange([...workingImages]);
+          }
+
+          // 3. Complete session
+          const compRes = await api.completeMediaUploadSession(sessionId);
+          if (!compRes.success || !compRes.data) {
+            throw new Error(compRes.error?.message || "Failed to finalize upload session");
+          }
+
+          const authoritativeAssetId = compRes.data.assetId;
+          if (item) {
+            item.assetId = authoritativeAssetId;
+          }
+
+          // 4. Poll status until READY
+          let assetReady = compRes.data.assetStatus === "READY";
+          let attempts = 0;
+          let finalVariants: Record<string, string> = {};
+
+          while (!assetReady && attempts < 20) {
+            await new Promise((r) => setTimeout(r, 1000));
+            const statusRes = await api.getMediaUploadSessionStatus(sessionId);
+            if (statusRes.success && statusRes.data) {
+              if (statusRes.data.assetStatus === "READY") {
+                assetReady = true;
+                finalVariants = statusRes.data.variants || {};
+              } else if (statusRes.data.assetStatus === "FAILED") {
+                throw new Error(statusRes.data.failureReason || "Async image processing failed");
+              }
+            }
+            attempts++;
+          }
+
+          // 5. Update UI with READY asset
+          if (item) {
+            const resolvedUrl = finalVariants.medium || finalVariants.large || finalVariants.thumbnail || item.url;
+            item.url = resolvedUrl;
+            item.status = "READY";
+
+            // If editing existing product, attach to product immediately via API
+            if (productId) {
+              const attachRes = await api.attachProductImage(productId, {
+                assetId: authoritativeAssetId,
+                altText: file.name,
+                isPrimary: item.isPrimary,
+              });
+
+              if (attachRes.success && attachRes.data?.id) {
+                item.id = attachRes.data.id;
+              }
+            }
+
+            onChange([...workingImages]);
+          }
+        } catch (err: any) {
+          console.error(`Product image upload error for ${file.name}:`, err);
+          const item = workingImages[tempIndex];
+          if (item) {
+            item.status = "FAILED";
+            item.errorMessage = err.message || "Upload failed";
+            onChange([...workingImages]);
           }
         }
-
-        onChange([...currentImages]);
-      } catch (err: any) {
-        console.error("Product image upload error:", err);
-        setError(err.message || "Upload failed");
-      }
-    }
+      })
+    );
 
     setUploading(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
