@@ -100,56 +100,26 @@ export function ProductImageUploader({
 
           const { sessionId, stagingPath } = sessionRes.data;
 
-          // 2. Upload binary to Supabase media-staging via presigned signed upload URL
+          // 2. Upload binary to Supabase media-staging via signed upload token.
+          // media-staging is a PRIVATE bucket — must use uploadToSignedUrl with the token
+          // returned by the backend createSignedUploadUrl call. Raw PUT to signedUrl does not
+          // work on private buckets; only the token-authenticated path works.
           const uploadTarget = sessionRes.data.upload;
-          let uploadSuccess = false;
-          let uploadErrText = "";
+          const supabase = getSupabaseBrowserClient();
+          const token = uploadTarget?.token;
 
-          if (uploadTarget?.url) {
-            try {
-              const putRes = await fetch(uploadTarget.url, {
-                method: "PUT",
-                headers: {
-                  "Content-Type": file.type || "image/jpeg",
-                },
-                body: file,
-              });
-
-              if (putRes.ok) {
-                uploadSuccess = true;
-              } else {
-                const errBody = await putRes.text();
-                uploadErrText = `HTTP ${putRes.status}: ${errBody}`;
-              }
-            } catch (fErr: any) {
-              uploadErrText = fErr.message || "Network error during upload";
-            }
+          if (!token) {
+            throw new Error("No signed upload token received from server. Cannot upload to staging.");
           }
 
-          if (!uploadSuccess) {
-            const supabase = getSupabaseBrowserClient();
-            const token = (uploadTarget as any)?.token;
-            if (token) {
-              const { error: sErr } = await supabase.storage
-                .from("media-staging")
-                .uploadToSignedUrl(stagingPath, token, file, {
-                  contentType: file.type || "image/jpeg",
-                });
-              if (sErr) {
-                throw new Error(`Staging upload failed: ${sErr.message}`);
-              }
-            } else {
-              const { error: uploadErr } = await supabase.storage
-                .from("media-staging")
-                .upload(stagingPath, file, {
-                  contentType: file.type || "image/jpeg",
-                  upsert: true,
-                });
+          const { error: uploadErr } = await supabase.storage
+            .from("media-staging")
+            .uploadToSignedUrl(stagingPath, token, file, {
+              contentType: file.type || "image/jpeg",
+            });
 
-              if (uploadErr) {
-                throw new Error(`Staging upload failed: ${uploadErr.message || uploadErrText}`);
-              }
-            }
+          if (uploadErr) {
+            throw new Error(`Staging upload failed: ${uploadErr.message}`);
           }
 
           // Update UI status to PROCESSING
