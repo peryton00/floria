@@ -9,37 +9,39 @@ export const metadata: Metadata = {
   description: "Browse all plant and gardening product categories on Floria.",
 };
 
+import { getSystemMediaUrl } from "@/lib/services/systemMedia";
+
 const CATEGORY_IMAGES: Record<string, { url: string; alt: string }> = {
   "indoor-plants": {
-    url: "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=600&q=80",
+    url: getSystemMediaUrl("/cat-plants.png", "banner"),
     alt: "Lush indoor tropical houseplants in ceramic planter",
   },
   "outdoor-plants": {
-    url: "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=600&q=80",
+    url: getSystemMediaUrl("outdoor-plants", "banner"),
     alt: "Vibrant garden shrubs, patio plants and outdoor trees",
   },
   "succulents-cacti": {
-    url: "https://images.unsplash.com/photo-1509423350716-97f9360b4e09?auto=format&fit=crop&w=600&q=80",
+    url: getSystemMediaUrl("succulents-cacti", "banner"),
     alt: "Green succulent rosettes and desert cacti",
   },
   "flowering-plants": {
-    url: "https://images.unsplash.com/photo-1508615039623-a25605d2b022?auto=format&fit=crop&w=600&q=80",
+    url: getSystemMediaUrl("flowering-plants", "banner"),
     alt: "Colorful blooming perennial and seasonal garden flowers",
   },
   "herbs-edibles": {
-    url: "https://images.unsplash.com/photo-1618164435735-413d3b066c9a?auto=format&fit=crop&w=600&q=80",
+    url: getSystemMediaUrl("herbs-edibles", "banner"),
     alt: "Fresh organic potted culinary herbs and kitchen edibles",
   },
   "planters-pots": {
-    url: "https://images.unsplash.com/photo-1485955900006-10f4d324d411?auto=format&fit=crop&w=600&q=80",
+    url: getSystemMediaUrl("/cat-pots.png", "banner"),
     alt: "Artisan terracotta and glazed ceramic plant pots",
   },
   "soil-fertilizers": {
-    url: "https://images.unsplash.com/photo-1599685315640-9ceab2f58944?auto=format&fit=crop&w=600&q=80",
+    url: getSystemMediaUrl("soil-fertilizers", "banner"),
     alt: "Rich organic potting mix, fertilizer and growing media",
   },
   "tools-accessories": {
-    url: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=600&q=80",
+    url: getSystemMediaUrl("/cat-tools.png", "banner"),
     alt: "Durable gardening hand trowels, shears and brass watering can",
   },
 };

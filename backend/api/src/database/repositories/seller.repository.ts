@@ -268,11 +268,29 @@ export class SellerRepository {
       updated_at: now,
     });
 
-    // Primary Image
-    if (productData.image_url) {
+    // Primary & Additional Images Support
+    if (Array.isArray(productData.images) && productData.images.length > 0) {
+      for (let i = 0; i < productData.images.length; i++) {
+        const imgObj = productData.images[i];
+        const assetId = typeof imgObj === "string" ? imgObj : (imgObj.asset_id || imgObj.assetId || null);
+        const imgUrl = typeof imgObj === "string" ? imgObj : (imgObj.url || productData.image_url || "/floria-logo.png");
+        const isPrimary = typeof imgObj === "object" && imgObj.is_primary !== undefined ? imgObj.is_primary : i === 0;
+
+        await db.from("product_images").insert({
+          product_id: prod.id,
+          asset_id: assetId,
+          url: imgUrl,
+          alt_text: prod.name,
+          display_order: i + 1,
+          is_primary: isPrimary,
+          created_at: now,
+        });
+      }
+    } else if (productData.asset_id || productData.image_url) {
       await db.from("product_images").insert({
         product_id: prod.id,
-        url: productData.image_url,
+        asset_id: productData.asset_id || null,
+        url: productData.image_url || "/floria-logo.png",
         alt_text: prod.name,
         display_order: 1,
         is_primary: true,
@@ -313,6 +331,33 @@ export class SellerRepository {
       if (updates.sku !== undefined) invPayload["sku"] = updates.sku?.trim() || null;
 
       await db.from("inventory").update(invPayload).eq("product_id", productId).eq("seller_id", sellerId);
+    }
+
+    // Update Primary image if image_url or asset_id provided
+    if (updates.asset_id || updates.image_url) {
+      const { data: primaryImg } = await db
+        .from("product_images")
+        .select("id")
+        .eq("product_id", productId)
+        .eq("is_primary", true)
+        .maybeSingle();
+
+      if (primaryImg) {
+        const imgPayload: Record<string, any> = {};
+        if (updates.asset_id) imgPayload["asset_id"] = updates.asset_id;
+        if (updates.image_url) imgPayload["url"] = updates.image_url;
+        await db.from("product_images").update(imgPayload).eq("id", primaryImg.id);
+      } else {
+        await db.from("product_images").insert({
+          product_id: productId,
+          asset_id: updates.asset_id || null,
+          url: updates.image_url || "/floria-logo.png",
+          alt_text: existing.name,
+          display_order: 1,
+          is_primary: true,
+          created_at: now,
+        });
+      }
     }
 
     return this.findSellerProductById(sellerId, productId);

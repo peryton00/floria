@@ -30,19 +30,19 @@ ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO user_profiles (id, role, full_name, phone, avatar_url)
 VALUES
-  ('00000000-0000-0000-0000-000000000101', 'seller', 'Green Leaf Nursery', '+91 98765 43210', 'https://images.unsplash.com/photo-1545241047-6083a3684587?w=300&auto=format&fit=crop&q=80'),
-  ('00000000-0000-0000-0000-000000000102', 'seller', 'Nisarga Gardens',    '+91 98765 43211', 'https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?w=300&auto=format&fit=crop&q=80'),
-  ('00000000-0000-0000-0000-000000000103', 'seller', 'Clay & Co.',         '+91 98765 43212', 'https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=300&auto=format&fit=crop&q=80'),
-  ('00000000-0000-0000-0000-000000000104', 'seller', 'Sai Garden Center',  '+91 98765 43213', 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=300&auto=format&fit=crop&q=80')
+  ('00000000-0000-0000-0000-000000000101', 'seller', 'Green Leaf Nursery', '+91 98765 43210', 'https://flymwzdtsrkiiriqaswc.supabase.co/storage/v1/object/public/public-media/system/96fa064a-30d7-4652-bf01-962bf534fadd/medium.webp'),
+  ('00000000-0000-0000-0000-000000000102', 'seller', 'Nisarga Gardens',    '+91 98765 43211', 'https://flymwzdtsrkiiriqaswc.supabase.co/storage/v1/object/public/public-media/system/9d707107-77fe-4ebb-8fa4-c39984f3893b/medium.webp'),
+  ('00000000-0000-0000-0000-000000000103', 'seller', 'Clay & Co.',         '+91 98765 43212', 'https://flymwzdtsrkiiriqaswc.supabase.co/storage/v1/object/public/public-media/system/a4d3e43f-1b50-4fc7-94f0-6400451816b9/medium.webp'),
+  ('00000000-0000-0000-0000-000000000104', 'seller', 'Sai Garden Center',  '+91 98765 43213', 'https://flymwzdtsrkiiriqaswc.supabase.co/storage/v1/object/public/public-media/system/77a8be13-cb44-47e0-a1e2-227917e88b15/medium.webp')
 ON CONFLICT (id) DO NOTHING;
 
 -- 3. SEED SELLER PROFILES
 INSERT INTO seller_profiles (id, user_id, business_name, business_description, contact_phone, contact_email, address, logo_url, status, is_active)
 VALUES
-  ('00000000-0000-0000-0000-000000000101', '00000000-0000-0000-0000-000000000101', 'Green Leaf Nursery', 'Premium indoor and outdoor plants curated for urban homes. We specialize in low-maintenance tropicals and succulents.', '+91 98765 43210', 'greenleaf@floria.in', '12, Nursery Road, Sector 5, Raipur, Chhattisgarh, 492001', 'https://images.unsplash.com/photo-1545241047-6083a3684587?w=300&auto=format&fit=crop&q=80', 'approved', TRUE),
-  ('00000000-0000-0000-0000-000000000102', '00000000-0000-0000-0000-000000000102', 'Nisarga Gardens', 'Organic potted plants, flowering shrubs, and heritage garden care essentials.', '+91 98765 43211', 'nisarga@floria.in', '88, Garden Street, VIP Road, Raipur, Chhattisgarh, 492006', 'https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?w=300&auto=format&fit=crop&q=80', 'approved', TRUE),
-  ('00000000-0000-0000-0000-000000000103', '00000000-0000-0000-0000-000000000103', 'Clay & Co.', 'Artisanal handcrafted terracotta planters, ceramic pots, and drainage solutions.', '+91 98765 43212', 'clayco@floria.in', '45, Potter Lane, Pottery Market, Raipur, Chhattisgarh, 492002', 'https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=300&auto=format&fit=crop&q=80', 'approved', TRUE),
-  ('00000000-0000-0000-0000-000000000104', '00000000-0000-0000-0000-000000000104', 'Sai Garden Center', 'Exotic indoor foliage, flowering perennials, and heavy-duty gardening tools.', '+91 98765 43213', 'saigarden@floria.in', '101, Green Highway, Shankar Nagar, Raipur, Chhattisgarh, 492007', 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=300&auto=format&fit=crop&q=80', 'approved', TRUE)
+  ('00000000-0000-0000-0000-000000000101', '00000000-0000-0000-0000-000000000101', 'Green Leaf Nursery', 'Premium indoor and outdoor plants curated for urban homes. We specialize in low-maintenance tropicals and succulents.', '+91 98765 43210', 'greenleaf@floria.in', '12, Nursery Road, Sector 5, Raipur, Chhattisgarh, 492001', 'https://flymwzdtsrkiiriqaswc.supabase.co/storage/v1/object/public/public-media/system/96fa064a-30d7-4652-bf01-962bf534fadd/medium.webp', 'approved', TRUE),
+  ('00000000-0000-0000-0000-000000000102', '00000000-0000-0000-0000-000000000102', 'Nisarga Gardens', 'Organic potted plants, flowering shrubs, and heritage garden care essentials.', '+91 98765 43211', 'nisarga@floria.in', '88, Garden Street, VIP Road, Raipur, Chhattisgarh, 492006', 'https://flymwzdtsrkiiriqaswc.supabase.co/storage/v1/object/public/public-media/system/9d707107-77fe-4ebb-8fa4-c39984f3893b/medium.webp', 'approved', TRUE),
+  ('00000000-0000-0000-0000-000000000103', '00000000-0000-0000-0000-000000000103', 'Clay & Co.', 'Artisanal handcrafted terracotta planters, ceramic pots, and drainage solutions.', '+91 98765 43212', 'clayco@floria.in', '45, Potter Lane, Pottery Market, Raipur, Chhattisgarh, 492002', 'https://flymwzdtsrkiiriqaswc.supabase.co/storage/v1/object/public/public-media/system/a4d3e43f-1b50-4fc7-94f0-6400451816b9/medium.webp', 'approved', TRUE),
+  ('00000000-0000-0000-0000-000000000104', '00000000-0000-0000-0000-000000000104', 'Sai Garden Center', 'Exotic indoor foliage, flowering perennials, and heavy-duty gardening tools.', '+91 98765 43213', 'saigarden@floria.in', '101, Green Highway, Shankar Nagar, Raipur, Chhattisgarh, 492007', 'https://flymwzdtsrkiiriqaswc.supabase.co/storage/v1/object/public/public-media/system/77a8be13-cb44-47e0-a1e2-227917e88b15/medium.webp', 'approved', TRUE)
 ON CONFLICT (id) DO UPDATE SET
   business_name = EXCLUDED.business_name,
   status = 'approved',
@@ -84,14 +84,14 @@ ON CONFLICT (product_id) DO UPDATE SET
 -- 6. SEED PRODUCT IMAGES
 INSERT INTO product_images (product_id, url, alt_text, display_order, is_primary)
 VALUES
-  ('00000000-0000-0000-0000-000000000201', 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=600&auto=format&fit=crop&q=80', 'Snake Plant (Sansevieria)', 1, TRUE),
-  ('00000000-0000-0000-0000-000000000202', 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=600&auto=format&fit=crop&q=80', 'Monstera Deliciosa', 1, TRUE),
-  ('00000000-0000-0000-0000-000000000203', 'https://images.unsplash.com/photo-1596547609652-9cf5d8d76921?w=600&auto=format&fit=crop&q=80', 'Aloe Vera', 1, TRUE),
-  ('00000000-0000-0000-0000-000000000204', 'https://images.unsplash.com/photo-1589393922695-ef4c2f236b67?w=600&auto=format&fit=crop&q=80', 'Peace Lily (Spathiphyllum)', 1, TRUE),
-  ('00000000-0000-0000-0000-000000000205', 'https://images.unsplash.com/photo-1618164436241-4473940d1f5c?w=600&auto=format&fit=crop&q=80', 'Sweet Basil Organic Seeds', 1, TRUE),
-  ('00000000-0000-0000-0000-000000000206', 'https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=600&auto=format&fit=crop&q=80', 'Terracotta Pot (Medium - 8 inch)', 1, TRUE),
-  ('00000000-0000-0000-0000-000000000207', 'https://images.unsplash.com/photo-1512428559087-560fa5ceab42?w=600&auto=format&fit=crop&q=80', 'Vibrant Pink Bougainvillea', 1, TRUE),
-  ('00000000-0000-0000-0000-000000000208', 'https://images.unsplash.com/photo-1628352081506-83c43123ed6d?w=600&auto=format&fit=crop&q=80', 'Organic Vermicompost (5 kg)', 1, TRUE),
-  ('00000000-0000-0000-0000-000000000209', 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=600&auto=format&fit=crop&q=80', 'Ergonomic Pruning Shears', 1, TRUE),
-  ('00000000-0000-0000-0000-000000000210', 'https://images.unsplash.com/photo-1604762524889-3e2fcc145683?w=600&auto=format&fit=crop&q=80', 'Golden Money Plant (Pothos)', 1, TRUE)
+  ('00000000-0000-0000-0000-000000000201', 'https://flymwzdtsrkiiriqaswc.supabase.co/storage/v1/object/public/public-media/system/a996836e-1bf1-4805-8a63-32339503a310/medium.webp', 'Snake Plant (Sansevieria)', 1, TRUE),
+  ('00000000-0000-0000-0000-000000000202', 'https://flymwzdtsrkiiriqaswc.supabase.co/storage/v1/object/public/public-media/system/a996836e-1bf1-4805-8a63-32339503a310/medium.webp', 'Monstera Deliciosa', 1, TRUE),
+  ('00000000-0000-0000-0000-000000000203', 'https://flymwzdtsrkiiriqaswc.supabase.co/storage/v1/object/public/public-media/system/d0bba723-132b-4b2e-abc2-286e08ec4637/medium.webp', 'Aloe Vera', 1, TRUE),
+  ('00000000-0000-0000-0000-000000000204', 'https://flymwzdtsrkiiriqaswc.supabase.co/storage/v1/object/public/public-media/system/ec1dc2bd-402f-481a-9170-329d552eefcf/medium.webp', 'Peace Lily (Spathiphyllum)', 1, TRUE),
+  ('00000000-0000-0000-0000-000000000205', 'https://flymwzdtsrkiiriqaswc.supabase.co/storage/v1/object/public/public-media/system/a394425e-1bec-4d14-a36a-550648ba4762/medium.webp', 'Sweet Basil Organic Seeds', 1, TRUE),
+  ('00000000-0000-0000-0000-000000000206', 'https://flymwzdtsrkiiriqaswc.supabase.co/storage/v1/object/public/public-media/system/a4d3e43f-1b50-4fc7-94f0-6400451816b9/medium.webp', 'Terracotta Pot (Medium - 8 inch)', 1, TRUE),
+  ('00000000-0000-0000-0000-000000000207', 'https://flymwzdtsrkiiriqaswc.supabase.co/storage/v1/object/public/public-media/system/b5ff0d43-d559-466c-bee2-3ade79a582a7/standard.webp', 'Vibrant Pink Bougainvillea', 1, TRUE),
+  ('00000000-0000-0000-0000-000000000208', 'https://flymwzdtsrkiiriqaswc.supabase.co/storage/v1/object/public/public-media/system/832d746c-a5ed-4e88-ad9b-796c613614c5/standard.webp', 'Organic Vermicompost (5 kg)', 1, TRUE),
+  ('00000000-0000-0000-0000-000000000209', 'https://flymwzdtsrkiiriqaswc.supabase.co/storage/v1/object/public/public-media/system/77a8be13-cb44-47e0-a1e2-227917e88b15/medium.webp', 'Ergonomic Pruning Shears', 1, TRUE),
+  ('00000000-0000-0000-0000-000000000210', 'https://flymwzdtsrkiiriqaswc.supabase.co/storage/v1/object/public/public-media/system/4c4784da-f022-47c0-9cea-7715dc0a7852/standard.webp', 'Golden Money Plant (Pothos)', 1, TRUE)
 ON CONFLICT DO NOTHING;

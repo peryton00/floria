@@ -266,6 +266,46 @@ export class SellersService {
     return { success: true };
   }
 
+  async attachProductImage(sellerProfile: SellerProfile, productId: string, payload: { assetId: string; altText?: string; displayOrder?: number; isPrimary?: boolean }) {
+    if (sellerProfile.status !== "approved") {
+      throw Errors.forbidden("Pending or suspended sellers cannot attach media assets to products");
+    }
+    const { ProductMediaService } = await import("../products/product-media.service.js");
+    return ProductMediaService.attachMediaAssetToProduct(sellerProfile.id, productId, payload);
+  }
+
+  async removeProductImage(sellerProfile: SellerProfile, productId: string, imageId: string) {
+    if (sellerProfile.status !== "approved") {
+      throw Errors.forbidden("Pending or suspended sellers cannot remove product images");
+    }
+    const { ProductMediaService } = await import("../products/product-media.service.js");
+    return ProductMediaService.removeProductImage(sellerProfile.id, productId, imageId);
+  }
+
+  async reorderProductImages(sellerProfile: SellerProfile, productId: string, imageOrders: Array<{ imageId: string; displayOrder: number }>) {
+    if (sellerProfile.status !== "approved") {
+      throw Errors.forbidden("Pending or suspended sellers cannot reorder product images");
+    }
+    const { ProductMediaService } = await import("../products/product-media.service.js");
+    return ProductMediaService.reorderProductImages(sellerProfile.id, productId, imageOrders);
+  }
+
+  async setPrimaryProductImage(sellerProfile: SellerProfile, productId: string, imageId: string) {
+    if (sellerProfile.status !== "approved") {
+      throw Errors.forbidden("Pending or suspended sellers cannot change primary product image");
+    }
+    const { ProductMediaService } = await import("../products/product-media.service.js");
+    return ProductMediaService.setPrimaryProductImage(sellerProfile.id, productId, imageId);
+  }
+
+  async replaceProductImage(sellerProfile: SellerProfile, productId: string, imageId: string, payload: { assetId: string; altText?: string }) {
+    if (sellerProfile.status !== "approved") {
+      throw Errors.forbidden("Pending or suspended sellers cannot replace product images");
+    }
+    const { ProductMediaService } = await import("../products/product-media.service.js");
+    return ProductMediaService.replaceProductImage(sellerProfile.id, productId, imageId, payload.assetId, payload);
+  }
+
   async getInventory(sellerId: string) {
     return sellerRepository.findSellerInventory(sellerId);
   }

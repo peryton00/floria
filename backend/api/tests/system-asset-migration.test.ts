@@ -1,3 +1,4 @@
+
 // Floria Media Infrastructure — Stage 6 System Asset Migration Unit Test Suite
 import { describe, it, expect, vi } from "vitest";
 import sharp from "sharp";
@@ -74,6 +75,19 @@ describe("Stage 6 — System Asset Migration Execution & Idempotency", () => {
       .png()
       .toBuffer();
 
+    const mockBuffers: Record<string, Buffer> = {
+      "cat-plants.png": mockPng,
+      "cat-seeds.png": mockPng,
+      "cat-pots.png": mockPng,
+      "cat-fertilizers.png": mockPng,
+      "cat-tools.png": mockPng,
+      "nursery-1.png": mockPng,
+      "nursery-2.png": mockPng,
+      "nursery-3.png": mockPng,
+      "nursery-4.png": mockPng,
+      "hero-plants.png": mockPng,
+    };
+
     const insertedAssets: any[] = [];
     const insertedVariants: any[] = [];
 
@@ -117,7 +131,7 @@ describe("Stage 6 — System Asset Migration Execution & Idempotency", () => {
 
     vi.spyOn(await import("../src/config/database.js"), "getAdminDb").mockReturnValue(mockAdminDb as any);
 
-    const results = await migrateSystemAssets();
+    const results = await migrateSystemAssets(mockBuffers);
     expect(results.length).toBeGreaterThan(0);
 
     for (const asset of insertedAssets) {

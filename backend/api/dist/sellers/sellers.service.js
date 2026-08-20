@@ -83,15 +83,32 @@ class SellersService {
         if (updates.business_name !== undefined && updates.business_name !== null && !updates.business_name.trim()) {
             throw errors_js_1.Errors.validation("Business name is required");
         }
-        if (updates.contact_phone !== undefined && updates.contact_phone !== null) {
+        if (updates.contact_phone !== undefined && updates.contact_phone !== null && updates.contact_phone.trim()) {
             const cleanPhone = updates.contact_phone.replace(/[\s\-+()\u00a0]/g, "").replace(/^91/, "");
             if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
-                throw errors_js_1.Errors.validation("Invalid phone number format");
+                throw errors_js_1.Errors.validation("Invalid phone number format (must be 10 digits)");
             }
         }
-        if (updates.contact_email !== undefined && updates.contact_email !== null) {
+        if (updates.whatsapp_number !== undefined && updates.whatsapp_number !== null && updates.whatsapp_number.trim()) {
+            const cleanWhatsapp = updates.whatsapp_number.replace(/[\s\-+()\u00a0]/g, "").replace(/^91/, "");
+            if (!/^[6-9]\d{9}$/.test(cleanWhatsapp)) {
+                throw errors_js_1.Errors.validation("Invalid WhatsApp number format (must be 10 digits)");
+            }
+        }
+        if (updates.alternate_phone !== undefined && updates.alternate_phone !== null && updates.alternate_phone.trim()) {
+            const cleanAlt = updates.alternate_phone.replace(/[\s\-+()\u00a0]/g, "").replace(/^91/, "");
+            if (!/^[6-9]\d{9}$/.test(cleanAlt)) {
+                throw errors_js_1.Errors.validation("Invalid alternate phone number format (must be 10 digits)");
+            }
+        }
+        if (updates.contact_email !== undefined && updates.contact_email !== null && updates.contact_email.trim()) {
             if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(updates.contact_email.trim())) {
                 throw errors_js_1.Errors.validation("Invalid email address format");
+            }
+        }
+        if (updates.pincode !== undefined && updates.pincode !== null && updates.pincode.trim()) {
+            if (!/^\d{6}$/.test(updates.pincode.trim())) {
+                throw errors_js_1.Errors.validation("Invalid Indian PIN code (must be 6 digits)");
             }
         }
         const updated = await seller_repository_js_1.sellerRepository.updateProfile(profile.id, updates);
@@ -220,6 +237,41 @@ class SellersService {
             resource_id: productId,
         });
         return { success: true };
+    }
+    async attachProductImage(sellerProfile, productId, payload) {
+        if (sellerProfile.status !== "approved") {
+            throw errors_js_1.Errors.forbidden("Pending or suspended sellers cannot attach media assets to products");
+        }
+        const { ProductMediaService } = await import("../products/product-media.service.js");
+        return ProductMediaService.attachMediaAssetToProduct(sellerProfile.id, productId, payload);
+    }
+    async removeProductImage(sellerProfile, productId, imageId) {
+        if (sellerProfile.status !== "approved") {
+            throw errors_js_1.Errors.forbidden("Pending or suspended sellers cannot remove product images");
+        }
+        const { ProductMediaService } = await import("../products/product-media.service.js");
+        return ProductMediaService.removeProductImage(sellerProfile.id, productId, imageId);
+    }
+    async reorderProductImages(sellerProfile, productId, imageOrders) {
+        if (sellerProfile.status !== "approved") {
+            throw errors_js_1.Errors.forbidden("Pending or suspended sellers cannot reorder product images");
+        }
+        const { ProductMediaService } = await import("../products/product-media.service.js");
+        return ProductMediaService.reorderProductImages(sellerProfile.id, productId, imageOrders);
+    }
+    async setPrimaryProductImage(sellerProfile, productId, imageId) {
+        if (sellerProfile.status !== "approved") {
+            throw errors_js_1.Errors.forbidden("Pending or suspended sellers cannot change primary product image");
+        }
+        const { ProductMediaService } = await import("../products/product-media.service.js");
+        return ProductMediaService.setPrimaryProductImage(sellerProfile.id, productId, imageId);
+    }
+    async replaceProductImage(sellerProfile, productId, imageId, payload) {
+        if (sellerProfile.status !== "approved") {
+            throw errors_js_1.Errors.forbidden("Pending or suspended sellers cannot replace product images");
+        }
+        const { ProductMediaService } = await import("../products/product-media.service.js");
+        return ProductMediaService.replaceProductImage(sellerProfile.id, productId, imageId, payload.assetId, payload);
     }
     async getInventory(sellerId) {
         return seller_repository_js_1.sellerRepository.findSellerInventory(sellerId);

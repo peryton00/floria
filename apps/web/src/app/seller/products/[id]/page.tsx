@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useSeller } from "@/lib/contexts/SellerContext";
 import { api } from "@/lib/api";
 import { AlertIcon } from "@/components/ui/Icons";
+import { ProductImageUploader } from "@/components/seller/ProductImageUploader";
 
 interface FormErrors {
   name?: string;
@@ -31,6 +32,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
   const [description, setDescription] = useState("");
   const [careInstructions, setCareInstructions] = useState("");
   const [status, setStatus] = useState<"active" | "draft">("active");
+  const [productImages, setProductImages] = useState<import("@/components/seller/ProductImageUploader").ImageItem[]>([]);
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(true);
@@ -67,6 +69,20 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           setDescription(p.description || "");
           setCareInstructions(p.care_instructions || "");
           setStatus(p.status === "active" ? "active" : "draft");
+
+          if (Array.isArray(p.images)) {
+            setProductImages(
+              p.images.map((img: any) => ({
+                id: img.id,
+                assetId: img.asset_id || "",
+                url: img.url,
+                altText: img.alt_text,
+                isPrimary: img.is_primary,
+                displayOrder: img.display_order,
+                status: "READY" as const,
+              }))
+            );
+          }
         } else {
           setApiError(prodRes.error?.message || "Product not found or access denied");
         }
@@ -302,6 +318,16 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
             value={careInstructions}
             onChange={(e) => setCareInstructions(e.target.value)}
             className="w-full p-3 rounded border border-[#E2E8F0] bg-[#F8FAFC] focus:bg-white text-xs focus:outline-none focus:ring-1 focus:ring-[#1B4D3E] text-[#0F172A] resize-none"
+          />
+        </div>
+
+        {/* Product Media Uploader (Stage 8 Vertical Slice) */}
+        <div className="pt-2 pb-2">
+          <ProductImageUploader
+            productId={productId}
+            images={productImages}
+            onChange={setProductImages}
+            maxImages={8}
           />
         </div>
 

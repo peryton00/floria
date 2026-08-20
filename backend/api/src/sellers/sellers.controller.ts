@@ -103,6 +103,56 @@ export class SellersController {
     }
   }
 
+  async attachProductImage(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const profile = await sellersService.getProfile(req.user!.id);
+      const product = await sellersService.attachProductImage(profile, req.params.productId as string, req.body);
+      res.status(201).json({ success: true, data: product });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async removeProductImage(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const profile = await sellersService.getProfile(req.user!.id);
+      const product = await sellersService.removeProductImage(profile, req.params.productId as string, req.params.imageId as string);
+      res.json({ success: true, data: product });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async reorderProductImages(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const profile = await sellersService.getProfile(req.user!.id);
+      const product = await sellersService.reorderProductImages(profile, req.params.productId as string, req.body.imageOrders);
+      res.json({ success: true, data: product });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async setPrimaryProductImage(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const profile = await sellersService.getProfile(req.user!.id);
+      const product = await sellersService.setPrimaryProductImage(profile, req.params.productId as string, req.params.imageId as string);
+      res.json({ success: true, data: product });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async replaceProductImage(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const profile = await sellersService.getProfile(req.user!.id);
+      const product = await sellersService.replaceProductImage(profile, req.params.productId as string, req.params.imageId as string, req.body);
+      res.json({ success: true, data: product });
+    } catch (err) {
+      next(err);
+    }
+  }
+
   async getInventory(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const profile = await sellersService.getProfile(req.user!.id);

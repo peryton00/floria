@@ -28,6 +28,7 @@ const payments_routes_js_1 = __importDefault(require("./payments/payments.routes
 const notifications_routes_js_1 = __importDefault(require("./notifications/notifications.routes.js"));
 const reports_routes_js_1 = __importDefault(require("./reports/reports.routes.js"));
 const reviews_routes_js_1 = __importDefault(require("./reviews/reviews.routes.js"));
+const media_routes_js_1 = __importDefault(require("./media/media.routes.js"));
 function createApp() {
     const app = (0, express_1.default)();
     // 1. Security, CORS & Correlation Logging
@@ -86,6 +87,7 @@ function createApp() {
     apiV1.use("/payments", payments_routes_js_1.default);
     apiV1.use("/notifications", notifications_routes_js_1.default);
     apiV1.use("/reports", reports_routes_js_1.default);
+    apiV1.use("/media", media_routes_js_1.default);
     app.use("/api/v1", reviews_routes_js_1.default); // reviews routes self-contain full paths
     app.use("/api/v1", apiV1);
     // 5. 404 Route Handler

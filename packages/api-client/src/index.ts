@@ -412,6 +412,68 @@ export class FloriaApiClient {
     });
   }
 
+  // ── SELLER PRODUCT MEDIA INTEGRATION (STAGE 8) ───────────────────────────
+
+  public async createMediaUploadSession(params: {
+    profile: string;
+    filename: string;
+    mimeType: string;
+    sizeBytes: number;
+  }): Promise<ApiResponse<any>> {
+    return this.request<any>("/api/v1/media/upload-session", {
+      method: "POST",
+      body: JSON.stringify(params),
+    });
+  }
+
+  public async completeMediaUploadSession(sessionId: string): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/v1/media/upload-session/${sessionId}/complete`, {
+      method: "POST",
+    });
+  }
+
+  public async getMediaUploadSessionStatus(sessionId: string): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/v1/media/upload-session/${sessionId}`);
+  }
+
+  public async attachProductImage(productId: string, params: {
+    assetId: string;
+    altText?: string;
+    isPrimary?: boolean;
+    displayOrder?: number;
+  }): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/v1/seller/products/${productId}/images`, {
+      method: "POST",
+      body: JSON.stringify(params),
+    });
+  }
+
+  public async removeProductImage(productId: string, imageId: string): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/v1/seller/products/${productId}/images/${imageId}`, {
+      method: "DELETE",
+    });
+  }
+
+  public async reorderProductImages(productId: string, imageOrders: Array<{ imageId: string; displayOrder: number }>): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/v1/seller/products/${productId}/images/reorder`, {
+      method: "PATCH",
+      body: JSON.stringify({ imageOrders }),
+    });
+  }
+
+  public async setPrimaryProductImage(productId: string, imageId: string): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/v1/seller/products/${productId}/images/${imageId}/primary`, {
+      method: "PATCH",
+    });
+  }
+
+  public async replaceProductImage(productId: string, imageId: string, params: { assetId: string; altText?: string }): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/v1/seller/products/${productId}/images/${imageId}`, {
+      method: "PUT",
+      body: JSON.stringify(params),
+    });
+  }
+
   public async getSellerInventory(): Promise<ApiResponse<any[]>> {
     return this.request<any[]>("/api/v1/seller/inventory");
   }

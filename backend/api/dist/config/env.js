@@ -21,6 +21,9 @@ function validateEnv() {
         missing.push("SUPABASE_ANON_KEY (or NEXT_PUBLIC_SUPABASE_ANON_KEY)");
     if (!serviceRoleKey)
         missing.push("SUPABASE_SERVICE_ROLE_KEY");
+    if ((process.env.NODE_ENV || "development") === "production" && !process.env.REDIS_URL) {
+        missing.push("REDIS_URL (required in production environment)");
+    }
     if (missing.length > 0) {
         const errorMsg = `[Floria API] Critical Environment Startup Error:\nMissing required production environment variables:\n- ${missing.join("\n- ")}\n\nServer process startup aborted for security integrity.`;
         console.error(errorMsg);
@@ -31,6 +34,7 @@ function validateEnv() {
         .map((o) => o.trim());
     const port = parseInt(process.env.PORT || process.env.API_PORT || "4000", 10);
     const nodeEnv = process.env.NODE_ENV || "development";
+    const redisUrl = process.env.REDIS_URL || "redis://127.0.0.1:6379";
     return {
         SUPABASE_URL: url,
         SUPABASE_ANON_KEY: anonKey,
@@ -38,6 +42,7 @@ function validateEnv() {
         CORS_ALLOWED_ORIGINS: corsOrigins,
         API_PORT: port,
         NODE_ENV: nodeEnv,
+        REDIS_URL: redisUrl,
     };
 }
 let cachedEnv = null;

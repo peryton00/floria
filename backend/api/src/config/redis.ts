@@ -11,12 +11,14 @@ export function getRedisOptions(): RedisOptions {
   const redisUrl = env.REDIS_URL;
 
   const urlObj = new URL(redisUrl);
+  const isTls = urlObj.protocol === "rediss:";
 
   return {
     host: urlObj.hostname || "127.0.0.1",
     port: parseInt(urlObj.port || "6379", 10),
-    username: urlObj.username || undefined,
-    password: urlObj.password || undefined,
+    username: urlObj.username ? decodeURIComponent(urlObj.username) : undefined,
+    password: urlObj.password ? decodeURIComponent(urlObj.password) : undefined,
+    tls: isTls ? { rejectUnauthorized: false } : undefined,
     maxRetriesPerRequest: null, // Required by BullMQ
     enableReadyCheck: false,
     lazyConnect: true,

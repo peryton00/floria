@@ -1,3 +1,4 @@
+
 // Floria Media Infrastructure — Media API Service
 import crypto from "crypto";
 import { getAdminDb } from "../config/database.js";
@@ -99,13 +100,13 @@ export class MediaService {
       id: sessionId,
       seller_id: sellerId,
       uploaded_by_user_id: user.id,
-      status: "CREATED",
-      expected_profile: input.profile,
-      expected_mime: mime,
-      expected_size_bytes: input.sizeBytes,
+      target_domain: input.profile,
+      media_category: "IMAGE",
       original_filename: sanitizedFilename,
-      staging_bucket: "media-staging",
+      expected_mime_type: mime,
+      expected_size_bytes: input.sizeBytes,
       staging_path: stagingPath,
+      status: "CREATED",
       expires_at: expiresAt,
     });
 
@@ -249,6 +250,14 @@ export class MediaService {
     if (existingAsset) {
       // Deduplicate! Reuse existing asset, complete session, purge staging binary
       await adminDb
+        .from("media_assets")
+        .update({
+          storage_bucket: "public-media",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", existingAsset.id);
+
+      await adminDb
         .from("media_upload_sessions")
         .update({
           status: "COMPLETED",
@@ -275,14 +284,13 @@ export class MediaService {
       id: assetId,
       seller_id: session.seller_id,
       uploaded_by_user_id: session.uploaded_by_user_id,
-      profile: session.expected_profile,
-      category: "IMAGE",
+      session_id: sessionId,
+      media_category: "IMAGE",
       original_filename: session.original_filename,
-      mime_type: session.expected_mime,
+      mime_type: session.expected_mime_type,
       file_size_bytes: buffer.length,
       sha256_hash: sha256Hash,
       storage_bucket: "media-staging",
-      storage_path: session.staging_path,
       status: "QUEUED",
       is_system_seeded: false,
     });
@@ -298,7 +306,7 @@ export class MediaService {
         sessionId,
         sellerId: session.seller_id,
         uploadedByUserId: session.uploaded_by_user_id,
-        profile: session.expected_profile,
+        profile: session.target_domain,
         stagingPath: session.staging_path,
       });
     } catch (queueErr: any) {

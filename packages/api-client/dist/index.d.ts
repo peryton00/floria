@@ -198,6 +198,30 @@ declare class FloriaApiClient {
     updateSellerProduct(id: string, data: any): Promise<ApiResponse<any>>;
     deleteSellerProduct(id: string): Promise<ApiResponse<any>>;
     updateSellerProductStatus(id: string, status: "active" | "draft" | "inactive"): Promise<ApiResponse<any>>;
+    createMediaUploadSession(params: {
+        profile: string;
+        filename: string;
+        mimeType: string;
+        sizeBytes: number;
+    }): Promise<ApiResponse<any>>;
+    completeMediaUploadSession(sessionId: string): Promise<ApiResponse<any>>;
+    getMediaUploadSessionStatus(sessionId: string): Promise<ApiResponse<any>>;
+    attachProductImage(productId: string, params: {
+        assetId: string;
+        altText?: string;
+        isPrimary?: boolean;
+        displayOrder?: number;
+    }): Promise<ApiResponse<any>>;
+    removeProductImage(productId: string, imageId: string): Promise<ApiResponse<any>>;
+    reorderProductImages(productId: string, imageOrders: Array<{
+        imageId: string;
+        displayOrder: number;
+    }>): Promise<ApiResponse<any>>;
+    setPrimaryProductImage(productId: string, imageId: string): Promise<ApiResponse<any>>;
+    replaceProductImage(productId: string, imageId: string, params: {
+        assetId: string;
+        altText?: string;
+    }): Promise<ApiResponse<any>>;
     getSellerInventory(): Promise<ApiResponse<any[]>>;
     updateSellerInventory(productId: string, data: any): Promise<ApiResponse<any>>;
     getSellerOrders(params?: QueryParams): Promise<ApiResponse<any[]>>;

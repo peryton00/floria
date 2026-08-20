@@ -1,3 +1,4 @@
+
 // Floria Media Infrastructure — System Assets Migration Script (Stage 6)
 import fs from "fs";
 import path from "path";
@@ -23,37 +24,27 @@ export const DEFAULT_SYSTEM_USER_ID = "00000000-0000-0000-0000-000000000000";
 export async function resolveSystemUploaderUserId(): Promise<string> {
   const adminDb = getAdminDb();
 
-  // 1. Check if designated system user exists
-  const { data: existingSysUser } = await adminDb
+  // 1. Query real existing admin profile from user_profiles
+  const { data: adminUser } = await adminDb
     .from("user_profiles")
     .select("id")
-    .eq("id", DEFAULT_SYSTEM_USER_ID)
+    .eq("role", "admin")
+    .limit(1)
     .maybeSingle();
 
-  if (existingSysUser) {
-    return DEFAULT_SYSTEM_USER_ID;
+  if (adminUser && adminUser.id) {
+    return adminUser.id;
   }
 
-  // 2. Query any existing admin or user profile
+  // 2. Query any existing user profile
   const { data: existingProfile } = await adminDb
     .from("user_profiles")
     .select("id")
     .limit(1)
     .maybeSingle();
 
-  if (existingProfile) {
+  if (existingProfile && existingProfile.id) {
     return existingProfile.id;
-  }
-
-  // 3. Insert system user profile if table is empty
-  const { error: insertErr } = await adminDb.from("user_profiles").insert({
-    id: DEFAULT_SYSTEM_USER_ID,
-    role: "admin",
-    full_name: "Floria System Administrator",
-  });
-
-  if (insertErr) {
-    console.warn(`[SystemMigration] System uploader insert fallback notice: ${insertErr.message}`);
   }
 
   return DEFAULT_SYSTEM_USER_ID;
@@ -64,7 +55,7 @@ export async function resolveSystemUploaderUserId(): Promise<string> {
  * processes through Stage 3 ImageEngine, uploads WebP variants to public-media,
  * and records database records with is_system_seeded = TRUE and seller_id = NULL.
  */
-export async function migrateSystemAssets(): Promise<MigratedAssetResult[]> {
+export async function migrateSystemAssets(overrideBuffers?: Record<string, Buffer>): Promise<MigratedAssetResult[]> {
   const adminDb = getAdminDb();
   const systemUserId = await resolveSystemUploaderUserId();
   const results: MigratedAssetResult[] = [];
@@ -81,14 +72,21 @@ export async function migrateSystemAssets(): Promise<MigratedAssetResult[]> {
   const supabaseUrl = process.env.SUPABASE_URL || "https://supabase.co";
 
   for (const assetDef of SYSTEM_ASSETS_MANIFEST) {
-    const filePath = path.join(effectivePublicDir, assetDef.legacyPath);
+    let fileBuffer: Buffer | null = null;
 
-    if (!fs.existsSync(filePath)) {
-      console.warn(`[SystemMigration] Source file '${assetDef.legacyPath}' not found at '${filePath}'. Skipping.`);
-      continue;
+    if (overrideBuffers && overrideBuffers[assetDef.legacyPath]) {
+      fileBuffer = overrideBuffers[assetDef.legacyPath];
+    } else {
+      const filePath = path.join(effectivePublicDir, assetDef.legacyPath);
+      if (fs.existsSync(filePath)) {
+        fileBuffer = fs.readFileSync(filePath);
+      }
     }
 
-    const fileBuffer = fs.readFileSync(filePath);
+    if (!fileBuffer) {
+      console.warn(`[SystemMigration] Source file '${assetDef.legacyPath}' not found. Skipping.`);
+      continue;
+    }
     const sha256Hash = crypto.createHash("sha256").update(fileBuffer).digest("hex");
 
     // 1. SHA-256 Deduplication Check (for system-seeded READY assets)
@@ -179,7 +177,6 @@ export async function migrateSystemAssets(): Promise<MigratedAssetResult[]> {
         id: assetId,
         seller_id: null, // Strictly system-seeded, not seller-owned!
         uploaded_by_user_id: systemUserId,
-        profile: assetDef.profile,
         media_category: "IMAGE",
         original_filename: assetDef.originalFilename,
         mime_type: "image/png",

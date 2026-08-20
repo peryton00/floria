@@ -25,6 +25,13 @@ router.patch("/products/:id", authenticateToken, sellerFulfillmentRateLimiter, r
 router.patch("/products/:id/status", authenticateToken, sellerFulfillmentRateLimiter, requireApprovedSeller, sellersController.updateProductStatus);
 router.delete("/products/:id", authenticateToken, sellerFulfillmentRateLimiter, requireApprovedSeller, sellersController.deleteProduct);
 
+// Seller Product Media Asset Management
+router.post("/products/:productId/images", authenticateToken, sellerFulfillmentRateLimiter, requireApprovedSeller, sellersController.attachProductImage);
+router.delete("/products/:productId/images/:imageId", authenticateToken, sellerFulfillmentRateLimiter, requireApprovedSeller, sellersController.removeProductImage);
+router.patch("/products/:productId/images/reorder", authenticateToken, sellerFulfillmentRateLimiter, requireApprovedSeller, sellersController.reorderProductImages);
+router.patch("/products/:productId/images/:imageId/primary", authenticateToken, sellerFulfillmentRateLimiter, requireApprovedSeller, sellersController.setPrimaryProductImage);
+router.put("/products/:productId/images/:imageId", authenticateToken, sellerFulfillmentRateLimiter, requireApprovedSeller, sellersController.replaceProductImage);
+
 // Seller Inventory Management
 router.get("/inventory", authenticateToken, requireRole("seller", "admin"), sellersController.getInventory);
 router.patch("/inventory/:productId", authenticateToken, sellerFulfillmentRateLimiter, requireApprovedSeller, sellersController.updateInventory);

@@ -22,6 +22,12 @@ router.post("/products", auth_js_1.authenticateToken, rateLimit_js_1.sellerFulfi
 router.patch("/products/:id", auth_js_1.authenticateToken, rateLimit_js_1.sellerFulfillmentRateLimiter, authorization_js_1.requireApprovedSeller, sellers_controller_js_1.sellersController.updateProduct);
 router.patch("/products/:id/status", auth_js_1.authenticateToken, rateLimit_js_1.sellerFulfillmentRateLimiter, authorization_js_1.requireApprovedSeller, sellers_controller_js_1.sellersController.updateProductStatus);
 router.delete("/products/:id", auth_js_1.authenticateToken, rateLimit_js_1.sellerFulfillmentRateLimiter, authorization_js_1.requireApprovedSeller, sellers_controller_js_1.sellersController.deleteProduct);
+// Seller Product Media Asset Management
+router.post("/products/:productId/images", auth_js_1.authenticateToken, rateLimit_js_1.sellerFulfillmentRateLimiter, authorization_js_1.requireApprovedSeller, sellers_controller_js_1.sellersController.attachProductImage);
+router.delete("/products/:productId/images/:imageId", auth_js_1.authenticateToken, rateLimit_js_1.sellerFulfillmentRateLimiter, authorization_js_1.requireApprovedSeller, sellers_controller_js_1.sellersController.removeProductImage);
+router.patch("/products/:productId/images/reorder", auth_js_1.authenticateToken, rateLimit_js_1.sellerFulfillmentRateLimiter, authorization_js_1.requireApprovedSeller, sellers_controller_js_1.sellersController.reorderProductImages);
+router.patch("/products/:productId/images/:imageId/primary", auth_js_1.authenticateToken, rateLimit_js_1.sellerFulfillmentRateLimiter, authorization_js_1.requireApprovedSeller, sellers_controller_js_1.sellersController.setPrimaryProductImage);
+router.put("/products/:productId/images/:imageId", auth_js_1.authenticateToken, rateLimit_js_1.sellerFulfillmentRateLimiter, authorization_js_1.requireApprovedSeller, sellers_controller_js_1.sellersController.replaceProductImage);
 // Seller Inventory Management
 router.get("/inventory", auth_js_1.authenticateToken, (0, authorization_js_1.requireRole)("seller", "admin"), sellers_controller_js_1.sellersController.getInventory);
 router.patch("/inventory/:productId", auth_js_1.authenticateToken, rateLimit_js_1.sellerFulfillmentRateLimiter, authorization_js_1.requireApprovedSeller, sellers_controller_js_1.sellersController.updateInventory);

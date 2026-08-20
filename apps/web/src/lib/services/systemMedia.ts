@@ -45,6 +45,21 @@ export const SYSTEM_MEDIA_REGISTRY: Record<string, Record<string, string>> = {
     cover: `${SUPABASE_STORAGE_URL}/storage/v1/object/public/public-media/system/hero-plants/cover.webp`,
     card: `${SUPABASE_STORAGE_URL}/storage/v1/object/public/public-media/system/hero-plants/card.webp`,
   },
+  "outdoor-plants": {
+    banner: `${SUPABASE_STORAGE_URL}/storage/v1/object/public/public-media/system/category-outdoor-plants/banner.webp`,
+  },
+  "succulents-cacti": {
+    banner: `${SUPABASE_STORAGE_URL}/storage/v1/object/public/public-media/system/category-succulents-cacti/banner.webp`,
+  },
+  "flowering-plants": {
+    banner: `${SUPABASE_STORAGE_URL}/storage/v1/object/public/public-media/system/category-flowering-plants/banner.webp`,
+  },
+  "herbs-edibles": {
+    banner: `${SUPABASE_STORAGE_URL}/storage/v1/object/public/public-media/system/category-herbs-edibles/banner.webp`,
+  },
+  "soil-fertilizers": {
+    banner: `${SUPABASE_STORAGE_URL}/storage/v1/object/public/public-media/system/category-soil-fertilizers/banner.webp`,
+  },
 };
 
 /**

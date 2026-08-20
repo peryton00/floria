@@ -183,6 +183,7 @@ export class MediaWorker {
         .from("media_assets")
         .update({
           status: "READY",
+          storage_bucket: "public-media",
           updated_at: new Date().toISOString(),
         })
         .eq("id", payload.assetId)

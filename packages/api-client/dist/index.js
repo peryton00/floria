@@ -240,6 +240,49 @@ var FloriaApiClient = class {
       body: JSON.stringify({ status })
     });
   }
+  // ── SELLER PRODUCT MEDIA INTEGRATION (STAGE 8) ───────────────────────────
+  async createMediaUploadSession(params) {
+    return this.request("/api/v1/media/upload-session", {
+      method: "POST",
+      body: JSON.stringify(params)
+    });
+  }
+  async completeMediaUploadSession(sessionId) {
+    return this.request(`/api/v1/media/upload-session/${sessionId}/complete`, {
+      method: "POST"
+    });
+  }
+  async getMediaUploadSessionStatus(sessionId) {
+    return this.request(`/api/v1/media/upload-session/${sessionId}`);
+  }
+  async attachProductImage(productId, params) {
+    return this.request(`/api/v1/seller/products/${productId}/images`, {
+      method: "POST",
+      body: JSON.stringify(params)
+    });
+  }
+  async removeProductImage(productId, imageId) {
+    return this.request(`/api/v1/seller/products/${productId}/images/${imageId}`, {
+      method: "DELETE"
+    });
+  }
+  async reorderProductImages(productId, imageOrders) {
+    return this.request(`/api/v1/seller/products/${productId}/images/reorder`, {
+      method: "PATCH",
+      body: JSON.stringify({ imageOrders })
+    });
+  }
+  async setPrimaryProductImage(productId, imageId) {
+    return this.request(`/api/v1/seller/products/${productId}/images/${imageId}/primary`, {
+      method: "PATCH"
+    });
+  }
+  async replaceProductImage(productId, imageId, params) {
+    return this.request(`/api/v1/seller/products/${productId}/images/${imageId}`, {
+      method: "PUT",
+      body: JSON.stringify(params)
+    });
+  }
   async getSellerInventory() {
     return this.request("/api/v1/seller/inventory");
   }

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useSeller } from "@/lib/contexts/SellerContext";
 import { api } from "@/lib/api";
 import { AlertIcon } from "@/components/ui/Icons";
+import { ProductImageUploader } from "@/components/seller/ProductImageUploader";
 
 interface FormErrors {
   name?: string;
@@ -28,7 +29,7 @@ export default function AddProductPage() {
   const [description, setDescription] = useState("");
   const [careInstructions, setCareInstructions] = useState("");
   const [status, setStatus] = useState<"active" | "draft">("active");
-  const [imageUrl, setImageUrl] = useState("/floria-logo.png");
+  const [productImages, setProductImages] = useState<import("@/components/seller/ProductImageUploader").ImageItem[]>([]);
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -86,7 +87,12 @@ export default function AddProductPage() {
         description: description.trim() || undefined,
         care_instructions: careInstructions.trim() || undefined,
         status,
-        image_url: imageUrl,
+        images: productImages.map((img) => ({
+          asset_id: img.assetId || undefined,
+          url: img.url,
+          is_primary: img.isPrimary,
+        })),
+        image_url: productImages.find((img) => img.isPrimary)?.url || productImages[0]?.url || "/floria-logo.png",
       };
 
       const res = await api.createSellerProduct(payload);
@@ -270,17 +276,12 @@ export default function AddProductPage() {
           />
         </div>
 
-        {/* Image URL */}
-        <div>
-          <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-slate-600 mb-1">
-            Plant Photography URL
-          </label>
-          <input
-            type="text"
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
-            placeholder="/floria-logo.png or https://images.unsplash.com/..."
-            className="w-full px-3.5 py-2 rounded border border-[#E2E8F0] bg-[#F8FAFC] focus:bg-white text-xs font-mono focus:outline-none focus:ring-1 focus:ring-[#1B4D3E] text-[#0F172A]"
+        {/* Product Media Uploader (Stage 8 Vertical Slice) */}
+        <div className="pt-2 pb-2">
+          <ProductImageUploader
+            images={productImages}
+            onChange={setProductImages}
+            maxImages={8}
           />
         </div>
 

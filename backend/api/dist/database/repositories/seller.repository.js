@@ -29,10 +29,33 @@ class SellerRepository {
     }
     async updateProfile(sellerId, updates) {
         const db = (0, database_js_1.getAdminDb)();
+        // Auto-sync address string if structured components are updated
+        let address = updates.address;
+        if (!address && (updates.address_line1 || updates.city || updates.state || updates.pincode)) {
+            address = [
+                updates.address_line1,
+                updates.address_line2,
+                updates.locality,
+                updates.landmark,
+                updates.city,
+                updates.district,
+                updates.state,
+                updates.pincode,
+                updates.country || "India",
+            ]
+                .filter((part) => typeof part === "string" && part.trim().length > 0)
+                .join(", ");
+        }
         const payload = {
             ...updates,
             updated_at: new Date().toISOString(),
         };
+        if (address) {
+            payload.address = address;
+        }
+        if (updates.is_profile_completed && !updates.profile_completed_at) {
+            payload.profile_completed_at = new Date().toISOString();
+        }
         const { data, error } = await db
             .from("seller_profiles")
             .update(payload)
@@ -153,14 +176,7 @@ class SellerRepository {
             q = q.or(`name.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
         }
         const { data } = await (typeof q.order === "function" ? q.order("created_at", { ascending: false }) : q);
-        let results = data && data.length > 0 ? data : [];
-        if (results.length === 0) {
-            const qAll = db.from("products").select(PRODUCT_LISTING_SELECT);
-            const { data: allProds } = await (typeof qAll.order === "function"
-                ? qAll.order("created_at", { ascending: false }).limit(50)
-                : qAll);
-            results = allProds || [];
-        }
+        let results = data || [];
         results = results.filter((p) => p.status !== "deleted");
         if (filters?.stock === "low") {
             results = results.filter((p) => {
@@ -225,11 +241,29 @@ class SellerRepository {
             sku: productData.sku?.trim() || null,
             updated_at: now,
         });
-        // Primary Image
-        if (productData.image_url) {
+        // Primary & Additional Images Support
+        if (Array.isArray(productData.images) && productData.images.length > 0) {
+            for (let i = 0; i < productData.images.length; i++) {
+                const imgObj = productData.images[i];
+                const assetId = typeof imgObj === "string" ? imgObj : (imgObj.asset_id || imgObj.assetId || null);
+                const imgUrl = typeof imgObj === "string" ? imgObj : (imgObj.url || productData.image_url || "/floria-logo.png");
+                const isPrimary = typeof imgObj === "object" && imgObj.is_primary !== undefined ? imgObj.is_primary : i === 0;
+                await db.from("product_images").insert({
+                    product_id: prod.id,
+                    asset_id: assetId,
+                    url: imgUrl,
+                    alt_text: prod.name,
+                    display_order: i + 1,
+                    is_primary: isPrimary,
+                    created_at: now,
+                });
+            }
+        }
+        else if (productData.asset_id || productData.image_url) {
             await db.from("product_images").insert({
                 product_id: prod.id,
-                url: productData.image_url,
+                asset_id: productData.asset_id || null,
+                url: productData.image_url || "/floria-logo.png",
                 alt_text: prod.name,
                 display_order: 1,
                 is_primary: true,
@@ -271,6 +305,34 @@ class SellerRepository {
             if (updates.sku !== undefined)
                 invPayload["sku"] = updates.sku?.trim() || null;
             await db.from("inventory").update(invPayload).eq("product_id", productId).eq("seller_id", sellerId);
+        }
+        // Update Primary image if image_url or asset_id provided
+        if (updates.asset_id || updates.image_url) {
+            const { data: primaryImg } = await db
+                .from("product_images")
+                .select("id")
+                .eq("product_id", productId)
+                .eq("is_primary", true)
+                .maybeSingle();
+            if (primaryImg) {
+                const imgPayload = {};
+                if (updates.asset_id)
+                    imgPayload["asset_id"] = updates.asset_id;
+                if (updates.image_url)
+                    imgPayload["url"] = updates.image_url;
+                await db.from("product_images").update(imgPayload).eq("id", primaryImg.id);
+            }
+            else {
+                await db.from("product_images").insert({
+                    product_id: productId,
+                    asset_id: updates.asset_id || null,
+                    url: updates.image_url || "/floria-logo.png",
+                    alt_text: existing.name,
+                    display_order: 1,
+                    is_primary: true,
+                    created_at: now,
+                });
+            }
         }
         return this.findSellerProductById(sellerId, productId);
     }
@@ -440,64 +502,7 @@ class SellerRepository {
                 }
             });
         }
-        // Fallback: If no orders matched targetSellerId/targetUserId, fetch recent orders from database so test/seed orders display
-        if (orderMap.size === 0) {
-            const { data: allOrders } = await db
-                .from("orders")
-                .select("*, order_items(*, product:products(name,slug,seller_id))")
-                .order("created_at", { ascending: false })
-                .limit(20);
-            (allOrders || []).forEach((order) => {
-                const lineItems = (order.order_items || []).map((item) => {
-                    const pricePaise = item.unit_price_paise_snapshot || 0;
-                    const basePrice = item.base_price_paise_snapshot ?? item.unit_price_paise_snapshot ?? 0;
-                    const commRate = item.commission_rate_snapshot ?? (order.commission_rate ?? 0);
-                    const commPaise = item.commission_paise_snapshot ?? Math.round(basePrice * commRate);
-                    const sellerNetPaise = basePrice - commPaise;
-                    return {
-                        product: {
-                            id: item.product_id,
-                            name: item.product_name_snapshot || item.product?.name || "Plant",
-                            slug: item.product?.slug || "plant",
-                        },
-                        quantity: item.quantity,
-                        pricePaise,
-                        base_price_paise: basePrice,
-                        seller_net_paise: sellerNetPaise,
-                        commission_paise: commPaise,
-                    };
-                });
-                const subtotalPaise = lineItems.reduce((sum, it) => sum + it.pricePaise * it.quantity, 0) || order.subtotal_paise || 0;
-                const sellerPayoutPaise = lineItems.reduce((sum, it) => sum + it.seller_net_paise * it.quantity, 0);
-                orderMap.set(order.id, {
-                    masterOrderId: order.id,
-                    sellerId: targetSellerId,
-                    sellerName,
-                    customer: {
-                        name: order.delivery_address_snapshot?.full_name || "Customer",
-                        phone: order.delivery_address_snapshot?.phone || "",
-                        address: typeof order.delivery_address_snapshot === "string"
-                            ? order.delivery_address_snapshot
-                            : [order.delivery_address_snapshot?.line1, order.delivery_address_snapshot?.line2, order.delivery_address_snapshot?.city, order.delivery_address_snapshot?.state, order.delivery_address_snapshot?.pincode].filter(Boolean).join(", ") || "Raipur, Chhattisgarh",
-                        addressSnapshot: order.delivery_address_snapshot || {},
-                    },
-                    items: lineItems,
-                    subtotalPaise,
-                    seller_payout_paise: sellerPayoutPaise,
-                    discountPaise: 0,
-                    totalPaise: subtotalPaise,
-                    status: order.status === "preparing" ? "Preparing" : "Order Placed",
-                    masterStatus: order.status,
-                    paymentMethod: order.notes?.includes("COD") ? "Cash on Delivery" : "Online Payment",
-                    createdAt: new Date(order.created_at || Date.now()).toLocaleDateString("en-IN", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                    }),
-                    createdAtTimestamp: new Date(order.created_at || Date.now()).getTime(),
-                });
-            });
-        }
+        // ponytail: fallback intentionally removed — sellers with no orders see an empty list (correct tenant isolation)
         let results = Array.from(orderMap.values());
         if (filters?.status && filters.status !== "all") {
             results = results.filter((o) => o.status.toLowerCase() === filters.status.toLowerCase());

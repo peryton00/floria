@@ -102,6 +102,56 @@ class SellersController {
             next(err);
         }
     }
+    async attachProductImage(req, res, next) {
+        try {
+            const profile = await sellers_service_js_1.sellersService.getProfile(req.user.id);
+            const product = await sellers_service_js_1.sellersService.attachProductImage(profile, req.params.productId, req.body);
+            res.status(201).json({ success: true, data: product });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+    async removeProductImage(req, res, next) {
+        try {
+            const profile = await sellers_service_js_1.sellersService.getProfile(req.user.id);
+            const product = await sellers_service_js_1.sellersService.removeProductImage(profile, req.params.productId, req.params.imageId);
+            res.json({ success: true, data: product });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+    async reorderProductImages(req, res, next) {
+        try {
+            const profile = await sellers_service_js_1.sellersService.getProfile(req.user.id);
+            const product = await sellers_service_js_1.sellersService.reorderProductImages(profile, req.params.productId, req.body.imageOrders);
+            res.json({ success: true, data: product });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+    async setPrimaryProductImage(req, res, next) {
+        try {
+            const profile = await sellers_service_js_1.sellersService.getProfile(req.user.id);
+            const product = await sellers_service_js_1.sellersService.setPrimaryProductImage(profile, req.params.productId, req.params.imageId);
+            res.json({ success: true, data: product });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+    async replaceProductImage(req, res, next) {
+        try {
+            const profile = await sellers_service_js_1.sellersService.getProfile(req.user.id);
+            const product = await sellers_service_js_1.sellersService.replaceProductImage(profile, req.params.productId, req.params.imageId, req.body);
+            res.json({ success: true, data: product });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
     async getInventory(req, res, next) {
         try {
             const profile = await sellers_service_js_1.sellersService.getProfile(req.user.id);
