@@ -6,7 +6,8 @@ export type ImageProfileName =
   | "SELLER_LOGO"
   | "USER_AVATAR"
   | "CATEGORY"
-  | "REVIEW_IMAGE";
+  | "REVIEW_IMAGE"
+  | "DOCUMENT";
 
 export type FitBehavior = "FIT" | "COVER" | "CONTAIN";
 

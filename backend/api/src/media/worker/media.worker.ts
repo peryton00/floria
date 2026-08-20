@@ -113,20 +113,8 @@ export class MediaWorker {
       const arrayBuffer = await fileData.arrayBuffer();
       const inputBuffer = Buffer.from(arrayBuffer);
 
-      // 3. Pass Buffer to ImageEngine for Sharp Transformations
-      const engineResult = await ImageEngine.process(inputBuffer, payload.profile);
-
-      // 4. State Transition: STORING
-      await adminDb
-        .from("media_assets")
-        .update({
-          status: "STORING",
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", payload.assetId);
-
-      // 5. Upload Generated Variants to public-media with Immutable Cache Headers
-      const variantRecords: Array<{
+      // 3. Pass Buffer to ImageEngine for Sharp Transformations (or Private Storage for DOCUMENT)
+      let variantRecords: Array<{
         asset_id: string;
         variant_name: string;
         format: string;
@@ -136,46 +124,108 @@ export class MediaWorker {
         storage_bucket: string;
         storage_path: string;
       }> = [];
+      let engineResult: any = null;
 
-      for (const variant of engineResult.variants) {
-        const publicPath = buildPublicVariantPath(
-          payload.profile,
-          payload.sellerId,
-          payload.uploadedByUserId,
-          payload.assetId,
-          variant.variantName
-        );
-
-        const { error: uploadErr } = await adminDb.storage
-          .from("public-media")
-          .upload(publicPath, variant.buffer, {
-            contentType: "image/webp",
-            cacheControl: "public, max-age=31536000, immutable",
+      if (payload.profile === "DOCUMENT") {
+        const privatePath = `private/seller_${payload.sellerId || "admin"}/${payload.assetId}/document.pdf`;
+        const { error: privateUploadErr } = await adminDb.storage
+          .from("private-documents")
+          .upload(privatePath, inputBuffer, {
+            contentType: "application/pdf",
             upsert: true,
           });
 
-        if (uploadErr) {
-          throw new Error(`Failed to upload variant '${variant.variantName}' to '${publicPath}': ${uploadErr.message}`);
+        if (privateUploadErr) {
+          throw new Error(`Failed to upload private document to 'private-documents': ${privateUploadErr.message}`);
         }
 
-        uploadedVariantPaths.push(publicPath);
+        // Database Finalization for DOCUMENT: Transition to READY with private-documents bucket
+        const { data: finalDocAsset, error: docFinalErr } = await adminDb
+          .from("media_assets")
+          .update({
+            status: "READY",
+            storage_bucket: "private-documents",
+            original_path: privatePath,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", payload.assetId)
+          .select("id")
+          .maybeSingle();
 
-        variantRecords.push({
-          asset_id: payload.assetId,
-          variant_name: variant.variantName,
-          format: variant.format,
-          width: variant.width,
-          height: variant.height,
-          size_bytes: variant.sizeBytes,
-          storage_bucket: "public-media",
-          storage_path: publicPath,
-        });
-      }
+        if (docFinalErr || !finalDocAsset) {
+          throw new Error(`Document asset '${payload.assetId}' failed to finalize to READY.`);
+        }
 
-      // 6. Database Finalization: Insert media_variants
-      const { error: insertErr } = await adminDb.from("media_variants").insert(variantRecords);
-      if (insertErr) {
-        throw new Error(`Failed to insert media_variants records: ${insertErr.message}`);
+        if (payload.sessionId) {
+          await adminDb
+            .from("media_upload_sessions")
+            .update({
+              status: "COMPLETED",
+              completed_at: new Date().toISOString(),
+              resolved_asset_id: payload.assetId,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", payload.sessionId);
+        }
+
+        await adminDb.storage.from("media-staging").remove([payload.stagingPath]);
+        console.log(`[MediaWorker] Document asset '${payload.assetId}' processed into private-documents.`);
+        return;
+      } else {
+        engineResult = await ImageEngine.process(inputBuffer, payload.profile);
+
+        // 4. State Transition: STORING
+        await adminDb
+          .from("media_assets")
+          .update({
+            status: "STORING",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", payload.assetId);
+
+        // 5. Upload Generated Variants to public-media with Immutable Cache Headers
+        for (const variant of engineResult.variants) {
+          const publicPath = buildPublicVariantPath(
+            payload.profile,
+            payload.sellerId,
+            payload.uploadedByUserId,
+            payload.assetId,
+            variant.variantName
+          );
+
+          const { error: uploadErr } = await adminDb.storage
+            .from("public-media")
+            .upload(publicPath, variant.buffer, {
+              contentType: "image/webp",
+              cacheControl: "public, max-age=31536000, immutable",
+              upsert: true,
+            });
+
+          if (uploadErr) {
+            throw new Error(`Failed to upload variant '${variant.variantName}' to '${publicPath}': ${uploadErr.message}`);
+          }
+
+          uploadedVariantPaths.push(publicPath);
+
+          variantRecords.push({
+            asset_id: payload.assetId,
+            variant_name: variant.variantName,
+            format: variant.format,
+            width: variant.width,
+            height: variant.height,
+            size_bytes: variant.sizeBytes,
+            storage_bucket: "public-media",
+            storage_path: publicPath,
+          });
+        }
+
+        // 6. Database Finalization: Insert media_variants
+        if (variantRecords.length > 0) {
+          const { error: insertErr } = await adminDb.from("media_variants").insert(variantRecords);
+          if (insertErr) {
+            throw new Error(`Failed to insert media_variants records: ${insertErr.message}`);
+          }
+        }
       }
 
       // 7. Race-Safe Atomic Finalization: Transition STORING -> READY

@@ -16,6 +16,7 @@ exports.ALLOWED_MIME_TYPES = new Set([
     "image/webp",
     "image/heic",
     "image/heif",
+    "application/pdf",
 ]);
 exports.VALID_PROFILES = new Set([
     "PRODUCT",
@@ -24,6 +25,7 @@ exports.VALID_PROFILES = new Set([
     "USER_AVATAR",
     "CATEGORY",
     "REVIEW_IMAGE",
+    "DOCUMENT",
 ]);
 exports.MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 exports.SESSION_EXPIRATION_MS = 15 * 60 * 1000; // 15 minutes

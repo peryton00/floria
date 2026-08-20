@@ -12,7 +12,7 @@ export interface MediaUploadResult {
 }
 
 interface MediaUploaderProps {
-  profile: "PRODUCT" | "NURSERY" | "SELLER_LOGO" | "USER_AVATAR" | "CATEGORY" | "REVIEW_IMAGE";
+  profile: "PRODUCT" | "NURSERY" | "SELLER_LOGO" | "USER_AVATAR" | "CATEGORY" | "REVIEW_IMAGE" | "DOCUMENT";
   onUploadSuccess: (result: MediaUploadResult) => void;
   label?: string;
   accept?: string;

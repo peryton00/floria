@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useSeller } from "@/lib/contexts/SellerContext";
 import { api, type SellerDocument } from "@/lib/api";
 import { FileText, ShieldCheck, CheckCircle, Clock, AlertTriangle, Upload, Loader2 } from "lucide-react";
+import { MediaUploader } from "@/components/media/MediaUploader";
 
 export default function SellerDocumentsPage() {
   const { sellerProfile } = useSeller();
@@ -156,59 +157,57 @@ export default function SellerDocumentsPage() {
           </div>
         )}
 
-        <form onSubmit={handleUpload} className="space-y-4 text-xs">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-slate-600 mb-1">Document Type *</label>
-              <select
-                value={documentType}
-                onChange={(e) => setDocumentType(e.target.value)}
-                className="w-full px-3.5 py-2 rounded border border-[#E2E8F0] bg-[#F8FAFC] focus:bg-white text-xs font-medium focus:outline-none focus:ring-1 focus:ring-[#1B4D3E] text-[#0F172A]"
-              >
-                <option value="gstin">GSTIN Certificate</option>
-                <option value="business_license">Nursery Business License</option>
-                <option value="pan_card">PAN Card / Identity Proof</option>
-                <option value="trade_license">Municipal Trade License</option>
-                <option value="other">Other Business Document</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-slate-600 mb-1">Document Title *</label>
-              <input
-                type="text"
-                required
-                value={fileName}
-                onChange={(e) => setFileName(e.target.value)}
-                placeholder="e.g. GSTIN_Raipur_Branch.pdf"
-                className="w-full px-3.5 py-2 rounded border border-[#E2E8F0] bg-[#F8FAFC] focus:bg-white text-xs font-medium focus:outline-none focus:ring-1 focus:ring-[#1B4D3E] text-[#0F172A] placeholder:text-slate-400"
-              />
-            </div>
+        <div className="space-y-3 text-xs">
+          <div>
+            <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-slate-600 mb-1">Document Type *</label>
+            <select
+              value={documentType}
+              onChange={(e) => setDocumentType(e.target.value)}
+              className="w-full px-3.5 py-2 rounded border border-[#E2E8F0] bg-[#F8FAFC] focus:bg-white text-xs font-medium focus:outline-none focus:ring-1 focus:ring-[#1B4D3E] text-[#0F172A]"
+            >
+              <option value="gstin">GSTIN Certificate</option>
+              <option value="business_license">Nursery Business License</option>
+              <option value="pan_card">PAN Card / Identity Proof</option>
+              <option value="trade_license">Municipal Trade License</option>
+              <option value="other">Other Business Document</option>
+            </select>
           </div>
 
-          <div>
-            <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-slate-600 mb-1">Document URL / Storage Link *</label>
-            <input
-              type="text"
-              required
-              value={fileUrl}
-              onChange={(e) => setFileUrl(e.target.value)}
-              placeholder="https://... or secure storage link"
-              className="w-full px-3.5 py-2 rounded border border-[#E2E8F0] bg-[#F8FAFC] focus:bg-white text-xs font-mono focus:outline-none focus:ring-1 focus:ring-[#1B4D3E] text-[#0F172A] placeholder:text-slate-400"
+          <div className="pt-2">
+            <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+              Upload Verification PDF / Image File *
+            </label>
+            <MediaUploader
+              profile="DOCUMENT"
+              accept="application/pdf,image/jpeg,image/png"
+              maxSizeBytes={15 * 1024 * 1024}
+              onUploadSuccess={async (res) => {
+                try {
+                  setIsUploading(true);
+                  setError(null);
+                  setUploadSuccess(false);
+
+                  const attachRes = await api.attachSellerDocument(
+                    documentType,
+                    res.assetId
+                  );
+
+                  if (attachRes.success) {
+                    setUploadSuccess(true);
+                    fetchDocuments();
+                  } else {
+                    setError(attachRes.error?.message || "Failed to record seller document");
+                  }
+                } catch (err: any) {
+                  setError(err.message || "Failed to record seller document");
+                } finally {
+                  setIsUploading(false);
+                }
+              }}
+              label="Upload Document File (PDF / Image)"
             />
           </div>
-
-          <div className="flex justify-end pt-2">
-            <button
-              type="submit"
-              disabled={isUploading}
-              style={{ color: "#ffffff" }}
-              className="px-5 py-2 bg-[#1B4D3E] hover:bg-[#153e31] !text-white rounded font-bold text-xs uppercase tracking-wider transition-colors shadow-xs disabled:opacity-50 flex items-center gap-2"
-            >
-              {isUploading ? <Loader2 size={13} className="animate-spin" /> : "Submit Document"}
-            </button>
-          </div>
-        </form>
+        </div>
       </section>
 
       {/* Document List */}
@@ -227,22 +226,37 @@ export default function SellerDocumentsPage() {
           <div className="divide-y divide-[#E2E8F0]">
             {documents.map((doc) => (
               <div key={doc.id} className="py-3.5 flex justify-between items-center text-xs hover:bg-slate-50/80 transition-colors">
-                <div className="flex gap-3 items-center">
+                <div className="flex gap-3 items-center min-w-0">
                   <div className="w-8 h-8 rounded bg-forest-50 text-forest-700 flex items-center justify-center flex-shrink-0 border border-forest-100 shadow-xs">
                     <FileText size={16} />
                   </div>
-                  <div>
-                    <p className="font-bold text-[#0F172A]">{doc.file_name}</p>
+                  <div className="min-w-0">
+                    <p className="font-bold text-[#0F172A] truncate">{doc.file_name || doc.document_type.toUpperCase()}</p>
                     <p className="text-[10px] text-slate-400 mt-0.5 font-mono">
-                      {doc.document_type.toUpperCase()} • {doc.mime_type}
+                      {doc.document_type.toUpperCase()} • {doc.mime_type || "PDF/Image"}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <span className="text-[10px] text-slate-400 font-mono">
-                    {new Date(doc.created_at).toLocaleDateString()}
-                  </span>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        const linkRes = await api.getSignedDocumentUrl(doc.id);
+                        if (linkRes.success && linkRes.data?.signedUrl) {
+                          window.open(linkRes.data.signedUrl, "_blank");
+                        } else {
+                          alert("Failed to generate private document download URL");
+                        }
+                      } catch (e: any) {
+                        alert(e.message || "Failed to fetch private document link");
+                      }
+                    }}
+                    className="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 font-mono font-bold text-[10px] text-slate-800 border border-slate-300 transition-colors flex items-center gap-1"
+                  >
+                    <Upload size={10} className="rotate-180" /> Secure Download
+                  </button>
                   {getStatusBadge(doc.status)}
                 </div>
               </div>

@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { FilterSidebar } from "@/components/ui/FilterSidebar";
-import { MOCK_SELLERS } from "@/lib/services/mockData";
 
 interface FilterAndSortControlsProps {
   totalCount: number;
@@ -46,9 +45,7 @@ export function FilterAndSortControls({
   };
 
   // Resolve Nursery Name
-  const nurseryName = activeNursery && MOCK_SELLERS[activeNursery]
-    ? MOCK_SELLERS[activeNursery].business_name
-    : null;
+  const nurseryName = activeNursery ? "Selected Nursery" : null;
 
   return (
     <div className="space-y-3 mb-6">

@@ -5,6 +5,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { api } from "@/lib/api";
 import { useToast } from "@/lib/contexts/ToastContext";
 import { TableSkeleton } from "@/components/ui/loading";
+import { MediaUploader } from "@/components/media/MediaUploader";
 
 export default function AdminCategoriesPage() {
   const { toast } = useToast();
@@ -276,6 +277,34 @@ export default function AdminCategoriesPage() {
                     className="w-full px-3 py-2 rounded-xl border border-ink-200 text-xs focus:outline-none focus:ring-1 focus:ring-forest-700 bg-white"
                   />
                 </div>
+
+                {editingCategory && (
+                  <div className="pt-2 border-t border-ink-100">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-ink-700 mb-1.5">
+                      Category WebP Banner Image
+                    </label>
+                    <MediaUploader
+                      profile="CATEGORY"
+                      currentUrl={editingCategory.banner_url || editingCategory.image_url || undefined}
+                      onUploadSuccess={async (res) => {
+                        try {
+                          setActionLoading(true);
+                          const updateRes = await api.updateCategoryBanner(editingCategory.id, res.assetId);
+                          if (updateRes.success) {
+                            fetchCategories();
+                          } else {
+                            setError(updateRes.error?.message || "Failed to update category banner");
+                          }
+                        } catch (err: any) {
+                          setError(err.message || "Failed to update category banner");
+                        } finally {
+                          setActionLoading(false);
+                        }
+                      }}
+                      label="Upload WebP Category Banner"
+                    />
+                  </div>
+                )}
 
                 <div className="flex gap-3 pt-3">
                   <button

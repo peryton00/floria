@@ -105,4 +105,8 @@ export const PROFILES: Record<ImageProfileName, ProfileSpec> = {
       },
     ],
   },
+  DOCUMENT: {
+    profileName: "DOCUMENT",
+    variants: [],
+  },
 };

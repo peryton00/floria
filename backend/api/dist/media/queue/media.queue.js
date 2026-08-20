@@ -15,6 +15,7 @@ exports.VALID_PROFILES = new Set([
     "USER_AVATAR",
     "CATEGORY",
     "REVIEW_IMAGE",
+    "DOCUMENT",
 ]);
 /**
  * MANDATORY ARCHITECTURAL CHECK: Validates job payload to ensure

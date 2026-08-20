@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { LockIcon } from "@/components/ui/Icons";
+import { api } from "@/lib/api";
+import { MediaUploader } from "@/components/media/MediaUploader";
 
 export interface UserProfile {
   name: string;
@@ -74,14 +76,25 @@ export function ProfileEditModal({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Avatar Option */}
-          <div className="flex items-center gap-4 py-2">
-            <div className="w-14 h-14 rounded-full bg-forest-100 text-forest-800 font-serif font-bold text-xl flex items-center justify-center border border-forest-200">
-              {formData.name ? formData.name.charAt(0).toUpperCase() : "U"}
-            </div>
-            <div>
-              <p className="text-xs font-bold text-ink-900">Customer Avatar</p>
-              <p className="text-[11px] text-ink-400">Generated from your profile name</p>
-            </div>
+          <div className="py-2 border-b border-floria-border">
+            <label className="block text-xs font-bold text-ink-700 uppercase tracking-wider mb-2">
+              Profile Avatar Photo
+            </label>
+            <MediaUploader
+              profile="USER_AVATAR"
+              currentUrl={formData.avatarUrl}
+              onUploadSuccess={async (res) => {
+                try {
+                  const updateRes = await api.updateUserAvatar(res.assetId);
+                  if (updateRes.success) {
+                    setFormData((prev) => ({ ...prev, avatarUrl: res.url }));
+                  }
+                } catch (e) {
+                  console.error("Avatar update failed:", e);
+                }
+              }}
+              label="Upload New Avatar"
+            />
           </div>
 
           {/* Full Name */}

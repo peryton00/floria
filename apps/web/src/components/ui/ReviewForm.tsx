@@ -8,6 +8,7 @@ import { api, type ProductReview } from "@/lib/api";
 import { useToast } from "@/lib/contexts/ToastContext";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { useOrders } from "@/lib/contexts/OrderContext";
+import { MediaUploader } from "@/components/media/MediaUploader";
 
 interface ReviewFormProps {
   productId: string;
@@ -166,6 +167,26 @@ export function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
 
         {rev.title && <p className="text-xs font-bold text-ink-900">{rev.title}</p>}
         {rev.body && <p className="text-xs text-ink-600 leading-relaxed">{rev.body}</p>}
+
+        {"id" in rev && typeof (rev as any).id === "string" && (rev as any).id !== "new" && (
+          <div className="pt-2 border-t border-floria-border">
+            <p className="text-xs font-bold text-ink-700 mb-1.5">Attach Review Photo</p>
+            <MediaUploader
+              profile="REVIEW_IMAGE"
+              onUploadSuccess={async (res) => {
+                try {
+                  const attachRes = await api.attachReviewImage((rev as any).id, res.assetId);
+                  if (attachRes.success) {
+                    toast.success("Review Photo Attached", "Your photo will appear on this product review.");
+                  }
+                } catch (e: any) {
+                  toast.error("Upload Error", e.message || "Failed to attach review photo");
+                }
+              }}
+              label="Upload Review Photo"
+            />
+          </div>
+        )}
 
         <p className="text-[11px] text-ink-400 pt-1">
           To edit your review, please visit your{" "}

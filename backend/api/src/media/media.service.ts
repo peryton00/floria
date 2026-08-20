@@ -20,6 +20,7 @@ export const ALLOWED_MIME_TYPES = new Set([
   "image/webp",
   "image/heic",
   "image/heif",
+  "application/pdf",
 ]);
 
 export const VALID_PROFILES: Set<ImageProfileName> = new Set([
@@ -29,6 +30,7 @@ export const VALID_PROFILES: Set<ImageProfileName> = new Set([
   "USER_AVATAR",
   "CATEGORY",
   "REVIEW_IMAGE",
+  "DOCUMENT",
 ]);
 
 export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB

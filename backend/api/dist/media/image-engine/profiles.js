@@ -105,4 +105,8 @@ exports.PROFILES = {
             },
         ],
     },
+    DOCUMENT: {
+        profileName: "DOCUMENT",
+        variants: [],
+    },
 };

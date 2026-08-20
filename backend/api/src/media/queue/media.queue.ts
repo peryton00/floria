@@ -21,6 +21,7 @@ export const VALID_PROFILES: Set<ImageProfileName> = new Set([
   "USER_AVATAR",
   "CATEGORY",
   "REVIEW_IMAGE",
+  "DOCUMENT",
 ]);
 
 /**
