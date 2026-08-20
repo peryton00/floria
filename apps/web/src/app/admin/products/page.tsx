@@ -10,6 +10,13 @@ import { ProductGridSkeleton } from "@/components/ui/loading";
 
 import { ProductFinancialBreakdown } from "@/components/admin/ProductFinancialBreakdown";
 
+function formatBytes(bytes?: number): string {
+  if (!bytes || isNaN(bytes)) return "N/A";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
 export default function AdminProductsPage() {
   const { toast } = useToast();
   const [products, setProducts] = useState<any[]>([]);
@@ -23,8 +30,8 @@ export default function AdminProductsPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Edit fields
-  const [isEditing, setIsEditing] = useState(false);
+  // Edit / Modal fields
+  const [modalTab, setModalTab] = useState<"moderation" | "edit" | "media">("moderation");
   const [editName, setEditName] = useState("");
   const [editDesc, setEditDesc] = useState("");
   const [editCategory, setEditCategory] = useState("");
@@ -82,7 +89,7 @@ export default function AdminProductsPage() {
     setEditPriceINR((pricePaise / 100).toFixed(2));
     setEditStock(String(stockQty));
     setEditSku(sku);
-    setIsEditing(false);
+    setModalTab("moderation");
   };
 
   const handleModerateStatus = async (action: "publish" | "unpublish" | "archive") => {
@@ -302,25 +309,35 @@ export default function AdminProductsPage() {
                 </button>
               </div>
 
-              {/* View/Edit Navigation */}
-              <div className="flex border-b border-ink-100 gap-4 text-xs font-bold uppercase tracking-wider">
+              {/* View/Edit/Media Navigation */}
+              <div className="flex border-b border-ink-100 gap-4 text-xs font-bold uppercase tracking-wider overflow-x-auto">
                 <button
                   type="button"
-                  onClick={() => setIsEditing(false)}
-                  className={`pb-2 border-b-2 transition-colors ${!isEditing ? "border-forest-700 text-forest-700" : "border-transparent text-ink-400"}`}
+                  onClick={() => setModalTab("moderation")}
+                  className={`pb-2 border-b-2 transition-colors whitespace-nowrap ${modalTab === "moderation" ? "border-forest-700 text-forest-700" : "border-transparent text-ink-400"}`}
                 >
                   Status Moderation
                 </button>
                 <button
                   type="button"
-                  onClick={() => setIsEditing(true)}
-                  className={`pb-2 border-b-2 transition-colors ${isEditing ? "border-forest-700 text-forest-700" : "border-transparent text-ink-400"}`}
+                  onClick={() => setModalTab("edit")}
+                  className={`pb-2 border-b-2 transition-colors whitespace-nowrap ${modalTab === "edit" ? "border-forest-700 text-forest-700" : "border-transparent text-ink-400"}`}
                 >
                   Edit Specifications
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setModalTab("media")}
+                  className={`pb-2 border-b-2 transition-colors whitespace-nowrap flex items-center gap-1.5 ${modalTab === "media" ? "border-forest-700 text-forest-700" : "border-transparent text-ink-400"}`}
+                >
+                  <span>Media Assets</span>
+                  <span className="px-1.5 py-0.5 text-[10px] rounded-full bg-forest-100 text-forest-800 font-mono">
+                    {selectedProduct.images?.length || 0}
+                  </span>
+                </button>
               </div>
 
-              {!isEditing ? (
+              {modalTab === "moderation" && (
                 <div className="space-y-4">
                   <div className="bg-cream-50 rounded-xl p-4 space-y-2 text-xs">
                     <div className="flex justify-between">
@@ -370,7 +387,9 @@ export default function AdminProductsPage() {
                     </button>
                   </div>
                 </div>
-              ) : (
+              )}
+
+              {modalTab === "edit" && (
                 <form onSubmit={handleSaveDetails} className="space-y-4">
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-ink-700 mb-1">
@@ -488,6 +507,127 @@ export default function AdminProductsPage() {
                     </button>
                   </div>
                 </form>
+              )}
+
+              {modalTab === "media" && (
+                <div className="space-y-4 text-xs font-sans">
+                  {!selectedProduct.images || selectedProduct.images.length === 0 ? (
+                    <div className="p-8 text-center bg-slate-50 border border-slate-200 rounded-xl text-slate-500 font-medium">
+                      No media assets attached to this product.
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {selectedProduct.images.map((img: any, idx: number) => {
+                        const asset = img.asset || {};
+                        const variants = img.variant_details || [];
+                        const fileSizeFormatted = formatBytes(asset.file_size_bytes);
+
+                        return (
+                          <div key={img.id || img.asset_id || idx} className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+                            {/* Card Top Header */}
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-16 h-16 rounded-lg overflow-hidden border border-slate-300 bg-white shrink-0 relative">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img
+                                    src={img.url || "/floria-logo.png"}
+                                    alt={asset.original_filename || `Image ${idx + 1}`}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-bold text-slate-900 truncate max-w-[200px]">
+                                      {asset.original_filename || `Product Media #${idx + 1}`}
+                                    </span>
+                                    {img.is_primary && (
+                                      <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                        Primary Image
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-[10px] text-slate-500 font-mono mt-0.5">
+                                    Asset ID: {img.asset_id || "Unlinked"}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <a
+                                href={img.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="px-2.5 py-1 rounded bg-white hover:bg-slate-100 text-forest-800 border border-slate-300 font-mono font-bold text-[10px] transition-colors shrink-0"
+                              >
+                                Full View ↗
+                              </a>
+                            </div>
+
+                            {/* Metadata Details Grid */}
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-white p-3 rounded-lg border border-slate-200 font-mono text-[11px]">
+                              <div>
+                                <span className="text-slate-400 block text-[9px] uppercase">File Size</span>
+                                <span className="font-bold text-slate-800">{fileSizeFormatted}</span>
+                              </div>
+                              <div>
+                                <span className="text-slate-400 block text-[9px] uppercase">Dimensions</span>
+                                <span className="font-bold text-slate-800">
+                                  {asset.width && asset.height ? `${asset.width} × ${asset.height} px` : "N/A"}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-slate-400 block text-[9px] uppercase">MIME Type</span>
+                                <span className="font-bold text-slate-800 truncate block">{asset.mime_type || "image/jpeg"}</span>
+                              </div>
+                              <div>
+                                <span className="text-slate-400 block text-[9px] uppercase">Storage Status</span>
+                                <span className="font-bold text-emerald-700 uppercase">{asset.status || "READY"}</span>
+                              </div>
+                            </div>
+
+                            {/* Hash Details */}
+                            {asset.sha256_hash && (
+                              <div className="bg-white p-2.5 rounded-lg border border-slate-200 font-mono text-[10px] flex items-center justify-between gap-2">
+                                <span className="text-slate-400 shrink-0 uppercase font-bold text-[9px]">SHA-256 Hash:</span>
+                                <span className="text-slate-700 truncate font-semibold">{asset.sha256_hash}</span>
+                              </div>
+                            )}
+
+                            {/* WebP Variants Table */}
+                            {variants.length > 0 && (
+                              <div className="bg-white rounded-lg border border-slate-200 p-3 space-y-2">
+                                <p className="font-bold text-[10px] uppercase tracking-wider text-slate-600">
+                                  Generated WebP Image Variants ({variants.length})
+                                </p>
+                                <div className="divide-y divide-slate-100 font-mono text-[11px]">
+                                  {variants.map((v: any) => (
+                                    <div key={v.variant_name} className="py-1.5 flex justify-between items-center text-slate-700">
+                                      <div className="flex items-center gap-2">
+                                        <span className="font-bold uppercase text-forest-800 text-[10px] px-1.5 py-0.5 bg-forest-50 border border-forest-100 rounded">
+                                          {v.variant_name}
+                                        </span>
+                                        <span className="text-[10px] text-slate-500">
+                                          {v.width && v.height ? `${v.width}×${v.height} px` : "WebP"} • {formatBytes(v.file_size_bytes)}
+                                        </span>
+                                      </div>
+                                      <a
+                                        href={v.url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="text-forest-700 font-bold hover:underline text-[10px]"
+                                      >
+                                        Open ↗
+                                      </a>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>
