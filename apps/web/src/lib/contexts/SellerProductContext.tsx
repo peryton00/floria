@@ -202,6 +202,14 @@ export function SellerProductProvider({ children }: { children: React.ReactNode 
     };
   }, [refreshProducts]);
 
+  const [categories, setCategories] = useState<import("@floria/types").Category[]>([]);
+
+  useEffect(() => {
+    api.getCategories().then((res) => {
+      if (res.success && res.data) setCategories(res.data);
+    }).catch(() => {});
+  }, []);
+
   const getProductListingById = (productId: string): ProductListing | null => {
     const p = products.find((prod) => prod.id === productId);
     if (!p) return null;
@@ -217,7 +225,7 @@ export function SellerProductProvider({ children }: { children: React.ReactNode 
     };
     const imgList = images[p.id] ?? [];
     const primaryImg = imgList.find((i) => i.is_primary) ?? imgList[0] ?? null;
-    const cat = MOCK_CATEGORIES.find((c) => c.id === p.category_id) ?? null;
+    const cat = categories.find((c) => c.id === p.category_id) ?? MOCK_CATEGORIES.find((c) => c.id === p.category_id) ?? null;
     const seller = MOCK_SELLERS[p.seller_id] ?? { id: p.seller_id, business_name: "Green Leaf Nursery" };
 
     return {

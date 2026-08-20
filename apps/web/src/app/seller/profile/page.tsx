@@ -255,6 +255,15 @@ export default function SellerProfilePage() {
 
   const [nurseryCategory, setNurseryCategory] = useState("Retail Plant Nursery");
   const [plantCategories, setPlantCategories] = useState<string[]>(["Indoor Plants", "Flowering Plants"]);
+  const [dbCategories, setDbCategories] = useState<string[]>([]);
+
+  useEffect(() => {
+    api.getCategories().then((res) => {
+      if (res.success && res.data && res.data.length > 0) {
+        setDbCategories(res.data.map((c: any) => c.name));
+      }
+    }).catch(() => {});
+  }, []);
   const [specializations, setSpecializations] = useState("");
   const [nurserySize, setNurserySize] = useState("2,500 sq ft");
   const [yearsExperience, setYearsExperience] = useState<string>("5");
@@ -1273,7 +1282,7 @@ export default function SellerProfilePage() {
               </label>
               <p className="text-[11px] text-slate-400 mb-2">Click to select all plant varieties and supplies your nursery provides:</p>
               <div className="flex flex-wrap gap-2">
-                {PLANT_CATEGORIES.map((cat) => {
+                {(dbCategories.length > 0 ? dbCategories : PLANT_CATEGORIES).map((cat) => {
                   const selected = plantCategories.includes(cat);
                   return (
                     <button

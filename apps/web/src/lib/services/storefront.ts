@@ -219,13 +219,13 @@ export function filterAndSortListings(
 export async function getActiveCategories(): Promise<Category[]> {
   try {
     const res = await api.getCategories({ next: { revalidate: 300 } });
-    if (res.success && res.data && res.data.length > 0) {
+    if (res.success && res.data) {
       return res.data;
     }
   } catch (e) {
     console.warn("[storefront] getActiveCategories API error:", e);
   }
-  return MOCK_CATEGORIES;
+  return [];
 }
 
 export async function getCategoryBySlug(slug: string): Promise<Category | null> {

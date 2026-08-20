@@ -10,16 +10,7 @@ import {
   SproutIcon,
 } from "@/components/ui/Icons";
 
-const SHOP_LINKS = [
-  { label: "Indoor Plants", href: "/categories/indoor-plants" },
-  { label: "Outdoor Plants", href: "/categories/outdoor-plants" },
-  { label: "Succulents & Cacti", href: "/categories/succulents-cacti" },
-  { label: "Flowering Plants", href: "/categories/flowering-plants" },
-  { label: "Herbs & Edibles", href: "/categories/herbs-edibles" },
-  { label: "Pots & Planters", href: "/categories/planters-pots" },
-  { label: "Soil & Nutrients", href: "/categories/soil-fertilizers" },
-  { label: "Gardening Tools", href: "/categories/tools-accessories" },
-];
+import { getActiveCategories } from "@/lib/services/storefront";
 
 const COMPANY_LINKS = [
   { label: "About Floria", href: "/about" },
@@ -82,7 +73,13 @@ const VALUE_PROPS = [
   },
 ];
 
-export function Footer() {
+export async function Footer() {
+  const categories = await getActiveCategories();
+  const shopLinks = categories.map((c) => ({
+    label: c.name,
+    href: `/categories/${c.slug}`,
+  }));
+
   return (
     <>
       {/* Botanical Trust & Assurance Ribbon */}
@@ -199,7 +196,7 @@ export function Footer() {
               </div>
             </div>
 
-            <FooterColumn title="COLLECTIONS" links={SHOP_LINKS} />
+            <FooterColumn title="COLLECTIONS" links={shopLinks.length > 0 ? shopLinks : [{ label: "All Products", href: "/shop" }]} />
             <FooterColumn title="COMPANY" links={COMPANY_LINKS} />
             <FooterColumn title="HELP & SUPPORT" links={HELP_LINKS} />
           </div>

@@ -3,7 +3,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { CustomerShell } from "@/components/layout/CustomerShell";
 import { ProductCard } from "@/components/ui/ProductCard";
-import { getProductListings } from "@/lib/services/storefront";
+import { getActiveCategories, getProductListings } from "@/lib/services/storefront";
+import { getSystemMediaUrl } from "@/lib/services/systemMedia";
+
+import type { NurserySummary } from "@/lib/api";
 import {
   LeafIcon,
   SproutIcon,
@@ -23,43 +26,6 @@ export const metadata: Metadata = {
   description:
     "Discover. Choose. Grow. Shop premium plants and gardening products from trusted local nurseries. Floria handles packing and delivery.",
 };
-
-import { getSystemMediaUrl } from "@/lib/services/systemMedia";
-
-const CATEGORIES = [
-  {
-    name: "Plants",
-    slug: "indoor-plants",
-    subtitle: "Bring life to your space.",
-    image: getSystemMediaUrl("/cat-plants.png", "banner"),
-  },
-  {
-    name: "Seeds",
-    slug: "herbs-edibles",
-    subtitle: "Start something beautiful.",
-    image: getSystemMediaUrl("/cat-seeds.png", "banner"),
-  },
-  {
-    name: "Pots & Planters",
-    slug: "planters-pots",
-    subtitle: "The perfect home for your plants.",
-    image: getSystemMediaUrl("/cat-pots.png", "banner"),
-  },
-  {
-    name: "Fertilizers & Soil",
-    slug: "soil-fertilizers",
-    subtitle: "Nourish your plants the right way.",
-    image: getSystemMediaUrl("/cat-fertilizers.png", "banner"),
-  },
-  {
-    name: "Gardening Tools",
-    slug: "tools-accessories",
-    subtitle: "Everything you need to garden better.",
-    image: getSystemMediaUrl("/cat-tools.png", "banner"),
-  },
-] as const;
-
-import type { NurserySummary } from "@/lib/api";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
@@ -83,9 +49,10 @@ import {
 } from "@/components/ui/motion";
 
 export default async function HomePage() {
-  const [allListings, nurseries] = await Promise.all([
+  const [allListings, nurseries, categories] = await Promise.all([
     getProductListings(),
     fetchRankedNurseries(),
+    getActiveCategories(),
   ]);
   const bestSellers = allListings.slice(0, 5);
 
@@ -319,43 +286,46 @@ export default async function HomePage() {
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4 md:gap-5">
-            {CATEGORIES.map((cat) => (
-              <Link
-                key={cat.slug}
-                href={`/categories/${cat.slug}`}
-                className="group flex flex-col bg-floria-linen rounded-2xl sm:rounded-3xl overflow-hidden border border-floria-border shadow-xs hover:shadow-xl hover:-translate-y-1.5 hover:border-forest-400 transition-all duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-800"
-              >
-                {/* Photo Frame with subtle gradient */}
-                <div className="relative aspect-[4/3] w-full bg-floria-natural-sand overflow-hidden border-b border-floria-border">
-                  <Image
-                    src={cat.image}
-                    alt={cat.name}
-                    fill
-                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-                    className="object-cover group-hover:scale-108 transition-transform duration-500 ease-out"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent pointer-events-none" />
-                </div>
-
-                {/* Text & Explore prompt */}
-                <div className="p-3 sm:p-4 bg-floria-linen flex flex-col flex-1">
-                  <p className="font-serif text-xs sm:text-sm font-bold text-ink-900 leading-tight group-hover:text-forest-800 transition-colors">
-                    {cat.name}
-                  </p>
-                  <p className="text-[10px] sm:text-[11px] text-ink-500 leading-snug mt-1 font-medium font-ui line-clamp-1">
-                    {cat.subtitle}
-                  </p>
-                  <div className="mt-auto pt-2.5 sm:pt-3 border-t border-floria-border flex items-center justify-between font-ui text-[10px] sm:text-[11px] font-bold text-forest-800">
-                    <span className="group-hover:text-forest-900 transition-colors">
-                      Explore
-                    </span>
-                    <span className="group-hover:translate-x-1 transition-transform duration-200">
-                      &rarr;
-                    </span>
+            {categories.slice(0, 5).map((cat) => {
+              const imgUrl = cat.banner_url || cat.image_url || getSystemMediaUrl("/cat-plants.png", "banner");
+              return (
+                <Link
+                  key={cat.id}
+                  href={`/categories/${cat.slug}`}
+                  className="group flex flex-col bg-floria-linen rounded-2xl sm:rounded-3xl overflow-hidden border border-floria-border shadow-xs hover:shadow-xl hover:-translate-y-1.5 hover:border-forest-400 transition-all duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-800"
+                >
+                  {/* Photo Frame with subtle gradient */}
+                  <div className="relative aspect-[4/3] w-full bg-floria-natural-sand overflow-hidden border-b border-floria-border">
+                    <Image
+                      src={imgUrl}
+                      alt={cat.name}
+                      fill
+                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                      className="object-cover group-hover:scale-108 transition-transform duration-500 ease-out"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent pointer-events-none" />
                   </div>
-                </div>
-              </Link>
-            ))}
+
+                  {/* Text & Explore prompt */}
+                  <div className="p-3 sm:p-4 bg-floria-linen flex flex-col flex-1">
+                    <p className="font-serif text-xs sm:text-sm font-bold text-ink-900 leading-tight group-hover:text-forest-800 transition-colors">
+                      {cat.name}
+                    </p>
+                    <p className="text-[10px] sm:text-[11px] text-ink-500 leading-snug mt-1 font-medium font-ui line-clamp-1">
+                      {cat.description || "Curated marketplace collection."}
+                    </p>
+                    <div className="mt-auto pt-2.5 sm:pt-3 border-t border-floria-border flex items-center justify-between font-ui text-[10px] sm:text-[11px] font-bold text-forest-800">
+                      <span className="group-hover:text-forest-900 transition-colors">
+                        Explore
+                      </span>
+                      <span className="group-hover:translate-x-1 transition-transform duration-200">
+                        &rarr;
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </section>

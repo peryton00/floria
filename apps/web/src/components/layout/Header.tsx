@@ -12,14 +12,8 @@ import { SearchIcon, UserIcon, BagIcon, BellIcon, WishlistIcon } from "@/compone
 import { useCart } from "@/lib/contexts/CartContext";
 import { useWishlist } from "@/lib/contexts/WishlistContext";
 
-const NAV_ITEMS = [
-  { label: "Plants",          href: "/categories/indoor-plants" },
-  { label: "Seeds",           href: "/categories/herbs-edibles" },
-  { label: "Fertilizers",     href: "/categories/soil-fertilizers" },
-  { label: "Pots & Planners", href: "/categories/planters-pots" },
-  { label: "Gardening",       href: "/categories/tools-accessories" },
-  { label: "Offers",          href: "/search?q=offer" },
-] as const;
+import { api } from "@/lib/api";
+import type { Category } from "@floria/types";
 
 export function Header() {
   const { cartCount } = useCart();
@@ -28,6 +22,21 @@ export function Header() {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const [isScrolled, setIsScrolled] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    async function loadCategories() {
+      try {
+        const res = await api.getCategories();
+        if (res.success && res.data) {
+          setCategories(res.data);
+        }
+      } catch (e) {
+        console.warn("[Header] Failed to fetch categories", e);
+      }
+    }
+    loadCategories();
+  }, []);
 
   useEffect(() => {
     if (!isHome) {
@@ -41,6 +50,15 @@ export function Header() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [isHome]);
+
+  const navItems = [
+    ...categories.slice(0, 5).map((cat) => ({
+      label: cat.name,
+      href: `/categories/${cat.slug}`,
+      hasChevron: true,
+    })),
+    { label: "Offers", href: "/search?q=offer", hasChevron: false },
+  ];
 
   const headerClass = [
     isHome ? "fixed" : "sticky",
@@ -97,8 +115,7 @@ export function Header() {
           aria-label="Primary navigation"
           className="hidden md:flex items-center gap-1 flex-1 justify-center"
         >
-          {NAV_ITEMS.map(({ label, href }) => {
-            const hasChevron = label !== "Offers";
+          {navItems.map(({ label, href, hasChevron }) => {
             return (
               <Link
                 key={href}

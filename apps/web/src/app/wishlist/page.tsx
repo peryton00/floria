@@ -9,9 +9,20 @@ import { WishlistIcon, BagIcon, MapPinIcon } from "@/components/ui/Icons";
 import { StarRating } from "@/components/ui/StarRating";
 import { ProductPriceBlock } from "@/components/ui/ProductPriceBlock";
 
+import { useState, useEffect } from "react";
+import { api } from "@/lib/api";
+import type { Category } from "@floria/types";
+
 export default function WishlistPage() {
   const { wishlistItems, removeFromWishlist } = useWishlist();
   const { addToCart } = useCart();
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    api.getCategories().then((res) => {
+      if (res.success && res.data) setCategories(res.data);
+    }).catch(() => {});
+  }, []);
 
   const handleMoveToCart = (item: any) => {
     // Add to cart (handles duplicates inside CartContext)
@@ -106,18 +117,10 @@ export default function WishlistPage() {
               Popular Collections to Explore
             </p>
             <div className="flex flex-wrap items-center justify-center gap-2">
-              {[
-                { name: "Indoor Plants", href: "/categories/indoor-plants" },
-                {
-                  name: "Succulents & Cacti",
-                  href: "/categories/succulents-cacti",
-                },
-                { name: "Planters & Pots", href: "/categories/planters-pots" },
-                { name: "Herbs & Edibles", href: "/categories/herbs-edibles" },
-              ].map((cat) => (
+              {categories.slice(0, 5).map((cat) => (
                 <Link
-                  key={cat.href}
-                  href={cat.href}
+                  key={cat.id}
+                  href={`/categories/${cat.slug}`}
                   className="text-xs font-semibold text-forest-800 bg-floria-linen hover:bg-forest-100/90 active:bg-forest-200 border border-forest-200/80 px-3.5 py-1.5 rounded-full transition-all shadow-2xs hover:scale-105 active:scale-95"
                 >
                   {cat.name}

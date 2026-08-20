@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { CustomerShell } from "@/components/layout/CustomerShell";
-import { getCategoryBySlug, getProductListingsByCategorySlug } from "@/lib/services/storefront";
+import { getCategoryBySlug, getProductListingsByCategorySlug, getActiveCategories } from "@/lib/services/storefront";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { FilterSidebar } from "@/components/ui/FilterSidebar";
 import { FilterAndSortControls } from "@/components/ui/FilterAndSortControls";
@@ -35,7 +35,10 @@ export default async function CategorySlugPage({ params, searchParams }: Props) 
   const { slug } = await params;
   const sParams = await searchParams;
 
-  const category = await getCategoryBySlug(slug);
+  const [category, allCategories] = await Promise.all([
+    getCategoryBySlug(slug),
+    getActiveCategories(),
+  ]);
   if (!category) notFound();
 
   const minPriceNum = sParams.minPrice ? parseFloat(sParams.minPrice) : undefined;
@@ -113,12 +116,10 @@ export default async function CategorySlugPage({ params, searchParams }: Props) 
                 label: "Explore All Categories",
                 href: "/categories",
               }}
-              suggestions={[
-                { label: "Indoor Plants", href: "/categories/indoor-plants" },
-                { label: "Herbs & Edibles", href: "/categories/herbs-edibles" },
-                { label: "Planters & Pots", href: "/categories/planters-pots" },
-                { label: "Soil & Fertilizers", href: "/categories/soil-fertilizers" },
-              ]}
+              suggestions={allCategories.filter((c) => c.slug !== slug).slice(0, 4).map((c) => ({
+                label: c.name,
+                href: `/categories/${c.slug}`,
+              }))}
             />
           ) : (
             <div

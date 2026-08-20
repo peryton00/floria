@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CustomerShell } from "@/components/layout/CustomerShell";
-import { getProductListings } from "@/lib/services/storefront";
+import { getProductListings, getActiveCategories } from "@/lib/services/storefront";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { FilterSidebar } from "@/components/ui/FilterSidebar";
 import { FilterAndSortControls } from "@/components/ui/FilterAndSortControls";
@@ -32,15 +32,18 @@ export default async function ShopPage({ searchParams }: Props) {
   const minPriceNum = params.minPrice ? parseFloat(params.minPrice) : undefined;
   const maxPriceNum = params.maxPrice ? parseFloat(params.maxPrice) : undefined;
 
-  const listings = await getProductListings(undefined, {
-    categorySlug: params.category,
-    nurseryId: params.nursery,
-    minPrice: minPriceNum,
-    maxPrice: maxPriceNum,
-    inStockOnly: params.inStock === "true",
-    searchQuery: params.q,
-    sort: params.sort,
-  });
+  const [listings, categories] = await Promise.all([
+    getProductListings(undefined, {
+      categorySlug: params.category,
+      nurseryId: params.nursery,
+      minPrice: minPriceNum,
+      maxPrice: maxPriceNum,
+      inStockOnly: params.inStock === "true",
+      searchQuery: params.q,
+      sort: params.sort,
+    }),
+    getActiveCategories(),
+  ]);
 
   return (
     <CustomerShell>
@@ -100,12 +103,10 @@ export default async function ShopPage({ searchParams }: Props) {
                 label: "Explore Top Categories",
                 href: "/categories",
               }}
-              suggestions={[
-                { label: "Indoor Plants", href: "/categories/indoor-plants" },
-                { label: "Herbs & Edibles", href: "/categories/herbs-edibles" },
-                { label: "Planters & Pots", href: "/categories/planters-pots" },
-                { label: "Soil & Fertilizers", href: "/categories/soil-fertilizers" },
-              ]}
+              suggestions={categories.slice(0, 4).map((c) => ({
+                label: c.name,
+                href: `/categories/${c.slug}`,
+              }))}
             />
           ) : (
             <div

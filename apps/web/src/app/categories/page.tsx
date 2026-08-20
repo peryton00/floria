@@ -11,41 +11,6 @@ export const metadata: Metadata = {
 
 import { getSystemMediaUrl } from "@/lib/services/systemMedia";
 
-const CATEGORY_IMAGES: Record<string, { url: string; alt: string }> = {
-  "indoor-plants": {
-    url: getSystemMediaUrl("/cat-plants.png", "banner"),
-    alt: "Lush indoor tropical houseplants in ceramic planter",
-  },
-  "outdoor-plants": {
-    url: getSystemMediaUrl("outdoor-plants", "banner"),
-    alt: "Vibrant garden shrubs, patio plants and outdoor trees",
-  },
-  "succulents-cacti": {
-    url: getSystemMediaUrl("succulents-cacti", "banner"),
-    alt: "Green succulent rosettes and desert cacti",
-  },
-  "flowering-plants": {
-    url: getSystemMediaUrl("flowering-plants", "banner"),
-    alt: "Colorful blooming perennial and seasonal garden flowers",
-  },
-  "herbs-edibles": {
-    url: getSystemMediaUrl("herbs-edibles", "banner"),
-    alt: "Fresh organic potted culinary herbs and kitchen edibles",
-  },
-  "planters-pots": {
-    url: getSystemMediaUrl("/cat-pots.png", "banner"),
-    alt: "Artisan terracotta and glazed ceramic plant pots",
-  },
-  "soil-fertilizers": {
-    url: getSystemMediaUrl("soil-fertilizers", "banner"),
-    alt: "Rich organic potting mix, fertilizer and growing media",
-  },
-  "tools-accessories": {
-    url: getSystemMediaUrl("/cat-tools.png", "banner"),
-    alt: "Durable gardening hand trowels, shears and brass watering can",
-  },
-};
-
 export default async function CategoriesPage() {
   const categories = await getActiveCategories();
 
@@ -87,10 +52,7 @@ export default async function CategoriesPage() {
         aria-label="All product categories"
       >
         {categories.map((cat) => {
-          const catImg = {
-            url: cat.banner_url || (CATEGORY_IMAGES as Record<string, { url: string; alt: string }>)[cat.slug]?.url || "/floria-logo.png",
-            alt: cat.name,
-          };
+          const catImgUrl = cat.banner_url || cat.image_url || getSystemMediaUrl("/cat-plants.png", "banner");
 
           return (
             <div key={cat.id} role="listitem">
@@ -107,8 +69,8 @@ export default async function CategoriesPage() {
                 {/* Category Photography Frame */}
                 <div className="relative aspect-[4/3] w-full rounded-2xl overflow-hidden bg-floria-natural-sand mb-4 border border-floria-border shadow-2xs">
                   <Image
-                    src={cat.image_url || catImg.url}
-                    alt={catImg.alt || cat.name}
+                    src={catImgUrl}
+                    alt={cat.name}
                     fill
                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                     className="object-cover group-hover:scale-108 transition-transform duration-500 ease-out"
