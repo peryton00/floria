@@ -6,32 +6,69 @@
 import "server-only";
 
 export type AuditAction =
-  // User lifecycle
-  | "USER_CREATED"
+  // Auth & Session lifecycle (login / logout)
+  | "USER_LOGIN"
+  | "USER_LOGOUT"
   | "USER_GOOGLE_SIGNIN"
   | "USER_GOOGLE_LINKED"
-  // Seller lifecycle
+  // User lifecycle & changes
+  | "USER_CREATED"
+  | "USER_UPDATED"
+  | "USER_DELETED"
+  | "CUSTOMER_SUSPENDED"
+  | "CUSTOMER_REACTIVATED"
+  | "USER_PROFILE_UPDATED"
+  // Seller lifecycle & changes
   | "SELLER_APPLIED"
   | "SELLER_APPROVED"
   | "SELLER_SUSPENDED"
-  // Product
+  | "SELLER_REJECTED"
+  | "SELLER_PROFILE_UPDATED"
+  | "SELLER_APPLICATION_SUBMITTED"
+  | "SELLER_DOCUMENT_UPLOADED"
+  | "SELLER_NOTIFICATION_SETTINGS_UPDATED"
+  // Catalog & Product changes
   | "PRODUCT_CREATED"
   | "PRODUCT_UPDATED"
   | "PRODUCT_PUBLISHED"
   | "PRODUCT_UNPUBLISHED"
-  // Inventory
+  | "PRODUCT_DELETED"
+  | "SELLER_PRODUCT_CREATED"
+  | "SELLER_PRODUCT_UPDATED"
+  | "SELLER_PRODUCT_DELETED"
+  | "SELLER_PRODUCT_PUBLISHED"
+  | "SELLER_PRODUCT_DRAFT"
+  | "PRODUCT_CATALOG_UPDATED"
+  | "CATEGORY_CREATED"
+  | "CATEGORY_UPDATED"
+  | "CATEGORY_DELETED"
+  // Inventory changes
   | "INVENTORY_UPDATED"
-  // Orders
+  | "SELLER_INVENTORY_UPDATED"
+  // Order & Fulfillment changes
   | "ORDER_CREATED"
   | "ORDER_STATUS_CHANGED"
+  | "ORDER_STATUS_OVERRIDDEN"
   | "SELLER_FULFILLMENT_CHANGED"
-  // Payments
+  | "SELLER_FULFILLMENT_UPDATED"
+  | "FULFILLMENT_STATUS_CHANGED"
+  // Delivery changes
+  | "DELIVERY_ASSIGNED"
+  | "DELIVERY_REASSIGNED"
+  | "DELIVERY_SETTINGS_UPDATED"
+  // Payment & Financial policy changes
   | "PAYMENT_CREATED"
   | "PAYMENT_CONFIRMED"
+  | "PAYMENT_WEBHOOK_PROCESSED"
   | "REFUND_CREATED"
-  // Payouts
   | "PAYOUT_CREATED"
   | "PAYOUT_COMPLETED"
+  | "PLATFORM_COMMISSION_UPDATED"
+  | "SELLER_COMMISSION_UPDATED"
+  | "FLORIA_PROFIT_RATE_UPDATED"
+  | "PLATFORM_MAINTENANCE_FEE_UPDATED"
+  | "FREE_DELIVERY_POLICY_UPDATED"
+  | "DELIVERY_RECOVERY_UPDATED"
   // Security
   | "AUTH_FAILED"
   | "RATE_LIMITED"
@@ -55,6 +92,19 @@ export interface AuditEntry {
  */
 export async function auditLog(entry: AuditEntry): Promise<void> {
   try {
+    const actionUpper = (entry.action || "").toUpperCase();
+    // Filter out read/view/visit events — strictly collect logins, logouts, and data changes
+    if (
+      actionUpper.includes("VIEW") ||
+      actionUpper.includes("READ") ||
+      actionUpper.includes("VISIT") ||
+      actionUpper.includes("FETCH") ||
+      actionUpper.includes("LIST") ||
+      actionUpper.includes("SEARCH")
+    ) {
+      return;
+    }
+
     const { getSupabaseServiceClient } = await import("@/lib/supabase/server");
     const db = await getSupabaseServiceClient();
 

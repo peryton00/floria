@@ -259,28 +259,13 @@ export class AdminService {
   }
 
   // ── Orders Oversight ──────────────────────────────────────────────────────
-  async getOrders(adminUserId: string, filters?: { status?: string; search?: string }) {
-    await auditRepository.log({
-      actor_user_id: adminUserId,
-      actor_role: "admin",
-      action: "ORDER_VIEWED_BY_ADMIN",
-      resource_type: "orders_list",
-    });
+  async getOrders(_adminUserId: string, filters?: { status?: string; search?: string }) {
     return orderRepository.findAllMasterOrders(filters);
   }
 
-  async getOrderById(adminUserId: string, id: string) {
+  async getOrderById(_adminUserId: string, id: string) {
     const order = await orderRepository.findById(id);
     if (!order) throw Errors.notFound("Master order");
-
-    await auditRepository.log({
-      actor_user_id: adminUserId,
-      actor_role: "admin",
-      action: "ORDER_VIEWED_BY_ADMIN",
-      resource_type: "order",
-      resource_id: id,
-    });
-
     return order;
   }
 

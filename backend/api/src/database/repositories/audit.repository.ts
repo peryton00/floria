@@ -13,6 +13,19 @@ export interface CreateAuditLogInput {
 export class AuditRepository {
   async log(entry: CreateAuditLogInput): Promise<void> {
     try {
+      const actionUpper = (entry.action || "").toUpperCase();
+      // Ignore read/view/visit events — only collect login, logout, and state changes
+      if (
+        actionUpper.includes("VIEW") ||
+        actionUpper.includes("READ") ||
+        actionUpper.includes("VISIT") ||
+        actionUpper.includes("FETCH") ||
+        actionUpper.includes("LIST") ||
+        actionUpper.includes("SEARCH")
+      ) {
+        return;
+      }
+
       const db = getAdminDb();
       const { error } = await db.from("audit_logs").insert({
         actor_user_id: entry.actor_user_id ?? null,
@@ -31,7 +44,7 @@ export class AuditRepository {
     }
   }
 
-  async findAll(limit = 100): Promise<any[]> {
+  async findAll(limit = 200): Promise<any[]> {
     try {
       const db = getAdminDb();
       const { data, error } = await db
@@ -41,7 +54,19 @@ export class AuditRepository {
         .limit(limit);
 
       if (error || !data) return [];
-      return data;
+
+      // Strictly return only login, logout, and change events (exclude legacy read/view logs)
+      return data.filter((l: any) => {
+        const act = (l.action || "").toUpperCase();
+        return (
+          !act.includes("VIEW") &&
+          !act.includes("READ") &&
+          !act.includes("VISIT") &&
+          !act.includes("FETCH") &&
+          !act.includes("LIST") &&
+          !act.includes("SEARCH")
+        );
+      });
     } catch {
       return [];
     }

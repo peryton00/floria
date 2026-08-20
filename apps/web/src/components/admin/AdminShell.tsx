@@ -85,6 +85,15 @@ export function AdminShell({ children }: AdminShellProps) {
   }, [router]);
 
   const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/audit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "USER_LOGOUT", role: "admin" }),
+      });
+    } catch (e) {
+      console.warn("Failed to audit logout:", e);
+    }
     const supabase = getSupabaseBrowserClient();
     await supabase.auth.signOut();
     router.replace("/admin/login");
@@ -153,10 +162,13 @@ export function AdminShell({ children }: AdminShellProps) {
 
   return (
     <div className="min-h-screen bg-[#F9F8F3] flex font-sans antialiased text-[#212529]">
-      {/* DESKTOP SIDEBAR */}
-      <aside className="hidden md:flex w-64 bg-[#1E3A2B] text-white/80 flex-col flex-shrink-0 border-r border-white/10" aria-label="Admin panel navigation">
+      {/* DESKTOP SIDEBAR — Fixed screen height sticky sidebar for PC */}
+      <aside
+        className="hidden md:flex w-64 h-screen sticky top-0 bg-[#1E3A2B] text-white/80 flex-col flex-shrink-0 border-r border-white/10 select-none z-20"
+        aria-label="Admin panel navigation"
+      >
         {/* Brand Header */}
-        <div className="p-5 border-b border-white/10 flex items-center justify-between">
+        <div className="p-5 border-b border-white/10 flex items-center justify-between flex-shrink-0">
           <Link href="/" className="flex items-center gap-2.5" aria-label="Admin dashboard home">
             <div className="w-8 h-8 rounded bg-[#274D39] border border-[#DDE7DD]/20 flex items-center justify-center p-1.5 flex-shrink-0">
               <Image src="/floria-logo.png" alt="Floria Logo" width={20} height={20} className="object-contain brightness-[5]" />
@@ -169,7 +181,7 @@ export function AdminShell({ children }: AdminShellProps) {
         </div>
 
         {/* Navigation Links */}
-        <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
+        <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto min-h-0">
           {navLinks.map((link) => {
             const isActive = pathname === link.href;
             return (
@@ -191,7 +203,7 @@ export function AdminShell({ children }: AdminShellProps) {
         </nav>
 
         {/* User Info Footer */}
-        <div className="p-4 border-t border-white/10 flex items-center justify-between bg-black/10">
+        <div className="p-4 border-t border-white/10 flex items-center justify-between bg-black/10 flex-shrink-0">
           <div className="min-w-0 pr-2">
             <p className="text-xs font-bold text-white truncate leading-tight">{userName}</p>
             <p className="font-mono text-[9px] uppercase tracking-wider text-[#DDE7DD] font-medium truncate mt-0.5 leading-none">{userRole}</p>
