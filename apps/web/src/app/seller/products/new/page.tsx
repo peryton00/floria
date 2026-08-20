@@ -77,6 +77,21 @@ export default function AddProductPage() {
 
     try {
       setIsSubmitting(true);
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://supabase.co";
+      const cleanImages = productImages.map((img) => {
+        let cleanUrl = img.url;
+        if (cleanUrl && cleanUrl.startsWith("blob:")) {
+          cleanUrl = img.assetId
+            ? `${supabaseUrl}/storage/v1/object/public/public-media/product/${img.assetId}.webp`
+            : "/floria-logo.png";
+        }
+        return {
+          asset_id: img.assetId || undefined,
+          url: cleanUrl,
+          is_primary: img.isPrimary,
+        };
+      });
+
       const payload = {
         name: name.trim(),
         category_id: categoryId,
@@ -87,12 +102,8 @@ export default function AddProductPage() {
         description: description.trim() || undefined,
         care_instructions: careInstructions.trim() || undefined,
         status,
-        images: productImages.map((img) => ({
-          asset_id: img.assetId || undefined,
-          url: img.url,
-          is_primary: img.isPrimary,
-        })),
-        image_url: productImages.find((img) => img.isPrimary)?.url || productImages[0]?.url || "/floria-logo.png",
+        images: cleanImages,
+        image_url: cleanImages.find((img) => img.is_primary)?.url || cleanImages[0]?.url || "/floria-logo.png",
       };
 
       const res = await api.createSellerProduct(payload);

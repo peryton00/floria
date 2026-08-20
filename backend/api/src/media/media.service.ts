@@ -368,6 +368,8 @@ export class MediaService {
 
     const targetAssetId = session.resolved_asset_id;
 
+    const supabaseUrl = process.env.SUPABASE_URL || "https://supabase.co";
+
     if (targetAssetId) {
       const { data: asset } = await adminDb
         .from("media_assets")
@@ -387,12 +389,17 @@ export class MediaService {
 
           if (variantRows) {
             for (const v of variantRows) {
-              const publicUrl = `${process.env.SUPABASE_URL || "https://supabase.co"}/storage/v1/object/public/${v.storage_bucket}/${v.storage_path}`;
+              const publicUrl = `${supabaseUrl}/storage/v1/object/public/${v.storage_bucket}/${v.storage_path}`;
               variants[v.variant_name] = publicUrl;
             }
           }
         }
       }
+    }
+
+    // Fallback: If no variants generated yet, provide staging public URL so frontend never falls back to blob URL
+    if (!variants.medium && !variants.thumbnail && !variants.original && session.staging_path) {
+      variants.original = `${supabaseUrl}/storage/v1/object/public/media-staging/${session.staging_path}`;
     }
 
     return {

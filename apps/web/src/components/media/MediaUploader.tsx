@@ -140,9 +140,11 @@ export function MediaUploader({
         await new Promise((r) => setTimeout(r, 1000));
         const statusRes = await api.getMediaUploadSessionStatus(sessionId);
         if (statusRes.success && statusRes.data) {
+          if (statusRes.data.variants && Object.keys(statusRes.data.variants).length > 0) {
+            finalVariants = statusRes.data.variants;
+          }
           if (statusRes.data.assetStatus === "READY") {
             assetReady = true;
-            finalVariants = statusRes.data.variants || {};
           } else if (statusRes.data.assetStatus === "FAILED") {
             throw new Error(statusRes.data.failureReason || "Async image processing failed");
           }
@@ -151,7 +153,8 @@ export function MediaUploader({
       }
 
       // 6. Resolve final variant URL
-      const resolvedUrl =
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://supabase.co";
+      let resolvedUrl =
         finalVariants.medium ||
         finalVariants.avatar ||
         finalVariants.standard ||
@@ -159,7 +162,20 @@ export function MediaUploader({
         finalVariants.cover ||
         finalVariants.display ||
         finalVariants.thumbnail ||
-        localPreview;
+        finalVariants.original;
+
+      if (!resolvedUrl || resolvedUrl.startsWith("blob:")) {
+        resolvedUrl = `${supabaseUrl}/storage/v1/object/public/media-staging/${stagingPath}`;
+      }
+
+      // Revoke temporary browser blob URL to free memory and prevent dead blob reference leaks
+      if (localPreview && localPreview.startsWith("blob:")) {
+        try {
+          URL.revokeObjectURL(localPreview);
+        } catch (e) {
+          // Ignore blob revocation errors
+        }
+      }
 
       setPreviewUrl(resolvedUrl);
       setStatusText(null);

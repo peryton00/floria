@@ -180,9 +180,11 @@ export function ProductImageUploader({
             await new Promise((r) => setTimeout(r, 1000));
             const statusRes = await api.getMediaUploadSessionStatus(sessionId);
             if (statusRes.success && statusRes.data) {
+              if (statusRes.data.variants && Object.keys(statusRes.data.variants).length > 0) {
+                finalVariants = statusRes.data.variants;
+              }
               if (statusRes.data.assetStatus === "READY") {
                 assetReady = true;
-                finalVariants = statusRes.data.variants || {};
               } else if (statusRes.data.assetStatus === "FAILED") {
                 throw new Error(statusRes.data.failureReason || "Async image processing failed");
               }
@@ -190,9 +192,28 @@ export function ProductImageUploader({
             attempts++;
           }
 
-          // 5. Update UI with READY asset
+          // 5. Update UI with READY asset and permanent HTTPS URL
           if (item) {
-            const resolvedUrl = finalVariants.medium || finalVariants.large || finalVariants.thumbnail || item.url;
+            const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://supabase.co";
+            let resolvedUrl =
+              finalVariants.medium ||
+              finalVariants.large ||
+              finalVariants.thumbnail ||
+              finalVariants.original;
+
+            if (!resolvedUrl || resolvedUrl.startsWith("blob:")) {
+              resolvedUrl = `${supabaseUrl}/storage/v1/object/public/media-staging/${stagingPath}`;
+            }
+
+            // Revoke temporary browser blob URL to free memory and prevent dead blob reference leaks
+            if (item.url && item.url.startsWith("blob:")) {
+              try {
+                URL.revokeObjectURL(item.url);
+              } catch (e) {
+                // Ignore blob revocation errors
+              }
+            }
+
             item.url = resolvedUrl;
             item.status = "READY";
 
