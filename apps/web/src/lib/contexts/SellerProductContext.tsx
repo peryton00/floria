@@ -7,7 +7,6 @@ import type {
   ProductImage,
   ProductListing,
 } from "@floria/types";
-import { MOCK_CATEGORIES, MOCK_SELLERS } from "@/lib/services/mockData";
 import { api } from "@/lib/api";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 
@@ -24,61 +23,6 @@ export interface CreateProductInput {
   status?: "active" | "draft" | "inactive";
   image_url?: string;
 }
-
-const SEED_PRODUCTS: Product[] = [
-  {
-    id: "p-demo-1",
-    seller_id: "sel-demo-1",
-    category_id: "cat-1",
-    name: "Snake Plant (Sansevieria)",
-    slug: "snake-plant-sansevieria-demo",
-    description: "The ultimate air-purifier. Minimal watering required, resilient and beautiful.",
-    care_instructions: "Water every 2-3 weeks when soil is fully dry. Tolerates low light.",
-    status: "active",
-    created_at: new Date(Date.now() - 86400000 * 10).toISOString(),
-    updated_at: new Date(Date.now() - 86400000 * 2).toISOString(),
-  },
-  {
-    id: "p-demo-2",
-    seller_id: "sel-demo-1",
-    category_id: "cat-1",
-    name: "Monstera Deliciosa",
-    slug: "monstera-deliciosa-demo",
-    description: "Swiss Cheese Plant with stunning natural split leaves. Statement tropical indoor plant.",
-    care_instructions: "Water weekly. Medium to bright indirect sunlight.",
-    status: "active",
-    created_at: new Date(Date.now() - 86400000 * 8).toISOString(),
-    updated_at: new Date(Date.now() - 86400000 * 1).toISOString(),
-  },
-];
-
-const SEED_INVENTORY: Record<string, Inventory> = {
-  "p-demo-1": {
-    id: "inv-demo-1",
-    product_id: "p-demo-1",
-    seller_id: "sel-demo-1",
-    price_paise: 29900,
-    stock_quantity: 15,
-    low_stock_threshold: 3,
-    sku: "GLN-SP-001",
-    updated_at: new Date().toISOString(),
-  },
-  "p-demo-2": {
-    id: "inv-demo-2",
-    product_id: "p-demo-2",
-    seller_id: "sel-demo-1",
-    price_paise: 49900,
-    stock_quantity: 4,
-    low_stock_threshold: 5,
-    sku: "GLN-MD-002",
-    updated_at: new Date().toISOString(),
-  },
-};
-
-const SEED_IMAGES: Record<string, ProductImage[]> = {
-  "p-demo-1": [{ id: "img-d-1", product_id: "p-demo-1", url: "/floria-logo.png", alt_text: "Snake Plant", display_order: 1, is_primary: true, created_at: "" }],
-  "p-demo-2": [{ id: "img-d-2", product_id: "p-demo-2", url: "/floria-logo.png", alt_text: "Monstera Plant", display_order: 1, is_primary: true, created_at: "" }],
-};
 
 export interface SellerProductContextType {
   products: Product[];
@@ -125,8 +69,8 @@ export function SellerProductProvider({ children }: { children: React.ReactNode 
               category_id: row.category_id,
               name: row.name,
               slug: row.slug,
-              description: row.description,
-              care_instructions: row.care_instructions,
+              description: row.description || null,
+              care_instructions: row.care_instructions || null,
               status: row.status,
               created_at: row.created_at || "",
               updated_at: row.updated_at || "",
@@ -170,16 +114,16 @@ export function SellerProductProvider({ children }: { children: React.ReactNode 
       if (storedProds && storedInvs) {
         setProducts(JSON.parse(storedProds));
         setInventories(JSON.parse(storedInvs));
-        setImages(storedImgs ? JSON.parse(storedImgs) : SEED_IMAGES);
+        setImages(storedImgs ? JSON.parse(storedImgs) : {});
       } else {
-        setProducts(SEED_PRODUCTS);
-        setInventories(SEED_INVENTORY);
-        setImages(SEED_IMAGES);
+        setProducts([]);
+        setInventories({});
+        setImages({});
       }
     } catch {
-      setProducts(SEED_PRODUCTS);
-      setInventories(SEED_INVENTORY);
-      setImages(SEED_IMAGES);
+      setProducts([]);
+      setInventories({});
+      setImages({});
     }
   }, []);
 
@@ -191,9 +135,9 @@ export function SellerProductProvider({ children }: { children: React.ReactNode 
       if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session?.user) {
         await refreshProducts();
       } else if (event === "SIGNED_OUT") {
-        setProducts(SEED_PRODUCTS);
-        setInventories(SEED_INVENTORY);
-        setImages(SEED_IMAGES);
+        setProducts([]);
+        setInventories({});
+        setImages({});
       }
     });
 
@@ -225,8 +169,8 @@ export function SellerProductProvider({ children }: { children: React.ReactNode 
     };
     const imgList = images[p.id] ?? [];
     const primaryImg = imgList.find((i) => i.is_primary) ?? imgList[0] ?? null;
-    const cat = categories.find((c) => c.id === p.category_id) ?? MOCK_CATEGORIES.find((c) => c.id === p.category_id) ?? null;
-    const seller = MOCK_SELLERS[p.seller_id] ?? { id: p.seller_id, business_name: "Green Leaf Nursery" };
+    const cat = categories.find((c) => c.id === p.category_id) ?? null;
+    const seller = { id: p.seller_id, business_name: "Seller Nursery" };
 
     return {
       product: p,
