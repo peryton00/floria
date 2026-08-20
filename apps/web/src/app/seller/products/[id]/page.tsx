@@ -282,17 +282,19 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           </div>
         </div>
 
-        {/* SKU */}
-        <div>
-          <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-slate-600 mb-1">
-            SKU / Plant Code (Optional)
-          </label>
-          <input
-            type="text"
-            value={sku}
-            onChange={(e) => setSku(e.target.value)}
-            className="w-full px-3.5 py-2 rounded border border-[#E2E8F0] bg-[#F8FAFC] focus:bg-white text-xs font-mono focus:outline-none focus:ring-1 focus:ring-[#1B4D3E] text-[#0F172A]"
-          />
+        {/* Permanent SKU Display */}
+        <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded p-3.5 flex items-center justify-between">
+          <div>
+            <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-slate-600">
+              Permanent Product SKU
+            </label>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Unique SKU assigned permanently to this listing by Floria.
+            </p>
+          </div>
+          <span className="font-mono text-xs font-bold px-3 py-1.5 bg-slate-100 text-slate-800 border border-slate-300 rounded tracking-wider">
+            {sku || `FLR-${productId.replace(/-/g, "").slice(0, 8).toUpperCase()}`}
+          </span>
         </div>
 
         {/* Description */}

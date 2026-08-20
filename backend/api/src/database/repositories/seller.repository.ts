@@ -257,6 +257,9 @@ export class SellerRepository {
 
     if (prodErr || !prod) throw prodErr || new Error("Failed to create product");
 
+    // Auto-generate permanent unique SKU if not provided
+    const autoSku = productData.sku?.trim() || `FLR-${prod.id.replace(/-/g, "").slice(0, 8).toUpperCase()}`;
+
     // Inventory
     await db.from("inventory").insert({
       product_id: prod.id,
@@ -264,7 +267,7 @@ export class SellerRepository {
       price_paise: Math.max(0, productData.price_paise || 0),
       stock_quantity: Math.max(0, productData.stock_quantity || 0),
       low_stock_threshold: Math.max(0, productData.low_stock_threshold ?? 5),
-      sku: productData.sku?.trim() || null,
+      sku: autoSku,
       updated_at: now,
     });
 

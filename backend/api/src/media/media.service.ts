@@ -6,6 +6,8 @@ import { Errors } from "../utils/errors.js";
 import type { AuthenticatedUser } from "../middleware/auth.js";
 import type { ImageProfileName } from "./image-engine/image-engine.types.js";
 import { enqueueMediaJob } from "./queue/media.queue.js";
+import { ImageEngine } from "./image-engine/image-engine.js";
+import { buildPublicVariantPath } from "./worker/path-builder.js";
 import type {
   CreateSessionInput,
   UploadSessionDto,
@@ -302,19 +304,94 @@ export class MediaService {
       throw Errors.database(`Failed to create media_assets record: ${assetInsertErr.message}`);
     }
 
-    // 6. Enqueue BullMQ Media Job
+    // 6. Direct Inline WebP Processing & Upload to public-media bucket
+    let finalAssetStatus = "QUEUED";
     try {
-      await enqueueMediaJob({
-        assetId,
-        sessionId,
-        sellerId: session.seller_id,
-        uploadedByUserId: session.uploaded_by_user_id,
-        profile: session.target_domain,
-        stagingPath: session.staging_path,
-      });
-    } catch (queueErr: any) {
-      console.error(`[MediaService] Queue enqueue error for session '${sessionId}':`, queueErr.message);
-      // Retain asset in QUEUED state for worker reconciliation
+      if (session.target_domain === "DOCUMENT") {
+        const privatePath = `private/seller_${session.seller_id || "admin"}/${assetId}/document.pdf`;
+        await adminDb.storage.from("private-documents").upload(privatePath, buffer, {
+          contentType: "application/pdf",
+          upsert: true,
+        });
+
+        await adminDb
+          .from("media_assets")
+          .update({
+            status: "READY",
+            storage_bucket: "private-documents",
+            original_path: privatePath,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", assetId);
+
+        finalAssetStatus = "READY";
+      } else {
+        const engineResult = await ImageEngine.process(buffer, session.target_domain);
+        const variantRecords: any[] = [];
+
+        for (const variant of engineResult.variants) {
+          const publicPath = buildPublicVariantPath(
+            session.target_domain,
+            session.seller_id,
+            session.uploaded_by_user_id,
+            assetId,
+            variant.variantName
+          );
+
+          const { error: uploadErr } = await adminDb.storage
+            .from("public-media")
+            .upload(publicPath, variant.buffer, {
+              contentType: "image/webp",
+              cacheControl: "public, max-age=31536000, immutable",
+              upsert: true,
+            });
+
+          if (!uploadErr) {
+            variantRecords.push({
+              asset_id: assetId,
+              variant_name: variant.variantName,
+              format: variant.format,
+              width: variant.width,
+              height: variant.height,
+              size_bytes: variant.sizeBytes,
+              storage_bucket: "public-media",
+              storage_path: publicPath,
+            });
+          }
+        }
+
+        if (variantRecords.length > 0) {
+          await adminDb.from("media_variants").insert(variantRecords);
+          await adminDb
+            .from("media_assets")
+            .update({
+              status: "READY",
+              storage_bucket: "public-media",
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", assetId);
+
+          finalAssetStatus = "READY";
+        }
+      }
+
+      // Cleanup staging file
+      await adminDb.storage.from("media-staging").remove([session.staging_path]);
+    } catch (procErr: any) {
+      console.warn(`[MediaService] Inline processing warning for session '${sessionId}':`, procErr.message);
+      // Fallback: Enqueue BullMQ Media Job if inline processing failed
+      try {
+        await enqueueMediaJob({
+          assetId,
+          sessionId,
+          sellerId: session.seller_id,
+          uploadedByUserId: session.uploaded_by_user_id,
+          profile: session.target_domain,
+          stagingPath: session.staging_path,
+        });
+      } catch (qErr: any) {
+        // Ignore queue fallback error
+      }
     }
 
     // 7. Update Session Status to COMPLETED
@@ -332,7 +409,7 @@ export class MediaService {
       sessionId,
       assetId,
       sessionStatus: "COMPLETED",
-      assetStatus: "QUEUED",
+      assetStatus: finalAssetStatus,
       deduplicated: false,
     };
   }

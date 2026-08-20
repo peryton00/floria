@@ -9,6 +9,8 @@ const crypto_1 = __importDefault(require("crypto"));
 const database_js_1 = require("../config/database.js");
 const errors_js_1 = require("../utils/errors.js");
 const media_queue_js_1 = require("./queue/media.queue.js");
+const image_engine_js_1 = require("./image-engine/image-engine.js");
+const path_builder_js_1 = require("./worker/path-builder.js");
 exports.ALLOWED_MIME_TYPES = new Set([
     "image/jpeg",
     "image/jpg",
@@ -245,20 +247,83 @@ class MediaService {
         if (assetInsertErr) {
             throw errors_js_1.Errors.database(`Failed to create media_assets record: ${assetInsertErr.message}`);
         }
-        // 6. Enqueue BullMQ Media Job
+        // 6. Direct Inline WebP Processing & Upload to public-media bucket
+        let finalAssetStatus = "QUEUED";
         try {
-            await (0, media_queue_js_1.enqueueMediaJob)({
-                assetId,
-                sessionId,
-                sellerId: session.seller_id,
-                uploadedByUserId: session.uploaded_by_user_id,
-                profile: session.target_domain,
-                stagingPath: session.staging_path,
-            });
+            if (session.target_domain === "DOCUMENT") {
+                const privatePath = `private/seller_${session.seller_id || "admin"}/${assetId}/document.pdf`;
+                await adminDb.storage.from("private-documents").upload(privatePath, buffer, {
+                    contentType: "application/pdf",
+                    upsert: true,
+                });
+                await adminDb
+                    .from("media_assets")
+                    .update({
+                    status: "READY",
+                    storage_bucket: "private-documents",
+                    original_path: privatePath,
+                    updated_at: new Date().toISOString(),
+                })
+                    .eq("id", assetId);
+                finalAssetStatus = "READY";
+            }
+            else {
+                const engineResult = await image_engine_js_1.ImageEngine.process(buffer, session.target_domain);
+                const variantRecords = [];
+                for (const variant of engineResult.variants) {
+                    const publicPath = (0, path_builder_js_1.buildPublicVariantPath)(session.target_domain, session.seller_id, session.uploaded_by_user_id, assetId, variant.variantName);
+                    const { error: uploadErr } = await adminDb.storage
+                        .from("public-media")
+                        .upload(publicPath, variant.buffer, {
+                        contentType: "image/webp",
+                        cacheControl: "public, max-age=31536000, immutable",
+                        upsert: true,
+                    });
+                    if (!uploadErr) {
+                        variantRecords.push({
+                            asset_id: assetId,
+                            variant_name: variant.variantName,
+                            format: variant.format,
+                            width: variant.width,
+                            height: variant.height,
+                            size_bytes: variant.sizeBytes,
+                            storage_bucket: "public-media",
+                            storage_path: publicPath,
+                        });
+                    }
+                }
+                if (variantRecords.length > 0) {
+                    await adminDb.from("media_variants").insert(variantRecords);
+                    await adminDb
+                        .from("media_assets")
+                        .update({
+                        status: "READY",
+                        storage_bucket: "public-media",
+                        updated_at: new Date().toISOString(),
+                    })
+                        .eq("id", assetId);
+                    finalAssetStatus = "READY";
+                }
+            }
+            // Cleanup staging file
+            await adminDb.storage.from("media-staging").remove([session.staging_path]);
         }
-        catch (queueErr) {
-            console.error(`[MediaService] Queue enqueue error for session '${sessionId}':`, queueErr.message);
-            // Retain asset in QUEUED state for worker reconciliation
+        catch (procErr) {
+            console.warn(`[MediaService] Inline processing warning for session '${sessionId}':`, procErr.message);
+            // Fallback: Enqueue BullMQ Media Job if inline processing failed
+            try {
+                await (0, media_queue_js_1.enqueueMediaJob)({
+                    assetId,
+                    sessionId,
+                    sellerId: session.seller_id,
+                    uploadedByUserId: session.uploaded_by_user_id,
+                    profile: session.target_domain,
+                    stagingPath: session.staging_path,
+                });
+            }
+            catch (qErr) {
+                // Ignore queue fallback error
+            }
         }
         // 7. Update Session Status to COMPLETED
         await adminDb
@@ -274,7 +339,7 @@ class MediaService {
             sessionId,
             assetId,
             sessionStatus: "COMPLETED",
-            assetStatus: "QUEUED",
+            assetStatus: finalAssetStatus,
             deduplicated: false,
         };
     }

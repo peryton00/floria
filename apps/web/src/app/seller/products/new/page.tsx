@@ -245,18 +245,19 @@ export default function AddProductPage() {
           </div>
         </div>
 
-        {/* SKU */}
-        <div>
-          <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-slate-600 mb-1">
-            SKU / Plant Code (Optional)
-          </label>
-          <input
-            type="text"
-            value={sku}
-            onChange={(e) => setSku(e.target.value)}
-            placeholder="FLORIA-MONSTERA-01"
-            className="w-full px-3.5 py-2 rounded border border-[#E2E8F0] bg-[#F8FAFC] focus:bg-white text-xs font-mono focus:outline-none focus:ring-1 focus:ring-[#1B4D3E] text-[#0F172A]"
-          />
+        {/* SKU Notice */}
+        <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded p-3.5 flex items-center justify-between">
+          <div>
+            <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-slate-600">
+              Product SKU Code
+            </label>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Unique SKU is automatically generated and permanently saved by Floria upon product creation.
+            </p>
+          </div>
+          <span className="font-mono text-xs font-bold px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded">
+            Auto-Generated (FLR-XXXXXXXX)
+          </span>
         </div>
 
         {/* Description */}
