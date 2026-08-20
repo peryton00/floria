@@ -259,6 +259,46 @@ var FloriaApiClient = class {
       body: JSON.stringify(params)
     });
   }
+  // ── STAGE 9 REMAINING MEDIA DOMAIN INTEGRATIONS ─────────────────────────
+  async updateSellerLogo(assetId) {
+    return this.request("/api/v1/media/seller-logo", {
+      method: "PATCH",
+      body: JSON.stringify({ assetId })
+    });
+  }
+  async updateUserAvatar(assetId) {
+    return this.request("/api/v1/media/user-avatar", {
+      method: "PATCH",
+      body: JSON.stringify({ assetId })
+    });
+  }
+  async updateCategoryBanner(categoryId, assetId) {
+    return this.request(`/api/v1/media/category-banner/${categoryId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ assetId })
+    });
+  }
+  async attachReviewImage(reviewId, assetId, displayOrder = 0) {
+    return this.request(`/api/v1/media/reviews/${reviewId}/images`, {
+      method: "POST",
+      body: JSON.stringify({ assetId, displayOrder })
+    });
+  }
+  async attachSellerDocument(documentType, fileAssetId) {
+    return this.request("/api/v1/media/seller-documents", {
+      method: "POST",
+      body: JSON.stringify({ documentType, fileAssetId })
+    });
+  }
+  async getSignedDocumentUrl(documentId) {
+    return this.request(`/api/v1/media/seller-documents/${documentId}/download`);
+  }
+  async updateNurseryBanner(assetId) {
+    return this.request("/api/v1/media/nursery-banner", {
+      method: "PATCH",
+      body: JSON.stringify({ assetId })
+    });
+  }
   async getSellerInventory() {
     return this.request("/api/v1/seller/inventory");
   }

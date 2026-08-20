@@ -87,6 +87,11 @@ export interface SellerProfile {
   contact_email: string | null;
   address: string | null;
   logo_url: string | null;
+  logo_asset_id?: string | null;
+  logo_variants?: Record<string, string>;
+  banner_asset_id?: string | null;
+  banner_url?: string | null;
+  banner_variants?: Record<string, string>;
   status: SellerStatus;
   is_active: boolean;
 
@@ -153,6 +158,9 @@ export interface Category {
   slug: string;
   description: string | null;
   image_url: string | null;
+  banner_asset_id?: string | null;
+  banner_url?: string | null;
+  banner_variants?: Record<string, string>;
   parent_id: UUID | null;
   display_order: number;
   is_active: boolean;

@@ -87,8 +87,8 @@ export default async function CategoriesPage() {
         aria-label="All product categories"
       >
         {categories.map((cat) => {
-          const catImg = CATEGORY_IMAGES[cat.slug] || {
-            url: "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=600&q=80",
+          const catImg = {
+            url: cat.banner_url || (CATEGORY_IMAGES as Record<string, { url: string; alt: string }>)[cat.slug]?.url || "/floria-logo.png",
             alt: cat.name,
           };
 

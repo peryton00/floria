@@ -1021,16 +1021,21 @@ export class SellerRepository {
   async insertSellerDocument(doc: {
     seller_id: string;
     document_type: string;
-    file_name: string;
-    file_url: string;
-    file_size_bytes: number;
-    mime_type: string;
+    file_name?: string;
+    file_url?: string;
+    document_url?: string;
+    file_size_bytes?: number;
+    mime_type?: string;
+    file_asset_id?: string;
   }) {
     const db = getAdminDb();
     const { data, error } = await db
       .from("seller_documents")
       .insert({
-        ...doc,
+        seller_id: doc.seller_id,
+        document_type: doc.document_type,
+        document_url: doc.document_url || doc.file_url || "",
+        file_asset_id: doc.file_asset_id || null,
         status: "pending",
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),

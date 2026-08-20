@@ -474,6 +474,54 @@ export class FloriaApiClient {
     });
   }
 
+  // ── STAGE 9 REMAINING MEDIA DOMAIN INTEGRATIONS ─────────────────────────
+
+  public async updateSellerLogo(assetId: string): Promise<ApiResponse<any>> {
+    return this.request<any>("/api/v1/media/seller-logo", {
+      method: "PATCH",
+      body: JSON.stringify({ assetId }),
+    });
+  }
+
+  public async updateUserAvatar(assetId: string): Promise<ApiResponse<any>> {
+    return this.request<any>("/api/v1/media/user-avatar", {
+      method: "PATCH",
+      body: JSON.stringify({ assetId }),
+    });
+  }
+
+  public async updateCategoryBanner(categoryId: string, assetId: string): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/v1/media/category-banner/${categoryId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ assetId }),
+    });
+  }
+
+  public async attachReviewImage(reviewId: string, assetId: string, displayOrder = 0): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/v1/media/reviews/${reviewId}/images`, {
+      method: "POST",
+      body: JSON.stringify({ assetId, displayOrder }),
+    });
+  }
+
+  public async attachSellerDocument(documentType: string, fileAssetId: string): Promise<ApiResponse<any>> {
+    return this.request<any>("/api/v1/media/seller-documents", {
+      method: "POST",
+      body: JSON.stringify({ documentType, fileAssetId }),
+    });
+  }
+
+  public async getSignedDocumentUrl(documentId: string): Promise<ApiResponse<{ signedUrl: string; filename?: string }>> {
+    return this.request<{ signedUrl: string; filename?: string }>(`/api/v1/media/seller-documents/${documentId}/download`);
+  }
+
+  public async updateNurseryBanner(assetId: string): Promise<ApiResponse<any>> {
+    return this.request<any>("/api/v1/media/nursery-banner", {
+      method: "PATCH",
+      body: JSON.stringify({ assetId }),
+    });
+  }
+
   public async getSellerInventory(): Promise<ApiResponse<any[]>> {
     return this.request<any[]>("/api/v1/seller/inventory");
   }

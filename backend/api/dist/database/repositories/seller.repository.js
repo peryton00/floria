@@ -937,7 +937,10 @@ class SellerRepository {
         const { data, error } = await db
             .from("seller_documents")
             .insert({
-            ...doc,
+            seller_id: doc.seller_id,
+            document_type: doc.document_type,
+            document_url: doc.document_url || doc.file_url || "",
+            file_asset_id: doc.file_asset_id || null,
             status: "pending",
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),

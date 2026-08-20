@@ -222,6 +222,16 @@ declare class FloriaApiClient {
         assetId: string;
         altText?: string;
     }): Promise<ApiResponse<any>>;
+    updateSellerLogo(assetId: string): Promise<ApiResponse<any>>;
+    updateUserAvatar(assetId: string): Promise<ApiResponse<any>>;
+    updateCategoryBanner(categoryId: string, assetId: string): Promise<ApiResponse<any>>;
+    attachReviewImage(reviewId: string, assetId: string, displayOrder?: number): Promise<ApiResponse<any>>;
+    attachSellerDocument(documentType: string, fileAssetId: string): Promise<ApiResponse<any>>;
+    getSignedDocumentUrl(documentId: string): Promise<ApiResponse<{
+        signedUrl: string;
+        filename?: string;
+    }>>;
+    updateNurseryBanner(assetId: string): Promise<ApiResponse<any>>;
     getSellerInventory(): Promise<ApiResponse<any[]>>;
     updateSellerInventory(productId: string, data: any): Promise<ApiResponse<any>>;
     getSellerOrders(params?: QueryParams): Promise<ApiResponse<any[]>>;
