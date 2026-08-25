@@ -1,3 +1,4 @@
+
 // Floria API — Checkout Service
 import { getAdminDb } from "../config/database.js";
 import { orderRepository } from "../database/repositories/order.repository.js";
@@ -209,8 +210,9 @@ export class CheckoutService {
 
     // 5b. Save Multi-Nursery Financial Attribution & Seller Ledger Entries
     try {
+      const providerName = input.paymentMethod === "online" ? "cashfree" : input.paymentMethod;
       const { PaymentProviderFactory } = await import("../payments/payment.provider.js");
-      const provider = PaymentProviderFactory.getProvider(input.paymentMethod);
+      const provider = PaymentProviderFactory.getProvider(providerName);
       const paymentIntent = await provider.createPaymentIntent({
         masterOrderId: orderId,
         customerId: input.userId,
@@ -222,7 +224,9 @@ export class CheckoutService {
         order_id: orderId,
         customer_id: input.userId,
         payment_reference: paymentIntent.paymentReference,
-        provider: input.paymentMethod,
+        cf_order_id: paymentIntent.cfOrderId || paymentIntent.paymentReference,
+        payment_session_id: paymentIntent.paymentSessionId || null,
+        provider: providerName,
         currency: "INR",
         amount_paise: finalTotalPaise,
         status: paymentIntent.status,
@@ -290,6 +294,7 @@ export class CheckoutService {
         data: { orderId },
         source_type: "order",
         source_id: orderId,
+        navigation: { entityType: "ORDER", entityId: orderId, action: "VIEW" },
       });
 
       // Seller notifications for each nursery in the order
@@ -316,6 +321,7 @@ export class CheckoutService {
             data: { orderId, sellerId: sId },
             source_type: "order",
             source_id: orderId,
+            navigation: { entityType: "ORDER", entityId: orderId, action: "VIEW" },
           });
         } else {
           // Fallback: Notify all registered seller accounts for seed/test products
@@ -334,6 +340,7 @@ export class CheckoutService {
                 data: { orderId, sellerId: sId },
                 source_type: "order",
                 source_id: orderId,
+                navigation: { entityType: "ORDER", entityId: orderId, action: "VIEW" },
               });
             }
           }

@@ -44,7 +44,7 @@ export type AddToCartInput = z.infer<typeof addToCartSchema>;
 export const checkoutSchema = z.object({
   cart_id: z.string().uuid(),
   delivery_address_id: z.string().uuid(),
-  // payment_method resolved server-side from Razorpay response
+  // payment_method resolved server-side from Cashfree response
 });
 
 export type CheckoutInput = z.infer<typeof checkoutSchema>;
@@ -103,24 +103,51 @@ export const orderTransitionSchema = z.object({
 export type OrderTransitionInput = z.infer<typeof orderTransitionSchema>;
 
 // ------------------------------------------------------------------
-// Webhook payload (Razorpay) — validated server-side only
+// Webhook & Session Payloads (Cashfree) — validated server-side only
 // ------------------------------------------------------------------
 
-export const razorpayWebhookBodySchema = z.object({
-  event: z.string(),
-  payload: z.object({
-    payment: z
-      .object({
-        entity: z.object({
-          id: z.string(),
-          order_id: z.string(),
-          amount: z.number(),
-          currency: z.string(),
-          status: z.string(),
-        }),
-      })
-      .optional(),
-  }),
+export const createPaymentSessionSchema = z.object({
+  orderId: z.string().uuid("Invalid order ID"),
 });
 
-export type RazorpayWebhookBody = z.infer<typeof razorpayWebhookBodySchema>;
+export type CreatePaymentSessionInput = z.infer<typeof createPaymentSessionSchema>;
+
+export const cashfreeWebhookBodySchema = z.object({
+  type: z.string().optional(),
+  event_time: z.string().optional(),
+  data: z
+    .object({
+      order: z
+        .object({
+          order_id: z.string(),
+          order_amount: z.number().or(z.string()).optional(),
+          order_currency: z.string().optional(),
+          order_status: z.string().optional(),
+        })
+        .optional(),
+      payment: z
+        .object({
+          cf_payment_id: z.number().or(z.string()).optional(),
+          payment_status: z.string().optional(),
+          payment_amount: z.number().or(z.string()).optional(),
+          payment_currency: z.string().optional(),
+          payment_message: z.string().optional(),
+          payment_time: z.string().optional(),
+          bank_reference: z.string().optional(),
+          auth_id: z.string().optional(),
+          payment_method: z.any().optional(),
+        })
+        .optional(),
+      refund: z
+        .object({
+          cf_refund_id: z.string().optional(),
+          refund_id: z.string().optional(),
+          refund_status: z.string().optional(),
+          refund_amount: z.number().or(z.string()).optional(),
+        })
+        .optional(),
+    })
+    .optional(),
+});
+
+export type CashfreeWebhookBody = z.infer<typeof cashfreeWebhookBodySchema>;

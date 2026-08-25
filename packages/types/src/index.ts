@@ -320,22 +320,47 @@ export type PaymentStatus =
   | "pending"
   | "authorized"
   | "captured"
+  | "paid"
   | "failed"
-  | "refunded"
-  | "partially_refunded";
+  | "cancelled"
+  | "expired"
+  | "refund_pending"
+  | "partially_refunded"
+  | "refunded";
 
 export interface Payment {
   id: UUID;
   order_id: UUID;
-  provider: "razorpay" | "cod";
-  provider_order_id: string | null;
-  provider_payment_id: string | null;
+  customer_id?: UUID;
+  payment_reference?: string;
+  provider: "cashfree" | "cod" | "online";
+  cf_order_id?: string | null;
+  cf_payment_id?: string | null;
+  payment_session_id?: string | null;
+  provider_order_id?: string | null;
+  provider_payment_id?: string | null;
   amount_paise: number;
   currency: string; // "INR"
   status: PaymentStatus;
   webhook_verified: boolean;
+  raw_provider_response?: Record<string, unknown>;
   created_at: Timestamp;
   updated_at: Timestamp;
+}
+
+export interface CashfreeCheckoutSession {
+  paymentSessionId: string;
+  cfOrderId: string;
+  orderId: string;
+  amountPaise: number;
+  currency: string;
+  environment: "SANDBOX" | "PRODUCTION";
+}
+
+export interface PaymentRefundRequest {
+  paymentId: string;
+  amountPaise: number;
+  reason?: string;
 }
 
 // ------------------------------------------------------------------

@@ -41,7 +41,7 @@ export default function AdminPayoutsPage() {
               <li className="flex items-start gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-forest-600 mt-1.5 flex-shrink-0" />
                 <div>
-                  <span className="font-bold text-ink-800">Payment Gateway Disbursal API:</span> Integration with RazorpayX or Stripe Connect Payout APIs to programmatically route funds from the platform escrow account to verified partner nursery bank accounts.
+                  <span className="font-bold text-ink-800">Payment Gateway Disbursal API:</span> Integration with Cashfree Payouts API to programmatically route funds from the platform escrow account to verified partner nursery bank accounts.
                 </div>
               </li>
               <li className="flex items-start gap-2">

@@ -347,6 +347,33 @@ export class FloriaApiClient {
     });
   }
 
+  // Cashfree Payment Session & Verification
+  public async createPaymentSession(orderId: string): Promise<ApiResponse<{
+    paymentId: string;
+    paymentSessionId: string;
+    cfOrderId: string;
+    orderId: string;
+    amountPaise: number;
+    currency: string;
+    environment: "SANDBOX" | "PRODUCTION";
+  }>> {
+    return this.request<any>("/api/v1/payments/create-session", {
+      method: "POST",
+      body: JSON.stringify({ orderId }),
+    });
+  }
+
+  public async getPaymentStatus(paymentId: string): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/v1/payments/${paymentId}/status`);
+  }
+
+  public async requestRefund(paymentId: string, amountPaise: number, reason?: string): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/v1/payments/${paymentId}/refund`, {
+      method: "POST",
+      body: JSON.stringify({ amountPaise, reason }),
+    });
+  }
+
   public async getOrders(): Promise<ApiResponse<any[]>> {
     return this.request<any[]>("/api/v1/customer/orders");
   }
@@ -612,6 +639,16 @@ export class FloriaApiClient {
     return this.request<any>("/api/v1/notifications/read-all", {
       method: "PATCH",
     });
+  }
+
+  public async deleteNotification(id: string): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/v1/notifications/${id}`, {
+      method: "DELETE",
+    });
+  }
+
+  public getRealtimeStreamUrl(): string {
+    return `${this.baseUrl}/api/v1/notifications/stream`;
   }
 
   // ── Admin API (/api/v1/admin) ─────────────────────────────────────────────

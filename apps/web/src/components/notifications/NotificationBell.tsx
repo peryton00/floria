@@ -35,6 +35,21 @@ export function NotificationBell({ userRole = "customer" }: NotificationBellProp
     fetchUnreadCount();
 
     let unsubscribe = () => {};
+    let channel: BroadcastChannel | null = null;
+
+    try {
+      if (typeof window !== "undefined" && "BroadcastChannel" in window) {
+        channel = new BroadcastChannel("floria_notifications");
+        channel.onmessage = (event) => {
+          if (event.data?.type === "REFRESH_NOTIFICATIONS" || event.data?.type === "NEW_NOTIFICATION") {
+            fetchUnreadCount();
+          }
+        };
+      }
+    } catch {
+      // BroadcastChannel unavailable
+    }
+
     try {
       const supabase = getSupabaseBrowserClient();
       const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -49,11 +64,13 @@ export function NotificationBell({ userRole = "customer" }: NotificationBellProp
       // Ignore if Supabase is unavailable in current context
     }
 
-    const interval = setInterval(fetchUnreadCount, 30000);
+    // Conservative 60-second fallback poll
+    const interval = setInterval(fetchUnreadCount, 60000);
 
     return () => {
       unsubscribe();
       clearInterval(interval);
+      if (channel) channel.close();
     };
   }, [fetchUnreadCount]);
 

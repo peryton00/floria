@@ -186,6 +186,22 @@ var FloriaApiClient = class {
       body: JSON.stringify(data)
     });
   }
+  // Cashfree Payment Session & Verification
+  async createPaymentSession(orderId) {
+    return this.request("/api/v1/payments/create-session", {
+      method: "POST",
+      body: JSON.stringify({ orderId })
+    });
+  }
+  async getPaymentStatus(paymentId) {
+    return this.request(`/api/v1/payments/${paymentId}/status`);
+  }
+  async requestRefund(paymentId, amountPaise, reason) {
+    return this.request(`/api/v1/payments/${paymentId}/refund`, {
+      method: "POST",
+      body: JSON.stringify({ amountPaise, reason })
+    });
+  }
   async getOrders() {
     return this.request("/api/v1/customer/orders");
   }
@@ -390,6 +406,14 @@ var FloriaApiClient = class {
     return this.request("/api/v1/notifications/read-all", {
       method: "PATCH"
     });
+  }
+  async deleteNotification(id) {
+    return this.request(`/api/v1/notifications/${id}`, {
+      method: "DELETE"
+    });
+  }
+  getRealtimeStreamUrl() {
+    return `${this.baseUrl}/api/v1/notifications/stream`;
   }
   // ── Admin API (/api/v1/admin) ─────────────────────────────────────────────
   async getAdminHealth() {

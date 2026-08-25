@@ -161,6 +161,29 @@ export class AdminService {
       metadata: { from: currentStatus, to: status },
     });
 
+    // Trigger notification to seller user
+    if (seller.user_id) {
+      try {
+        const { notificationService } = await import("../notifications/notification.service.js");
+        await notificationService.createNotification({
+          user_id: seller.user_id,
+          role: "seller",
+          type: `SELLER_${status.toUpperCase()}`,
+          title: `Nursery Partner Status: ${status.toUpperCase()}`,
+          message: status === "approved"
+            ? "Congratulations! Your Floria nursery seller application has been approved."
+            : status === "rejected"
+            ? "Your Floria nursery seller application was not approved."
+            : "Your Floria nursery seller account has been suspended.",
+          source_type: "seller_profile",
+          source_id: `${sellerId}_${status}`,
+          navigation: { entityType: "SELLER", entityId: sellerId, action: "VIEW" },
+        });
+      } catch (notifErr) {
+        console.error("[AdminService] Seller status notification error:", notifErr);
+      }
+    }
+
     return { id: sellerId, status };
   }
 

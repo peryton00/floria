@@ -25,7 +25,7 @@ exports.reviewsService = {
             err.code = "NOT_ELIGIBLE";
             throw err;
         }
-        return review_repository_js_1.reviewRepository.create({
+        const review = await review_repository_js_1.reviewRepository.create({
             product_id: productId,
             customer_id: customerId,
             order_item_id: eligible.order_item_id,
@@ -33,6 +33,33 @@ exports.reviewsService = {
             title: payload.title?.trim() || undefined,
             body: payload.body?.trim() || undefined,
         });
+        // Notify seller of new review
+        try {
+            const { getAdminDb } = await import("../config/database.js");
+            const { notificationService } = await import("../notifications/notification.service.js");
+            const db = getAdminDb();
+            const { data: prod } = await db.from("products").select("seller_id, name").eq("id", productId).maybeSingle();
+            if (prod?.seller_id) {
+                const { data: sellerProf } = await db.from("seller_profiles").select("user_id").or(`id.eq.${prod.seller_id},user_id.eq.${prod.seller_id}`).maybeSingle();
+                if (sellerProf?.user_id) {
+                    await notificationService.createNotification({
+                        user_id: sellerProf.user_id,
+                        role: "seller",
+                        type: "NEW_REVIEW",
+                        title: "New Customer Review",
+                        message: `A customer submitted a ${payload.rating}-star review on "${prod.name || "your product"}".`,
+                        data: { productId, rating: payload.rating, reviewId: review.id },
+                        source_type: "review",
+                        source_id: review.id,
+                        navigation: { entityType: "REVIEW", entityId: productId, action: "VIEW" },
+                    });
+                }
+            }
+        }
+        catch (notifErr) {
+            console.error("[ReviewsService] Seller review notification error:", notifErr);
+        }
+        return review;
     },
     async moderateReview(reviewId, action, note) {
         const result = await review_repository_js_1.reviewRepository.moderate(reviewId, action, note);

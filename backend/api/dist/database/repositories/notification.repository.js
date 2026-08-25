@@ -9,11 +9,12 @@ class NotificationRepository {
         // Deduplication check if source_type & source_id provided
         if (dto.source_type && dto.source_id) {
             try {
-                const query = db.from("notifications").select("id");
+                const query = db.from("notifications").select("*");
                 if (typeof query.eq === "function") {
                     const { data: existing } = await query
                         .eq("user_id", dto.user_id)
-                        .eq("type", dto.type)
+                        .eq("source_type", dto.source_type)
+                        .eq("source_id", dto.source_id)
                         .maybeSingle();
                     if (existing) {
                         return existing;
@@ -24,6 +25,10 @@ class NotificationRepository {
                 // Continue to insert if query mock doesn't support nested .eq()
             }
         }
+        const payloadData = dto.data || {};
+        if (dto.navigation && !payloadData.navigation) {
+            payloadData.navigation = dto.navigation;
+        }
         const { data, error } = await db
             .from("notifications")
             .insert({
@@ -32,13 +37,25 @@ class NotificationRepository {
             type: dto.type,
             title: dto.title,
             message: dto.message,
-            data: dto.data || {},
+            data: payloadData,
             source_type: dto.source_type || null,
             source_id: dto.source_id || null,
         })
             .select()
             .single();
         if (error) {
+            // Handle Postgres unique constraint violation (code 23505)
+            if (error.code === "23505" && dto.source_type && dto.source_id) {
+                const { data: existing } = await db
+                    .from("notifications")
+                    .select("*")
+                    .eq("user_id", dto.user_id)
+                    .eq("source_type", dto.source_type)
+                    .eq("source_id", dto.source_id)
+                    .maybeSingle();
+                if (existing)
+                    return existing;
+            }
             console.error("[NotificationRepository] createNotification error:", error);
             throw new Error(error.message);
         }
@@ -99,6 +116,17 @@ class NotificationRepository {
             .update({ read_at: new Date().toISOString() })
             .eq("user_id", userId)
             .is("read_at", null);
+        if (error)
+            throw new Error(error.message);
+        return true;
+    }
+    async deleteNotification(userId, notificationId) {
+        const db = (0, database_js_1.getAdminDb)();
+        const { error } = await db
+            .from("notifications")
+            .delete()
+            .eq("id", notificationId)
+            .eq("user_id", userId);
         if (error)
             throw new Error(error.message);
         return true;

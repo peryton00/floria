@@ -14,8 +14,11 @@ import {
   AlertTriangle,
   Info,
   X,
-  ChevronRight
+  ChevronRight,
+  Trash2
 } from "lucide-react";
+
+import { resolveNotificationNavigation } from "@/lib/navigation/notificationResolver";
 
 interface NotificationDrawerProps {
   isOpen: boolean;
@@ -93,29 +96,20 @@ export function NotificationDrawer({
     }
   };
 
+  const handleDeleteNotification = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    e.preventDefault();
+    try {
+      await api.deleteNotification(id);
+      setNotifications((prev) => prev.filter((item) => item.id !== id));
+      onRefreshCount();
+    } catch (err) {
+      console.error("[NotificationDrawer] deleteNotification error:", err);
+    }
+  };
+
   const getTargetHref = (item: NotificationItem): string => {
-    const data = item.data || {};
-    if (data.orderId) {
-      if (userRole === "seller") return `/seller/orders/${data.orderId}`;
-      if (userRole === "operations") return `/operations/orders`;
-      if (userRole === "admin") return `/admin/orders`;
-      return `/orders/${data.orderId}`;
-    }
-    if (data.productId) {
-      if (userRole === "seller") return `/seller/inventory`;
-      return `/products/${data.productId}`;
-    }
-    if (item.type.includes("SELLER")) {
-      if (userRole === "admin") return `/admin/sellers`;
-      return `/seller/dashboard`;
-    }
-    return userRole === "seller"
-      ? "/seller/dashboard"
-      : userRole === "admin"
-      ? "/admin/dashboard"
-      : userRole === "operations"
-      ? "/operations"
-      : "/account";
+    return resolveNotificationNavigation(item, userRole);
   };
 
   const getIcon = (type: string) => {
@@ -194,7 +188,7 @@ export function NotificationDrawer({
                       if (isUnread) handleMarkRead(item.id);
                       onClose();
                     }}
-                    className="block space-y-1"
+                    className="block space-y-1 pr-6"
                   >
                     <div className="flex justify-between items-start gap-2">
                       <div className="flex items-center gap-2">
@@ -217,6 +211,15 @@ export function NotificationDrawer({
                       </span>
                     </div>
                   </Link>
+
+                  <button
+                    type="button"
+                    onClick={(e) => handleDeleteNotification(e, item.id)}
+                    className="absolute top-3 right-3 p-1 rounded-md text-ink-400 hover:text-error-600 hover:bg-error-50 opacity-0 group-hover:opacity-100 transition-all"
+                    title="Dismiss notification"
+                  >
+                    <Trash2 size={13} />
+                  </button>
                 </div>
               );
             })

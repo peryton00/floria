@@ -156,6 +156,29 @@ class AdminService {
             resource_id: sellerId,
             metadata: { from: currentStatus, to: status },
         });
+        // Trigger notification to seller user
+        if (seller.user_id) {
+            try {
+                const { notificationService } = await import("../notifications/notification.service.js");
+                await notificationService.createNotification({
+                    user_id: seller.user_id,
+                    role: "seller",
+                    type: `SELLER_${status.toUpperCase()}`,
+                    title: `Nursery Partner Status: ${status.toUpperCase()}`,
+                    message: status === "approved"
+                        ? "Congratulations! Your Floria nursery seller application has been approved."
+                        : status === "rejected"
+                            ? "Your Floria nursery seller application was not approved."
+                            : "Your Floria nursery seller account has been suspended.",
+                    source_type: "seller_profile",
+                    source_id: `${sellerId}_${status}`,
+                    navigation: { entityType: "SELLER", entityId: sellerId, action: "VIEW" },
+                });
+            }
+            catch (notifErr) {
+                console.error("[AdminService] Seller status notification error:", notifErr);
+            }
+        }
         return { id: sellerId, status };
     }
     async getSellerDocuments(sellerId) {
@@ -244,26 +267,13 @@ class AdminService {
         return category;
     }
     // ── Orders Oversight ──────────────────────────────────────────────────────
-    async getOrders(adminUserId, filters) {
-        await audit_repository_js_1.auditRepository.log({
-            actor_user_id: adminUserId,
-            actor_role: "admin",
-            action: "ORDER_VIEWED_BY_ADMIN",
-            resource_type: "orders_list",
-        });
+    async getOrders(_adminUserId, filters) {
         return order_repository_js_1.orderRepository.findAllMasterOrders(filters);
     }
-    async getOrderById(adminUserId, id) {
+    async getOrderById(_adminUserId, id) {
         const order = await order_repository_js_1.orderRepository.findById(id);
         if (!order)
             throw errors_js_1.Errors.notFound("Master order");
-        await audit_repository_js_1.auditRepository.log({
-            actor_user_id: adminUserId,
-            actor_role: "admin",
-            action: "ORDER_VIEWED_BY_ADMIN",
-            resource_type: "order",
-            resource_id: id,
-        });
         return order;
     }
     // ── Audit Logs ────────────────────────────────────────────────────────────

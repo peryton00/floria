@@ -191,6 +191,17 @@ declare class FloriaApiClient {
     }): Promise<ApiResponse<{
         orderId: string;
     }>>;
+    createPaymentSession(orderId: string): Promise<ApiResponse<{
+        paymentId: string;
+        paymentSessionId: string;
+        cfOrderId: string;
+        orderId: string;
+        amountPaise: number;
+        currency: string;
+        environment: "SANDBOX" | "PRODUCTION";
+    }>>;
+    getPaymentStatus(paymentId: string): Promise<ApiResponse<any>>;
+    requestRefund(paymentId: string, amountPaise: number, reason?: string): Promise<ApiResponse<any>>;
     getOrders(): Promise<ApiResponse<any[]>>;
     getOrderById(id: string): Promise<ApiResponse<any>>;
     getSellerProfile(): Promise<ApiResponse<any>>;
@@ -262,6 +273,8 @@ declare class FloriaApiClient {
     }>>;
     markNotificationRead(id: string): Promise<ApiResponse<any>>;
     markAllNotificationsRead(): Promise<ApiResponse<any>>;
+    deleteNotification(id: string): Promise<ApiResponse<any>>;
+    getRealtimeStreamUrl(): string;
     getAdminHealth(): Promise<ApiResponse<any>>;
     getAdminDashboard(): Promise<ApiResponse<any>>;
     getAdminAnalytics(params?: QueryParams): Promise<ApiResponse<any>>;

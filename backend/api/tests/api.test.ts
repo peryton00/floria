@@ -708,6 +708,288 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
       expect(res.body.success).toBe(true);
     });
 
+    it("Authenticated User -> DELETE /api/v1/notifications/:id = 200 OK", async () => {
+      setupAuthUser("user-1", "customer");
+      mockFrom.mockImplementation((table: string) => {
+        if (table === "user_profiles") {
+          return {
+            select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { id: "user-1", role: "customer" }, error: null }) }) }),
+          };
+        }
+        if (table === "notifications") {
+          return {
+            delete: () => ({
+              eq: () => ({
+                eq: async () => ({ error: null }),
+              }),
+            }),
+          };
+        }
+        return {};
+      });
+
+      const res = await request(app)
+        .delete("/api/v1/notifications/notif-123")
+        .set("Authorization", "Bearer user_token");
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.message).toBe("Notification deleted");
+    });
+
+    it("NotificationRepository -> Allows sequential distinct notifications of same type with different source_id", async () => {
+      const { notificationRepository } = await import("../src/database/repositories/notification.repository.js");
+      const savedRows: any[] = [];
+
+      mockFrom.mockImplementation((table: string) => {
+        if (table === "notifications") {
+          return {
+            select: (cols?: string) => ({
+              eq: (field1: string, val1: string) => ({
+                eq: (field2: string, val2: string) => ({
+                  eq: (field3: string, val3: string) => ({
+                    maybeSingle: async () => {
+                      const match = savedRows.find(
+                        (r) => r.user_id === val1 && r.source_type === val2 && r.source_id === val3
+                      );
+                      return { data: match || null, error: null };
+                    },
+                  }),
+                }),
+              }),
+            }),
+            insert: (row: any) => ({
+              select: () => ({
+                single: async () => {
+                  const inserted = { id: `notif-${savedRows.length + 1}`, ...row };
+                  savedRows.push(inserted);
+                  return { data: inserted, error: null };
+                },
+              }),
+            }),
+          };
+        }
+        return {};
+      });
+
+      const notif1 = await notificationRepository.createNotification({
+        user_id: "user-test-1",
+        type: "ORDER_PLACED",
+        title: "Order #1 Placed",
+        message: "Order #1 confirmation",
+        source_type: "order",
+        source_id: "order-101",
+      });
+
+      const notif2 = await notificationRepository.createNotification({
+        user_id: "user-test-1",
+        type: "ORDER_PLACED",
+        title: "Order #2 Placed",
+        message: "Order #2 confirmation",
+        source_type: "order",
+        source_id: "order-102",
+      });
+
+      expect(notif1.id).toBe("notif-1");
+      expect(notif2.id).toBe("notif-2");
+      expect(savedRows.length).toBe(2);
+    });
+
+    it("GET /api/v1/notifications/stream -> 401 UNAUTHORIZED when token missing", async () => {
+      const res = await request(app).get("/api/v1/notifications/stream");
+      expect(res.status).toBe(401);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error.code).toBe("AUTH_REQUIRED");
+    });
+
+    it("NotificationService -> Structured navigation payload is preserved", async () => {
+      const { notificationService } = await import("../src/notifications/notification.service.js");
+      const savedRows: any[] = [];
+
+      mockFrom.mockImplementation((table: string) => {
+        if (table === "notifications") {
+          return {
+            select: () => ({
+              eq: () => ({ eq: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null, error: null }) }) }) }),
+            }),
+            insert: (row: any) => ({
+              select: () => ({
+                single: async () => {
+                  const inserted = { id: `notif-${savedRows.length + 1}`, ...row };
+                  savedRows.push(inserted);
+                  return { data: inserted, error: null };
+                },
+              }),
+            }),
+          };
+        }
+        return {};
+      });
+
+      const notif = await notificationService.createNotification({
+        user_id: "user-test-nav",
+        type: "ORDER_PLACED",
+        title: "Order Placed",
+        message: "Order #999 created",
+        source_type: "order",
+        source_id: "order-999",
+        navigation: {
+          entityType: "ORDER",
+          entityId: "order-999",
+          action: "VIEW",
+        },
+      });
+
+      expect(notif.data.navigation.entityType).toBe("ORDER");
+      expect(notif.data.navigation.entityId).toBe("order-999");
+    });
+
+    it("User A cannot delete User B notification -> Scoped by user_id", async () => {
+      const { notificationService } = await import("../src/notifications/notification.service.js");
+      let scopedUserId: string | null = null;
+
+      mockFrom.mockImplementation((table: string) => {
+        if (table === "notifications") {
+          return {
+            delete: () => ({
+              eq: (field1: string, val1: string) => ({
+                eq: (field2: string, val2: string) => {
+                  if (field2 === "user_id") scopedUserId = val2;
+                  return { error: null };
+                },
+              }),
+            }),
+          };
+        }
+        return {};
+      });
+
+      await notificationService.deleteNotification("user-owner-123", "notif-target-456");
+      expect(scopedUserId).toBe("user-owner-123");
+    });
+
+    it("Admin updateSellerStatus -> Triggers SELLER_APPROVED notification for seller user", async () => {
+      const { adminService } = await import("../src/admin/admin.service.js");
+      const createdNotifs: any[] = [];
+
+      mockFrom.mockImplementation((table: string) => {
+        if (table === "seller_profiles") {
+          return {
+            select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { id: "seller-100", user_id: "user-seller-100", status: "pending" }, error: null }) }) }),
+            update: () => ({ eq: async () => ({ error: null }) }),
+          };
+        }
+        if (table === "notifications") {
+          return {
+            select: () => ({ eq: () => ({ eq: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null, error: null }) }) }) }) }),
+            insert: (row: any) => ({
+              select: () => ({
+                single: async () => {
+                  createdNotifs.push(row);
+                  return { data: { id: "notif-approved", ...row }, error: null };
+                },
+              }),
+            }),
+          };
+        }
+        return {};
+      });
+
+      await adminService.updateSellerStatus("admin-1", "seller-100", "approved");
+      expect(createdNotifs.length).toBe(1);
+      expect(createdNotifs[0].user_id).toBe("user-seller-100");
+      expect(createdNotifs[0].type).toBe("SELLER_APPROVED");
+      expect(createdNotifs[0].data.navigation.entityType).toBe("SELLER");
+    });
+
+    it("Cashfree -> PaymentsService.createPaymentSession creates session for authenticated order owner", async () => {
+      const { paymentsService } = await import("../src/payments/payments.service.js");
+
+      mockFrom.mockImplementation((table: string) => {
+        if (table === "orders") {
+          return {
+            select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { id: "00000000-0000-0000-0000-000000000101", customer_id: "user-cf-1", total_paise: 49900, status: "pending" }, error: null }) }) }),
+          };
+        }
+        if (table === "user_profiles") {
+          return {
+            select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { email: "test@floria.local", full_name: "Test Customer" }, error: null }) }) }),
+          };
+        }
+        if (table === "payments") {
+          return {
+            upsert: (row: any) => ({
+              select: () => ({ maybeSingle: async () => ({ data: { id: "pay-cf-101", ...row }, error: null }) }),
+            }),
+          };
+        }
+        return {};
+      });
+
+      const session = await paymentsService.createPaymentSession("user-cf-1", "00000000-0000-0000-0000-000000000101");
+      expect(session.orderId).toBe("00000000-0000-0000-0000-000000000101");
+      expect(session.amountPaise).toBe(49900);
+      expect(session.currency).toBe("INR");
+      expect(session.paymentSessionId).toBeDefined();
+    });
+
+    it("Cashfree -> Webhook processing is idempotent and updates order & payment status", async () => {
+      const { paymentsService } = await import("../src/payments/payments.service.js");
+      let paymentStatusUpdated: string | null = null;
+      let orderStatusUpdated: string | null = null;
+
+      mockFrom.mockImplementation((table: string) => {
+        if (table === "payments") {
+          return {
+            select: () => ({ or: () => ({ maybeSingle: async () => ({ data: { id: "pay-1", order_id: "ord-1", customer_id: "user-1", amount_paise: 25000, status: "pending" }, error: null }) }) }),
+            update: (payload: any) => {
+              paymentStatusUpdated = payload.status;
+              return { eq: async () => ({ error: null }) };
+            },
+          };
+        }
+        if (table === "orders") {
+          return {
+            update: (payload: any) => {
+              orderStatusUpdated = payload.status;
+              return { eq: async () => ({ error: null }) };
+            },
+          };
+        }
+        if (table === "seller_ledger_entries") {
+          return { update: () => ({ eq: async () => ({ error: null }) }) };
+        }
+        if (table === "notifications") {
+          return { select: () => ({ eq: () => ({ eq: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null, error: null }) }) }) }) }), insert: () => ({ select: () => ({ single: async () => ({ data: {}, error: null }) }) }) };
+        }
+        return {};
+      });
+
+      const input = {
+        signature: "test-sig",
+        rawBody: JSON.stringify({
+          type: "PAYMENT_SUCCESS_WEBHOOK",
+          event_time: "2026-08-26T00:00:00Z",
+          data: {
+            order: { order_id: "CF-ORD-001" },
+            payment: { cf_payment_id: "999888", payment_status: "SUCCESS", payment_amount: 250 },
+          },
+        }),
+        headers: {},
+      };
+
+      const res1 = await paymentsService.processWebhookInput(input);
+      expect(res1.success).toBe(true);
+      expect(res1.idempotent).toBe(false);
+      expect(paymentStatusUpdated).toBe("paid");
+      expect(orderStatusUpdated).toBe("seller_pending");
+
+      // Duplicate webhook execution -> Idempotent response
+      const res2 = await paymentsService.processWebhookInput(input);
+      expect(res2.success).toBe(true);
+      expect(res2.idempotent).toBe(true);
+    });
+
     it("Seller Documents -> Valid PDF upload returns 200 OK with pending status", async () => {
       setupAuthUser("seller-1", "seller");
       mockFrom.mockImplementation((table: string) => {

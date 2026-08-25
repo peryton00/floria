@@ -10,7 +10,31 @@ export class NotificationService {
     if (!dto.user_id || !dto.title || !dto.message || !dto.type) {
       throw Errors.validation("Missing required notification fields");
     }
-    return notificationRepository.createNotification(dto);
+    const created = await notificationRepository.createNotification(dto);
+
+    // Publish realtime event to Redis channel floria:notifications:<user_id>
+    try {
+      const { getRedisClient } = await import("../config/redis.js");
+      const redis = getRedisClient();
+      const channel = `floria:notifications:${dto.user_id}`;
+      const payload = JSON.stringify({
+        event: "notification.created",
+        notificationId: created.id,
+        userId: created.user_id,
+        type: created.type,
+        title: created.title,
+        message: created.message,
+        createdAt: created.created_at || new Date().toISOString(),
+        navigation: created.data?.navigation || dto.navigation || null,
+        data: created.data || {},
+      });
+      await redis.publish(channel, payload);
+    } catch (redisErr: any) {
+      // Redis publishing failure MUST NOT break PostgreSQL notification persistence
+      console.warn("[NotificationService] Redis publish event failed:", redisErr?.message);
+    }
+
+    return created;
   }
 
   async getUserNotifications(
@@ -34,6 +58,10 @@ export class NotificationService {
 
   async markAllAsRead(userId: string) {
     return notificationRepository.markAllAsRead(userId);
+  }
+
+  async deleteNotification(userId: string, notificationId: string) {
+    return notificationRepository.deleteNotification(userId, notificationId);
   }
 }
 

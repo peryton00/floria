@@ -384,6 +384,7 @@ export class SellersService {
             data: { productId, stockQuantity: 0 },
             source_type: "inventory",
             source_id: `${productId}_out_of_stock`,
+            navigation: { entityType: "PRODUCT", entityId: productId, action: "VIEW" },
           });
         } else if (updates.stock_quantity <= threshold) {
           await notificationService.createNotification({
@@ -395,6 +396,7 @@ export class SellersService {
             data: { productId, stockQuantity: updates.stock_quantity },
             source_type: "inventory",
             source_id: `${productId}_low_stock`,
+            navigation: { entityType: "PRODUCT", entityId: productId, action: "VIEW" },
           });
         }
       }
@@ -447,6 +449,7 @@ export class SellersService {
             data: { orderId: masterOrderId, status: newStatus },
             source_type: "fulfillment",
             source_id: `${masterOrderId}_${newStatus}`,
+            navigation: { entityType: "ORDER", entityId: masterOrderId, action: "VIEW" },
           });
         }
       } catch (notifErr) {

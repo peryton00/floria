@@ -192,17 +192,36 @@ export default function CheckoutPage() {
         return;
       }
 
-      // Post-checkout: fetch the actual order from backend to get authoritative totals,
-      // then refresh orders. For the confirmation screen, show a pending state until refresh.
-      // We do NOT recalculate delivery/maintenance client-side — these are server-authoritative.
+      const orderId = res.data.orderId;
+
+      // Online Cashfree Payment Session Initialization
+      if (paymentMethod === "online") {
+        const sessionRes = await api.createPaymentSession(orderId);
+        if (sessionRes.success && sessionRes.data?.paymentSessionId) {
+          // If Cashfree SDK JS loaded on window
+          if (typeof window !== "undefined" && (window as any).Cashfree) {
+            try {
+              const cashfree = (window as any).Cashfree({
+                mode: sessionRes.data.environment.toLowerCase() === "production" ? "production" : "sandbox",
+              });
+              await cashfree.checkout({
+                paymentSessionId: sessionRes.data.paymentSessionId,
+                redirectTarget: "_self",
+              });
+            } catch (cfErr) {
+              console.warn("[Checkout] Cashfree SDK launch notice:", cfErr);
+            }
+          }
+        }
+      }
+
       setConfirmedOrder({
-        id: res.data.orderId,
+        id: orderId,
         createdAt: new Date().toLocaleString(),
-        paymentMethod: paymentMethod === "cod" ? "Cash on Delivery" : "Online Payment",
+        paymentMethod: paymentMethod === "cod" ? "Cash on Delivery" : "Online Payment (UPI/Cards/NetBanking)",
         address: selectedAddr,
         nurseryGroups,
         subtotalPaise,
-        // These will be replaced with the real order's snapshotted values after refreshOrders.
         deliveryFeePaise: null,
         maintenanceFeePaise: null,
         totalPaise: null,

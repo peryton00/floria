@@ -52,6 +52,17 @@ export class NotificationsController {
       next(err);
     }
   }
+
+  async deleteNotification(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = req.user!.id;
+      const notificationId = req.params.id as string;
+      await notificationService.deleteNotification(userId, notificationId);
+      res.json({ success: true, data: { message: "Notification deleted" } });
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 export const notificationsController = new NotificationsController();
