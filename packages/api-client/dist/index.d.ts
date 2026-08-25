@@ -204,6 +204,11 @@ declare class FloriaApiClient {
     }>>;
     getPaymentStatus(paymentId: string): Promise<ApiResponse<any>>;
     requestRefund(paymentId: string, amountPaise: number, reason?: string): Promise<ApiResponse<any>>;
+    getAdminTransactions(params?: {
+        status?: string;
+        search?: string;
+        limit?: number;
+    }): Promise<ApiResponse<any[]>>;
     getOrders(): Promise<ApiResponse<any[]>>;
     getOrderById(id: string): Promise<ApiResponse<any>>;
     getSellerProfile(): Promise<ApiResponse<any>>;

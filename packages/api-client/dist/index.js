@@ -242,6 +242,14 @@ var FloriaApiClient = class {
       body: JSON.stringify({ amountPaise, reason })
     });
   }
+  async getAdminTransactions(params) {
+    const query = new URLSearchParams();
+    if (params?.status) query.set("status", params.status);
+    if (params?.search) query.set("search", params.search);
+    if (params?.limit) query.set("limit", String(params.limit));
+    const qStr = query.toString();
+    return this.request(`/api/v1/payments/admin/all${qStr ? `?${qStr}` : ""}`);
+  }
   async getOrders() {
     return this.request("/api/v1/customer/orders");
   }

@@ -93,6 +93,26 @@ export class PaymentsController {
       next(err);
     }
   }
+
+  /**
+   * GET /api/v1/payments/admin/all
+   * Authorized admin query to fetch transaction logs across all marketplace orders.
+   */
+  async getAdminTransactions(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const status = typeof req.query.status === "string" ? req.query.status : undefined;
+      const search = typeof req.query.search === "string" ? req.query.search : undefined;
+      const limit = typeof req.query.limit === "string" ? parseInt(req.query.limit, 10) : 100;
+
+      const transactions = await paymentsService.getAdminTransactions({ status, search, limit });
+      res.json({
+        success: true,
+        data: transactions,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 export const paymentsController = new PaymentsController();

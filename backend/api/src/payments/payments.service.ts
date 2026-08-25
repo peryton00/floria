@@ -317,6 +317,72 @@ export class PaymentsService {
 
     return refundRow;
   }
+
+  /**
+   * Admin Query: Fetch all payment transactions across platform with customer & order details.
+   */
+  async getAdminTransactions(filters: { search?: string; status?: string; limit?: number }) {
+    const db = getAdminDb();
+    let query = db
+      .from("payments")
+      .select("*, orders(id, total_paise, status, notes), user_profiles(email, full_name, phone)")
+      .order("created_at", { ascending: false });
+
+    if (filters.status && filters.status !== "all") {
+      query = query.eq("status", filters.status);
+    }
+
+    if (filters.limit) {
+      query = query.limit(filters.limit);
+    } else {
+      query = query.limit(100);
+    }
+
+    const { data, error } = await query;
+    if (error) {
+      console.warn("[PaymentsService] getAdminTransactions query notice:", error.message);
+      return [];
+    }
+
+    let results = (data || []).map((p: any) => {
+      const u = p.user_profiles || {};
+      const o = p.orders || {};
+      return {
+        id: p.id,
+        orderId: p.order_id,
+        customerId: p.customer_id,
+        customerName: u.full_name || u.email?.split("@")[0] || "Customer",
+        customerEmail: u.email || "",
+        customerPhone: u.phone || "",
+        paymentReference: p.payment_reference || p.cf_payment_id || p.cf_order_id || p.id,
+        cfOrderId: p.cf_order_id || null,
+        cfPaymentId: p.cf_payment_id || null,
+        paymentSessionId: p.payment_session_id || null,
+        provider: p.provider || "cashfree",
+        currency: p.currency || "INR",
+        amountPaise: p.amount_paise || o.total_paise || 0,
+        status: p.status || "pending",
+        createdAt: p.created_at || p.updated_at || new Date().toISOString(),
+        updatedAt: p.updated_at || p.created_at || new Date().toISOString(),
+      };
+    });
+
+    if (filters.search) {
+      const s = filters.search.toLowerCase();
+      results = results.filter(
+        (r) =>
+          r.id.toLowerCase().includes(s) ||
+          r.orderId.toLowerCase().includes(s) ||
+          r.customerName.toLowerCase().includes(s) ||
+          r.customerEmail.toLowerCase().includes(s) ||
+          r.paymentReference.toLowerCase().includes(s) ||
+          (r.cfOrderId && r.cfOrderId.toLowerCase().includes(s)) ||
+          (r.cfPaymentId && r.cfPaymentId.toLowerCase().includes(s))
+      );
+    }
+
+    return results;
+  }
 }
 
 export const paymentsService = new PaymentsService();

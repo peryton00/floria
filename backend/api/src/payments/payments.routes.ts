@@ -14,7 +14,8 @@ router.post("/webhooks", paymentsController.handleCashfreeWebhook); // Alias
 router.post("/create-session", authenticateToken, paymentsController.createPaymentSession);
 router.get("/:paymentId/status", authenticateToken, paymentsController.getPaymentStatus);
 
-// Authorized Admin Refund Endpoint
+// Authorized Admin Endpoints
+router.get("/admin/all", authenticateToken, requireRole("admin", "operations"), paymentsController.getAdminTransactions);
 router.post("/:paymentId/refund", authenticateToken, requireRole("admin", "operations"), paymentsController.processRefund);
 
 export default router;

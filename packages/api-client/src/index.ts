@@ -427,6 +427,15 @@ export class FloriaApiClient {
     });
   }
 
+  public async getAdminTransactions(params?: { status?: string; search?: string; limit?: number }): Promise<ApiResponse<any[]>> {
+    const query = new URLSearchParams();
+    if (params?.status) query.set("status", params.status);
+    if (params?.search) query.set("search", params.search);
+    if (params?.limit) query.set("limit", String(params.limit));
+    const qStr = query.toString();
+    return this.request<any[]>(`/api/v1/payments/admin/all${qStr ? `?${qStr}` : ""}`);
+  }
+
   public async getOrders(): Promise<ApiResponse<any[]>> {
     return this.request<any[]>("/api/v1/customer/orders");
   }

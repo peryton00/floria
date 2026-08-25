@@ -188,6 +188,7 @@ export default function CheckoutPage() {
 
       if (!res.success || !res.data) {
         setValidationError(res.error?.message || "Failed to place order. Please try again.");
+        setIsPlacingOrder(false);
         isPlacingOrderRef.current = false;
         return;
       }
@@ -197,24 +198,58 @@ export default function CheckoutPage() {
       // Online Cashfree Payment Session Initialization
       if (paymentMethod === "online") {
         const sessionRes = await api.createPaymentSession(orderId);
-        if (sessionRes.success && sessionRes.data?.paymentSessionId) {
-          // If Cashfree SDK JS loaded on window
-          if (typeof window !== "undefined" && (window as any).Cashfree) {
-            try {
-              const cashfree = (window as any).Cashfree({
-                mode: sessionRes.data.environment.toLowerCase() === "production" ? "production" : "sandbox",
-              });
-              await cashfree.checkout({
-                paymentSessionId: sessionRes.data.paymentSessionId,
-                redirectTarget: "_self",
-              });
-            } catch (cfErr) {
-              console.warn("[Checkout] Cashfree SDK launch notice:", cfErr);
-            }
+        if (!sessionRes.success || !sessionRes.data?.paymentSessionId) {
+          setValidationError(
+            sessionRes.error?.message || "Failed to create payment session. Please check your network or try Cash on Delivery."
+          );
+          setIsPlacingOrder(false);
+          isPlacingOrderRef.current = false;
+          return;
+        }
+
+        // Ensure Cashfree SDK JS is loaded
+        let CashfreeSDK = (window as any).Cashfree;
+        if (!CashfreeSDK) {
+          try {
+            await new Promise<void>((resolve, reject) => {
+              const script = document.createElement("script");
+              script.src = "https://sdk.cashfree.com/js/v3/cashfree.js";
+              script.onload = () => resolve();
+              script.onerror = () => reject(new Error("Cashfree SDK failed to load"));
+              document.head.appendChild(script);
+            });
+            CashfreeSDK = (window as any).Cashfree;
+          } catch (e) {
+            console.warn("[Checkout] Cashfree SDK loading error:", e);
           }
+        }
+
+        if (CashfreeSDK) {
+          try {
+            const environment = (sessionRes.data.environment || "SANDBOX").toLowerCase() === "production" ? "production" : "sandbox";
+            const cashfree = CashfreeSDK({ mode: environment });
+            await cashfree.checkout({
+              paymentSessionId: sessionRes.data.paymentSessionId,
+              redirectTarget: "_self",
+            });
+            // Cashfree handles redirect / modal
+            return;
+          } catch (cfErr: any) {
+            console.error("[Checkout] Cashfree launch error:", cfErr);
+            setValidationError(cfErr.message || "Unable to launch Cashfree payment window. Please try again.");
+            setIsPlacingOrder(false);
+            isPlacingOrderRef.current = false;
+            return;
+          }
+        } else {
+          setValidationError("Cashfree Payment SDK could not be loaded. Please check your internet connection or use Cash on Delivery.");
+          setIsPlacingOrder(false);
+          isPlacingOrderRef.current = false;
+          return;
         }
       }
 
+      // Cash on Delivery Order Completion
       setConfirmedOrder({
         id: orderId,
         createdAt: new Date().toLocaleString(),
@@ -229,8 +264,8 @@ export default function CheckoutPage() {
       setStep("confirmation");
       clearCart();
       refreshOrders().catch((err) => console.warn("[Checkout] refreshOrders error:", err));
-    } catch {
-      setValidationError("A network error occurred. Please check your connection and try again.");
+    } catch (err: any) {
+      setValidationError(err.message || "A network error occurred. Please check your connection and try again.");
     } finally {
       setIsPlacingOrder(false);
       isPlacingOrderRef.current = false;
