@@ -47,6 +47,28 @@ export default function RootLayout({
         <meta name="color-scheme" content="light" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* Protective Guard: Suppress third-party browser extension postMessage loop spam */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                if (typeof window === 'undefined') return;
+                var origPostMessage = window.postMessage;
+                var msgCount = 0;
+                var lastReset = Date.now();
+                window.postMessage = function(message, targetOrigin, transfer) {
+                  var now = Date.now();
+                  if (now - lastReset > 1000) { msgCount = 0; lastReset = now; }
+                  msgCount++;
+                  if (msgCount > 60 && typeof message === 'object' && message !== null && message.result === false) {
+                    return; // Dampen runaway extension loop
+                  }
+                  return origPostMessage.apply(this, arguments);
+                };
+              })();
+            `,
+          }}
+        />
         {/* Cashfree Checkout Web SDK */}
         <script src="https://sdk.cashfree.com/js/v3/cashfree.js" async />
       </head>
