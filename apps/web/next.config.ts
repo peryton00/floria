@@ -17,12 +17,12 @@ const isDev = process.env["NODE_ENV"] === "development";
 
 const csp = [
   `default-src 'self'`,
-  `script-src 'self' 'unsafe-inline' https://vercel.live https://*.vercel.app${isDev ? " 'unsafe-eval'" : ""}`,
-  `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
+  `script-src 'self' 'unsafe-inline' https://sdk.cashfree.com https://*.cashfree.com https://vercel.live https://*.vercel.app${isDev ? " 'unsafe-eval'" : ""}`,
+  `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://sdk.cashfree.com https://*.cashfree.com`,
   `font-src 'self' https://fonts.gstatic.com https://vercel.live https://*.vercel.app`,
-  `img-src 'self' data: blob: https://${supabaseHostname} https://*.supabase.co https://images.unsplash.com https://plus.unsplash.com${isDev ? " http://localhost:* http://127.0.0.1:*" : ""}`,
-  `connect-src 'self' https://${supabaseHostname} wss://${supabaseHostname} https://*.supabase.co wss://*.supabase.co https://${apiHostname} https://*.onrender.com https://floria-api.onrender.com https://nominatim.openstreetmap.org https://vercel.live https://*.vercel.app wss://*.vercel.app https://*.pusher.com wss://*.pusher.com${isDev ? " http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:*" : ""}`,
-  `frame-src 'self' https://vercel.live https://*.vercel.app`,
+  `img-src 'self' data: blob: https://${supabaseHostname} https://*.supabase.co https://images.unsplash.com https://plus.unsplash.com https://sdk.cashfree.com https://*.cashfree.com${isDev ? " http://localhost:* http://127.0.0.1:*" : ""}`,
+  `connect-src 'self' https://${supabaseHostname} wss://${supabaseHostname} https://*.supabase.co wss://*.supabase.co https://${apiHostname} https://*.onrender.com https://floria-api.onrender.com https://sdk.cashfree.com https://*.cashfree.com https://sandbox.cashfree.com https://api.cashfree.com https://nominatim.openstreetmap.org https://vercel.live https://*.vercel.app wss://*.vercel.app https://*.pusher.com wss://*.pusher.com${isDev ? " http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:*" : ""}`,
+  `frame-src 'self' https://sdk.cashfree.com https://*.cashfree.com https://sandbox.cashfree.com https://api.cashfree.com https://vercel.live https://*.vercel.app`,
   `frame-ancestors 'none'`,
   `object-src 'none'`,
   `base-uri 'self'`,
@@ -33,7 +33,7 @@ const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(self), payment=()" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(self), payment=*" },
   { key: "Content-Security-Policy", value: csp },
   // HSTS only in production — avoid breaking local dev with http://
   ...(isDev ? [] : [{ key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" }]),
@@ -47,6 +47,11 @@ const nextConfig: NextConfig = {
   // Image optimization — allow Supabase storage domain once configured
   images: {
     remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "flymwzdtsrkiiriqaswc.supabase.co",
+        pathname: "/storage/v1/object/public/**",
+      },
       {
         protocol: "https",
         hostname: "*.supabase.co",
