@@ -1,4 +1,7 @@
-// Floria — Footer (server component)
+"use client";
+
+// Floria — Footer
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { NewsletterForm } from "@/components/ui/NewsletterForm";
@@ -9,8 +12,8 @@ import {
   VerifiedIcon,
   SproutIcon,
 } from "@/components/ui/Icons";
-
-import { getActiveCategories } from "@/lib/services/storefront";
+import { api } from "@/lib/api";
+import type { Category } from "@floria/types";
 
 const COMPANY_LINKS = [
   { label: "About Floria", href: "/about" },
@@ -73,8 +76,23 @@ const VALUE_PROPS = [
   },
 ];
 
-export async function Footer() {
-  const categories = await getActiveCategories();
+export function Footer() {
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    async function loadCategories() {
+      try {
+        const res = await api.getCategories();
+        if (res.success && res.data) {
+          setCategories(res.data);
+        }
+      } catch (e) {
+        console.warn("[Footer] Failed to load categories:", e);
+      }
+    }
+    loadCategories();
+  }, []);
+
   const shopLinks = categories.map((c) => ({
     label: c.name,
     href: `/categories/${c.slug}`,
