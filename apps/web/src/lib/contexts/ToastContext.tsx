@@ -5,6 +5,7 @@ import React, {
   useContext,
   useState,
   useCallback,
+  useMemo,
   useRef,
   useEffect,
 } from "react";
@@ -163,7 +164,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     [dismiss]
   );
 
-  const toastHelpers = {
+  // Memoize so `toast` has a stable reference — prevents infinite loops in
+  // consumers that list `toast` as a useCallback / useEffect dependency.
+  const toastHelpers = useMemo(() => ({
     success: (title: string, description?: string, options?: ToastOptions) =>
       addToast("success", title, description, options),
     error: (title: string, description?: string, options?: ToastOptions) =>
@@ -176,7 +179,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       addToast("loading", title, description, options),
     dismiss,
     update,
-  };
+  }), [addToast, dismiss, update]);
 
   const visibleToasts = toasts.slice(0, MAX_VISIBLE_TOASTS);
 
