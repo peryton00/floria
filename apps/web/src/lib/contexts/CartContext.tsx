@@ -27,6 +27,8 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
+  const toastRef = useRef(toast); // stable ref — never changes identity, safe in useCallback deps
+  useEffect(() => { toastRef.current = toast; }); // keep in sync every render (no deps = always)
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const cartItemsRef = useRef<CartItem[]>([]); // mirror for reading in async callbacks without triggering loops
   const [isHydrated, setIsHydrated] = useState(false);
@@ -128,8 +130,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
               const newPrice =
                 newItem.listing.pricing?.sellingPricePaise ?? newItem.listing.inventory?.price_paise ?? 0;
               if (typeof oldPrice === "number" && oldPrice > 0 && newPrice > 0 && oldPrice !== newPrice) {
-                // Fire toast BEFORE setCartItems so it's outside the updater
-                toast.info(
+                // Fire toast via ref — keeps toast out of useCallback deps
+                toastRef.current.info(
                   "Price updated",
                   `The price of "${newItem.listing.product.name}" changed from ${formatINR(oldPrice)} to ${formatINR(newPrice)}.`
                 );
@@ -197,7 +199,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                 if (toastsToFire.length > 0) {
                   setCartItems(updated);
                   for (const { name, oldPrice, newPrice } of toastsToFire) {
-                    toast.info(
+                    toastRef.current.info(
                       "Price updated",
                       `The price of "${name}" changed from ${formatINR(oldPrice)} to ${formatINR(newPrice)}.`
                     );
@@ -211,7 +213,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // Ignore
     }
-  }, [mapDbCartItems, toast]);
+  }, [mapDbCartItems]);
 
   // Initial hydration & auth listener for guest cart merge
   useEffect(() => {
