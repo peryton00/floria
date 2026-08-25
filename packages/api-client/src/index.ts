@@ -161,6 +161,8 @@ export class FloriaApiClient {
   private baseUrl: string;
   private getAccessToken?: () => Promise<string | null> | string | null;
   private customFetch: typeof fetch;
+  private pendingGetRequests = new Map<string, Promise<ApiResponse<any>>>();
+  private staticCache = new Map<string, { timestamp: number; data: ApiResponse<any> }>();
 
   constructor(config: ApiClientConfig) {
     this.baseUrl = config.baseUrl.replace(/\/$/, "");
@@ -173,37 +175,88 @@ export class FloriaApiClient {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
+    const isGet = !options.method || options.method.toUpperCase() === "GET";
     const url = `${this.baseUrl}${endpoint.startsWith("/") ? "" : "/"}${endpoint}`;
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      ...(options.headers as Record<string, string>),
-    };
 
-    if (this.getAccessToken) {
-      const token = await this.getAccessToken();
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
+    // Static cache for catalog categories (60s)
+    if (isGet && endpoint.includes("/catalog/categories")) {
+      const cached = this.staticCache.get(url);
+      if (cached && Date.now() - cached.timestamp < 60000) {
+        return cached.data as ApiResponse<T>;
       }
     }
 
-    try {
-      const fetchFn = this.customFetch || (typeof window !== "undefined" ? window.fetch.bind(window) : globalThis.fetch.bind(globalThis));
-      const response = await fetchFn(url, {
-        ...options,
-        headers,
-      });
-
-      const json = await response.json();
-      return json as ApiResponse<T>;
-    } catch (error) {
-      return {
-        success: false,
-        error: {
-          code: "NETWORK_ERROR",
-          message: error instanceof Error ? error.message : "Network request failed",
-        },
-      };
+    // Request deduplication for identical in-flight GET requests
+    if (isGet) {
+      const existing = this.pendingGetRequests.get(url);
+      if (existing) {
+        return existing as Promise<ApiResponse<T>>;
+      }
     }
+
+    const executeRequest = async (): Promise<ApiResponse<T>> => {
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        ...(options.headers as Record<string, string>),
+      };
+
+      if (this.getAccessToken) {
+        try {
+          const token = await this.getAccessToken();
+          if (token) {
+            headers["Authorization"] = `Bearer ${token}`;
+          }
+        } catch {
+          // Token retrieval error fallback
+        }
+      }
+
+      // Add 15s timeout to release browser socket pool on Render cold starts
+      const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+      const timeoutId = controller ? setTimeout(() => controller.abort(), 15000) : null;
+
+      try {
+        const fetchFn = this.customFetch || (typeof window !== "undefined" ? window.fetch.bind(window) : globalThis.fetch.bind(globalThis));
+        const response = await fetchFn(url, {
+          ...options,
+          headers,
+          signal: controller?.signal || options.signal,
+        });
+
+        if (timeoutId) clearTimeout(timeoutId);
+
+        const json = await response.json();
+        const apiRes = json as ApiResponse<T>;
+
+        if (isGet && endpoint.includes("/catalog/categories") && apiRes.success) {
+          this.staticCache.set(url, { timestamp: Date.now(), data: apiRes });
+        }
+
+        return apiRes;
+      } catch (error: any) {
+        if (timeoutId) clearTimeout(timeoutId);
+        const isAbort = error?.name === "AbortError";
+        return {
+          success: false,
+          error: {
+            code: isAbort ? "REQUEST_TIMEOUT" : "NETWORK_ERROR",
+            message: isAbort ? "Request timed out waiting for server response." : (error instanceof Error ? error.message : "Network request failed"),
+          },
+        };
+      } finally {
+        if (isGet) {
+          this.pendingGetRequests.delete(url);
+        }
+      }
+    };
+
+    if (isGet) {
+      const promise = executeRequest();
+      this.pendingGetRequests.set(url, promise);
+      return promise;
+    }
+
+    return executeRequest();
   }
 
   // Health check

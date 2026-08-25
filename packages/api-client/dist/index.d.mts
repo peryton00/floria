@@ -150,6 +150,8 @@ declare class FloriaApiClient {
     private baseUrl;
     private getAccessToken?;
     private customFetch;
+    private pendingGetRequests;
+    private staticCache;
     constructor(config: ApiClientConfig);
     private request;
     getHealth(): Promise<ApiResponse<{

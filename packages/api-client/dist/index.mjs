@@ -9,6 +9,8 @@ var FloriaApiClient = class {
   baseUrl;
   getAccessToken;
   customFetch;
+  pendingGetRequests = /* @__PURE__ */ new Map();
+  staticCache = /* @__PURE__ */ new Map();
   constructor(config) {
     this.baseUrl = config.baseUrl.replace(/\/$/, "");
     this.getAccessToken = config.getAccessToken;
@@ -16,34 +18,72 @@ var FloriaApiClient = class {
     this.customFetch = typeof window !== "undefined" ? fn.bind(window) : fn.bind(globalThis);
   }
   async request(endpoint, options = {}) {
+    const isGet = !options.method || options.method.toUpperCase() === "GET";
     const url = `${this.baseUrl}${endpoint.startsWith("/") ? "" : "/"}${endpoint}`;
-    const headers = {
-      "Content-Type": "application/json",
-      ...options.headers
-    };
-    if (this.getAccessToken) {
-      const token = await this.getAccessToken();
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
+    if (isGet && endpoint.includes("/catalog/categories")) {
+      const cached = this.staticCache.get(url);
+      if (cached && Date.now() - cached.timestamp < 6e4) {
+        return cached.data;
       }
     }
-    try {
-      const fetchFn = this.customFetch || (typeof window !== "undefined" ? window.fetch.bind(window) : globalThis.fetch.bind(globalThis));
-      const response = await fetchFn(url, {
-        ...options,
-        headers
-      });
-      const json = await response.json();
-      return json;
-    } catch (error) {
-      return {
-        success: false,
-        error: {
-          code: "NETWORK_ERROR",
-          message: error instanceof Error ? error.message : "Network request failed"
-        }
-      };
+    if (isGet) {
+      const existing = this.pendingGetRequests.get(url);
+      if (existing) {
+        return existing;
+      }
     }
+    const executeRequest = async () => {
+      const headers = {
+        "Content-Type": "application/json",
+        ...options.headers
+      };
+      if (this.getAccessToken) {
+        try {
+          const token = await this.getAccessToken();
+          if (token) {
+            headers["Authorization"] = `Bearer ${token}`;
+          }
+        } catch {
+        }
+      }
+      const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+      const timeoutId = controller ? setTimeout(() => controller.abort(), 15e3) : null;
+      try {
+        const fetchFn = this.customFetch || (typeof window !== "undefined" ? window.fetch.bind(window) : globalThis.fetch.bind(globalThis));
+        const response = await fetchFn(url, {
+          ...options,
+          headers,
+          signal: controller?.signal || options.signal
+        });
+        if (timeoutId) clearTimeout(timeoutId);
+        const json = await response.json();
+        const apiRes = json;
+        if (isGet && endpoint.includes("/catalog/categories") && apiRes.success) {
+          this.staticCache.set(url, { timestamp: Date.now(), data: apiRes });
+        }
+        return apiRes;
+      } catch (error) {
+        if (timeoutId) clearTimeout(timeoutId);
+        const isAbort = error?.name === "AbortError";
+        return {
+          success: false,
+          error: {
+            code: isAbort ? "REQUEST_TIMEOUT" : "NETWORK_ERROR",
+            message: isAbort ? "Request timed out waiting for server response." : error instanceof Error ? error.message : "Network request failed"
+          }
+        };
+      } finally {
+        if (isGet) {
+          this.pendingGetRequests.delete(url);
+        }
+      }
+    };
+    if (isGet) {
+      const promise = executeRequest();
+      this.pendingGetRequests.set(url, promise);
+      return promise;
+    }
+    return executeRequest();
   }
   // Health check
   async getHealth() {
