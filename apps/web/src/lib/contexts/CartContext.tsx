@@ -28,6 +28,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const cartItemsRef = useRef<CartItem[]>([]); // mirror for reading in async callbacks without triggering loops
   const [isHydrated, setIsHydrated] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const debounceTimeoutRefs = useRef<Record<string, NodeJS.Timeout>>({});
@@ -113,29 +114,30 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           const rawItems = res.data.cart_items || res.data.items || [];
           const mapped = mapDbCartItems(rawItems);
 
-          // Revalidate price changes against previous cart state
-          setCartItems((prevItems) => {
-            if (prevItems.length > 0) {
-              const prevPriceMap = new Map(
-                prevItems.map((item) => [
-                  item.listing.product.id,
-                  item.listing.pricing?.sellingPricePaise ?? item.listing.inventory?.price_paise ?? 0,
-                ])
-              );
-              for (const newItem of mapped) {
-                const oldPrice = prevPriceMap.get(newItem.listing.product.id);
-                const newPrice =
-                  newItem.listing.pricing?.sellingPricePaise ?? newItem.listing.inventory?.price_paise ?? 0;
-                if (typeof oldPrice === "number" && oldPrice > 0 && newPrice > 0 && oldPrice !== newPrice) {
-                  toast.info(
-                    "Price updated",
-                    `The price of "${newItem.listing.product.name}" changed from ${formatINR(oldPrice)} to ${formatINR(newPrice)}.`
-                  );
-                }
+          // Read previous prices from ref (safe in async context, no state loop)
+          const prevItems = cartItemsRef.current;
+          if (prevItems.length > 0) {
+            const prevPriceMap = new Map(
+              prevItems.map((item) => [
+                item.listing.product.id,
+                item.listing.pricing?.sellingPricePaise ?? item.listing.inventory?.price_paise ?? 0,
+              ])
+            );
+            for (const newItem of mapped) {
+              const oldPrice = prevPriceMap.get(newItem.listing.product.id);
+              const newPrice =
+                newItem.listing.pricing?.sellingPricePaise ?? newItem.listing.inventory?.price_paise ?? 0;
+              if (typeof oldPrice === "number" && oldPrice > 0 && newPrice > 0 && oldPrice !== newPrice) {
+                // Fire toast BEFORE setCartItems so it's outside the updater
+                toast.info(
+                  "Price updated",
+                  `The price of "${newItem.listing.product.name}" changed from ${formatINR(oldPrice)} to ${formatINR(newPrice)}.`
+                );
               }
             }
-            return mapped;
-          });
+          }
+
+          setCartItems(mapped);
 
           // Keep user resilient cache in sync
           try { localStorage.setItem("floria_cart_cache", JSON.stringify(mapped)); } catch { /* ignore */ }
@@ -167,45 +169,40 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             api.getProducts().then((res) => {
               if (res.success && res.data && res.data.length > 0) {
                 const catalogMap = new Map((res.data as any[]).map((p: any) => [p.id, p]));
-                setCartItems((currentItems) => {
-                  let changed = false;
-                  const updated = currentItems.map((item) => {
-                    const live = catalogMap.get(item.listing.product.id);
-                    if (!live) return item;
-                    const livePricing = live.pricing || (Array.isArray(live.inventory) ? live.inventory[0]?.pricing : live.inventory?.pricing);
-                    const newPrice = livePricing?.sellingPricePaise ?? livePricing?.customerPricePaise ?? (Array.isArray(live.inventory) ? live.inventory[0]?.price_paise : live.inventory?.price_paise);
-                    const oldPrice = item.listing.pricing?.sellingPricePaise ?? item.listing.inventory?.price_paise ?? 0;
+                // Compute updates and toasts outside the updater (updaters must be pure)
+                const currentItems = cartItemsRef.current;
+                const toastsToFire: Array<{ name: string; oldPrice: number; newPrice: number }> = [];
+                const updated = currentItems.map((item) => {
+                  const live = catalogMap.get(item.listing.product.id);
+                  if (!live) return item;
+                  const livePricing = live.pricing || (Array.isArray(live.inventory) ? live.inventory[0]?.pricing : live.inventory?.pricing);
+                  const newPrice = livePricing?.sellingPricePaise ?? livePricing?.customerPricePaise ?? (Array.isArray(live.inventory) ? live.inventory[0]?.price_paise : live.inventory?.price_paise);
+                  const oldPrice = item.listing.pricing?.sellingPricePaise ?? item.listing.inventory?.price_paise ?? 0;
 
-                    if (typeof newPrice === "number" && newPrice > 0 && oldPrice > 0 && newPrice !== oldPrice) {
-                      changed = true;
-                      toast.info(
-                        "Price updated",
-                        `The price of "${item.listing.product.name}" changed from ${formatINR(oldPrice)} to ${formatINR(newPrice)}.`
-                      );
-                      return {
-                        ...item,
-                        listing: {
-                          ...item.listing,
-                          inventory: {
-                            ...item.listing.inventory,
-                            price_paise: newPrice,
-                          },
-                          pricing: livePricing ? {
-                            ...livePricing,
-                            sellingPricePaise: newPrice,
-                            customerPricePaise: newPrice,
-                          } : {
-                            ...item.listing.pricing,
-                            sellingPricePaise: newPrice,
-                            customerPricePaise: newPrice,
-                          },
-                        },
-                      };
-                    }
-                    return item;
-                  });
-                  return changed ? updated : currentItems;
+                  if (typeof newPrice === "number" && newPrice > 0 && oldPrice > 0 && newPrice !== oldPrice) {
+                    toastsToFire.push({ name: item.listing.product.name, oldPrice, newPrice });
+                    return {
+                      ...item,
+                      listing: {
+                        ...item.listing,
+                        inventory: { ...item.listing.inventory, price_paise: newPrice },
+                        pricing: livePricing
+                          ? { ...livePricing, sellingPricePaise: newPrice, customerPricePaise: newPrice }
+                          : { ...item.listing.pricing, sellingPricePaise: newPrice, customerPricePaise: newPrice },
+                      },
+                    };
+                  }
+                  return item;
                 });
+                if (toastsToFire.length > 0) {
+                  setCartItems(updated);
+                  for (const { name, oldPrice, newPrice } of toastsToFire) {
+                    toast.info(
+                      "Price updated",
+                      `The price of "${name}" changed from ${formatINR(oldPrice)} to ${formatINR(newPrice)}.`
+                    );
+                  }
+                }
               }
             }).catch(() => {});
           }
@@ -243,6 +240,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       Object.values(debounceTimeoutRefs.current).forEach(clearTimeout);
     };
   }, [refreshCart]);
+
+  // Keep cartItemsRef in sync so async callbacks can read current items without state loops
+  useEffect(() => { cartItemsRef.current = cartItems; }, [cartItems]);
 
   // Persist cart to localStorage (guests -> floria_cart, authenticated -> floria_cart_cache)
   useEffect(() => {
