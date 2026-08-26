@@ -19,6 +19,8 @@ export default function AdminCategoriesPage() {
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
   const [displayOrder, setDisplayOrder] = useState(1);
+  const [bannerUrl, setBannerUrl] = useState("");
+  const [assetId, setAssetId] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,6 +57,8 @@ export default function AdminCategoriesPage() {
     setSlug(cat.slug || "");
     setDescription(cat.description || "");
     setDisplayOrder(cat.display_order ?? 1);
+    setBannerUrl(cat.banner_url || cat.image_url || "");
+    setAssetId(cat.banner_asset_id || cat.asset_id || "");
     setShowCreateModal(true);
   };
 
@@ -63,20 +67,21 @@ export default function AdminCategoriesPage() {
     try {
       setActionLoading(true);
       let res;
+      const imagePayload = {
+        name,
+        slug,
+        description,
+        display_order: displayOrder,
+        banner_url: bannerUrl || undefined,
+        image_url: bannerUrl || undefined,
+        asset_id: assetId || undefined,
+        banner_asset_id: assetId || undefined,
+      };
+
       if (editingCategory) {
-        res = await api.updateAdminCategory(editingCategory.id, {
-          name,
-          slug,
-          description,
-          display_order: displayOrder,
-        });
+        res = await api.updateAdminCategory(editingCategory.id, imagePayload);
       } else {
-        res = await api.createAdminCategory({
-          name,
-          slug,
-          description,
-          display_order: displayOrder,
-        });
+        res = await api.createAdminCategory(imagePayload);
       }
 
       if (res.success) {
@@ -130,6 +135,8 @@ export default function AdminCategoriesPage() {
     setSlug("");
     setDescription("");
     setDisplayOrder(1);
+    setBannerUrl("");
+    setAssetId("");
     setEditingCategory(null);
   };
 
@@ -164,53 +171,66 @@ export default function AdminCategoriesPage() {
           <div className="p-12 text-center text-xs text-ink-400">No categories found in system.</div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {categories.map((c) => (
-              <div
-                key={c.id}
-                className="bg-white rounded-xl border border-ink-100 p-5 shadow-xs flex flex-col justify-between space-y-4 hover:border-ink-200 transition-colors"
-              >
-                <div className="flex items-start justify-between min-w-0">
-                  <div className="min-w-0">
-                    <p className="font-bold text-ink-900 leading-tight">{c.name}</p>
-                    <p className="text-[10px] text-ink-400 font-mono mt-0.5 truncate">Slug: {c.slug}</p>
+            {categories.map((c) => {
+              const catImg = c.banner_url || c.image_url;
+              return (
+                <div
+                  key={c.id}
+                  className="bg-white rounded-xl border border-ink-100 p-5 shadow-xs flex flex-col justify-between space-y-4 hover:border-ink-200 transition-colors"
+                >
+                  <div className="flex items-start justify-between min-w-0 gap-3">
+                    {catImg ? (
+                      <div className="w-12 h-12 rounded-lg overflow-hidden border border-ink-100 relative flex-shrink-0 bg-cream-100">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={catImg} alt={c.name} className="w-full h-full object-cover" />
+                      </div>
+                    ) : (
+                      <div className="w-12 h-12 rounded-lg border border-dashed border-ink-200 flex items-center justify-center text-[10px] text-ink-400 font-bold bg-cream-50 flex-shrink-0">
+                        No Img
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="font-bold text-ink-900 leading-tight">{c.name}</p>
+                      <p className="text-[10px] text-ink-400 font-mono mt-0.5 truncate">Slug: {c.slug}</p>
+                    </div>
+                    <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider border ${c.is_active ? "bg-success-50 text-success-700 border-success-100" : "bg-ink-50 text-ink-500 border-ink-100"}`}>
+                      {c.is_active ? "Active" : "Disabled"}
+                    </span>
                   </div>
-                  <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider border ${c.is_active ? "bg-success-50 text-success-700 border-success-100" : "bg-ink-50 text-ink-500 border-ink-100"}`}>
-                    {c.is_active ? "Active" : "Disabled"}
-                  </span>
-                </div>
 
-                <div className="space-y-1.5 text-xs">
-                  <p className="text-ink-550 leading-relaxed min-h-[36px] line-clamp-2">{c.description || "No description provided."}</p>
-                  <div className="flex justify-between text-[10px] font-mono text-ink-400">
-                    <span>Position: {c.display_order ?? 0}</span>
+                  <div className="space-y-1.5 text-xs">
+                    <p className="text-ink-550 leading-relaxed min-h-[36px] line-clamp-2">{c.description || "No description provided."}</p>
+                    <div className="flex justify-between text-[10px] font-mono text-ink-400">
+                      <span>Position: {c.display_order ?? 0}</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-ink-50 flex gap-2 justify-end">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleActive(c)}
+                      className="px-2.5 py-1 rounded-lg border border-ink-200 hover:bg-cream-100 font-bold text-[9px] uppercase tracking-wider text-ink-700 transition-colors"
+                    >
+                      {c.is_active ? "Deactivate" : "Activate"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEdit(c)}
+                      className="px-2.5 py-1 rounded-lg bg-forest-50 text-forest-700 hover:bg-forest-100 font-bold text-[9px] uppercase tracking-wider transition-colors"
+                    >
+                      Edit Details
+                    </button>
                   </div>
                 </div>
-
-                <div className="pt-2 border-t border-ink-50 flex gap-2 justify-end">
-                  <button
-                    type="button"
-                    onClick={() => handleToggleActive(c)}
-                    className="px-2.5 py-1 rounded-lg border border-ink-200 hover:bg-cream-100 font-bold text-[9px] uppercase tracking-wider text-ink-700 transition-colors"
-                  >
-                    {c.is_active ? "Deactivate" : "Activate"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleOpenEdit(c)}
-                    className="px-2.5 py-1 rounded-lg bg-forest-50 text-forest-700 hover:bg-forest-100 font-bold text-[9px] uppercase tracking-wider transition-colors"
-                  >
-                    Edit Details
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
         {/* Modal: Create or Edit Category */}
         {showCreateModal && (
           <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl border border-ink-100 p-6 max-w-md w-full shadow-2xl space-y-4">
+            <div className="bg-white rounded-2xl border border-ink-100 p-6 max-w-md w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center border-b border-ink-100 pb-3">
                 <h3 className="font-serif text-lg font-bold text-ink-900">
                   {editingCategory ? "Edit Category Details" : "Create New Category"}
@@ -278,19 +298,23 @@ export default function AdminCategoriesPage() {
                   />
                 </div>
 
-                {editingCategory && (
-                  <div className="pt-2 border-t border-ink-100">
-                    <label className="block text-xs font-bold uppercase tracking-wider text-ink-700 mb-1.5">
-                      Category WebP Banner Image
-                    </label>
-                    <MediaUploader
-                      profile="CATEGORY"
-                      currentUrl={editingCategory.banner_url || editingCategory.image_url || undefined}
-                      onUploadSuccess={async (res) => {
+                {/* Category Banner Media Uploader */}
+                <div className="pt-2 border-t border-ink-100">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-ink-700 mb-1.5">
+                    Category WebP Banner Image
+                  </label>
+                  <MediaUploader
+                    profile="CATEGORY"
+                    currentUrl={bannerUrl || undefined}
+                    onUploadSuccess={async (res) => {
+                      setBannerUrl(res.publicUrl);
+                      setAssetId(res.assetId);
+                      if (editingCategory) {
                         try {
                           setActionLoading(true);
                           const updateRes = await api.updateCategoryBanner(editingCategory.id, res.assetId);
                           if (updateRes.success) {
+                            toast.success("Category banner attached", "Category image updated successfully.");
                             fetchCategories();
                           } else {
                             setError(updateRes.error?.message || "Failed to update category banner");
@@ -300,11 +324,11 @@ export default function AdminCategoriesPage() {
                         } finally {
                           setActionLoading(false);
                         }
-                      }}
-                      label="Upload WebP Category Banner"
-                    />
-                  </div>
-                )}
+                      }
+                    }}
+                    label="Upload WebP Category Banner"
+                  />
+                </div>
 
                 <div className="flex gap-3 pt-3">
                   <button

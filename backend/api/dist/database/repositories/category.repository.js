@@ -49,6 +49,8 @@ class CategoryRepository {
     }
     async createCategory(payload) {
         const db = (0, database_js_1.getAdminDb)();
+        const imgUrl = payload.banner_url || payload.image_url || null;
+        const astId = payload.banner_asset_id || payload.asset_id || null;
         const { data, error } = await db
             .from("categories")
             .insert({
@@ -57,6 +59,10 @@ class CategoryRepository {
             description: payload.description?.trim() || null,
             display_order: payload.display_order ?? 0,
             is_active: payload.is_active ?? true,
+            image_url: imgUrl,
+            banner_url: imgUrl,
+            asset_id: astId,
+            banner_asset_id: astId,
         })
             .select()
             .single();

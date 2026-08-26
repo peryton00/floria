@@ -162,8 +162,10 @@ class DomainMediaService {
         const { data: updated, error: uErr } = await adminDb
             .from("categories")
             .update({
+            asset_id: assetId,
             banner_asset_id: assetId,
             image_url: bannerUrl || undefined,
+            banner_url: bannerUrl || undefined,
             updated_at: new Date().toISOString(),
         })
             .eq("id", categoryId)

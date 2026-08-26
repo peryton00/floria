@@ -50,8 +50,21 @@ export class CategoryRepository {
     return data as Category;
   }
 
-  async createCategory(payload: { name: string; slug: string; description?: string; display_order?: number; is_active?: boolean }): Promise<Category> {
+  async createCategory(payload: {
+    name: string;
+    slug: string;
+    description?: string;
+    display_order?: number;
+    is_active?: boolean;
+    image_url?: string;
+    banner_url?: string;
+    asset_id?: string;
+    banner_asset_id?: string;
+  }): Promise<Category> {
     const db = getAdminDb();
+    const imgUrl = payload.banner_url || payload.image_url || null;
+    const astId = payload.banner_asset_id || payload.asset_id || null;
+
     const { data, error } = await db
       .from("categories")
       .insert({
@@ -60,6 +73,10 @@ export class CategoryRepository {
         description: payload.description?.trim() || null,
         display_order: payload.display_order ?? 0,
         is_active: payload.is_active ?? true,
+        image_url: imgUrl,
+        banner_url: imgUrl,
+        asset_id: astId,
+        banner_asset_id: astId,
       })
       .select()
       .single();

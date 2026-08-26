@@ -153,7 +153,7 @@ export function filterAndSortListings(
 
 export async function getActiveCategories(): Promise<Category[]> {
   try {
-    const res = await api.getCategories({ next: { revalidate: 300 } });
+    const res = await api.getCategories({ cache: "no-store" });
     if (res.success && res.data) {
       return res.data;
     }
