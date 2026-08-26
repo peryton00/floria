@@ -72,6 +72,12 @@ router.post("/delivery/preview", adminController.previewDeliveryFee);
 router.get("/settings/financials", adminController.getFinancialSettings);
 router.patch("/settings/financials", adminController.updateFinancialSettings);
 
+// Media & Image Management
+router.get("/media", adminController.getMedia);
+router.post("/media/upload", adminController.uploadMedia);
+router.patch("/media/:id", adminController.updateMedia);
+router.delete("/media/:id", adminController.deleteMedia);
+
 // Versioned Pricing Policies (Phase 3.23)
 import pricingPolicyRoutes from "./pricing-policy.routes.js";
 router.use("/pricing-policies", pricingPolicyRoutes);

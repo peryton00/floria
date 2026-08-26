@@ -253,6 +253,34 @@ var FloriaApiClient = class {
     const qStr = query.toString();
     return this.request(`/api/v1/payments/admin/all${qStr ? `?${qStr}` : ""}`);
   }
+  // Admin Media & Images Management
+  async getAdminMedia(params) {
+    const query = new URLSearchParams();
+    if (params?.category) query.set("category", params.category);
+    if (params?.status) query.set("status", params.status);
+    if (params?.search) query.set("search", params.search);
+    if (params?.page) query.set("page", String(params.page));
+    if (params?.limit) query.set("limit", String(params.limit));
+    const qStr = query.toString();
+    return this.request(`/api/v1/admin/media${qStr ? `?${qStr}` : ""}`);
+  }
+  async updateAdminMedia(id, data) {
+    return this.request(`/api/v1/admin/media/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data)
+    });
+  }
+  async deleteAdminMedia(id) {
+    return this.request(`/api/v1/admin/media/${id}`, {
+      method: "DELETE"
+    });
+  }
+  async uploadAdminMedia(data) {
+    return this.request("/api/v1/admin/media/upload", {
+      method: "POST",
+      body: JSON.stringify(data)
+    });
+  }
   async getOrders() {
     return this.request("/api/v1/customer/orders");
   }

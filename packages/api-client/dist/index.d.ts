@@ -212,6 +212,25 @@ declare class FloriaApiClient {
         search?: string;
         limit?: number;
     }): Promise<ApiResponse<any[]>>;
+    getAdminMedia(params?: {
+        category?: string;
+        status?: string;
+        search?: string;
+        page?: number;
+        limit?: number;
+    }): Promise<ApiResponse<any>>;
+    updateAdminMedia(id: string, data: {
+        filename?: string;
+        altText?: string;
+        category?: string;
+    }): Promise<ApiResponse<any>>;
+    deleteAdminMedia(id: string): Promise<ApiResponse<any>>;
+    uploadAdminMedia(data: {
+        filename: string;
+        mimeType: string;
+        base64Data: string;
+        profile?: string;
+    }): Promise<ApiResponse<any>>;
     getOrders(): Promise<ApiResponse<any[]>>;
     getOrderById(id: string): Promise<ApiResponse<any>>;
     getSellerProfile(): Promise<ApiResponse<any>>;

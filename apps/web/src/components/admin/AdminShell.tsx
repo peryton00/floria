@@ -24,6 +24,7 @@ import {
   BellIcon,
   LockIcon,
   LogoutIcon,
+  ImageIcon,
 } from "@/components/ui/Icons";
 
 interface AdminShellProps {
@@ -106,6 +107,7 @@ export function AdminShell({ children }: AdminShellProps) {
     { label: "Sellers", href: "/admin/sellers", icon: <LeafIcon size={18} /> },
     { label: "Products", href: "/admin/products", icon: <SproutIcon size={18} /> },
     { label: "Categories", href: "/admin/categories", icon: <PlanterIcon size={18} /> },
+    { label: "Media & Images", href: "/admin/media", icon: <ImageIcon size={18} /> },
     { label: "Orders", href: "/admin/orders", icon: <OrderIcon size={18} /> },
     { label: "Inventory", href: "/admin/inventory", icon: <ToolsIcon size={18} /> },
     { label: "Finance & Commission", href: "/admin/finance", icon: <PayoutIcon size={18} /> },

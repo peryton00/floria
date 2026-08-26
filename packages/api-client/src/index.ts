@@ -440,6 +440,38 @@ export class FloriaApiClient {
     return this.request<any[]>(`/api/v1/payments/admin/all${qStr ? `?${qStr}` : ""}`);
   }
 
+  // Admin Media & Images Management
+  public async getAdminMedia(params?: { category?: string; status?: string; search?: string; page?: number; limit?: number }): Promise<ApiResponse<any>> {
+    const query = new URLSearchParams();
+    if (params?.category) query.set("category", params.category);
+    if (params?.status) query.set("status", params.status);
+    if (params?.search) query.set("search", params.search);
+    if (params?.page) query.set("page", String(params.page));
+    if (params?.limit) query.set("limit", String(params.limit));
+    const qStr = query.toString();
+    return this.request<any>(`/api/v1/admin/media${qStr ? `?${qStr}` : ""}`);
+  }
+
+  public async updateAdminMedia(id: string, data: { filename?: string; altText?: string; category?: string }): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/v1/admin/media/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  }
+
+  public async deleteAdminMedia(id: string): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/v1/admin/media/${id}`, {
+      method: "DELETE",
+    });
+  }
+
+  public async uploadAdminMedia(data: { filename: string; mimeType: string; base64Data: string; profile?: string }): Promise<ApiResponse<any>> {
+    return this.request<any>("/api/v1/admin/media/upload", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
   public async getOrders(): Promise<ApiResponse<any[]>> {
     return this.request<any[]>("/api/v1/customer/orders");
   }
