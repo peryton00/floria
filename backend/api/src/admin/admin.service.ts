@@ -245,7 +245,16 @@ export class AdminService {
     return { categoryId, activeProductsCount: prods.length };
   }
 
-  async createCategory(adminUserId: string, payload: { name: string; slug: string; description?: string; display_order?: number }) {
+  async createCategory(adminUserId: string, payload: {
+    name: string;
+    slug: string;
+    description?: string;
+    display_order?: number;
+    image_url?: string;
+    banner_url?: string;
+    asset_id?: string;
+    banner_asset_id?: string;
+  }) {
     const existing = await categoryRepository.findBySlug(payload.slug);
     if (existing) throw Errors.validation("A category with this slug already exists");
 

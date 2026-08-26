@@ -57,7 +57,7 @@ export default function AdminCategoriesPage() {
     setSlug(cat.slug || "");
     setDescription(cat.description || "");
     setDisplayOrder(cat.display_order ?? 1);
-    setBannerUrl(cat.banner_url || cat.image_url || "");
+    setBannerUrl(cat.image_url || cat.banner_url || "");
     setAssetId(cat.banner_asset_id || cat.asset_id || "");
     setShowCreateModal(true);
   };
@@ -67,16 +67,19 @@ export default function AdminCategoriesPage() {
     try {
       setActionLoading(true);
       let res;
-      const imagePayload = {
+      const imagePayload: any = {
         name,
         slug,
         description,
         display_order: displayOrder,
-        banner_url: bannerUrl || undefined,
-        image_url: bannerUrl || undefined,
-        asset_id: assetId || undefined,
-        banner_asset_id: assetId || undefined,
       };
+
+      if (bannerUrl) {
+        imagePayload.image_url = bannerUrl;
+      }
+      if (assetId) {
+        imagePayload.banner_asset_id = assetId;
+      }
 
       if (editingCategory) {
         res = await api.updateAdminCategory(editingCategory.id, imagePayload);

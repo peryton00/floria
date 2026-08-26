@@ -86,16 +86,21 @@ class MediaResolverService {
     static async enrichCategories(categories) {
         if (!categories || categories.length === 0)
             return categories;
-        const assetIds = categories.map((c) => c.banner_asset_id).filter(Boolean);
-        if (assetIds.length === 0)
-            return categories;
-        const variantMap = await this.resolveAssetVariants(assetIds);
+        const assetIds = categories
+            .map((c) => c.banner_asset_id || c.asset_id)
+            .filter(Boolean);
+        const variantMap = assetIds.length > 0 ? await this.resolveAssetVariants(assetIds) : new Map();
         for (const c of categories) {
             const item = c;
-            if (item.banner_asset_id && variantMap.has(item.banner_asset_id)) {
-                const vars = variantMap.get(item.banner_asset_id);
+            const astId = item.banner_asset_id || item.asset_id;
+            if (astId && variantMap.has(astId)) {
+                const vars = variantMap.get(astId);
                 item.banner_variants = vars;
-                item.banner_url = vars.banner || vars.medium || vars.cover || item.banner_url;
+                item.banner_url = vars.banner || vars.medium || vars.cover || vars.thumbnail || item.image_url;
+                item.image_url = item.banner_url;
+            }
+            else if (item.image_url) {
+                item.banner_url = item.image_url;
             }
         }
         return categories;
