@@ -51,7 +51,7 @@ const CATEGORY_TABS = [
 ];
 
 export default function AdminMediaPage() {
-  const { showToast } = useToast();
+  const { toast } = useToast();
 
   const [items, setItems] = useState<MediaItem[]>([]);
   const [stats, setStats] = useState<StatsData | null>(null);
@@ -82,13 +82,13 @@ export default function AdminMediaPage() {
   const loadMedia = async () => {
     try {
       setLoading(true);
-      const res = await api.getAdminMedia({
+      const res = (await api.getAdminMedia({
         category: selectedCategory,
         status: selectedStatus,
         search: search.trim() || undefined,
         page,
         limit: 30,
-      });
+      })) as any;
 
       if (res.success && res.data) {
         setItems(res.data);
@@ -97,10 +97,10 @@ export default function AdminMediaPage() {
           setTotalPages(res.pagination.totalPages || 1);
         }
       } else {
-        showToast(res.error?.message || "Failed to load media assets", "error");
+        toast.error("Error", res.error?.message || "Failed to load media assets");
       }
     } catch (err: any) {
-      showToast(err.message || "Network error loading media assets", "error");
+      toast.error("Error", err.message || "Network error loading media assets");
     } finally {
       setLoading(false);
     }
@@ -119,7 +119,7 @@ export default function AdminMediaPage() {
 
   const handleCopyUrl = (url: string) => {
     navigator.clipboard.writeText(url);
-    showToast("Image URL copied to clipboard!", "success");
+    toast.success("Copied", "Image URL copied to clipboard!");
   };
 
   const openEditModal = (item: MediaItem) => {
@@ -138,14 +138,14 @@ export default function AdminMediaPage() {
       });
 
       if (res.success) {
-        showToast("Image metadata updated successfully", "success");
+        toast.success("Updated", "Image metadata updated successfully");
         setEditingItem(null);
         loadMedia();
       } else {
-        showToast(res.error?.message || "Failed to update image", "error");
+        toast.error("Update Failed", res.error?.message || "Failed to update image");
       }
     } catch (err: any) {
-      showToast(err.message || "Failed to update image", "error");
+      toast.error("Update Failed", err.message || "Failed to update image");
     } finally {
       setIsUpdating(false);
     }
@@ -158,15 +158,15 @@ export default function AdminMediaPage() {
       const res = await api.deleteAdminMedia(deletingItem.id);
 
       if (res.success) {
-        showToast("Image permanently deleted from database and storage", "success");
+        toast.success("Deleted", "Image permanently deleted from database and storage");
         setDeletingItem(null);
         if (previewItem?.id === deletingItem.id) setPreviewItem(null);
         loadMedia();
       } else {
-        showToast(res.error?.message || "Failed to delete image", "error");
+        toast.error("Delete Failed", res.error?.message || "Failed to delete image");
       }
     } catch (err: any) {
-      showToast(err.message || "Failed to delete image", "error");
+      toast.error("Delete Failed", err.message || "Failed to delete image");
     } finally {
       setIsDeleting(false);
     }
@@ -185,7 +185,7 @@ export default function AdminMediaPage() {
 
   const handleUploadSubmit = async () => {
     if (!uploadFile || !uploadPreviewUrl) {
-      showToast("Please select an image file to upload", "error");
+      toast.error("Missing File", "Please select an image file to upload");
       return;
     }
 
@@ -199,16 +199,16 @@ export default function AdminMediaPage() {
       });
 
       if (res.success) {
-        showToast("New image uploaded successfully!", "success");
+        toast.success("Uploaded", "New image uploaded successfully!");
         setIsUploadModalOpen(false);
         setUploadFile(null);
         setUploadPreviewUrl(null);
         loadMedia();
       } else {
-        showToast(res.error?.message || "Image upload failed", "error");
+        toast.error("Upload Failed", res.error?.message || "Image upload failed");
       }
     } catch (err: any) {
-      showToast(err.message || "Image upload failed", "error");
+      toast.error("Upload Failed", err.message || "Image upload failed");
     } finally {
       setIsUploading(false);
     }
