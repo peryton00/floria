@@ -35,10 +35,10 @@ class AdminMediaService {
             db.from("media_variants").select("*"),
             db.from("product_images").select("*").order("created_at", { ascending: false }).limit(500),
             db.from("products").select("id, name, slug, seller_id"),
-            db.from("categories").select("id, name, slug, image_url, banner_url, created_at"),
-            db.from("seller_profiles").select("id, business_name, logo_url, banner_url, created_at"),
-            db.from("user_profiles").select("id, full_name, email, avatar_url, created_at"),
-            db.from("seller_documents").select("id, seller_id, file_name, file_url, document_type, created_at"),
+            db.from("categories").select("id, name, slug, image_url, banner_asset_id, created_at"),
+            db.from("seller_profiles").select("id, business_name, logo_url, banner_url, logo_asset_id, banner_asset_id, created_at"),
+            db.from("user_profiles").select("id, full_name, email, avatar_url, avatar_asset_id, created_at"),
+            db.from("seller_documents").select("id, seller_id, file_name, file_url, document_type, file_asset_id, created_at"),
             db.storage.from("public-media").list("", { limit: 100 }).catch(() => ({ data: null, error: null })),
         ]);
         if (assetsErr)
@@ -49,6 +49,30 @@ class AdminMediaService {
         const sellerMap = new Map((sellers || []).map((s) => [s.id, s.business_name]));
         const productMap = new Map((products || []).map((p) => [p.id, p]));
         const userMap = new Map((users || []).map((u) => [u.id, u.full_name || u.email]));
+        // Asset ID Domain Cross-Reference Sets
+        const categoryAssetIds = new Set();
+        (categories || []).forEach((c) => {
+            if (c.banner_asset_id)
+                categoryAssetIds.add(c.banner_asset_id);
+        });
+        const sellerLogoAssetIds = new Set();
+        const nurseryBannerAssetIds = new Set();
+        (sellers || []).forEach((s) => {
+            if (s.logo_asset_id)
+                sellerLogoAssetIds.add(s.logo_asset_id);
+            if (s.banner_asset_id)
+                nurseryBannerAssetIds.add(s.banner_asset_id);
+        });
+        const avatarAssetIds = new Set();
+        (users || []).forEach((u) => {
+            if (u.avatar_asset_id)
+                avatarAssetIds.add(u.avatar_asset_id);
+        });
+        const documentAssetIds = new Set();
+        (docs || []).forEach((d) => {
+            if (d.file_asset_id)
+                documentAssetIds.add(d.file_asset_id);
+        });
         const variantsByAssetId = new Map();
         (mediaVariants || []).forEach((v) => {
             if (!variantsByAssetId.has(v.asset_id)) {
@@ -72,22 +96,52 @@ class AdminMediaService {
                 (asset.original_path ? `${supabaseUrl}/storage/v1/object/public/${asset.storage_bucket}/${asset.original_path}` : "/floria-logo.png");
             if (primaryUrl && !seenUrls.has(primaryUrl)) {
                 seenUrls.add(primaryUrl);
-                // Derive domain category from original_path if media_category is generic 'IMAGE'
+                // Determine Domain Category with high precision
                 let domainCategory = asset.media_category;
-                if (domainCategory === "IMAGE" || !domainCategory) {
-                    const pathLower = (asset.original_path || "").toLowerCase();
-                    if (pathLower.includes("/category/"))
+                if (!domainCategory || domainCategory === "IMAGE") {
+                    if (categoryAssetIds.has(asset.id)) {
                         domainCategory = "CATEGORY";
-                    else if (pathLower.includes("/nursery/"))
-                        domainCategory = "NURSERY";
-                    else if (pathLower.includes("/seller_logo/"))
+                    }
+                    else if (sellerLogoAssetIds.has(asset.id)) {
                         domainCategory = "SELLER_LOGO";
-                    else if (pathLower.includes("/user_avatar/"))
+                    }
+                    else if (nurseryBannerAssetIds.has(asset.id)) {
+                        domainCategory = "NURSERY";
+                    }
+                    else if (avatarAssetIds.has(asset.id)) {
                         domainCategory = "USER_AVATAR";
-                    else if (pathLower.includes("/review/"))
-                        domainCategory = "REVIEW_IMAGE";
-                    else
-                        domainCategory = "PRODUCT";
+                    }
+                    else if (documentAssetIds.has(asset.id)) {
+                        domainCategory = "DOCUMENT";
+                    }
+                    else {
+                        // Path-based fallback check across original_path and all variant storage_paths
+                        const allPaths = [
+                            asset.original_path || "",
+                            ...variants.map((v) => v.storage_path || ""),
+                        ].join(" ").toLowerCase();
+                        if (allPaths.includes("categor") || allPaths.includes("/category")) {
+                            domainCategory = "CATEGORY";
+                        }
+                        else if (allPaths.includes("seller_logo") || allPaths.includes("logo")) {
+                            domainCategory = "SELLER_LOGO";
+                        }
+                        else if (allPaths.includes("nursery") || allPaths.includes("nurseries")) {
+                            domainCategory = "NURSERY";
+                        }
+                        else if (allPaths.includes("avatar")) {
+                            domainCategory = "USER_AVATAR";
+                        }
+                        else if (allPaths.includes("review")) {
+                            domainCategory = "REVIEW_IMAGE";
+                        }
+                        else if (allPaths.includes("doc") || allPaths.includes("pdf")) {
+                            domainCategory = "DOCUMENT";
+                        }
+                        else {
+                            domainCategory = "PRODUCT";
+                        }
+                    }
                 }
                 allMediaItems.push({
                     id: asset.id,
