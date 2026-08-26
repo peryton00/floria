@@ -307,7 +307,7 @@ export default function AdminCategoriesPage() {
                     profile="CATEGORY"
                     currentUrl={bannerUrl || undefined}
                     onUploadSuccess={async (res) => {
-                      setBannerUrl(res.publicUrl);
+                      setBannerUrl(res.url);
                       setAssetId(res.assetId);
                       if (editingCategory) {
                         try {
