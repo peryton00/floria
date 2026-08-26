@@ -130,18 +130,27 @@ export class CashfreePaymentProvider implements PaymentProvider {
       throw new Error("Cashfree Client ID and Client Secret are not configured in server environment variables.");
     }
 
+    if (orderAmountRupees < 1) {
+      throw new Error(`Order amount ₹${orderAmountRupees} is below the minimum ₹1 required by Cashfree.`);
+    }
+
     // Sanitize customer details according to Cashfree API requirements
-    const sanitizedCustId = `cust_${(input.customerId || "user").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 40)}`;
-    
+    // customer_id: alphanumeric + underscore + hyphen, max 50 chars. Strip dashes from UUID then prepend 'cust_'.
+    const rawCustId = (input.customerId || "user").replace(/[^a-zA-Z0-9]/g, "").slice(0, 44);
+    const sanitizedCustId = `cust_${rawCustId}`;
+
     let rawPhone = (input.customerPhone || "").replace(/\D/g, "");
     if (rawPhone.length > 10) rawPhone = rawPhone.slice(-10);
     const sanitizedPhone = rawPhone.length === 10 ? rawPhone : "9999999999";
 
-    const sanitizedEmail = input.customerEmail && input.customerEmail.includes("@")
+    const sanitizedEmail = input.customerEmail && /^[^@]+@[^@]+\.[^@]+$/.test(input.customerEmail.trim())
       ? input.customerEmail.trim()
-      : `customer_${sanitizedCustId.slice(0, 12)}@floria.in`;
+      : `cust${rawCustId.slice(0, 8)}@floria.in`;
 
-    const sanitizedName = input.customerName?.trim() || "Floria Customer";
+    const sanitizedName = (input.customerName?.trim() || "Floria Customer").slice(0, 50);
+
+    const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || "https://floriaa-web.vercel.app";
+    const returnUrl = input.returnUrl || `${appUrl}/checkout?order_id={order_id}`;
 
     const url = `${this.getBaseUrl()}/orders`;
     const body = {
@@ -155,15 +164,21 @@ export class CashfreePaymentProvider implements PaymentProvider {
         customer_name: sanitizedName,
       },
       order_meta: {
-        return_url: input.returnUrl || `${process.env.NEXT_PUBLIC_APP_URL || "https://floriaa-web.vercel.app"}/checkout?order_id={order_id}`,
+        return_url: returnUrl,
+        notify_url: `${process.env.API_BASE_URL || "https://floria-api.onrender.com"}/api/v1/payments/webhooks/cashfree`,
       },
     };
 
-    console.log(`[CashfreePaymentProvider] Creating Cashfree order (${this.getBaseUrl()}):`, {
+    console.log("[CashfreePaymentProvider] Sending to Cashfree:", JSON.stringify({
+      url,
+      apiVersion: this.getHeaders()["x-api-version"],
       order_id: cfOrderId,
       order_amount: orderAmountRupees,
       customer_id: sanitizedCustId,
-    });
+      customer_email: sanitizedEmail,
+      customer_phone: sanitizedPhone,
+      return_url: returnUrl,
+    }));
 
     const response = await fetch(url, {
       method: "POST",
@@ -174,11 +189,11 @@ export class CashfreePaymentProvider implements PaymentProvider {
     const resJson = (await response.json()) as any;
 
     if (!response.ok || !resJson?.payment_session_id) {
-      console.error("[CashfreePaymentProvider] Cashfree API returned error response:", {
+      console.error("[CashfreePaymentProvider] Cashfree API error:", JSON.stringify({
         status: response.status,
-        statusText: response.statusText,
         resJson,
-      });
+        sentPayload: { order_id: cfOrderId, order_amount: orderAmountRupees, customer_id: sanitizedCustId },
+      }));
       const errMsg = resJson?.message || resJson?.code || `Cashfree API HTTP ${response.status}`;
       throw new Error(`Cashfree Payment Error: ${errMsg}`);
     }
