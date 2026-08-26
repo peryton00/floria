@@ -25,8 +25,15 @@ export class PaymentsController {
         success: true,
         data: session,
       });
-    } catch (err) {
-      next(err);
+    } catch (err: any) {
+      console.warn("[PaymentsController] createPaymentSession notice:", err?.message || err);
+      res.status(400).json({
+        success: false,
+        error: {
+          code: "PAYMENT_INITIATION_FAILED",
+          message: err?.message || "Failed to initialize payment gateway session.",
+        },
+      });
     }
   }
 

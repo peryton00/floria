@@ -434,11 +434,38 @@ export default function CheckoutPage() {
 
       <h1 className="font-serif text-3xl font-bold text-ink-900 mb-6">Checkout</h1>
 
-      {/* Validation Error Alert */}
+      {/* Validation & Payment Error Alert */}
       {validationError && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 font-semibold flex items-center gap-2">
-          <span>⚠️</span>
-          <span>{validationError}</span>
+        <div className="mb-6 p-4.5 bg-red-50 border border-red-200 rounded-2xl text-xs text-red-800 space-y-3 shadow-xs">
+          <div className="flex items-start gap-3">
+            <span className="text-lg leading-none flex-shrink-0">⚠️</span>
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-sm text-red-900">Payment Notice</p>
+              <p className="mt-0.5 leading-relaxed font-medium">{validationError}</p>
+            </div>
+          </div>
+
+          {paymentMethod === "online" && (
+            <div className="pt-2.5 border-t border-red-200/80 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setPaymentMethod("cod");
+                  setValidationError(null);
+                }}
+                className="px-4 py-2 bg-forest-800 hover:bg-forest-900 text-white font-bold text-xs rounded-xl transition-colors shadow-xs"
+              >
+                Switch to Cash on Delivery (COD)
+              </button>
+              <button
+                type="button"
+                onClick={handlePlaceOrder}
+                className="px-4 py-2 border border-red-300 hover:bg-red-100/60 text-red-900 font-bold text-xs rounded-xl transition-colors"
+              >
+                Try Online Payment Again
+              </button>
+            </div>
+          )}
         </div>
       )}
 
