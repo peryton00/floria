@@ -553,15 +553,20 @@ export class AdminController {
         res.status(422).json({ success: false, error: { code: "VALIDATION_ERROR", message: "base64Data is required" } });
         return;
       }
-      const result = await adminMediaService.uploadDirectAdminMedia(req.user!.id, {
+      const userId = (req as any).user?.id || (req as any).user?.sub || (req as any).user?.userId || "";
+      const result = await adminMediaService.uploadDirectAdminMedia(userId, {
         filename: filename || "admin-upload.webp",
         mimeType: mimeType || "image/webp",
         base64Data,
         profile,
       });
       res.json({ success: true, data: result });
-    } catch (err) {
-      next(err);
+    } catch (err: any) {
+      console.error("[AdminController] uploadMedia error:", err);
+      res.status(500).json({
+        success: false,
+        error: { code: "UPLOAD_ERROR", message: err.message || "Failed to upload image" },
+      });
     }
   }
 }

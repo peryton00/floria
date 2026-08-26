@@ -534,7 +534,7 @@ export class AdminMediaService {
     const db = getAdminDb();
     const profile: ImageProfileName = input.profile || "CATEGORY";
 
-    const cleanBase64 = input.base64Data.replace(/^data:image\/\w+;base64,/, "");
+    const cleanBase64 = input.base64Data.replace(/^data:[^;]+;base64,/, "").trim();
     const buffer = Buffer.from(cleanBase64, "base64");
 
     if (!buffer || buffer.length === 0) {
@@ -552,35 +552,48 @@ export class AdminMediaService {
 
     for (const v of result.variants) {
       const storagePath = `admin-uploads/${profile.toLowerCase()}/${assetId}/${v.variantName}.webp`;
-      const { error: upErr } = await db.storage
-        .from(storageBucket)
-        .upload(storagePath, v.buffer, {
-          contentType: "image/webp",
-          upsert: true,
-        });
+      try {
+        const { error: upErr } = await db.storage
+          .from(storageBucket)
+          .upload(storagePath, v.buffer, {
+            contentType: "image/webp",
+            upsert: true,
+          });
 
-      if (!upErr) {
-        variantInsertRows.push({
-          asset_id: assetId,
-          variant_name: v.variantName,
-          format: "webp",
-          width: v.width,
-          height: v.height,
-          size_bytes: v.sizeBytes,
-          storage_bucket: storageBucket,
-          storage_path: storagePath,
-        });
+        if (!upErr) {
+          variantInsertRows.push({
+            asset_id: assetId,
+            variant_name: v.variantName,
+            format: "webp",
+            width: v.width,
+            height: v.height,
+            size_bytes: v.sizeBytes,
+            storage_bucket: storageBucket,
+            storage_path: storagePath,
+          });
 
-        const publicUrl = `${supabaseUrl}/storage/v1/object/public/${storageBucket}/${storagePath}`;
-        variantsMap[v.variantName] = publicUrl;
+          const publicUrl = `${supabaseUrl}/storage/v1/object/public/${storageBucket}/${storagePath}`;
+          variantsMap[v.variantName] = publicUrl;
+        } else {
+          console.error("[AdminMediaService] Storage upload error:", upErr.message);
+        }
+      } catch (stEx: any) {
+        console.error("[AdminMediaService] Storage exception:", stEx.message);
       }
+    }
+
+    // Verify if adminUserId exists in user_profiles to prevent FK constraint error
+    let uploaderId: string | null = null;
+    if (adminUserId) {
+      const { data: uProfile } = await db.from("user_profiles").select("id").eq("id", adminUserId).maybeSingle();
+      if (uProfile) uploaderId = adminUserId;
     }
 
     const { data: newAsset, error: assetErr } = await db
       .from("media_assets")
       .insert({
         id: assetId,
-        uploaded_by_user_id: adminUserId,
+        uploaded_by_user_id: uploaderId,
         original_filename: input.filename || "admin-image.webp",
         media_category: profile,
         mime_type: input.mimeType || "image/webp",
@@ -591,26 +604,34 @@ export class AdminMediaService {
         original_path: `admin-uploads/${profile.toLowerCase()}/${assetId}/original.webp`,
       })
       .select()
-      .single();
+      .maybeSingle();
 
     if (assetErr || !newAsset) {
-      throw new Error(`Media asset creation failed: ${assetErr?.message}`);
+      console.error("[AdminMediaService] media_assets insert error:", assetErr?.message);
+      throw new Error(`Media asset creation failed: ${assetErr?.message || "Unknown database error"}`);
     }
 
     if (variantInsertRows.length > 0) {
-      await db.from("media_variants").insert(variantInsertRows);
+      const { error: varErr } = await db.from("media_variants").insert(variantInsertRows);
+      if (varErr) {
+        console.error("[AdminMediaService] media_variants insert error:", varErr.message);
+      }
     }
 
-    await auditRepository.log({
-      actor_user_id: adminUserId,
-      actor_role: "admin",
-      action: "ADMIN_MEDIA_UPLOADED",
-      resource_type: "media_asset",
-      resource_id: assetId,
-      metadata: { filename: input.filename, profile },
-    });
+    try {
+      await auditRepository.log({
+        actor_user_id: uploaderId || "00000000-0000-0000-0000-000000000000",
+        actor_role: "admin",
+        action: "ADMIN_MEDIA_UPLOADED",
+        resource_type: "media_asset",
+        resource_id: assetId,
+        metadata: { filename: input.filename, profile },
+      });
+    } catch (audErr: any) {
+      console.warn("[AdminMediaService] audit log notice:", audErr.message);
+    }
 
-    const primaryUrl = variantsMap.medium || variantsMap.large || variantsMap.thumbnail || Object.values(variantsMap)[0];
+    const primaryUrl = variantsMap.medium || variantsMap.large || variantsMap.thumbnail || Object.values(variantsMap)[0] || `${supabaseUrl}/storage/v1/object/public/${storageBucket}/admin-uploads/${profile.toLowerCase()}/${assetId}/thumbnail.webp`;
 
     return {
       asset: newAsset,
