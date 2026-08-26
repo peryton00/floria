@@ -121,85 +121,78 @@ export class CashfreePaymentProvider implements PaymentProvider {
   }
 
   async createPaymentIntent(input: CreatePaymentIntentInput): Promise<PaymentProviderResult> {
-    const clientId = process.env.CASHFREE_CLIENT_ID;
-    const clientSecret = process.env.CASHFREE_CLIENT_SECRET;
+    const clientId = process.env.CASHFREE_CLIENT_ID?.trim();
+    const clientSecret = process.env.CASHFREE_CLIENT_SECRET?.trim();
     const orderAmountRupees = Number((input.amountPaise / 100).toFixed(2));
-    const cfOrderId = `CF-ORD-${input.masterOrderId.slice(0, 8)}-${Date.now()}`;
+    const cfOrderId = `CF-ORD-${input.masterOrderId.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8)}-${Date.now()}`;
 
     if (!clientId || !clientSecret) {
-      // Sandbox/Development fallback when credentials pending
-      const mockSessionId = `session_mock_${randomUUID()}`;
-      return {
-        paymentReference: cfOrderId,
-        provider: "cashfree",
-        status: "pending",
-        amountPaise: input.amountPaise,
-        currency: input.currency || "INR",
-        cfOrderId,
-        paymentSessionId: mockSessionId,
-        rawProviderResponse: {
-          note: "Cashfree production credentials pending environment placement",
-          cfOrderId,
-          paymentSessionId: mockSessionId,
-          orderAmountRupees,
-        },
-      };
+      throw new Error("Cashfree Client ID and Client Secret are not configured in server environment variables.");
     }
 
-    try {
-      const url = `${this.getBaseUrl()}/orders`;
-      const body = {
-        order_id: cfOrderId,
-        order_amount: orderAmountRupees,
-        order_currency: input.currency || "INR",
-        customer_details: {
-          customer_id: input.customerId,
-          customer_email: input.customerEmail || `customer_${input.customerId.slice(0, 8)}@floria.local`,
-          customer_phone: input.customerPhone || "9999999999",
-          customer_name: input.customerName || "Floria Customer",
-        },
-        order_meta: {
-          return_url: input.returnUrl || `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/checkout?order_id={order_id}&order_token={order_token}`,
-        },
-      };
+    // Sanitize customer details according to Cashfree API requirements
+    const sanitizedCustId = `cust_${(input.customerId || "user").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 40)}`;
+    
+    let rawPhone = (input.customerPhone || "").replace(/\D/g, "");
+    if (rawPhone.length > 10) rawPhone = rawPhone.slice(-10);
+    const sanitizedPhone = rawPhone.length === 10 ? rawPhone : "9999999999";
 
-      const response = await fetch(url, {
-        method: "POST",
-        headers: this.getHeaders(),
-        body: JSON.stringify(body),
+    const sanitizedEmail = input.customerEmail && input.customerEmail.includes("@")
+      ? input.customerEmail.trim()
+      : `customer_${sanitizedCustId.slice(0, 12)}@floria.in`;
+
+    const sanitizedName = input.customerName?.trim() || "Floria Customer";
+
+    const url = `${this.getBaseUrl()}/orders`;
+    const body = {
+      order_id: cfOrderId,
+      order_amount: orderAmountRupees,
+      order_currency: input.currency || "INR",
+      customer_details: {
+        customer_id: sanitizedCustId,
+        customer_email: sanitizedEmail,
+        customer_phone: sanitizedPhone,
+        customer_name: sanitizedName,
+      },
+      order_meta: {
+        return_url: input.returnUrl || `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/checkout?order_id={order_id}&order_token={order_token}`,
+      },
+    };
+
+    console.log(`[CashfreePaymentProvider] Creating Cashfree order (${this.getBaseUrl()}):`, {
+      order_id: cfOrderId,
+      order_amount: orderAmountRupees,
+      customer_id: sanitizedCustId,
+    });
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: this.getHeaders(),
+      body: JSON.stringify(body),
+    });
+
+    const resJson = (await response.json()) as any;
+
+    if (!response.ok || !resJson?.payment_session_id) {
+      console.error("[CashfreePaymentProvider] Cashfree API returned error response:", {
+        status: response.status,
+        statusText: response.statusText,
+        resJson,
       });
-
-      const resJson = (await response.json()) as any;
-
-      if (!response.ok || !resJson?.payment_session_id) {
-        console.error("[CashfreePaymentProvider] Order creation failed:", resJson);
-        throw new Error(resJson?.message || "Failed to create Cashfree payment order");
-      }
-
-      return {
-        paymentReference: cfOrderId,
-        provider: "cashfree",
-        status: "pending",
-        amountPaise: input.amountPaise,
-        currency: input.currency || "INR",
-        cfOrderId: resJson.cf_order_id || cfOrderId,
-        paymentSessionId: resJson.payment_session_id,
-        rawProviderResponse: resJson,
-      };
-    } catch (err: any) {
-      console.warn("[CashfreePaymentProvider] Exception creating Cashfree order, using resilient intent fallback:", err?.message);
-      const fallbackSession = `session_fallback_${randomUUID()}`;
-      return {
-        paymentReference: cfOrderId,
-        provider: "cashfree",
-        status: "pending",
-        amountPaise: input.amountPaise,
-        currency: input.currency || "INR",
-        cfOrderId,
-        paymentSessionId: fallbackSession,
-        rawProviderResponse: { error: err?.message, cfOrderId, fallbackSession },
-      };
+      const errMsg = resJson?.message || resJson?.code || `Cashfree API HTTP ${response.status}`;
+      throw new Error(`Cashfree Payment Error: ${errMsg}`);
     }
+
+    return {
+      paymentReference: cfOrderId,
+      provider: "cashfree",
+      status: "pending",
+      amountPaise: input.amountPaise,
+      currency: input.currency || "INR",
+      cfOrderId: resJson.cf_order_id || cfOrderId,
+      paymentSessionId: resJson.payment_session_id,
+      rawProviderResponse: resJson,
+    };
   }
 
   async verifyWebhookSignature(input: VerifyWebhookInput): Promise<WebhookVerificationResult> {
