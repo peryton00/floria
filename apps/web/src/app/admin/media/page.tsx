@@ -82,6 +82,10 @@ export default function AdminMediaPage() {
 
   const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [bulkDeleteProgress, setBulkDeleteProgress] = useState<{ current: number; total: number }>({
+    current: 0,
+    total: 0,
+  });
 
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
@@ -160,12 +164,14 @@ export default function AdminMediaPage() {
     const idsToDelete = Array.from(selectedIds);
     try {
       setIsBulkDeleting(true);
-      const loadingToastId = toast.loading("Mass Deleting Assets...", `Deleting ${idsToDelete.length} selected items from database and storage`);
+      setBulkDeleteProgress({ current: 0, total: idsToDelete.length });
 
-      // Delete in parallel batches of 5
       let successCount = 0;
-      for (let i = 0; i < idsToDelete.length; i += 5) {
-        const batch = idsToDelete.slice(i, i + 5);
+      let processedCount = 0;
+
+      // Delete in parallel batches of 3
+      for (let i = 0; i < idsToDelete.length; i += 3) {
+        const batch = idsToDelete.slice(i, i + 3);
         await Promise.all(
           batch.map(async (id) => {
             try {
@@ -173,12 +179,14 @@ export default function AdminMediaPage() {
               if (res.success) successCount++;
             } catch (err) {
               console.warn("Failed deleting item", id, err);
+            } finally {
+              processedCount++;
+              setBulkDeleteProgress({ current: processedCount, total: idsToDelete.length });
             }
           })
         );
       }
 
-      toast.dismiss(loadingToastId);
       toast.success("Mass Deletion Completed", `Successfully deleted ${successCount} of ${idsToDelete.length} selected assets.`);
       setIsBulkDeleteModalOpen(false);
       clearSelection();
@@ -989,39 +997,76 @@ export default function AdminMediaPage() {
                 <span className="p-2 rounded-full bg-red-100">
                   <TrashIcon size={20} />
                 </span>
-                <h3 className="font-serif text-lg font-bold text-red-900">Mass Delete Confirmation</h3>
+                <h3 className="font-serif text-lg font-bold text-red-900">
+                  {isBulkDeleting ? "Deleting Selected Assets..." : "Mass Delete Confirmation"}
+                </h3>
               </div>
 
-              <p className="text-xs text-gray-700">
-                Are you sure you want to permanently delete <span className="font-bold text-red-700">{selectedIds.size} selected image assets</span>?
-              </p>
+              {isBulkDeleting ? (
+                /* LIVE VISUAL PROGRESS BAR */
+                <div className="space-y-4 py-2">
+                  <div className="flex items-center justify-between text-xs font-bold text-red-900">
+                    <span>Deleting assets from database & storage...</span>
+                    <span className="font-mono text-red-700 font-bold">
+                      {bulkDeleteProgress.total > 0
+                        ? Math.round((bulkDeleteProgress.current / bulkDeleteProgress.total) * 100)
+                        : 0}%
+                    </span>
+                  </div>
 
-              <div className="p-3 bg-red-50 rounded-xl border border-red-200 text-xs text-red-800 space-y-1">
-                <p className="font-bold flex items-center gap-1">
-                  <AlertIcon size={14} /> Permanent Action Notice:
-                </p>
-                <p>• All selected images will be removed from database tables.</p>
-                <p>• Associated objects in Supabase Storage buckets will be permanently deleted.</p>
-              </div>
+                  {/* Visual Progress Bar Track & Indicator */}
+                  <div className="w-full bg-red-100 rounded-full h-4 overflow-hidden border border-red-200 p-0.5 shadow-inner">
+                    <div
+                      className="bg-gradient-to-r from-red-600 via-rose-500 to-red-600 h-full rounded-full transition-all duration-300 ease-out shadow-sm"
+                      style={{
+                        width: `${
+                          bulkDeleteProgress.total > 0
+                            ? Math.round((bulkDeleteProgress.current / bulkDeleteProgress.total) * 100)
+                            : 0
+                        }%`,
+                      }}
+                    />
+                  </div>
 
-              <div className="flex items-center justify-end gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsBulkDeleteModalOpen(false)}
-                  className="px-4 py-2 rounded-lg border border-[#E2DDD5] text-xs font-semibold hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  disabled={isBulkDeleting}
-                  onClick={handleBulkDeleteConfirm}
-                  className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-wider flex items-center gap-1.5"
-                >
-                  <TrashIcon size={14} />
-                  {isBulkDeleting ? "Deleting Selected..." : `Confirm Delete (${selectedIds.size})`}
-                </button>
-              </div>
+                  <div className="flex items-center justify-between text-[11px] font-mono text-gray-600">
+                    <span>Processed: {bulkDeleteProgress.current} / {bulkDeleteProgress.total}</span>
+                    <span>Remaining: {bulkDeleteProgress.total - bulkDeleteProgress.current}</span>
+                  </div>
+                </div>
+              ) : (
+                /* CONFIRMATION STEP */
+                <>
+                  <p className="text-xs text-gray-700">
+                    Are you sure you want to permanently delete <span className="font-bold text-red-700">{selectedIds.size} selected image assets</span>?
+                  </p>
+
+                  <div className="p-3 bg-red-50 rounded-xl border border-red-200 text-xs text-red-800 space-y-1">
+                    <p className="font-bold flex items-center gap-1">
+                      <AlertIcon size={14} /> Permanent Action Notice:
+                    </p>
+                    <p>• All selected images will be removed from database tables.</p>
+                    <p>• Associated objects in Supabase Storage buckets will be permanently deleted.</p>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsBulkDeleteModalOpen(false)}
+                      className="px-4 py-2 rounded-lg border border-[#E2DDD5] text-xs font-semibold hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleBulkDeleteConfirm}
+                      className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm"
+                    >
+                      <TrashIcon size={14} />
+                      Confirm Delete ({selectedIds.size})
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         )}
