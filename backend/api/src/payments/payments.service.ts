@@ -280,6 +280,24 @@ export class PaymentsService {
   }
 
   /**
+   * Lookup orderId by Cashfree order ID (cf_order_id or payment_reference).
+   */
+  async lookupOrderByCfOrderId(cfOrderId: string): Promise<{ orderId: string }> {
+    const db = getAdminDb();
+    const { data: payment } = await db
+      .from("payments")
+      .select("order_id")
+      .or(`cf_order_id.eq.${cfOrderId},payment_reference.eq.${cfOrderId}`)
+      .maybeSingle();
+
+    if (!payment?.order_id) {
+      throw Errors.notFound("Order payment reference");
+    }
+
+    return { orderId: payment.order_id };
+  }
+
+  /**
    * Execute Cashfree refund for an order item/payment.
    */
   async processRefund(adminOrSellerUserId: string, paymentId: string, amountPaise: number, reason?: string) {

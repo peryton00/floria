@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { CustomerShell } from "@/components/layout/CustomerShell";
 import { formatINR } from "@/lib/format";
@@ -48,8 +49,10 @@ export default function CheckoutPage() {
   const defaultAddr = getDefaultAddress();
   const [selectedAddressId, setSelectedAddressId] = useState<string>(defaultAddr?.id ?? "");
   const [paymentMethod, setPaymentMethod] = useState<"online" | "cod">("online");
-  const [step, setStep] = useState<"checkout" | "confirmation">("checkout");
+  const [step, setStep] = useState<"checkout" | "confirmation" | "redirecting">("checkout");
   const [confirmedOrder, setConfirmedOrder] = useState<any>(null);
+  const [redirectOrderId, setRedirectOrderId] = useState<string | null>(null);
+  const router = useRouter();
 
   // Modal State
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
@@ -63,6 +66,47 @@ export default function CheckoutPage() {
   // Dynamically loaded platform financial and delivery settings
   const [finSettings, setFinSettings] = useState<FinancialSettings | null>(null);
   const [delSettings, setDelSettings] = useState<DeliverySettings | null>(null);
+
+  // ── Cashfree Return Redirect Handler ────────────────────────────────────────
+  // Cashfree redirects to /checkout?order_id=CF-ORD-xxx&floria_order_id=yyy after payment.
+  // We resolve the order ID, clear the cart, and redirect to the receipt/order page.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const floriaOrderId = params.get("floria_order_id");
+    const cfOrderId = params.get("order_id");
+
+    if (!floriaOrderId && !cfOrderId) return;
+
+    setStep("redirecting");
+
+    if (floriaOrderId) {
+      clearCart();
+      refreshOrders().catch(() => {});
+      router.replace(`/orders/${floriaOrderId}`);
+      return;
+    }
+
+    if (cfOrderId) {
+      setRedirectOrderId(cfOrderId);
+      api.getOrderByCfOrderId(cfOrderId)
+        .then((res) => {
+          const resolvedOrderId = (res as any)?.data?.orderId || (res as any)?.data?.order_id;
+          clearCart();
+          refreshOrders().catch(() => {});
+          if (resolvedOrderId) {
+            router.replace(`/orders/${resolvedOrderId}`);
+          } else {
+            router.replace("/orders");
+          }
+        })
+        .catch(() => {
+          clearCart();
+          refreshOrders().catch(() => {});
+          router.replace("/orders");
+        });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     Promise.all([
@@ -271,6 +315,26 @@ export default function CheckoutPage() {
       isPlacingOrderRef.current = false;
     }
   };
+
+  // ── 0. PAYMENT REDIRECTING VIEW ────────────────────────────────────────────
+  if (step === "redirecting") {
+    return (
+      <CustomerShell>
+        <div className="max-w-xl mx-auto px-4 py-16 text-center">
+          <div className="w-16 h-16 rounded-full bg-forest-50 text-forest-700 flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <CheckCircleIcon size={36} />
+          </div>
+          <h1 className="font-serif text-2xl font-bold text-ink-900 mb-2">
+            Payment Confirmed!
+          </h1>
+          <p className="text-sm text-ink-500 mb-6">
+            Thank you! Redirecting you to your order receipt and tracking...
+          </p>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-forest-700 border-t-transparent"></div>
+        </div>
+      </CustomerShell>
+    );
+  }
 
   // ── 1. ORDER CONFIRMATION VIEW ─────────────────────────────────────────────
   if (step === "confirmation" && confirmedOrder) {

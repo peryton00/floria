@@ -416,6 +416,10 @@ export class FloriaApiClient {
     });
   }
 
+  public async getOrderByCfOrderId(cfOrderId: string): Promise<ApiResponse<{ orderId: string }>> {
+    return this.request<{ orderId: string }>(`/api/v1/payments/lookup-order?cf_order_id=${encodeURIComponent(cfOrderId)}`);
+  }
+
   public async getPaymentStatus(paymentId: string): Promise<ApiResponse<any>> {
     return this.request<any>(`/api/v1/payments/${paymentId}/status`);
   }

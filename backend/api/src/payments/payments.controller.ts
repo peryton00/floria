@@ -57,6 +57,23 @@ export class PaymentsController {
   }
 
   /**
+   * GET /api/v1/payments/lookup-order?cf_order_id=...
+   */
+  async lookupOrderByCfOrderId(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const cfOrderId = String(req.query.cf_order_id || req.query.order_id || "");
+      if (!cfOrderId) {
+        res.status(422).json({ success: false, error: { code: "VALIDATION_ERROR", message: "cf_order_id is required" } });
+        return;
+      }
+      const result = await paymentsService.lookupOrderByCfOrderId(cfOrderId);
+      res.json({ success: true, data: result });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
    * POST /api/v1/payments/webhooks/cashfree
    * Production Cashfree webhook endpoint with signature verification & idempotency.
    */

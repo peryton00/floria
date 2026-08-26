@@ -150,7 +150,7 @@ export class CashfreePaymentProvider implements PaymentProvider {
     const sanitizedName = (input.customerName?.trim() || "Floria Customer").slice(0, 50);
 
     const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || "https://floriaa-web.vercel.app";
-    const returnUrl = input.returnUrl || `${appUrl}/checkout?order_id={order_id}`;
+    const returnUrl = input.returnUrl || `${appUrl}/checkout?order_id={order_id}&floria_order_id=${input.masterOrderId}`;
 
     const url = `${this.getBaseUrl()}/orders`;
     const body = {

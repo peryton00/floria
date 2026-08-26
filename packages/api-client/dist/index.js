@@ -233,6 +233,9 @@ var FloriaApiClient = class {
       body: JSON.stringify({ orderId })
     });
   }
+  async getOrderByCfOrderId(cfOrderId) {
+    return this.request(`/api/v1/payments/lookup-order?cf_order_id=${encodeURIComponent(cfOrderId)}`);
+  }
   async getPaymentStatus(paymentId) {
     return this.request(`/api/v1/payments/${paymentId}/status`);
   }

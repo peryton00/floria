@@ -11,6 +11,7 @@ router.post(["/webhooks/cashfree", "/webhooks/cashfree/", "/webhook/cashfree", "
 router.post(["/webhooks", "/webhooks/", "/webhook", "/webhook/"], paymentsController.handleCashfreeWebhook);
 
 // Authenticated Client Payment Endpoints
+router.get("/lookup-order", paymentsController.lookupOrderByCfOrderId);
 router.post("/create-session", authenticateToken, paymentsController.createPaymentSession);
 router.get("/:paymentId/status", authenticateToken, paymentsController.getPaymentStatus);
 

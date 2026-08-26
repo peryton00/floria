@@ -202,6 +202,9 @@ declare class FloriaApiClient {
         currency: string;
         environment: "SANDBOX" | "PRODUCTION";
     }>>;
+    getOrderByCfOrderId(cfOrderId: string): Promise<ApiResponse<{
+        orderId: string;
+    }>>;
     getPaymentStatus(paymentId: string): Promise<ApiResponse<any>>;
     requestRefund(paymentId: string, amountPaise: number, reason?: string): Promise<ApiResponse<any>>;
     getAdminTransactions(params?: {
