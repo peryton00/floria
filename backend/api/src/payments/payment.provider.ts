@@ -155,7 +155,7 @@ export class CashfreePaymentProvider implements PaymentProvider {
         customer_name: sanitizedName,
       },
       order_meta: {
-        return_url: input.returnUrl || `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/checkout?order_id={order_id}&order_token={order_token}`,
+        return_url: input.returnUrl || `${process.env.NEXT_PUBLIC_APP_URL || "https://floriaa-web.vercel.app"}/checkout?order_id={order_id}`,
       },
     };
 

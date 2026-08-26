@@ -281,8 +281,10 @@ export class CheckoutService {
       console.warn("[CheckoutService] Financial ledger / payment creation warning:", finErr);
     }
 
-    // 6. Clear Cart
-    await db.from("cart_items").delete().eq("cart_id", cartRow.id);
+    // 6. Clear Cart — only for COD (cart is cleared for online after webhook payment confirmation)
+    if (input.paymentMethod === "cod") {
+      await db.from("cart_items").delete().eq("cart_id", cartRow.id);
+    }
 
     // 7. Audit Log
     await auditRepository.log({

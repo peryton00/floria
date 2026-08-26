@@ -193,6 +193,22 @@ export class PaymentsService {
           .update({ balance_state: "available" })
           .eq("order_id", payment.order_id);
 
+        // Clear the customer's cart now that payment is confirmed
+        if (payment.customer_id) {
+          try {
+            const { data: cartRow } = await db
+              .from("carts")
+              .select("id")
+              .eq("user_id", payment.customer_id)
+              .maybeSingle();
+            if (cartRow) {
+              await db.from("cart_items").delete().eq("cart_id", cartRow.id);
+            }
+          } catch (cartErr) {
+            console.warn("[PaymentsService] Cart clear on payment success warning:", cartErr);
+          }
+        }
+
         // Trigger PAYMENT_SUCCESS notification
         if (payment.customer_id) {
           try {
