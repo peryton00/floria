@@ -42,8 +42,8 @@ export const SYSTEM_MEDIA_REGISTRY: Record<string, Record<string, string>> = {
     cover: `${SUPABASE_STORAGE_URL}/storage/v1/object/public/public-media/system/nursery-4/cover.webp`,
   },
   "/hero-plants.png": {
-    cover: `${SUPABASE_STORAGE_URL}/storage/v1/object/public/public-media/system/hero-plants/cover.webp`,
-    card: `${SUPABASE_STORAGE_URL}/storage/v1/object/public/public-media/system/hero-plants/card.webp`,
+    cover: "https://flymwzdtsrkiiriqaswc.supabase.co/storage/v1/object/public/public-media/admin-uploads/product/4e3b9c16-257f-413c-90f2-cb6738f25c10/medium.webp",
+    card: "https://flymwzdtsrkiiriqaswc.supabase.co/storage/v1/object/public/public-media/admin-uploads/product/4e3b9c16-257f-413c-90f2-cb6738f25c10/medium.webp",
   },
   "outdoor-plants": {
     banner: `${SUPABASE_STORAGE_URL}/storage/v1/object/public/public-media/system/category-outdoor-plants/banner.webp`,
