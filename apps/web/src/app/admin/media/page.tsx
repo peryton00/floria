@@ -75,6 +75,7 @@ export default function AdminMediaPage() {
   const [editingItem, setEditingItem] = useState<MediaItem | null>(null);
   const [editFilename, setEditFilename] = useState("");
   const [editAltText, setEditAltText] = useState("");
+  const [editCategory, setEditCategory] = useState("PRODUCT");
   const [isUpdating, setIsUpdating] = useState(false);
 
   const [deletingItem, setDeletingItem] = useState<MediaItem | null>(null);
@@ -92,6 +93,17 @@ export default function AdminMediaPage() {
   const [uploadPreviewUrl, setUploadPreviewUrl] = useState<string | null>(null);
   const [uploadProfile, setUploadProfile] = useState("CATEGORY");
   const [isUploading, setIsUploading] = useState(false);
+
+  const openUploadModal = () => {
+    let initialProfile = "PRODUCT";
+    if (selectedCategory === "CATEGORY") initialProfile = "CATEGORY";
+    else if (selectedCategory === "SELLER_LOGO") initialProfile = "SELLER_LOGO";
+    else if (selectedCategory === "USER_AVATAR") initialProfile = "USER_AVATAR";
+    else if (selectedCategory === "REVIEW_IMAGE") initialProfile = "REVIEW_IMAGE";
+    else if (selectedCategory === "DOCUMENT") initialProfile = "DOCUMENT";
+    setUploadProfile(initialProfile);
+    setIsUploadModalOpen(true);
+  };
 
   const loadMedia = async () => {
     try {
@@ -215,6 +227,7 @@ export default function AdminMediaPage() {
     setEditingItem(item);
     setEditFilename(item.original_filename);
     setEditAltText(item.alt_text || "");
+    setEditCategory(item.media_category || "PRODUCT");
   };
 
   const handleSaveEdit = async () => {
@@ -224,10 +237,11 @@ export default function AdminMediaPage() {
       const res = await api.updateAdminMedia(editingItem.id, {
         filename: editFilename,
         altText: editAltText,
+        category: editCategory,
       });
 
       if (res.success) {
-        toast.success("Updated", "Image metadata updated successfully");
+        toast.success("Updated", "Image metadata and category updated successfully");
         setEditingItem(null);
         loadMedia();
       } else {
@@ -356,7 +370,7 @@ export default function AdminMediaPage() {
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => setIsUploadModalOpen(true)}
+              onClick={openUploadModal}
               className="px-4 py-2 bg-[#1E3A2B] hover:bg-[#274D39] text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow-xs transition-all flex items-center gap-2"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -921,6 +935,23 @@ export default function AdminMediaPage() {
                     className="w-full px-3 py-2 rounded-lg border border-[#E2DDD5] focus:outline-none focus:ring-1 focus:ring-[#1E3A2B]"
                   />
                 </div>
+
+                <div>
+                  <label className="block font-bold text-[#212529] mb-1">Asset Category / Classification</label>
+                  <select
+                    value={editCategory}
+                    onChange={(e) => setEditCategory(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-[#E2DDD5] focus:outline-none focus:ring-1 focus:ring-[#1E3A2B]"
+                  >
+                    <option value="PRODUCT">Products (PRODUCT)</option>
+                    <option value="CATEGORY">Category Covers & Banners (CATEGORY)</option>
+                    <option value="NURSERY">Nursery Store Banners (NURSERY)</option>
+                    <option value="SELLER_LOGO">Nursery / Seller Logos (SELLER_LOGO)</option>
+                    <option value="USER_AVATAR">User Avatars (USER_AVATAR)</option>
+                    <option value="REVIEW_IMAGE">Customer Reviews (REVIEW_IMAGE)</option>
+                    <option value="DOCUMENT">Verification Documents (DOCUMENT)</option>
+                  </select>
+                </div>
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E2DDD5]">
@@ -1079,16 +1110,18 @@ export default function AdminMediaPage() {
 
               <div className="space-y-3 text-xs">
                 <div>
-                  <label className="block font-bold text-[#212529] mb-1">Target Profile / Purpose</label>
+                  <label className="block font-bold text-[#212529] mb-1">Target Category / Profile</label>
                   <select
                     value={uploadProfile}
                     onChange={(e) => setUploadProfile(e.target.value)}
                     className="w-full px-3 py-2 rounded-lg border border-[#E2DDD5] focus:outline-none focus:ring-1 focus:ring-[#1E3A2B]"
                   >
-                    <option value="CATEGORY">Category Cover Image</option>
-                    <option value="PRODUCT">Product Image</option>
-                    <option value="NURSERY">Nursery Banner</option>
-                    <option value="SELLER_LOGO">Seller / Nursery Logo</option>
+                    <option value="PRODUCT">Product Image (PRODUCT)</option>
+                    <option value="CATEGORY">Category Cover Image (CATEGORY)</option>
+                    <option value="NURSERY">Nursery Store Banner (NURSERY)</option>
+                    <option value="SELLER_LOGO">Seller / Nursery Logo (SELLER_LOGO)</option>
+                    <option value="USER_AVATAR">User Avatar (USER_AVATAR)</option>
+                    <option value="REVIEW_IMAGE">Customer Review Photo (REVIEW_IMAGE)</option>
                   </select>
                 </div>
 

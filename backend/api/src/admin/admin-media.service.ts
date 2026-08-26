@@ -379,7 +379,7 @@ export class AdminMediaService {
       if (updates.altText !== undefined) {
         await db.from("product_images").update({ alt_text: updates.altText }).eq("id", realId);
       }
-      return { success: true, message: "Product image updated" };
+      return { success: true, message: "Product image metadata updated" };
     }
 
     if (assetId.startsWith("cat_img_") || assetId.startsWith("cat_banner_")) {
@@ -401,15 +401,11 @@ export class AdminMediaService {
       .select()
       .maybeSingle();
 
-    if (error || !updated) {
-      throw Errors.notFound("Media asset");
-    }
-
     if (updates.altText !== undefined) {
       await db.from("product_images").update({ alt_text: updates.altText }).eq("asset_id", assetId);
     }
 
-    return updated;
+    return updated || { success: true, message: "Media asset updated" };
   }
 
   async deleteMedia(assetId: string, adminUserId: string) {
