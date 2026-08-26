@@ -10,14 +10,14 @@ const router = Router();
 
 const checkoutSchema = {
   body: z.object({
-    addressId: z.string().uuid("Invalid address ID").optional(),
+    addressId: z.string().optional(),
     address: z.record(z.unknown()).optional(),
     paymentMethod: z.enum(["online", "cod"]),
   }),
 };
 
 router.post(
-  "/",
+  ["/", ""],
   authenticateToken,
   checkoutRateLimiter,
   validateRequest(checkoutSchema),

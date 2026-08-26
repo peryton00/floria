@@ -7,8 +7,8 @@ import { requireRole } from "../middleware/authorization.js";
 const router = Router();
 
 // Public / Provider Webhooks
-router.post("/webhooks/cashfree", paymentsController.handleCashfreeWebhook);
-router.post("/webhooks", paymentsController.handleCashfreeWebhook); // Alias
+router.post(["/webhooks/cashfree", "/webhooks/cashfree/", "/webhook/cashfree", "/webhook/cashfree/"], paymentsController.handleCashfreeWebhook);
+router.post(["/webhooks", "/webhooks/", "/webhook", "/webhook/"], paymentsController.handleCashfreeWebhook);
 
 // Authenticated Client Payment Endpoints
 router.post("/create-session", authenticateToken, paymentsController.createPaymentSession);
