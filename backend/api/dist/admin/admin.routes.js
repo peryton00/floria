@@ -65,6 +65,11 @@ router.patch("/settings/delivery", admin_controller_js_1.adminController.updateD
 router.post("/delivery/preview", admin_controller_js_1.adminController.previewDeliveryFee);
 router.get("/settings/financials", admin_controller_js_1.adminController.getFinancialSettings);
 router.patch("/settings/financials", admin_controller_js_1.adminController.updateFinancialSettings);
+// Media & Image Management
+router.get("/media", admin_controller_js_1.adminController.getMedia);
+router.post("/media/upload", admin_controller_js_1.adminController.uploadMedia);
+router.patch("/media/:id", admin_controller_js_1.adminController.updateMedia);
+router.delete("/media/:id", admin_controller_js_1.adminController.deleteMedia);
 // Versioned Pricing Policies (Phase 3.23)
 const pricing_policy_routes_js_1 = __importDefault(require("./pricing-policy.routes.js"));
 router.use("/pricing-policies", pricing_policy_routes_js_1.default);

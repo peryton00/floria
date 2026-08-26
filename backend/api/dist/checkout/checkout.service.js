@@ -157,7 +157,7 @@ class CheckoutService {
         const orderPayload = {
             customer_id: input.userId,
             seller_id: primarySellerId,
-            status: "seller_pending",
+            status: input.paymentMethod === "cod" ? "seller_pending" : "pending_payment",
             delivery_address_snapshot: deliveryAddress,
             subtotal_paise: subtotalPaise,
             maintenance_fee_paise: maintenanceFeePaise,
@@ -177,11 +177,25 @@ class CheckoutService {
             const providerName = input.paymentMethod === "online" ? "cashfree" : input.paymentMethod;
             const { PaymentProviderFactory } = await import("../payments/payment.provider.js");
             const provider = PaymentProviderFactory.getProvider(providerName);
-            const paymentIntent = await provider.createPaymentIntent({
-                masterOrderId: orderId,
-                customerId: input.userId,
-                amountPaise: finalTotalPaise,
-            });
+            let paymentIntent = null;
+            try {
+                paymentIntent = await provider.createPaymentIntent({
+                    masterOrderId: orderId,
+                    customerId: input.userId,
+                    amountPaise: finalTotalPaise,
+                });
+            }
+            catch (intentErr) {
+                console.warn("[CheckoutService] Payment intent creation notice during checkout:", intentErr?.message);
+                paymentIntent = {
+                    paymentReference: `PAY-${orderId.slice(0, 8)}-${Date.now()}`,
+                    provider: providerName,
+                    status: "pending",
+                    amountPaise: finalTotalPaise,
+                    currency: "INR",
+                    rawProviderResponse: { note: intentErr?.message || "Intent creation deferred to session endpoint" },
+                };
+            }
             // Insert Payments Record
             const { data: paymentRow } = await db.from("payments").insert({
                 order_id: orderId,
@@ -226,8 +240,10 @@ class CheckoutService {
         catch (finErr) {
             console.warn("[CheckoutService] Financial ledger / payment creation warning:", finErr);
         }
-        // 6. Clear Cart
-        await db.from("cart_items").delete().eq("cart_id", cartRow.id);
+        // 6. Clear Cart — only for COD (cart is cleared for online after webhook payment confirmation)
+        if (input.paymentMethod === "cod") {
+            await db.from("cart_items").delete().eq("cart_id", cartRow.id);
+        }
         // 7. Audit Log
         await audit_repository_js_1.auditRepository.log({
             actor_user_id: input.userId,

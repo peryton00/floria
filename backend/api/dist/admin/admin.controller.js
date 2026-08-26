@@ -486,6 +486,69 @@ class AdminController {
             next(err);
         }
     }
+    // ── Media & Image Management ──────────────────────────────────────────────
+    async getMedia(req, res, next) {
+        try {
+            const { adminMediaService } = await import("./admin-media.service.js");
+            const category = String(req.query.category || "ALL");
+            const status = String(req.query.status || "ALL");
+            const search = String(req.query.search || "");
+            const page = Number(req.query.page || 1);
+            const limit = Number(req.query.limit || 30);
+            const result = await adminMediaService.listMedia({ category, status, search, page, limit });
+            res.json({ success: true, data: result.items, pagination: result.pagination, stats: result.stats });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+    async updateMedia(req, res, next) {
+        try {
+            const { adminMediaService } = await import("./admin-media.service.js");
+            const id = String(req.params.id);
+            const result = await adminMediaService.updateMedia(id, req.body);
+            res.json({ success: true, data: result });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+    async deleteMedia(req, res, next) {
+        try {
+            const { adminMediaService } = await import("./admin-media.service.js");
+            const id = String(req.params.id);
+            const result = await adminMediaService.deleteMedia(id, req.user.id);
+            res.json({ success: true, data: result });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+    async uploadMedia(req, res, next) {
+        try {
+            const { adminMediaService } = await import("./admin-media.service.js");
+            const { filename, mimeType, base64Data, profile } = req.body;
+            if (!base64Data) {
+                res.status(422).json({ success: false, error: { code: "VALIDATION_ERROR", message: "base64Data is required" } });
+                return;
+            }
+            const userId = req.user?.id || req.user?.sub || req.user?.userId || "";
+            const result = await adminMediaService.uploadDirectAdminMedia(userId, {
+                filename: filename || "admin-upload.webp",
+                mimeType: mimeType || "image/webp",
+                base64Data,
+                profile,
+            });
+            res.json({ success: true, data: result });
+        }
+        catch (err) {
+            console.error("[AdminController] uploadMedia error:", err);
+            res.status(500).json({
+                success: false,
+                error: { code: "UPLOAD_ERROR", message: err.message || "Failed to upload image" },
+            });
+        }
+    }
 }
 exports.AdminController = AdminController;
 exports.adminController = new AdminController();

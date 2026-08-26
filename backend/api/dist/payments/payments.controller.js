@@ -25,7 +25,14 @@ class PaymentsController {
             });
         }
         catch (err) {
-            next(err);
+            console.warn("[PaymentsController] createPaymentSession notice:", err?.message || err);
+            res.status(400).json({
+                success: false,
+                error: {
+                    code: "PAYMENT_INITIATION_FAILED",
+                    message: err?.message || "Failed to initialize payment gateway session.",
+                },
+            });
         }
     }
     /**
@@ -41,6 +48,23 @@ class PaymentsController {
                 success: true,
                 data: payment,
             });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+    /**
+     * GET /api/v1/payments/lookup-order?cf_order_id=...
+     */
+    async lookupOrderByCfOrderId(req, res, next) {
+        try {
+            const cfOrderId = String(req.query.cf_order_id || req.query.order_id || "");
+            if (!cfOrderId) {
+                res.status(422).json({ success: false, error: { code: "VALIDATION_ERROR", message: "cf_order_id is required" } });
+                return;
+            }
+            const result = await payments_service_js_1.paymentsService.lookupOrderByCfOrderId(cfOrderId);
+            res.json({ success: true, data: result });
         }
         catch (err) {
             next(err);
@@ -82,6 +106,25 @@ class PaymentsController {
             res.json({
                 success: true,
                 data: refund,
+            });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+    /**
+     * GET /api/v1/payments/admin/all
+     * Authorized admin query to fetch transaction logs across all marketplace orders.
+     */
+    async getAdminTransactions(req, res, next) {
+        try {
+            const status = typeof req.query.status === "string" ? req.query.status : undefined;
+            const search = typeof req.query.search === "string" ? req.query.search : undefined;
+            const limit = typeof req.query.limit === "string" ? parseInt(req.query.limit, 10) : 100;
+            const transactions = await payments_service_js_1.paymentsService.getAdminTransactions({ status, search, limit });
+            res.json({
+                success: true,
+                data: transactions,
             });
         }
         catch (err) {

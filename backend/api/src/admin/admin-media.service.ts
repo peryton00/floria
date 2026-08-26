@@ -92,12 +92,24 @@ export class AdminMediaService {
 
       if (primaryUrl && !seenUrls.has(primaryUrl)) {
         seenUrls.add(primaryUrl);
+        // Derive domain category from original_path if media_category is generic 'IMAGE'
+        let domainCategory = asset.media_category;
+        if (domainCategory === "IMAGE" || !domainCategory) {
+          const pathLower = (asset.original_path || "").toLowerCase();
+          if (pathLower.includes("/category/")) domainCategory = "CATEGORY";
+          else if (pathLower.includes("/nursery/")) domainCategory = "NURSERY";
+          else if (pathLower.includes("/seller_logo/")) domainCategory = "SELLER_LOGO";
+          else if (pathLower.includes("/user_avatar/")) domainCategory = "USER_AVATAR";
+          else if (pathLower.includes("/review/")) domainCategory = "REVIEW_IMAGE";
+          else domainCategory = "PRODUCT";
+        }
+
         allMediaItems.push({
           id: asset.id,
           is_legacy: false,
           source_type: "media_asset",
           original_filename: asset.original_filename,
-          media_category: asset.media_category,
+          media_category: domainCategory,
           mime_type: asset.mime_type,
           file_size_bytes: Number(asset.file_size_bytes) || 0,
           status: asset.status,
@@ -392,7 +404,10 @@ export class AdminMediaService {
 
     const payload: any = { updated_at: new Date().toISOString() };
     if (updates.filename) payload.original_filename = updates.filename.trim();
-    if (updates.category) payload.media_category = updates.category;
+    if (updates.category) {
+      // Map category safely to valid DB enum ('IMAGE' or 'DOCUMENT') to prevent PostgreSQL invalid enum error
+      payload.media_category = updates.category === "DOCUMENT" ? "DOCUMENT" : "IMAGE";
+    }
 
     const { data: updated, error } = await db
       .from("media_assets")
@@ -585,13 +600,16 @@ export class AdminMediaService {
       if (uProfile) uploaderId = adminUserId;
     }
 
+    // Ensure media_category matches valid PostgreSQL DB enum values ('IMAGE' | 'DOCUMENT')
+    const validDbCategory = profile === "DOCUMENT" ? "DOCUMENT" : "IMAGE";
+
     const { data: newAsset, error: assetErr } = await db
       .from("media_assets")
       .insert({
         id: assetId,
         uploaded_by_user_id: uploaderId,
         original_filename: input.filename || "admin-image.webp",
-        media_category: profile,
+        media_category: validDbCategory,
         mime_type: input.mimeType || "image/webp",
         file_size_bytes: buffer.length,
         sha256_hash: crypto.createHash("sha256").update(buffer).digest("hex"),

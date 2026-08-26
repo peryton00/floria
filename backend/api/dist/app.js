@@ -36,8 +36,8 @@ function createApp() {
     app.use((0, cors_js_1.createCorsMiddleware)());
     app.use((0, security_js_1.createSecurityMiddleware)());
     // 2. Request Parsing
-    app.use(express_1.default.json({ limit: "2mb" }));
-    app.use(express_1.default.urlencoded({ extended: true }));
+    app.use(express_1.default.json({ limit: "10mb" }));
+    app.use(express_1.default.urlencoded({ extended: true, limit: "10mb" }));
     // 3. Root & Health Check Endpoints
     app.get("/", (_req, res) => {
         res.json({

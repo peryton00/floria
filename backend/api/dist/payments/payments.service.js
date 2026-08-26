@@ -163,6 +163,22 @@ class PaymentsService {
                     .from("seller_ledger_entries")
                     .update({ balance_state: "available" })
                     .eq("order_id", payment.order_id);
+                // Clear the customer's cart now that payment is confirmed
+                if (payment.customer_id) {
+                    try {
+                        const { data: cartRow } = await db
+                            .from("carts")
+                            .select("id")
+                            .eq("user_id", payment.customer_id)
+                            .maybeSingle();
+                        if (cartRow) {
+                            await db.from("cart_items").delete().eq("cart_id", cartRow.id);
+                        }
+                    }
+                    catch (cartErr) {
+                        console.warn("[PaymentsService] Cart clear on payment success warning:", cartErr);
+                    }
+                }
                 // Trigger PAYMENT_SUCCESS notification
                 if (payment.customer_id) {
                     try {
@@ -227,6 +243,21 @@ class PaymentsService {
         return payment;
     }
     /**
+     * Lookup orderId by Cashfree order ID (cf_order_id or payment_reference).
+     */
+    async lookupOrderByCfOrderId(cfOrderId) {
+        const db = (0, database_js_1.getAdminDb)();
+        const { data: payment } = await db
+            .from("payments")
+            .select("order_id")
+            .or(`cf_order_id.eq.${cfOrderId},payment_reference.eq.${cfOrderId}`)
+            .maybeSingle();
+        if (!payment?.order_id) {
+            throw errors_js_1.Errors.notFound("Order payment reference");
+        }
+        return { orderId: payment.order_id };
+    }
+    /**
      * Execute Cashfree refund for an order item/payment.
      */
     async processRefund(adminOrSellerUserId, paymentId, amountPaise, reason) {
@@ -272,6 +303,63 @@ class PaymentsService {
             metadata: { amountPaise, refundReference: refundResult.refundReference },
         });
         return refundRow;
+    }
+    /**
+     * Admin Query: Fetch all payment transactions across platform with customer & order details.
+     */
+    async getAdminTransactions(filters) {
+        const db = (0, database_js_1.getAdminDb)();
+        let query = db
+            .from("payments")
+            .select("*, orders(id, total_paise, status, notes), user_profiles(email, full_name, phone)")
+            .order("created_at", { ascending: false });
+        if (filters.status && filters.status !== "all") {
+            query = query.eq("status", filters.status);
+        }
+        if (filters.limit) {
+            query = query.limit(filters.limit);
+        }
+        else {
+            query = query.limit(100);
+        }
+        const { data, error } = await query;
+        if (error) {
+            console.warn("[PaymentsService] getAdminTransactions query notice:", error.message);
+            return [];
+        }
+        let results = (data || []).map((p) => {
+            const u = p.user_profiles || {};
+            const o = p.orders || {};
+            return {
+                id: p.id,
+                orderId: p.order_id,
+                customerId: p.customer_id,
+                customerName: u.full_name || u.email?.split("@")[0] || "Customer",
+                customerEmail: u.email || "",
+                customerPhone: u.phone || "",
+                paymentReference: p.payment_reference || p.cf_payment_id || p.cf_order_id || p.id,
+                cfOrderId: p.cf_order_id || null,
+                cfPaymentId: p.cf_payment_id || null,
+                paymentSessionId: p.payment_session_id || null,
+                provider: p.provider || "cashfree",
+                currency: p.currency || "INR",
+                amountPaise: p.amount_paise || o.total_paise || 0,
+                status: p.status || "pending",
+                createdAt: p.created_at || p.updated_at || new Date().toISOString(),
+                updatedAt: p.updated_at || p.created_at || new Date().toISOString(),
+            };
+        });
+        if (filters.search) {
+            const s = filters.search.toLowerCase();
+            results = results.filter((r) => r.id.toLowerCase().includes(s) ||
+                r.orderId.toLowerCase().includes(s) ||
+                r.customerName.toLowerCase().includes(s) ||
+                r.customerEmail.toLowerCase().includes(s) ||
+                r.paymentReference.toLowerCase().includes(s) ||
+                (r.cfOrderId && r.cfOrderId.toLowerCase().includes(s)) ||
+                (r.cfPaymentId && r.cfPaymentId.toLowerCase().includes(s)));
+        }
+        return results;
     }
 }
 exports.PaymentsService = PaymentsService;
