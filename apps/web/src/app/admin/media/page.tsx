@@ -12,6 +12,10 @@ import {
   CheckCircleIcon,
   ShieldIcon,
   ToolsIcon,
+  TrashIcon,
+  EditIcon,
+  CopyIcon,
+  EyeIcon,
 } from "@/components/ui/Icons";
 
 interface MediaItem {
@@ -63,6 +67,9 @@ export default function AdminMediaPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
 
+  // Multi-Selection State for Mass Actions
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
   // Modals
   const [previewItem, setPreviewItem] = useState<MediaItem | null>(null);
   const [editingItem, setEditingItem] = useState<MediaItem | null>(null);
@@ -72,6 +79,9 @@ export default function AdminMediaPage() {
 
   const [deletingItem, setDeletingItem] = useState<MediaItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
@@ -111,18 +121,89 @@ export default function AdminMediaPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategory, selectedStatus, page]);
 
+  // Multi-select Handlers
+  const toggleSelect = (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    const currentPageIds = items.map((i) => i.id);
+    const allSelected = currentPageIds.length > 0 && currentPageIds.every((id) => selectedIds.has(id));
+
+    if (allSelected) {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        currentPageIds.forEach((id) => next.delete(id));
+        return next;
+      });
+    } else {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        currentPageIds.forEach((id) => next.add(id));
+        return next;
+      });
+    }
+  };
+
+  const clearSelection = () => {
+    setSelectedIds(new Set());
+  };
+
+  const handleBulkDeleteConfirm = async () => {
+    if (selectedIds.size === 0) return;
+    const idsToDelete = Array.from(selectedIds);
+    try {
+      setIsBulkDeleting(true);
+      const loadingToastId = toast.loading("Mass Deleting Assets...", `Deleting ${idsToDelete.length} selected items from database and storage`);
+
+      // Delete in parallel batches of 5
+      let successCount = 0;
+      for (let i = 0; i < idsToDelete.length; i += 5) {
+        const batch = idsToDelete.slice(i, i + 5);
+        await Promise.all(
+          batch.map(async (id) => {
+            try {
+              const res = await api.deleteAdminMedia(id);
+              if (res.success) successCount++;
+            } catch (err) {
+              console.warn("Failed deleting item", id, err);
+            }
+          })
+        );
+      }
+
+      toast.dismiss(loadingToastId);
+      toast.success("Mass Deletion Completed", `Successfully deleted ${successCount} of ${idsToDelete.length} selected assets.`);
+      setIsBulkDeleteModalOpen(false);
+      clearSelection();
+      loadMedia();
+    } catch (err: any) {
+      toast.error("Mass Deletion Error", err.message || "Failed to process mass deletion");
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  };
+
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setPage(1);
     loadMedia();
   };
 
-  const handleCopyUrl = (url: string) => {
+  const handleCopyUrl = (url: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     navigator.clipboard.writeText(url);
     toast.success("Copied", "Image URL copied to clipboard!");
   };
 
-  const openEditModal = (item: MediaItem) => {
+  const openEditModal = (item: MediaItem, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     setEditingItem(item);
     setEditFilename(item.original_filename);
     setEditAltText(item.alt_text || "");
@@ -159,6 +240,11 @@ export default function AdminMediaPage() {
 
       if (res.success) {
         toast.success("Deleted", "Image permanently deleted from database and storage");
+        setSelectedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(deletingItem.id);
+          return next;
+        });
         setDeletingItem(null);
         if (previewItem?.id === deletingItem.id) setPreviewItem(null);
         loadMedia();
@@ -236,6 +322,9 @@ export default function AdminMediaPage() {
         return "bg-gray-100 text-gray-700 border-gray-200";
     }
   };
+
+  const isPageAllSelected =
+    items.length > 0 && items.every((i) => selectedIds.has(i.id));
 
   return (
     <AdminShell>
@@ -343,6 +432,7 @@ export default function AdminMediaPage() {
                 onClick={() => {
                   setSelectedCategory(tab.id);
                   setPage(1);
+                  clearSelection();
                 }}
                 className={[
                   "px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all",
@@ -376,6 +466,7 @@ export default function AdminMediaPage() {
                 onChange={(e) => {
                   setSelectedStatus(e.target.value);
                   setPage(1);
+                  clearSelection();
                 }}
                 className="px-3 py-2 text-xs rounded-lg border border-[#E2DDD5] bg-[#F9F8F3] focus:outline-none focus:ring-1 focus:ring-[#1E3A2B]"
               >
@@ -408,6 +499,47 @@ export default function AdminMediaPage() {
               </div>
             </div>
           </div>
+
+          {/* BULK SELECTION ACTION TOOLBAR */}
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-[#E2DDD5] bg-cream-50/50 p-2.5 rounded-lg">
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 text-xs font-bold text-[#212529] cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isPageAllSelected}
+                  onChange={toggleSelectAll}
+                  className="w-4 h-4 rounded border-[#E2DDD5] text-[#1E3A2B] focus:ring-[#1E3A2B]"
+                />
+                Select All on Page ({items.length})
+              </label>
+
+              {selectedIds.size > 0 && (
+                <span className="px-2.5 py-0.5 rounded-full bg-[#1E3A2B] text-white font-mono text-xs font-bold">
+                  {selectedIds.size} Selected
+                </span>
+              )}
+            </div>
+
+            {selectedIds.size > 0 && (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={clearSelection}
+                  className="px-3 py-1.5 text-xs font-semibold text-gray-600 hover:text-gray-900 bg-white border border-[#E2DDD5] rounded-lg"
+                >
+                  Clear Selection
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsBulkDeleteModalOpen(true)}
+                  className="px-3.5 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow-xs transition-colors flex items-center gap-1.5"
+                >
+                  <TrashIcon size={14} />
+                  Delete Selected ({selectedIds.size})
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Content Section */}
@@ -431,87 +563,110 @@ export default function AdminMediaPage() {
         ) : viewMode === "grid" ? (
           /* GRID VIEW */
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {items.map((item) => (
-              <div
-                key={item.id}
-                className="bg-white rounded-xl border border-[#E2DDD5] overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col group"
-              >
-                {/* Thumbnail Preview Box */}
-                <div className="relative aspect-square bg-[#F9F8F3] border-b border-[#E2DDD5] overflow-hidden flex items-center justify-center">
-                  <Image
-                    src={item.public_url}
-                    alt={item.original_filename}
-                    fill
-                    className="object-contain p-2 group-hover:scale-105 transition-transform duration-300"
-                    unoptimized
-                  />
-                  {/* Category Pill */}
-                  <span
-                    className={`absolute top-2 left-2 px-2 py-0.5 rounded text-[9px] font-mono font-bold uppercase border ${getCategoryBadgeClass(
-                      item.media_category
-                    )}`}
-                  >
-                    {item.media_category}
-                  </span>
+            {items.map((item) => {
+              const isSelected = selectedIds.has(item.id);
+              return (
+                <div
+                  key={item.id}
+                  onClick={() => toggleSelect(item.id)}
+                  className={`bg-white rounded-xl border transition-all flex flex-col group cursor-pointer relative ${
+                    isSelected ? "border-[#1E3A2B] ring-2 ring-[#1E3A2B]/20 shadow-md" : "border-[#E2DDD5] hover:shadow-md"
+                  }`}
+                >
+                  {/* Selection Checkbox Pill */}
+                  <div className="absolute top-2 right-2 z-10">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={(e) => toggleSelect(item.id, e as any)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="w-4 h-4 rounded border-[#E2DDD5] text-[#1E3A2B] focus:ring-[#1E3A2B] cursor-pointer"
+                    />
+                  </div>
 
-                  {/* Actions Overlay */}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 p-2 backdrop-blur-[1px]">
-                    <button
-                      type="button"
-                      onClick={() => setPreviewItem(item)}
-                      title="Preview Image"
-                      className="p-2 rounded-lg bg-white/90 text-gray-900 hover:bg-white transition-colors"
+                  {/* Thumbnail Preview Box */}
+                  <div className="relative aspect-square bg-[#F9F8F3] border-b border-[#E2DDD5] overflow-hidden flex items-center justify-center">
+                    <Image
+                      src={item.public_url}
+                      alt={item.original_filename}
+                      fill
+                      className="object-contain p-2 group-hover:scale-105 transition-transform duration-300"
+                      unoptimized
+                    />
+                    {/* Category Pill */}
+                    <span
+                      className={`absolute top-2 left-2 px-2 py-0.5 rounded text-[9px] font-mono font-bold uppercase border ${getCategoryBadgeClass(
+                        item.media_category
+                      )}`}
                     >
-                      <SearchIcon size={14} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => openEditModal(item)}
-                      title="Edit Metadata"
-                      className="p-2 rounded-lg bg-white/90 text-gray-900 hover:bg-white transition-colors"
-                    >
-                      ✏️
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleCopyUrl(item.public_url)}
-                      title="Copy Public URL"
-                      className="p-2 rounded-lg bg-white/90 text-gray-900 hover:bg-white transition-colors"
-                    >
-                      📋
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setDeletingItem(item)}
-                      title="Delete Asset"
-                      className="p-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
-                    >
-                      🗑️
-                    </button>
+                      {item.media_category}
+                    </span>
+
+                    {/* Actions Overlay */}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 p-2 backdrop-blur-[1px]">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPreviewItem(item);
+                        }}
+                        title="Preview Image"
+                        className="p-2 rounded-lg bg-white/90 text-gray-900 hover:bg-white transition-colors"
+                      >
+                        <EyeIcon size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => openEditModal(item, e)}
+                        title="Edit Metadata"
+                        className="p-2 rounded-lg bg-white/90 text-gray-900 hover:bg-white transition-colors"
+                      >
+                        <EditIcon size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => handleCopyUrl(item.public_url, e)}
+                        title="Copy Public URL"
+                        className="p-2 rounded-lg bg-white/90 text-gray-900 hover:bg-white transition-colors"
+                      >
+                        <CopyIcon size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeletingItem(item);
+                        }}
+                        title="Delete Asset"
+                        className="p-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
+                      >
+                        <TrashIcon size={14} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Info Footer */}
+                  <div className="p-3 flex-1 flex flex-col justify-between space-y-2">
+                    <div>
+                      <p
+                        className="text-xs font-bold text-[#212529] truncate"
+                        title={item.original_filename}
+                      >
+                        {item.original_filename}
+                      </p>
+                      <p className="text-[10px] text-[#6C756F] truncate mt-0.5">
+                        {item.seller_name || item.uploader_name || "System"}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[10px] text-[#6C756F] pt-2 border-t border-[#F9F8F3]">
+                      <span className="font-mono">{formatFileSize(item.file_size_bytes)}</span>
+                      <span>{new Date(item.created_at).toLocaleDateString()}</span>
+                    </div>
                   </div>
                 </div>
-
-                {/* Info Footer */}
-                <div className="p-3 flex-1 flex flex-col justify-between space-y-2">
-                  <div>
-                    <p
-                      className="text-xs font-bold text-[#212529] truncate"
-                      title={item.original_filename}
-                    >
-                      {item.original_filename}
-                    </p>
-                    <p className="text-[10px] text-[#6C756F] truncate mt-0.5">
-                      {item.seller_name || item.uploader_name || "System"}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center justify-between text-[10px] text-[#6C756F] pt-2 border-t border-[#F9F8F3]">
-                    <span className="font-mono">{formatFileSize(item.file_size_bytes)}</span>
-                    <span>{new Date(item.created_at).toLocaleDateString()}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           /* TABLE VIEW */
@@ -520,6 +675,14 @@ export default function AdminMediaPage() {
               <table className="w-full text-left text-xs">
                 <thead className="bg-[#F9F8F3] border-b border-[#E2DDD5] text-[10px] font-mono uppercase tracking-wider text-[#6C756F]">
                   <tr>
+                    <th className="px-4 py-3 w-8">
+                      <input
+                        type="checkbox"
+                        checked={isPageAllSelected}
+                        onChange={toggleSelectAll}
+                        className="w-4 h-4 rounded border-[#E2DDD5] text-[#1E3A2B] focus:ring-[#1E3A2B]"
+                      />
+                    </th>
                     <th className="px-4 py-3">Preview</th>
                     <th className="px-4 py-3">Filename / Asset ID</th>
                     <th className="px-4 py-3">Category</th>
@@ -530,71 +693,90 @@ export default function AdminMediaPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#E2DDD5]">
-                  {items.map((item) => (
-                    <tr key={item.id} className="hover:bg-[#F9F8F3]/50 transition-colors">
-                      <td className="px-4 py-3">
-                        <div
-                          className="relative w-10 h-10 rounded border border-[#E2DDD5] bg-[#F9F8F3] overflow-hidden flex-shrink-0 cursor-pointer"
-                          onClick={() => setPreviewItem(item)}
-                        >
-                          <Image
-                            src={item.public_url}
-                            alt={item.original_filename}
-                            fill
-                            className="object-contain p-1"
-                            unoptimized
+                  {items.map((item) => {
+                    const isSelected = selectedIds.has(item.id);
+                    return (
+                      <tr
+                        key={item.id}
+                        className={`transition-colors ${
+                          isSelected ? "bg-emerald-50/50" : "hover:bg-[#F9F8F3]/50"
+                        }`}
+                      >
+                        <td className="px-4 py-3">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleSelect(item.id)}
+                            className="w-4 h-4 rounded border-[#E2DDD5] text-[#1E3A2B] focus:ring-[#1E3A2B]"
                           />
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 font-semibold text-[#212529]">
-                        <p className="truncate max-w-xs">{item.original_filename}</p>
-                        <p className="font-mono text-[9px] text-[#6C756F] truncate">{item.id}</p>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`px-2 py-0.5 rounded text-[9px] font-mono font-bold uppercase border ${getCategoryBadgeClass(
-                            item.media_category
-                          )}`}
-                        >
-                          {item.media_category}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-[#6C756F]">
-                        {item.seller_name || item.uploader_name || "System"}
-                      </td>
-                      <td className="px-4 py-3 font-mono text-[#6C756F]">
-                        {formatFileSize(item.file_size_bytes)}
-                      </td>
-                      <td className="px-4 py-3 text-[#6C756F]">
-                        {new Date(item.created_at).toLocaleDateString()}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => openEditModal(item)}
-                            className="px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded font-semibold text-[10px]"
+                        </td>
+                        <td className="px-4 py-3">
+                          <div
+                            className="relative w-10 h-10 rounded border border-[#E2DDD5] bg-[#F9F8F3] overflow-hidden flex-shrink-0 cursor-pointer"
+                            onClick={() => setPreviewItem(item)}
                           >
-                            Edit
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleCopyUrl(item.public_url)}
-                            className="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded font-semibold text-[10px]"
+                            <Image
+                              src={item.public_url}
+                              alt={item.original_filename}
+                              fill
+                              className="object-contain p-1"
+                              unoptimized
+                            />
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 font-semibold text-[#212529]">
+                          <p className="truncate max-w-xs">{item.original_filename}</p>
+                          <p className="font-mono text-[9px] text-[#6C756F] truncate">{item.id}</p>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`px-2 py-0.5 rounded text-[9px] font-mono font-bold uppercase border ${getCategoryBadgeClass(
+                              item.media_category
+                            )}`}
                           >
-                            Copy URL
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setDeletingItem(item)}
-                            className="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-700 rounded font-semibold text-[10px]"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                            {item.media_category}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-[#6C756F]">
+                          {item.seller_name || item.uploader_name || "System"}
+                        </td>
+                        <td className="px-4 py-3 font-mono text-[#6C756F]">
+                          {formatFileSize(item.file_size_bytes)}
+                        </td>
+                        <td className="px-4 py-3 text-[#6C756F]">
+                          {new Date(item.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              type="button"
+                              onClick={(e) => openEditModal(item, e)}
+                              title="Edit Metadata"
+                              className="p-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg transition-colors"
+                            >
+                              <EditIcon size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => handleCopyUrl(item.public_url, e)}
+                              title="Copy URL"
+                              className="p-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition-colors"
+                            >
+                              <CopyIcon size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setDeletingItem(item)}
+                              title="Delete Asset"
+                              className="p-1.5 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg transition-colors"
+                            >
+                              <TrashIcon size={14} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -611,7 +793,10 @@ export default function AdminMediaPage() {
               <button
                 type="button"
                 disabled={page <= 1}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                onClick={() => {
+                  setPage((p) => Math.max(1, p - 1));
+                  clearSelection();
+                }}
                 className="px-3 py-1.5 text-xs font-semibold rounded border border-[#E2DDD5] bg-white disabled:opacity-40"
               >
                 Previous
@@ -619,7 +804,10 @@ export default function AdminMediaPage() {
               <button
                 type="button"
                 disabled={page >= totalPages}
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                onClick={() => {
+                  setPage((p) => Math.min(totalPages, p + 1));
+                  clearSelection();
+                }}
                 className="px-3 py-1.5 text-xs font-semibold rounded border border-[#E2DDD5] bg-white disabled:opacity-40"
               >
                 Next
@@ -673,17 +861,19 @@ export default function AdminMediaPage() {
               <div className="pt-2 flex items-center justify-end gap-3 border-t border-[#E2DDD5]">
                 <button
                   type="button"
-                  onClick={() => handleCopyUrl(previewItem.public_url)}
-                  className="px-4 py-2 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold text-xs"
+                  onClick={(e) => handleCopyUrl(previewItem.public_url, e)}
+                  className="px-4 py-2 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold text-xs flex items-center gap-1.5"
                 >
+                  <CopyIcon size={14} />
                   Copy URL
                 </button>
                 <a
                   href={previewItem.public_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-4 py-2 rounded-lg bg-[#1E3A2B] text-white hover:bg-[#274D39] font-bold text-xs"
+                  className="px-4 py-2 rounded-lg bg-[#1E3A2B] text-white hover:bg-[#274D39] font-bold text-xs flex items-center gap-1.5"
                 >
+                  <EyeIcon size={14} />
                   Open Full Resolution
                 </a>
               </div>
@@ -695,7 +885,12 @@ export default function AdminMediaPage() {
         {editingItem && (
           <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl border border-[#E2DDD5] max-w-md w-full p-6 shadow-2xl space-y-4">
-              <h3 className="font-serif text-lg font-bold text-[#212529]">Edit Image Metadata</h3>
+              <div className="flex items-center gap-2">
+                <span className="p-2 rounded-lg bg-gray-100 text-gray-800">
+                  <EditIcon size={18} />
+                </span>
+                <h3 className="font-serif text-lg font-bold text-[#212529]">Edit Image Metadata</h3>
+              </div>
 
               <div className="space-y-3 text-xs">
                 <div>
@@ -741,13 +936,13 @@ export default function AdminMediaPage() {
           </div>
         )}
 
-        {/* DELETE CONFIRMATION MODAL */}
+        {/* SINGLE DELETE CONFIRMATION MODAL */}
         {deletingItem && (
           <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl border border-red-200 max-w-md w-full p-6 shadow-2xl space-y-4">
               <div className="flex items-center gap-3 text-red-600">
                 <span className="p-2 rounded-full bg-red-100">
-                  <AlertIcon size={24} />
+                  <TrashIcon size={20} />
                 </span>
                 <h3 className="font-serif text-lg font-bold text-red-900">Confirm Asset Deletion</h3>
               </div>
@@ -757,7 +952,9 @@ export default function AdminMediaPage() {
               </p>
 
               <div className="p-3 bg-red-50 rounded-xl border border-red-200 text-xs text-red-800 space-y-1">
-                <p className="font-bold">⚠️ Warning:</p>
+                <p className="font-bold flex items-center gap-1">
+                  <AlertIcon size={14} /> Warning:
+                </p>
                 <p>• Removes file objects permanently from Supabase Storage buckets.</p>
                 <p>• Unlinks references from linked products, categories, or nursery profiles.</p>
               </div>
@@ -774,9 +971,55 @@ export default function AdminMediaPage() {
                   type="button"
                   disabled={isDeleting}
                   onClick={handleDeleteConfirm}
-                  className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-wider"
+                  className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-wider flex items-center gap-1.5"
                 >
+                  <TrashIcon size={14} />
                   {isDeleting ? "Deleting..." : "Delete Permanently"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* MASS / BULK DELETE CONFIRMATION MODAL */}
+        {isBulkDeleteModalOpen && (
+          <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl border border-red-200 max-w-md w-full p-6 shadow-2xl space-y-4">
+              <div className="flex items-center gap-3 text-red-600">
+                <span className="p-2 rounded-full bg-red-100">
+                  <TrashIcon size={20} />
+                </span>
+                <h3 className="font-serif text-lg font-bold text-red-900">Mass Delete Confirmation</h3>
+              </div>
+
+              <p className="text-xs text-gray-700">
+                Are you sure you want to permanently delete <span className="font-bold text-red-700">{selectedIds.size} selected image assets</span>?
+              </p>
+
+              <div className="p-3 bg-red-50 rounded-xl border border-red-200 text-xs text-red-800 space-y-1">
+                <p className="font-bold flex items-center gap-1">
+                  <AlertIcon size={14} /> Permanent Action Notice:
+                </p>
+                <p>• All selected images will be removed from database tables.</p>
+                <p>• Associated objects in Supabase Storage buckets will be permanently deleted.</p>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsBulkDeleteModalOpen(false)}
+                  className="px-4 py-2 rounded-lg border border-[#E2DDD5] text-xs font-semibold hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={isBulkDeleting}
+                  onClick={handleBulkDeleteConfirm}
+                  className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-wider flex items-center gap-1.5"
+                >
+                  <TrashIcon size={14} />
+                  {isBulkDeleting ? "Deleting Selected..." : `Confirm Delete (${selectedIds.size})`}
                 </button>
               </div>
             </div>
