@@ -191,7 +191,7 @@ export class CheckoutService {
     const orderPayload = {
       customer_id: input.userId,
       seller_id: primarySellerId,
-      status: input.paymentMethod === "cod" ? "seller_pending" : "payment_pending",
+      status: input.paymentMethod === "cod" ? "seller_pending" : "pending_payment",
       delivery_address_snapshot: deliveryAddress,
       subtotal_paise: subtotalPaise,
       maintenance_fee_paise: maintenanceFeePaise,

@@ -75,6 +75,7 @@ export class OrderRepository {
     if (error) return false;
 
     const displayStatusMap: Record<string, string> = {
+      pending_payment: "Pending Payment",
       order_placed: "Order Placed",
       seller_pending: "Order Placed",
       nursery_confirmed: "Nursery Confirmed",
