@@ -58,7 +58,7 @@ export function ProductCard({
   }
 
   return (
-    <div className="group relative flex flex-col bg-floria-linen rounded-2xl overflow-hidden border border-floria-border shadow-xs hover:shadow-lg hover:-translate-y-1 hover:border-forest-400 transition-all duration-300 ease-out focus-within:ring-2 focus-within:ring-forest-800">
+    <div className="group relative flex flex-col bg-floria-linen rounded-xl sm:rounded-2xl overflow-hidden border border-floria-border shadow-2xs hover:shadow-md hover:-translate-y-0.5 hover:border-forest-400 transition-all duration-300 ease-out focus-within:ring-2 focus-within:ring-forest-800">
       {/* Image */}
       <Link href={`/products/${product.slug}`} className="focus-visible:outline-none">
         <div className="relative overflow-hidden bg-floria-natural-sand" style={{ paddingBottom: "100%" }}>
@@ -73,11 +73,11 @@ export function ProductCard({
           <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
           {/* Capped Micro Badges (Max 2) */}
-          <div className="absolute top-2.5 left-2.5 flex flex-col gap-1 font-ui z-10">
+          <div className="absolute top-2 left-2 flex flex-col gap-0.5 font-ui z-10">
             {badges.map((b) => (
               <span
                 key={b.key}
-                className={`px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wider rounded-md shadow-xs backdrop-blur-xs ${b.className}`}
+                className={`px-1.5 py-0.5 text-[8.5px] sm:text-[9px] font-bold uppercase tracking-wider rounded shadow-2xs backdrop-blur-xs ${b.className}`}
               >
                 {b.label}
               </span>
@@ -85,11 +85,11 @@ export function ProductCard({
           </div>
 
           {/* Wishlist glass heart button */}
-          <div className="absolute top-2 right-2 z-10">
+          <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 z-10">
             <WishlistHeartButton
               active={wishlisted}
-              size={14}
-              className="w-8 h-8 flex items-center justify-center bg-white/85 hover:bg-white backdrop-blur-md shadow-xs border border-white/60 text-ink-400 hover:text-red-600 transition-transform active:scale-90"
+              size={13}
+              className="w-7 h-7 sm:w-7.5 sm:h-7.5 flex items-center justify-center bg-white/85 hover:bg-white backdrop-blur-md shadow-2xs border border-white/60 text-ink-400 hover:text-red-600 transition-transform active:scale-90"
               onToggle={() => toggleWishlist(listing)}
             />
           </div>
@@ -97,27 +97,27 @@ export function ProductCard({
       </Link>
 
       {/* Info */}
-      <Link href={`/products/${product.slug}`} className="p-3.5 flex flex-col flex-1 focus-visible:outline-none">
+      <Link href={`/products/${product.slug}`} className="p-2.5 sm:p-3 flex flex-col flex-1 focus-visible:outline-none">
         {/* Rating */}
-        <div className="mb-1.5 min-h-[18px]">
+        <div className="mb-1 min-h-[14px]">
           {reviewCount > 0 ? (
             <StarRating rating={avgRating} count={reviewCount} size="sm" />
           ) : (
-            <span className="text-[11px] text-ink-400 font-ui font-medium">New arrival</span>
+            <span className="text-[10px] text-ink-400 font-ui font-medium">New arrival</span>
           )}
         </div>
 
         {/* Name */}
-        <p className="font-sans text-[13.5px] font-semibold text-ink-900 leading-snug line-clamp-2 mb-1 group-hover:text-forest-800 transition-colors">
+        <p className="font-sans text-[12px] sm:text-[13px] font-semibold text-ink-900 leading-snug line-clamp-2 mb-0.5 group-hover:text-forest-800 transition-colors">
           {product.name}
         </p>
 
         {/* Seller / Nursery */}
-        <p className="text-[11px] text-ink-500 mb-3 font-ui flex items-center gap-1">
+        <p className="text-[10px] sm:text-[10.5px] text-ink-500 mb-2 font-ui flex items-center gap-1">
           <span className="truncate">{seller.business_name}</span>
           {seller.is_verified && (
             <span
-              className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-forest-100 text-forest-800 text-[9px] font-bold flex-shrink-0"
+              className="inline-flex items-center justify-center w-3 h-3 rounded-full bg-forest-100 text-forest-800 text-[8px] font-bold flex-shrink-0"
               title="Verified Nursery Partner"
             >
               ✓
@@ -126,7 +126,7 @@ export function ProductCard({
         </p>
 
         {/* Price & Cart button row */}
-        <div className="mt-auto flex items-center justify-between pt-2 border-t border-ink-100/60">
+        <div className="mt-auto flex items-center justify-between pt-1.5 border-t border-ink-100/60">
           <ProductPriceBlock
             sellingPricePaise={sellingPricePaise}
             originalPricePaise={originalPricePaise}
@@ -147,13 +147,13 @@ export function ProductCard({
             }}
             style={!isOutOfStock ? { color: "#ffffff" } : undefined}
             className={[
-              "w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 shadow-xs focus:outline-none focus:ring-2 focus:ring-offset-1 flex-shrink-0",
+              "w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-full flex items-center justify-center transition-all duration-200 shadow-2xs focus:outline-none focus:ring-2 focus:ring-offset-1 flex-shrink-0",
               isOutOfStock
                 ? "bg-cream-300 text-ink-400 cursor-not-allowed"
-                : "bg-terracotta-700 hover:bg-terracotta-800 !text-white hover:shadow-md hover:scale-105 active:scale-95 focus:ring-terracotta-700",
+                : "bg-terracotta-700 hover:bg-terracotta-800 !text-white hover:shadow-sm hover:scale-105 active:scale-95 focus:ring-terracotta-700",
             ].join(" ")}
           >
-            <BagIcon size={14} className="text-white" />
+            <BagIcon size={13} className="text-white" />
           </button>
         </div>
       </Link>
