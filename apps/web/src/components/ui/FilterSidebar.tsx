@@ -121,12 +121,12 @@ export function FilterSidebar({ currentCategory, onFilterChange }: FilterSidebar
     activeInStock;
 
   return (
-    <aside className="w-full space-y-6 bg-floria-linen p-6 rounded-3xl border border-floria-border shadow-xs" aria-label="Product filters">
+    <aside className="w-full space-y-5 bg-white p-5 rounded-2xl border border-stone-200/80 shadow-2xs" aria-label="Product filters">
       {/* Header & Reset */}
-      <div className="flex items-center justify-between pb-3 border-b border-floria-border">
+      <div className="flex items-center justify-between pb-3 border-b border-stone-100">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-forest-800" />
-          <h2 className="text-xs font-bold uppercase tracking-widest text-ink-900 font-ui">Filters</h2>
+          <h2 className="text-xs font-bold uppercase tracking-wider text-stone-900 font-ui">Filters</h2>
         </div>
         {hasActiveFilters && (
           <button
@@ -134,15 +134,15 @@ export function FilterSidebar({ currentCategory, onFilterChange }: FilterSidebar
             onClick={handleClearAll}
             className="text-[11px] font-bold text-terracotta-700 hover:text-terracotta-800 transition-colors uppercase tracking-wider font-ui"
           >
-            Reset All
+            Clear All
           </button>
         )}
       </div>
 
       {/* 1. Category Filter */}
       <div>
-        <h3 className="text-xs font-bold uppercase tracking-wider text-ink-900 mb-3 font-ui">
-          Category
+        <h3 className="text-xs font-bold uppercase tracking-wider text-stone-900 mb-2.5 font-ui">
+          Categories
         </h3>
         <ul className="space-y-1 text-xs font-ui">
           <li>
@@ -150,15 +150,15 @@ export function FilterSidebar({ currentCategory, onFilterChange }: FilterSidebar
               type="button"
               onClick={() => updateParam("category", "all")}
               className={[
-                "w-full text-left py-2 px-3 rounded-xl transition-all flex items-center justify-between group",
+                "w-full text-left py-2 px-3 rounded-lg transition-all flex items-center justify-between group",
                 activeCategory === "all"
-                  ? "bg-forest-100/90 text-forest-800 font-bold border border-forest-200/80 shadow-2xs"
-                  : "text-ink-600 hover:bg-floria-soft-sand hover:text-ink-900",
+                  ? "bg-forest-800 text-white font-bold shadow-2xs"
+                  : "text-stone-600 hover:bg-stone-50 hover:text-stone-900",
               ].join(" ")}
             >
               <span>All Categories</span>
               {activeCategory === "all" && (
-                <span className="w-1.5 h-1.5 rounded-full bg-forest-800" />
+                <span className="w-1.5 h-1.5 rounded-full bg-white" />
               )}
             </button>
           </li>
@@ -170,15 +170,15 @@ export function FilterSidebar({ currentCategory, onFilterChange }: FilterSidebar
                   type="button"
                   onClick={() => updateParam("category", cat.slug)}
                   className={[
-                    "w-full text-left py-2 px-3 rounded-xl transition-all flex items-center justify-between group",
+                    "w-full text-left py-2 px-3 rounded-lg transition-all flex items-center justify-between group",
                     isActive
-                      ? "bg-forest-100/90 text-forest-800 font-bold border border-forest-200/80 shadow-2xs"
-                      : "text-ink-600 hover:bg-floria-soft-sand hover:text-ink-900",
+                      ? "bg-forest-800 text-white font-bold shadow-2xs"
+                      : "text-stone-600 hover:bg-stone-50 hover:text-stone-900",
                   ].join(" ")}
                 >
-                  <span>{cat.name}</span>
+                  <span className="truncate">{cat.name}</span>
                   {isActive && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-forest-800" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-white flex-shrink-0" />
                   )}
                 </button>
               </li>
@@ -187,11 +187,11 @@ export function FilterSidebar({ currentCategory, onFilterChange }: FilterSidebar
         </ul>
       </div>
 
-      <hr className="border-floria-border" />
+      <hr className="border-stone-100" />
 
-      {/* 2. Nursery Filter (Floria Multi-Nursery Source Filter) */}
+      {/* 2. Nursery Filter */}
       <div>
-        <h3 className="text-xs font-bold uppercase tracking-wider text-ink-900 mb-3 font-ui">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-stone-900 mb-2.5 font-ui">
           Nursery Source
         </h3>
         <ul className="space-y-1 text-xs font-ui">
@@ -200,15 +200,15 @@ export function FilterSidebar({ currentCategory, onFilterChange }: FilterSidebar
               type="button"
               onClick={() => updateParam("nursery", "all")}
               className={[
-                "w-full text-left py-2 px-3 rounded-xl transition-all flex items-center justify-between",
+                "w-full text-left py-2 px-3 rounded-lg transition-all flex items-center justify-between",
                 activeNursery === "all"
-                  ? "bg-forest-100/90 text-forest-800 font-bold border border-forest-200/80 shadow-2xs"
-                  : "text-ink-600 hover:bg-floria-soft-sand hover:text-ink-900",
+                  ? "bg-forest-800 text-white font-bold shadow-2xs"
+                  : "text-stone-600 hover:bg-stone-50 hover:text-stone-900",
               ].join(" ")}
             >
               <span>All Nurseries</span>
               {activeNursery === "all" && (
-                <span className="w-1.5 h-1.5 rounded-full bg-forest-800" />
+                <span className="w-1.5 h-1.5 rounded-full bg-white" />
               )}
             </button>
           </li>
@@ -220,15 +220,15 @@ export function FilterSidebar({ currentCategory, onFilterChange }: FilterSidebar
                   type="button"
                   onClick={() => updateParam("nursery", seller.id)}
                   className={[
-                    "w-full text-left py-2 px-3 rounded-xl transition-all flex items-center justify-between",
+                    "w-full text-left py-2 px-3 rounded-lg transition-all flex items-center justify-between",
                     isActive
-                      ? "bg-forest-100/90 text-forest-800 font-bold border border-forest-200/80 shadow-2xs"
-                      : "text-ink-600 hover:bg-floria-soft-sand hover:text-ink-900",
+                      ? "bg-forest-800 text-white font-bold shadow-2xs"
+                      : "text-stone-600 hover:bg-stone-50 hover:text-stone-900",
                   ].join(" ")}
                 >
                   <span className="truncate">{seller.business_name}</span>
                   {isActive && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-forest-800 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-white flex-shrink-0" />
                   )}
                 </button>
               </li>
@@ -237,64 +237,64 @@ export function FilterSidebar({ currentCategory, onFilterChange }: FilterSidebar
         </ul>
       </div>
 
-      <hr className="border-floria-border" />
+      <hr className="border-stone-100" />
 
       {/* 3. Price Filter */}
       <div>
-        <h3 className="text-xs font-bold uppercase tracking-wider text-ink-900 mb-3 font-ui">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-stone-900 mb-2.5 font-ui">
           Price Range (₹)
         </h3>
         <form onSubmit={handlePriceApply} className="space-y-2.5">
           <div className="flex items-center gap-2 font-ui">
             <div className="relative w-1/2">
-              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-ink-400 select-none">₹</span>
+              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-stone-400 select-none">₹</span>
               <input
                 type="number"
                 placeholder="Min"
                 min="0"
                 value={minPrice}
                 onChange={(e) => setMinPrice(e.target.value)}
-                className="w-full pl-6 pr-2.5 py-2 text-xs rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen focus:outline-none focus:ring-2 focus:ring-forest-800/20 focus:border-forest-700 transition-all text-ink-900 font-semibold"
+                className="w-full pl-6 pr-2.5 py-1.5 text-xs rounded-lg border border-stone-200 bg-stone-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-forest-800/20 focus:border-forest-700 transition-all text-stone-900 font-semibold"
               />
             </div>
-            <span className="text-ink-400 text-xs font-bold">–</span>
+            <span className="text-stone-400 text-xs font-bold">–</span>
             <div className="relative w-1/2">
-              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-ink-400 select-none">₹</span>
+              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-stone-400 select-none">₹</span>
               <input
                 type="number"
                 placeholder="Max"
                 min="0"
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(e.target.value)}
-                className="w-full pl-6 pr-2.5 py-2 text-xs rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen focus:outline-none focus:ring-2 focus:ring-forest-800/20 focus:border-forest-700 transition-all text-ink-900 font-semibold"
+                className="w-full pl-6 pr-2.5 py-1.5 text-xs rounded-lg border border-stone-200 bg-stone-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-forest-800/20 focus:border-forest-700 transition-all text-stone-900 font-semibold"
               />
             </div>
           </div>
           <button
             type="submit"
             style={{ color: "#FFFFFF" }}
-            className="w-full py-2 bg-terracotta-700 hover:bg-terracotta-800 active:bg-terracotta-900 !text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-xs hover:shadow-md active:scale-[0.98] font-ui"
+            className="w-full py-2 bg-forest-800 hover:bg-forest-900 active:bg-forest-950 !text-white font-bold text-xs uppercase tracking-wider rounded-lg transition-all shadow-xs hover:shadow-md active:scale-[0.98] font-ui"
           >
             Apply Price
           </button>
         </form>
       </div>
 
-      <hr className="border-ink-150" />
+      <hr className="border-stone-100" />
 
       {/* 4. Stock Availability */}
       <div>
-        <h3 className="text-xs font-bold uppercase tracking-wider text-ink-900 mb-3 font-ui">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-stone-900 mb-2.5 font-ui">
           Availability
         </h3>
-        <label className="flex items-center gap-2.5 text-xs text-ink-700 cursor-pointer hover:text-ink-900 font-ui select-none">
+        <label className="flex items-center gap-2.5 text-xs text-stone-700 cursor-pointer hover:text-stone-900 font-ui select-none">
           <input
             type="checkbox"
             checked={activeInStock}
             onChange={(e) => updateParam("inStock", e.target.checked ? "true" : null)}
-            className="w-4 h-4 rounded border-ink-300 text-forest-800 focus:ring-forest-800 accent-forest-800 cursor-pointer"
+            className="w-4 h-4 rounded border-stone-300 text-forest-800 focus:ring-forest-800 accent-forest-800 cursor-pointer"
           />
-          <span className="font-semibold text-ink-800">In Stock Only</span>
+          <span className="font-semibold text-stone-800">In Stock Only</span>
         </label>
       </div>
     </aside>
