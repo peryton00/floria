@@ -21,6 +21,8 @@ import {
   AlertTriangle,
   Check,
   MapPin,
+  SlidersHorizontal,
+  Zap,
 } from "lucide-react";
 import {
   Leaf,
@@ -225,4 +227,12 @@ export function EyeIcon({ size = 18, className = "" }: IconProps) {
       <circle cx="12" cy="12" r="3" />
     </svg>
   );
+}
+
+export function FilterIcon({ size = 18, className, ...props }: IconProps) {
+  return <SlidersHorizontal size={size} className={className} {...props} />;
+}
+
+export function ZapIcon({ size = 18, className, ...props }: IconProps) {
+  return <Zap size={size} className={className} {...props} />;
 }

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { FilterSidebar } from "@/components/ui/FilterSidebar";
+import { FilterIcon } from "@/components/ui/Icons";
 
 interface FilterAndSortControlsProps {
   totalCount: number;
@@ -67,8 +68,8 @@ export function FilterAndSortControls({
           onClick={() => setIsMobileDrawerOpen(true)}
           className="flex items-center gap-1.5 px-3 py-1.5 bg-forest-800 text-white font-bold text-xs rounded-full shadow-2xs flex-shrink-0 active:scale-95 transition-transform"
         >
+          <FilterIcon size={13} className="text-white" />
           <span>Filters</span>
-          <span className="text-[10px] bg-white/20 px-1 rounded-full">⚡</span>
         </button>
 
         <button
