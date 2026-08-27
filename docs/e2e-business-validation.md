@@ -159,4 +159,4 @@ For a product with seller base price $P_{\text{base}} = \text{₹100.00}$ ($1000
 > **Justification**:
 > The Floria multi-vendor marketplace engine is fully functional, secure, and production-ready across all business workflows (Customer Storefront, Multi-Nursery Master Orders, Server-Authoritative Pricing, Seller Fulfillment State Machine, Operations Logistics, Audit Logging, and Verified Reviews). 
 >
-> The sole remaining item marked as **PARTIAL** is the live commercial payment gateway production activation (e.g. production Razorpay / Stripe API keys), which is ready in the Payment Provider Factory architecture and pending client production merchant account setup.
+> The sole remaining item marked as **PARTIAL** is the live commercial payment gateway production activation (e.g. production Cashfree API keys `CASHFREE_CLIENT_ID` and `CASHFREE_CLIENT_SECRET`), which is fully supported by CashfreePaymentProvider and pending client production merchant account setup.

@@ -15,7 +15,7 @@ Create Payout Batch (`public.payouts` with status = 'pending')
  ↓
 Link Ledger Items (`public.payout_items`)
  ↓
-Execute Bank Transfer (Razorpay Route / Bank API)
+Execute Bank Transfer (Cashfree Easy Split / Bank API)
  ↓
 Update Payout Status ('paid' or 'failed') & Append 'payout_debit' Ledger Entry
 ```

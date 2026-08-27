@@ -17,9 +17,10 @@ This document lists all environment variable keys required for Floria production
 | `NEXT_PUBLIC_API_URL` | Production REST API base endpoint (`/api/v1`) | **Required** | Client & Server |
 | `NEXT_PUBLIC_APP_URL` | Production Web application domain | **Required** | Client & Server |
 | `NODE_ENV` | Environment identifier (`production`) | **Required** | Server Only |
-| `NEXT_PUBLIC_RAZORPAY_KEY_ID` | Public Razorpay key for checkout modal | **Optional / Deferred** | Client & Server |
-| `RAZORPAY_KEY_SECRET` | Server-only Razorpay secret key | **Optional / Deferred** | Server Only |
-| `RAZORPAY_WEBHOOK_SECRET` | Server-only Razorpay webhook signature secret | **Optional / Deferred** | Server Only |
+| `CASHFREE_CLIENT_ID` | Production/Sandbox Cashfree App Client ID | **Required** | Server Only |
+| `CASHFREE_CLIENT_SECRET` | Production/Sandbox Cashfree Secret Key | **Required** | Server Only |
+| `CASHFREE_WEBHOOK_SECRET` | Cashfree Webhook HMAC Signature Secret | **Required** | Server Only |
+| `CASHFREE_ENVIRONMENT` | Payment environment (`SANDBOX` or `PRODUCTION`) | **Required** | Server Only |
 
 ---
 

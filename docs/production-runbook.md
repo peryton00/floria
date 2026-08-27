@@ -45,7 +45,7 @@ This document is the operational manual for engineers managing Floria in product
 
 ## 4. Secret Rotation Procedure
 
-If a secret key (e.g. `SUPABASE_SERVICE_ROLE_KEY`, `JWT_SECRET`, or `RAZORPAY_KEY_SECRET`) is compromised:
+If a secret key (e.g. `SUPABASE_SERVICE_ROLE_KEY`, `JWT_SECRET`, or `CASHFREE_CLIENT_SECRET`) is compromised:
 
 1. **Supabase Key Rotation**:
    - Go to Supabase Dashboard → Project Settings → API.

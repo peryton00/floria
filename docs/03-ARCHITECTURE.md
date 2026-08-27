@@ -3,12 +3,12 @@
 ## Stack
 Web: Next.js + TypeScript + App Router
 UI: React + Tailwind CSS + reusable components
-Backend/data: Supabase
-Database: PostgreSQL
+Backend/data: Express REST API (@floria/api) + Supabase PostgreSQL
+Database: PostgreSQL (via Supabase)
 Auth: Supabase Auth
 Storage: Supabase Storage
 Realtime: Supabase Realtime where useful
-Payments: Razorpay, subject to eligibility/compliance
+Payments: Cashfree Payments (Active PG)
 Hosting: Vercel
 Repo: GitHub monorepo
 Testing: Vitest + Playwright

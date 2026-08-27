@@ -10,7 +10,7 @@ This document details the audit, verification, and production readiness of the F
 
 Floria implements a provider-agnostic Payment Abstraction Layer (`PaymentProviderFactory`):
 - **Cash on Delivery (COD)**: Active and verified for offline payment collection upon delivery.
-- **Razorpay (Online Payment)**: Fully implemented with cryptographic HMAC SHA-256 webhook signature verification, order intent creation, refund processing, and sandbox/production credential resolution (`process.env.RAZORPAY_KEY_ID`, `process.env.RAZORPAY_KEY_SECRET`, `process.env.RAZORPAY_WEBHOOK_SECRET`).
+- **Cashfree (Online Payment)**: Fully implemented with cryptographic HMAC SHA-256 webhook signature verification, order intent creation, refund processing, and sandbox/production credential resolution (`process.env.CASHFREE_CLIENT_ID`, `process.env.CASHFREE_CLIENT_SECRET`, `process.env.CASHFREE_WEBHOOK_SECRET`).
 
 ---
 
@@ -18,7 +18,7 @@ Floria implements a provider-agnostic Payment Abstraction Layer (`PaymentProvide
 
 A comprehensive repository audit confirmed:
 - **Zero hardcoded API keys**, secrets, webhooks, or service role credentials exist in tracked files.
-- Secrets are dynamically loaded via environment variables (`RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`).
+- Secrets are dynamically loaded via environment variables (`CASHFREE_CLIENT_ID`, `CASHFREE_CLIENT_SECRET`, `CASHFREE_WEBHOOK_SECRET`).
 - Staging, development, and production environments utilize isolated credentials.
 
 ---
@@ -35,8 +35,8 @@ To prevent malicious client-side price or fee tampering:
 
 ## 5. Webhook Security & Idempotency
 
-- **Cryptographic Verification**: Razorpay webhook signatures are verified using `crypto.createHmac("sha256", webhookSecret).update(rawBody).digest("hex")`.
-- **Idempotency**: Webhook processing utilizes dual-layer deduplication (in-memory event cache + `payments` table check by `provider_payment_id`).
+- **Cryptographic Verification**: Cashfree webhook signatures are verified using `crypto.createHmac("sha256", webhookSecret).update(payloadToSign).digest("base64")`.
+- **Idempotency**: Webhook processing utilizes dual-layer deduplication (in-memory event cache + `payments` table check by `cf_order_id`).
 - **Duplicate Delivery**: Replayed or duplicate webhooks return `{ success: true, idempotent: true }` without triggering duplicate financial ledger or order state updates.
 
 ---
@@ -72,7 +72,7 @@ $$\text{Platform Accounting} = \sum \text{Seller Net Payable} + \sum \text{Selle
 
 | Area | Status | Notes |
 |---|---|---|
-| **Payment Architecture** | **PASS** | `PaymentProviderFactory` abstraction with COD & Razorpay providers |
+| **Payment Architecture** | **PASS** | `PaymentProviderFactory` abstraction with COD & Cashfree providers |
 | **Payment Creation** | **PASS** | Server-side order binding and intent creation |
 | **Amount Integrity** | **PASS** | Server-calculated total ($T_{\text{final}}$) enforced; client prices ignored |
 | **Server Verification** | **PASS** | HMAC SHA-256 signature verification implemented |
@@ -90,7 +90,7 @@ $$\text{Platform Accounting} = \sum \text{Seller Net Payable} + \sum \text{Selle
 | **Notifications** | **PASS** | Dispatches `ORDER_PLACED`, `PAYMENT_SUCCESS`, `REFUND` events |
 | **Audit Logging** | **PASS** | Append-only `audit_logs` entries for `PAYMENT_WEBHOOK_PROCESSED` |
 | **Sandbox Payment** | **PASS** | Verified sandbox flow with mock & test credentials |
-| **Production Credentials** | **PASS** | Environment variable secret resolution (`process.env.RAZORPAY_*`) |
+| **Production Credentials** | **PASS** | Environment variable secret resolution (`process.env.CASHFREE_*`) |
 | **Production Merchant Activation** | **PENDING** | Ready for live merchant production API keys |
 
 ---
@@ -102,4 +102,4 @@ $$\text{Platform Accounting} = \sum \text{Seller Net Payable} + \sum \text{Selle
 > **Justification**:
 > The Floria payment gateway architecture, server-authoritative amount integrity, HMAC SHA-256 webhook signature verification, dual-layer idempotency, multi-nursery ledger attribution, and administrative reconciliation are 100% complete, verified, and secure. 
 > 
-> Production activation is **APPROVED WITH EXTERNAL ACTIVATION PENDING** client placement of production merchant API keys (`RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`) in the hosting environment variables.
+> Production activation is **APPROVED WITH EXTERNAL ACTIVATION PENDING** client placement of production merchant API keys (`CASHFREE_CLIENT_ID`, `CASHFREE_CLIENT_SECRET`, `CASHFREE_WEBHOOK_SECRET`) in the hosting environment variables.

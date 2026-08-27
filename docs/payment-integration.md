@@ -19,7 +19,7 @@ export interface PaymentProvider {
 
 Active Implementations:
 - `CodPaymentProvider`: Manages Cash on Delivery transactions.
-- `RazorpayPaymentProvider`: Manages online card, UPI, netbanking, and wallet payments via Razorpay API.
+- `CashfreePaymentProvider`: Manages online card, UPI, netbanking, and wallet payments via Cashfree Payment Gateway API (`CASHFREE_CLIENT_ID` / `CASHFREE_CLIENT_SECRET`).
 
 ---
 
@@ -47,6 +47,6 @@ Order Fulfillment State Machine:
    - Prevents duplicate order placement or duplicate payment creation on network retries.
 
 2. **Webhook Security**:
-   - Webhooks verify HMAC-SHA256 signatures using server-stored secrets (`RAZORPAY_WEBHOOK_SECRET`).
+   - Webhooks verify HMAC-SHA256 signatures using server-stored secrets (`CASHFREE_WEBHOOK_SECRET`).
    - Webhook events are logged in `public.payment_events` with `provider_event_id` uniqueness constraints for deduplication.
    - Webhook amounts are strictly verified against expected order amounts before marking payment captured.
