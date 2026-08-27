@@ -134,21 +134,13 @@ export function ProductCard({
         {/* Price & Cart button row (Flipkart pricing style) */}
         <div className="mt-auto flex items-center justify-between pt-2 border-t border-stone-100">
           <div className="flex flex-col">
-            <div className="flex items-baseline gap-1.5 flex-wrap">
-              <span className="font-serif tracking-tight text-stone-900 text-sm sm:text-base font-bold">
-                {ProductPriceBlock ? (
-                  <ProductPriceBlock
-                    sellingPricePaise={sellingPricePaise}
-                    originalPricePaise={originalPricePaise}
-                    discountPercentage={discountPercent}
-                    size="sm"
-                    showSavings={false}
-                  />
-                ) : (
-                  `₹${(sellingPricePaise / 100).toFixed(0)}`
-                )}
-              </span>
-            </div>
+            <ProductPriceBlock
+              sellingPricePaise={sellingPricePaise}
+              originalPricePaise={originalPricePaise}
+              discountPercentage={discountPercent}
+              size="sm"
+              showSavings={false}
+            />
             {isFreeDelivery && (
               <span className="text-[10px] font-semibold text-emerald-700 font-ui mt-0.5">
                 Free delivery

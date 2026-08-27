@@ -37,6 +37,17 @@ export function FilterAndSortControls({
     router.push(queryStr ? `${pathname}?${queryStr}` : pathname);
   };
 
+  const toggleParam = (key: string, value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (params.get(key) === value) {
+      params.delete(key);
+    } else {
+      params.set(key, value);
+    }
+    const queryStr = params.toString();
+    router.push(queryStr ? `${pathname}?${queryStr}` : pathname);
+  };
+
   const removeFilter = (key: string) => {
     const params = new URLSearchParams(searchParams.toString());
     params.delete(key);
@@ -48,34 +59,84 @@ export function FilterAndSortControls({
   const nurseryName = activeNursery ? "Selected Nursery" : null;
 
   return (
-    <div className="space-y-3 mb-6">
-      {/* Status & Sort Controls Row */}
-      <div className="flex items-center justify-between pb-3 border-b border-floria-border text-xs text-ink-500 font-medium font-ui">
+    <div className="space-y-3 mb-5">
+      {/* Flipkart/Swiggy Horizontal Scroll Quick Filter Pills (Mobile Only) */}
+      <div className="md:hidden flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none font-ui">
+        <button
+          type="button"
+          onClick={() => setIsMobileDrawerOpen(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-forest-800 text-white font-bold text-xs rounded-full shadow-2xs flex-shrink-0 active:scale-95 transition-transform"
+        >
+          <span>Filters</span>
+          <span className="text-[10px] bg-white/20 px-1 rounded-full">⚡</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => toggleParam("inStock", "true")}
+          className={[
+            "px-3 py-1.5 text-xs font-semibold rounded-full border transition-all flex-shrink-0 whitespace-nowrap",
+            activeInStock
+              ? "bg-forest-100 text-forest-800 border-forest-300 font-bold"
+              : "bg-white text-stone-700 border-stone-200 hover:bg-stone-50",
+          ].join(" ")}
+        >
+          In Stock Only
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleSortChange(activeSort === "price-asc" ? "featured" : "price-asc")}
+          className={[
+            "px-3 py-1.5 text-xs font-semibold rounded-full border transition-all flex-shrink-0 whitespace-nowrap",
+            activeSort === "price-asc"
+              ? "bg-forest-100 text-forest-800 border-forest-300 font-bold"
+              : "bg-white text-stone-700 border-stone-200 hover:bg-stone-50",
+          ].join(" ")}
+        >
+          Price: Low to High
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleSortChange(activeSort === "top-rated" ? "featured" : "top-rated")}
+          className={[
+            "px-3 py-1.5 text-xs font-semibold rounded-full border transition-all flex-shrink-0 whitespace-nowrap",
+            activeSort === "top-rated"
+              ? "bg-forest-100 text-forest-800 border-forest-300 font-bold"
+              : "bg-white text-stone-700 border-stone-200 hover:bg-stone-50",
+          ].join(" ")}
+        >
+          ★ Top Rated
+        </button>
+      </div>
+
+      {/* Main Status & Sort Controls Bar */}
+      <div className="flex items-center justify-between pb-3 border-b border-stone-200/80 text-xs text-stone-500 font-medium font-ui">
         <span>
-          Showing <strong className="text-ink-900 font-bold">{totalCount}</strong> {totalCount === 1 ? "product" : "products"}
+          Showing <strong className="text-stone-900 font-bold">{totalCount}</strong> {totalCount === 1 ? "product" : "products"}
         </span>
 
         <div className="flex items-center gap-3">
-          {/* Mobile Filter Trigger Button */}
+          {/* Desktop Filter Button (Fallback) */}
           <button
             type="button"
             onClick={() => setIsMobileDrawerOpen(true)}
-            className="md:hidden flex items-center gap-1.5 px-3 py-2 bg-forest-50 hover:bg-forest-100 border border-forest-200 text-forest-800 font-bold text-xs rounded-xl transition-all shadow-2xs active:scale-95 font-ui"
+            className="hidden md:hidden flex items-center gap-1.5 px-3 py-2 bg-stone-100 hover:bg-stone-200 text-stone-800 font-bold text-xs rounded-lg transition-all shadow-2xs active:scale-95 font-ui"
           >
-            <span>Filters &amp; Sort</span>
-            <span className="text-[10px] font-mono">⚡</span>
+            <span>Filters</span>
           </button>
 
           {/* Sort Dropdown */}
           <div className="flex items-center gap-2">
-            <label htmlFor="sort-select" className="text-ink-400 font-semibold hidden sm:inline text-xs">
+            <label htmlFor="sort-select" className="text-stone-500 font-semibold hidden sm:inline text-xs">
               Sort by:
             </label>
             <select
               id="sort-select"
               value={activeSort}
               onChange={(e) => handleSortChange(e.target.value)}
-              className="bg-floria-sand/70 border border-floria-border rounded-xl px-3.5 py-2 text-xs font-bold text-ink-900 focus:outline-none focus:ring-2 focus:ring-forest-800/20 focus:border-forest-700 cursor-pointer shadow-2xs hover:border-forest-400 transition-all font-ui"
+              className="bg-white border border-stone-200 rounded-lg px-3 py-1.5 text-xs font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-forest-800/20 focus:border-forest-700 cursor-pointer shadow-2xs hover:border-forest-400 transition-all font-ui"
             >
               <option value="featured">Featured / Recommended</option>
               <option value="top-rated">Top Rated</option>
@@ -88,27 +149,27 @@ export function FilterAndSortControls({
         </div>
       </div>
 
-      {/* Active Filter Pills */}
+      {/* Active Filter Badges */}
       {(nurseryName || activeMinPrice || activeMaxPrice || activeInStock || activeQuery) && (
-        <div className="flex flex-wrap items-center gap-2 pt-1 font-ui">
-          <span className="text-[10px] text-ink-400 font-bold uppercase tracking-wider">Active:</span>
+        <div className="flex flex-wrap items-center gap-1.5 pt-1 font-ui">
+          <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider">Active Filters:</span>
 
           {activeQuery && (
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-forest-800 bg-forest-100/90 px-2.5 py-1 rounded-full border border-forest-200/80 shadow-2xs">
-              Query: &quot;{activeQuery}&quot;
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-forest-800 bg-forest-50 px-2.5 py-0.5 rounded-full border border-forest-200/80 shadow-2xs">
+              &quot;{activeQuery}&quot;
               <button type="button" onClick={() => removeFilter("q")} className="hover:text-red-700 font-bold ml-0.5">✕</button>
             </span>
           )}
 
           {nurseryName && (
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-forest-800 bg-forest-100/90 px-2.5 py-1 rounded-full border border-forest-200/80 shadow-2xs">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-forest-800 bg-forest-50 px-2.5 py-0.5 rounded-full border border-forest-200/80 shadow-2xs">
               Nursery: {nurseryName}
               <button type="button" onClick={() => removeFilter("nursery")} className="hover:text-red-700 font-bold ml-0.5">✕</button>
             </span>
           )}
 
           {(activeMinPrice || activeMaxPrice) && (
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-forest-800 bg-forest-100/90 px-2.5 py-1 rounded-full border border-forest-200/80 shadow-2xs">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-forest-800 bg-forest-50 px-2.5 py-0.5 rounded-full border border-forest-200/80 shadow-2xs">
               Price: ₹{activeMinPrice || "0"} – ₹{activeMaxPrice || "Max"}
               <button
                 type="button"
@@ -124,7 +185,7 @@ export function FilterAndSortControls({
           )}
 
           {activeInStock && (
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-forest-800 bg-forest-100/90 px-2.5 py-1 rounded-full border border-forest-200/80 shadow-2xs">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-forest-800 bg-forest-50 px-2.5 py-0.5 rounded-full border border-forest-200/80 shadow-2xs">
               In Stock Only
               <button type="button" onClick={() => removeFilter("inStock")} className="hover:text-red-700 font-bold ml-0.5">✕</button>
             </span>
@@ -132,17 +193,20 @@ export function FilterAndSortControls({
         </div>
       )}
 
-      {/* Mobile Slide-Over Filter Drawer */}
+      {/* Swiggy/Flipkart Mobile Bottom Sheet Modal */}
       {isMobileDrawerOpen && (
-        <div className="fixed inset-0 z-50 flex justify-end bg-ink-900/40 backdrop-blur-sm md:hidden">
-          <div className="bg-floria-linen w-full max-w-xs h-full p-6 overflow-y-auto shadow-2xl flex flex-col justify-between border-l border-floria-border">
+        <div className="fixed inset-0 z-50 flex items-end bg-black/50 backdrop-blur-xs md:hidden">
+          <div className="bg-white w-full max-h-[85vh] rounded-t-2xl p-5 overflow-y-auto shadow-2xl flex flex-col justify-between border-t border-stone-200 animate-in slide-in-from-bottom duration-300">
+            {/* Drag Pill Handle */}
+            <div className="w-12 h-1.5 bg-stone-300 rounded-full mx-auto mb-3" />
+
             <div>
-              <div className="flex items-center justify-between pb-4 border-b border-floria-border mb-6">
-                <h3 className="font-serif text-lg font-bold text-ink-900">Filters &amp; Sort</h3>
+              <div className="flex items-center justify-between pb-3 border-b border-stone-100 mb-4">
+                <h3 className="font-serif text-base font-bold text-stone-900">Filters &amp; Sort</h3>
                 <button
                   type="button"
                   onClick={() => setIsMobileDrawerOpen(false)}
-                  className="text-ink-400 hover:text-ink-900 font-bold text-lg p-1"
+                  className="text-stone-400 hover:text-stone-900 font-bold text-base p-1"
                   aria-label="Close filters"
                 >
                   ✕
@@ -155,13 +219,13 @@ export function FilterAndSortControls({
               />
             </div>
 
-            <div className="pt-6 border-t border-floria-border mt-6">
+            <div className="pt-4 border-t border-stone-100 mt-5 sticky bottom-0 bg-white">
               <button
                 type="button"
                 onClick={() => setIsMobileDrawerOpen(false)}
-                className="w-full py-3 bg-forest-800 text-white font-bold text-xs uppercase rounded-xl"
+                className="w-full py-3 bg-forest-800 text-white font-bold text-xs uppercase rounded-xl shadow-md active:scale-98 transition-transform"
               >
-                Apply &amp; View Results
+                Apply Filters
               </button>
             </div>
           </div>
