@@ -61,13 +61,22 @@ function createApp() {
     app.get("/ready", async (_req, res) => {
         try {
             const db = (0, database_js_1.getAdminDb)();
-            const { error } = await db.from("categories").select("id").limit(1);
+            const { data, error } = await db.from("categories").select("id").limit(1);
             if (error)
                 throw error;
-            res.json({ status: "ready", database: "connected" });
+            res.json({
+                status: "ready",
+                database: "connected",
+                categoriesFound: data ? data.length : 0,
+            });
         }
         catch (err) {
-            res.status(503).json({ status: "unready", database: "disconnected" });
+            console.error("[Floria API /ready] Readiness probe check failed:", err);
+            res.status(503).json({
+                status: "unready",
+                database: "disconnected",
+                error: err?.message || String(err),
+            });
         }
     });
     // 4. Versioned API V1 Routes (/api/v1)

@@ -13,11 +13,16 @@ dotenv_1.default.config({
     path: path_1.default.resolve(process.cwd(), "../../apps/web/.env.local"),
 });
 function validateEnv() {
-    const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const isTest = process.env.NODE_ENV === "test" || process.env.VITEST === "true";
+    const url = process.env.SUPABASE_URL ||
+        process.env.NEXT_PUBLIC_SUPABASE_URL ||
+        (isTest ? "https://mock-test.supabase.co" : undefined);
     const anonKey = process.env.SUPABASE_ANON_KEY ||
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+        (isTest ? "test-mock-anon-key" : undefined);
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY ||
+        (isTest ? "test-mock-service-role-key" : undefined);
     const missing = [];
     if (!url)
         missing.push("SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL)");
@@ -25,10 +30,6 @@ function validateEnv() {
         missing.push("SUPABASE_ANON_KEY (or NEXT_PUBLIC_SUPABASE_ANON_KEY)");
     if (!serviceRoleKey)
         missing.push("SUPABASE_SERVICE_ROLE_KEY");
-    if ((process.env.NODE_ENV || "development") === "production" &&
-        !process.env.REDIS_URL) {
-        missing.push("REDIS_URL (required in production environment)");
-    }
     if (missing.length > 0) {
         const errorMsg = `[Floria API] Critical Environment Startup Error:\nMissing required production environment variables:\n- ${missing.join("\n- ")}\n\nServer process startup aborted for security integrity.`;
         console.error(errorMsg);
