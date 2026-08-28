@@ -113,13 +113,19 @@ jobs:
         run: pnpm --filter @floria/seller-web build
         env:
           NEXT_PUBLIC_API_URL: https://floria-api.onrender.com
+          NEXT_PUBLIC_SUPABASE_URL: https://mock-test.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: test-mock-anon-key
 
       - name: Build Admin Web Next.js App
         run: pnpm --filter @floria/admin-web build
         env:
           NEXT_PUBLIC_API_URL: https://floria-api.onrender.com
+          NEXT_PUBLIC_SUPABASE_URL: https://mock-test.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: test-mock-anon-key
 
       - name: Build Customer Web Next.js App
         run: pnpm --filter @floria/web build
         env:
           NEXT_PUBLIC_API_URL: https://floria-api.onrender.com
+          NEXT_PUBLIC_SUPABASE_URL: https://mock-test.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: test-mock-anon-key
