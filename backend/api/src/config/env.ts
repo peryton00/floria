@@ -19,12 +19,21 @@ export interface AppEnv {
 }
 
 function validateEnv(): AppEnv {
-  const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const isTest =
+    process.env.NODE_ENV === "test" || process.env.VITEST === "true";
+
+  const url =
+    process.env.SUPABASE_URL ||
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    (isTest ? "https://mock-test.supabase.co" : undefined);
   const anonKey =
     process.env.SUPABASE_ANON_KEY ||
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+    (isTest ? "test-mock-anon-key" : undefined);
+  const serviceRoleKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    (isTest ? "test-mock-service-role-key" : undefined);
 
   const missing: string[] = [];
   if (!url) missing.push("SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL)");
