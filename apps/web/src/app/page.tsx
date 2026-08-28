@@ -45,13 +45,26 @@ async function fetchRankedNurseries(): Promise<NurserySummary[]> {
   }
 }
 
+import { redirect } from "next/navigation";
 import {
   FadeUp,
   AnimatedSection,
   BotanicalAmbient,
 } from "@/components/ui/motion";
 
-export default async function HomePage() {
+interface HomePageProps {
+  searchParams?: Promise<{ code?: string; next?: string }>;
+}
+
+export default async function HomePage(props: HomePageProps) {
+  const params = props.searchParams ? await props.searchParams : undefined;
+  if (params?.code) {
+    const next = params.next || "/";
+    redirect(
+      `/auth/callback?code=${encodeURIComponent(params.code)}&next=${encodeURIComponent(next)}`,
+    );
+  }
+
   const [allListings, nurseries, categories] = await Promise.all([
     getProductListings(),
     fetchRankedNurseries(),

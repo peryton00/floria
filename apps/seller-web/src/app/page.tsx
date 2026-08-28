@@ -1,14 +1,22 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSellerAuth } from "@/lib/contexts/SellerAuthContext";
 
-export default function SellerHomePage() {
+function SellerHomePageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { authState, isAuthenticated } = useSellerAuth();
 
   useEffect(() => {
+    const code = searchParams.get("code");
+    if (code) {
+      const next = searchParams.get("next") || "/dashboard";
+      router.replace(`/auth/callback?code=${encodeURIComponent(code)}&next=${encodeURIComponent(next)}`);
+      return;
+    }
+
     if (authState === "AUTHENTICATED" && isAuthenticated) {
       router.replace("/dashboard");
     } else if (
@@ -17,7 +25,7 @@ export default function SellerHomePage() {
     ) {
       router.replace("/login");
     }
-  }, [authState, isAuthenticated, router]);
+  }, [authState, isAuthenticated, router, searchParams]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-cream-100">
@@ -28,5 +36,19 @@ export default function SellerHomePage() {
         </span>
       </div>
     </div>
+  );
+}
+
+export default function SellerHomePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-cream-100">
+          <div className="w-8 h-8 border-2 border-forest-800 border-t-transparent rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <SellerHomePageContent />
+    </Suspense>
   );
 }

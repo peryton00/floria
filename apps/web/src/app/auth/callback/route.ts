@@ -104,11 +104,17 @@ export async function GET(req: NextRequest) {
 
     if (redirectPath === "/" || !redirectPath.startsWith("/")) {
       if (role === "admin" || role === "super_admin") {
-        redirectPath = "/admin/dashboard";
+        const adminBase =
+          process.env.NEXT_PUBLIC_ADMIN_URL ||
+          "https://floria-admin-web.vercel.app";
+        return NextResponse.redirect(new URL("/dashboard", adminBase));
       } else if (role === "operations") {
         redirectPath = "/operations";
       } else if (role === "seller") {
-        redirectPath = "/seller/dashboard";
+        const sellerBase =
+          process.env.NEXT_PUBLIC_SELLER_URL ||
+          "https://floria-seller-web.vercel.app";
+        return NextResponse.redirect(new URL("/dashboard", sellerBase));
       } else {
         redirectPath = "/";
       }
