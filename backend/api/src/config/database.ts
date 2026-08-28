@@ -1,6 +1,12 @@
 // Floria API — Server-Only Supabase Database Connection
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import WebSocket from "ws";
 import { getEnv } from "./env.js";
+
+// Ensure native WebSocket polyfill is available for @supabase/supabase-js in Node < 22
+if (typeof globalThis.WebSocket === "undefined") {
+  (globalThis as any).WebSocket = WebSocket;
+}
 
 let adminClient: SupabaseClient | null = null;
 let anonClient: SupabaseClient | null = null;
