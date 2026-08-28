@@ -83,7 +83,7 @@ export default function AdminAuditLogsPage() {
                     <td className="py-3.5 px-4 font-semibold text-ink-800">
                       <div>
                         {l.user_id
-                          ? `${l.user_id.substring(0, 8)}...`
+                          ? `${String(l.user_id).substring(0, 8)}...`
                           : "System"}
                       </div>
                       <div className="text-[10px] text-ink-400 uppercase">
@@ -92,7 +92,7 @@ export default function AdminAuditLogsPage() {
                     </td>
                     <td className="py-3.5 px-4 text-ink-700">
                       {l.entity_type}{" "}
-                      {l.entity_id ? `(${l.entity_id.substring(0, 8)})` : ""}
+                      {l.entity_id ? `(${String(l.entity_id).substring(0, 8)})` : ""}
                     </td>
                     <td className="py-3.5 px-4 font-mono text-[11px] text-ink-600 truncate max-w-xs">
                       {l.metadata ? JSON.stringify(l.metadata) : "—"}

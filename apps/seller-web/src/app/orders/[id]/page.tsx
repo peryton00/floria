@@ -117,7 +117,7 @@ export default function SellerOrderDetailPage({
         </Link>
         <div>
           <h1 className="font-serif text-2xl font-bold text-ink-900">
-            Fulfill Order #{orderId.substring(0, 8)}
+            Fulfill Order #{typeof orderId === "string" ? orderId.substring(0, 8) : String(orderId || "Details")}
           </h1>
           <p className="text-xs text-ink-500">
             Placed on {formatDate(order.created_at)}

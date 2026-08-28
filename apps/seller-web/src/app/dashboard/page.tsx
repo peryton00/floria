@@ -266,33 +266,38 @@ export default function SellerDashboardPage() {
 
           {recentOrders && recentOrders.length > 0 ? (
             <div className="divide-y divide-cream-300">
-              {recentOrders.slice(0, 5).map((ord: any) => (
-                <div
-                  key={ord.id}
-                  className="py-3 flex items-center justify-between gap-3"
-                >
-                  <div>
-                    <div className="text-xs font-bold text-ink-900">
-                      Order #{ord.order_id || ord.id.substring(0, 8)}
+              {recentOrders.slice(0, 5).map((ord: any, index: number) => {
+                const orderId = ord.order_id || ord.id || `ORD-${index + 1}`;
+                const shortId = typeof orderId === "string" ? orderId.substring(0, 8) : String(orderId);
+
+                return (
+                  <div
+                    key={ord.id || ord.order_id || index}
+                    className="py-3 flex items-center justify-between gap-3"
+                  >
+                    <div>
+                      <div className="text-xs font-bold text-ink-900">
+                        Order #{shortId}
+                      </div>
+                      <div className="text-[11px] text-ink-500">
+                        {ord.customer_name || "Customer"} •{" "}
+                        {formatINR(ord.subtotal_paise || ord.total_paise || 0)}
+                      </div>
                     </div>
-                    <div className="text-[11px] text-ink-500">
-                      {ord.customer_name || "Customer"} •{" "}
-                      {formatINR(ord.subtotal_paise || ord.total_paise || 0)}
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-cream-200 text-ink-700">
+                        {ord.status}
+                      </span>
+                      <Link
+                        href={`/orders/${orderId}`}
+                        className="p-1.5 hover:bg-cream-200 rounded-lg text-forest-800"
+                      >
+                        <ArrowRightIcon size={14} />
+                      </Link>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-cream-200 text-ink-700">
-                      {ord.status}
-                    </span>
-                    <Link
-                      href={`/orders/${ord.order_id || ord.id}`}
-                      className="p-1.5 hover:bg-cream-200 rounded-lg text-forest-800"
-                    >
-                      <ArrowRightIcon size={14} />
-                    </Link>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-8 text-ink-500 text-xs">

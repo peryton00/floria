@@ -170,7 +170,7 @@ export default function SellerEarningsPage() {
                     </td>
                     <td className="py-3.5 px-4 font-mono text-[11px] text-ink-500">
                       {tx.reference_id || tx.order_id
-                        ? `#${(tx.reference_id || tx.order_id).substring(0, 8)}`
+                        ? `#${String(tx.reference_id || tx.order_id).substring(0, 8)}`
                         : "—"}
                     </td>
                     <td className="py-3.5 px-4 text-right font-bold text-ink-900">

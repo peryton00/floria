@@ -182,13 +182,13 @@ export default function SellerOrdersPage() {
       {/* Orders List */}
       <div className="space-y-4">
         {filteredOrders.length > 0 ? (
-          filteredOrders.map((ord) => {
-            const orderId = ord.order_id || ord.id;
-            const shortId = orderId.substring(0, 8);
+          filteredOrders.map((ord, index) => {
+            const orderId = ord.order_id || ord.id || `ORD-${index + 1}`;
+            const shortId = typeof orderId === "string" ? orderId.substring(0, 8) : String(orderId);
 
             return (
               <div
-                key={ord.id}
+                key={ord.id || ord.order_id || index}
                 className="bg-cream-50 border border-cream-300 rounded-2xl p-5 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4 hover:border-forest-700/40 transition-all"
               >
                 <div className="space-y-2">

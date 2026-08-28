@@ -108,7 +108,7 @@ export default function AdminOrdersPage() {
                   >
                     <td className="py-3.5 px-4">
                       <div className="font-mono font-bold text-ink-900">
-                        {o.id.substring(0, 8)}...
+                        {o.id ? `${String(o.id).substring(0, 8)}...` : "—"}
                       </div>
                       <div className="text-[10px] text-ink-500">
                         {formatDate(o.created_at)}

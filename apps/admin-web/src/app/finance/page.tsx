@@ -126,7 +126,7 @@ export default function AdminFinancePage() {
                     className="hover:bg-cream-100/60 transition-colors"
                   >
                     <td className="py-3.5 px-4 font-mono font-bold text-ink-900">
-                      {t.id.substring(0, 8)}...
+                      {t.id ? `${String(t.id).substring(0, 8)}...` : "—"}
                     </td>
                     <td className="py-3.5 px-4 font-semibold text-ink-800 uppercase">
                       {t.type || "CAPTURE"}

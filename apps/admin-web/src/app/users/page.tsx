@@ -142,7 +142,7 @@ export default function AdminUsersPage() {
                         {u.full_name || u.name || "Customer"}
                       </div>
                       <div className="text-[10px] text-ink-400 font-mono">
-                        ID: {u.id.substring(0, 8)}
+                        ID: {u.id ? `${String(u.id).substring(0, 8)}` : "—"}
                       </div>
                     </td>
                     <td className="py-3.5 px-4 font-semibold text-ink-800">

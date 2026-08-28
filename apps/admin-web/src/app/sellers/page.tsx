@@ -224,7 +224,7 @@ export default function AdminSellersPage() {
                         {s.business_name || "New Nursery"}
                       </div>
                       <div className="text-[10px] text-ink-500 font-mono">
-                        ID: {s.id.substring(0, 8)}
+                        ID: {s.id ? `${String(s.id).substring(0, 8)}` : "—"}
                       </div>
                     </td>
                     <td className="py-3.5 px-4">

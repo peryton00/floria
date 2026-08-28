@@ -75,7 +75,7 @@ export default function AdminOperationsPage() {
                     className="hover:bg-cream-100/60 transition-colors"
                   >
                     <td className="py-3.5 px-4 font-mono font-bold text-ink-900">
-                      {d.id.substring(0, 8)}...
+                      {d.id ? `${String(d.id).substring(0, 8)}...` : "—"}
                     </td>
                     <td className="py-3.5 px-4 font-semibold text-ink-800">
                       {d.courier_name || d.courier_id || "Unassigned"}
