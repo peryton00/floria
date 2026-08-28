@@ -1,5 +1,6 @@
 // Floria API — Server-Only Supabase Database Connection
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
+// @ts-ignore
 import WebSocket from "ws";
 import { getEnv } from "./env.js";
 
