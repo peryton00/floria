@@ -40,12 +40,6 @@ function validateEnv(): AppEnv {
   if (!anonKey)
     missing.push("SUPABASE_ANON_KEY (or NEXT_PUBLIC_SUPABASE_ANON_KEY)");
   if (!serviceRoleKey) missing.push("SUPABASE_SERVICE_ROLE_KEY");
-  if (
-    (process.env.NODE_ENV || "development") === "production" &&
-    !process.env.REDIS_URL
-  ) {
-    missing.push("REDIS_URL (required in production environment)");
-  }
 
   if (missing.length > 0) {
     const errorMsg = `[Floria API] Critical Environment Startup Error:\nMissing required production environment variables:\n- ${missing.join("\n- ")}\n\nServer process startup aborted for security integrity.`;

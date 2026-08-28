@@ -63,11 +63,20 @@ export function createApp() {
   app.get("/ready", async (_req, res) => {
     try {
       const db = getAdminDb();
-      const { error } = await db.from("categories").select("id").limit(1);
+      const { data, error } = await db.from("categories").select("id").limit(1);
       if (error) throw error;
-      res.json({ status: "ready", database: "connected" });
-    } catch (err) {
-      res.status(503).json({ status: "unready", database: "disconnected" });
+      res.json({
+        status: "ready",
+        database: "connected",
+        categoriesFound: data ? data.length : 0,
+      });
+    } catch (err: any) {
+      console.error("[Floria API /ready] Readiness probe check failed:", err);
+      res.status(503).json({
+        status: "unready",
+        database: "disconnected",
+        error: err?.message || String(err),
+      });
     }
   });
 
