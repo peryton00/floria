@@ -1,14 +1,19 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ToastProvider } from "@/lib/contexts/ToastContext";
-import { SellerAuthProvider } from "@/lib/contexts/SellerAuthContext";
+import { SellerProvider } from "@/lib/contexts/SellerContext";
 import { SellerProductProvider } from "@/lib/contexts/SellerProductContext";
 import { SellerShell } from "@/components/seller/SellerShell";
 
 export const metadata: Metadata = {
-  title: "Floria Seller Portal — Nursery Store & Order Management",
+  title: "Floria Seller Cockpit — Nursery & Partner Portal",
   description:
-    "Manage your nursery store, products, inventory, and order fulfillment on Floria.",
+    "Floria Nursery Partner Portal — Manage catalog listings, orders queue, earnings ledger, and logistics fulfillment.",
+  icons: {
+    icon: "/floria-logo.png",
+    shortcut: "/floria-logo.png",
+    apple: "/floria-logo.png",
+  },
 };
 
 export default function RootLayout({
@@ -18,13 +23,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <link rel="icon" href="/floria-logo.png" type="image/png" />
+      </head>
       <body className="bg-cream-100 text-ink-900 antialiased font-sans">
         <ToastProvider>
-          <SellerAuthProvider>
+          <SellerProvider>
             <SellerProductProvider>
               <SellerShell>{children}</SellerShell>
             </SellerProductProvider>
-          </SellerAuthProvider>
+          </SellerProvider>
         </ToastProvider>
       </body>
     </html>

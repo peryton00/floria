@@ -1,30 +1,30 @@
-// Floria — Standard Currency & Date Formatting Utilities for Admin
+/** Pure formatting utilities — no business calculation logic. */
 
 export function formatINR(paise: number): string {
-  const rupees = Math.round(paise / 100);
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
     maximumFractionDigits: 0,
-  }).format(rupees);
+  }).format((paise || 0) / 100);
 }
 
 export function paiseToRupees(paise: number): number {
-  return Math.round(paise / 100);
+  return (paise || 0) / 100;
 }
 
 export function rupeesToPaise(rupees: number): number {
-  return Math.round(rupees * 100);
+  return Math.round((rupees || 0) * 100);
 }
 
-export function formatDate(isoDate: string | null | undefined): string {
-  if (!isoDate) return "—";
+export function formatDate(dateStr: string | Date | null | undefined): string {
+  if (!dateStr) return "—";
   try {
     return new Intl.DateTimeFormat("en-IN", {
-      dateStyle: "medium",
-      timeStyle: "short",
-    }).format(new Date(isoDate));
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    }).format(new Date(dateStr));
   } catch {
-    return isoDate;
+    return String(dateStr);
   }
 }

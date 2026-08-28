@@ -9,8 +9,8 @@ interface GoogleOAuthButtonProps {
 }
 
 export function GoogleOAuthButton({
-  label = "Sign in with Google",
-  redirectTo = "/dashboard",
+  label = "Continue with Google",
+  redirectTo,
 }: GoogleOAuthButtonProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +49,7 @@ export function GoogleOAuthButton({
   return (
     <div className="w-full space-y-2">
       {error && (
-        <div className="p-3 bg-red-500/20 border border-red-500/40 rounded-xl text-xs text-red-200 text-center font-medium">
+        <div className="p-3 bg-error-50 border border-error-100 rounded-xl text-xs text-error-700 text-center">
           {error}
         </div>
       )}
@@ -58,11 +58,11 @@ export function GoogleOAuthButton({
         type="button"
         disabled={loading}
         onClick={handleGoogleSignIn}
-        className="w-full h-11 px-4 py-2.5 bg-white/10 hover:bg-white/15 active:bg-white/20 text-white border border-white/20 hover:border-white/30 font-bold text-xs uppercase tracking-wider rounded-xl shadow-xs flex items-center justify-center gap-3 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-400 disabled:opacity-50 min-h-[44px] cursor-pointer"
+        className="w-full h-11 px-4 py-2.5 bg-white hover:bg-cream-50 active:bg-cream-100 text-ink-900 border border-ink-200 hover:border-ink-300 font-bold text-xs uppercase tracking-wider rounded-xl shadow-2xs flex items-center justify-center gap-3 transition-colors focus:outline-none focus:ring-2 focus:ring-forest-700 disabled:opacity-50 min-h-[44px]"
         aria-label={label}
       >
         {loading ? (
-          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          <div className="w-4 h-4 border-2 border-ink-600 border-t-transparent rounded-full animate-spin" />
         ) : (
           <svg
             width="18"

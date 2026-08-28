@@ -1,5 +1,5 @@
-// Floria Seller Web — Configured Universal Typed API Client Instance
-// Injects the current Supabase Auth access_token into Authorization: Bearer header.
+// Floria Web App — Configured API Client Instance
+// Automatically injects the Supabase Auth access_token into Authorization: Bearer header.
 import { FloriaApiClient } from "@floria/api-client";
 import { getSupabaseBrowserClient } from "./supabase/browser";
 
@@ -27,4 +27,8 @@ export type {
   NotificationListResponse,
   SellerDocument,
   SellerNotificationSettings,
+  ProductReview,
+  ReviewSummary,
+  ReviewListResponse,
+  NurserySummary,
 } from "@floria/api-client";

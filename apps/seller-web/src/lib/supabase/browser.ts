@@ -1,6 +1,9 @@
-// Floria Seller Web — Supabase browser client (client components)
+// Floria — Supabase browser client (client components)
+// Uses @supabase/ssr for cookie-based session handling.
+
 import { createBrowserClient } from "@supabase/ssr";
 
+// ponytail: module-level singleton — one client per browser tab
 let _client: ReturnType<typeof createBrowserClient> | undefined;
 
 export function getSupabaseBrowserClient() {
@@ -13,7 +16,7 @@ export function getSupabaseBrowserClient() {
 
   if (!url || !key) {
     throw new Error(
-      "[Floria Seller Web] Supabase environment variables missing (NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY).",
+      "[Floria] Supabase env vars missing. Copy .env.example to .env.local.",
     );
   }
 

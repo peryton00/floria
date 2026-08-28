@@ -1,4 +1,6 @@
-// Floria Seller Web — Supabase server client (Server Components, Route Handlers, Middleware)
+// Floria — Supabase server client (Server Components, Route Handlers, Middleware)
+// Uses @supabase/ssr with Next.js cookies() for session handling.
+
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
@@ -10,7 +12,7 @@ export async function getSupabaseServerClient() {
 
   if (!url || !key) {
     throw new Error(
-      "[Floria Seller Web] Supabase environment variables missing (NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY).",
+      "[Floria] Supabase env vars missing. Copy .env.example to .env.local.",
     );
   }
 
@@ -37,9 +39,28 @@ export async function getSupabaseServerClient() {
             );
           });
         } catch {
-          // setAll called from Server Component — safe to ignore here.
+          // setAll called from Server Component — cookies can only be set in
+          // middleware or Route Handlers; safe to ignore here.
         }
       },
     },
+  });
+}
+
+/** Service-role client — ONLY for trusted server operations.
+ *  Never expose this client or its key to the browser. */
+export async function getSupabaseServiceClient() {
+  const url = process.env["NEXT_PUBLIC_SUPABASE_URL"];
+  const serviceKey = process.env["SUPABASE_SERVICE_ROLE_KEY"];
+
+  if (!url || !serviceKey) {
+    throw new Error(
+      "[Floria] SUPABASE_SERVICE_ROLE_KEY missing. Required for service-role operations.",
+    );
+  }
+
+  const { createClient } = await import("@supabase/supabase-js");
+  return createClient(url, serviceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
   });
 }

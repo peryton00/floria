@@ -8,6 +8,14 @@ const nextConfig: NextConfig = {
   experimental: {
     externalDir: true,
   },
+  async rewrites() {
+    return [
+      {
+        source: "/seller/:path*",
+        destination: "/:path*",
+      },
+    ];
+  },
 };
 
 export default nextConfig;
