@@ -7,7 +7,10 @@ import { CustomerShell } from "@/components/layout/CustomerShell";
 import { useOrders } from "@/lib/contexts/OrderContext";
 import { useWishlist } from "@/lib/contexts/WishlistContext";
 import { AddressModal, AddressItem } from "@/components/ui/AddressModal";
-import { ProfileEditModal, UserProfile } from "@/components/ui/ProfileEditModal";
+import {
+  ProfileEditModal,
+  UserProfile,
+} from "@/components/ui/ProfileEditModal";
 import { useCustomer } from "@/lib/contexts/CustomerContext";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { GoogleOAuthButton } from "@/components/auth/GoogleOAuthButton";
@@ -41,7 +44,9 @@ export default function AccountPage() {
 
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
-  const [editingAddress, setEditingAddress] = useState<AddressItem | null>(null);
+  const [editingAddress, setEditingAddress] = useState<AddressItem | null>(
+    null,
+  );
 
   // Reviews State
   const [myReviews, setMyReviews] = useState<any[]>([]);
@@ -52,7 +57,10 @@ export default function AccountPage() {
   const [savingReview, setSavingReview] = useState(false);
 
   // Toast / Feedback State
-  const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [feedback, setFeedback] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
 
   // Settings State (Notification & Marketing)
   const [settings, setSettings] = useState({
@@ -75,7 +83,9 @@ export default function AccountPage() {
     async function checkProvider() {
       try {
         const supabase = getSupabaseBrowserClient();
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         if (session?.user) {
           const provider =
             session.user.app_metadata?.provider ||
@@ -182,7 +192,10 @@ export default function AccountPage() {
     } catch (e) {
       console.error("Failed to save settings", e);
     }
-    showToast("success", `${key === "orderAlerts" ? "Order Updates" : "Offers & Tips"} preference saved.`);
+    showToast(
+      "success",
+      `${key === "orderAlerts" ? "Order Updates" : "Offers & Tips"} preference saved.`,
+    );
   };
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
@@ -202,7 +215,9 @@ export default function AccountPage() {
     try {
       setUpdatingPassword(true);
       const supabase = getSupabaseBrowserClient();
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
 
       if (error) {
         setPasswordError(error.message || "Failed to update password.");
@@ -210,7 +225,10 @@ export default function AccountPage() {
         setShowPasswordModal(false);
         setNewPassword("");
         setConfirmPassword("");
-        showToast("success", "Password updated successfully in Supabase Security Vault.");
+        showToast(
+          "success",
+          "Password updated successfully in Supabase Security Vault.",
+        );
       }
     } catch (err: any) {
       setPasswordError(err.message || "Could not connect to security service.");
@@ -238,7 +256,9 @@ export default function AccountPage() {
         setShowDeleteAccountModal(false);
         router.push("/login?message=account_deleted");
       } else {
-        setDeleteError(res.error?.message || "Failed to delete account records.");
+        setDeleteError(
+          res.error?.message || "Failed to delete account records.",
+        );
       }
     } catch (err: any) {
       setDeleteError(err.message || "Error communicating with server.");
@@ -288,16 +308,22 @@ export default function AccountPage() {
             <UserIcon size={32} />
           </div>
           <div>
-            <h1 className="font-serif text-2xl font-bold text-ink-900 mb-1">Sign in to Access Your Account</h1>
-            <p className="text-xs text-ink-500">View orders, manage delivery addresses, and save favorite plants.</p>
+            <h1 className="font-serif text-2xl font-bold text-ink-900 mb-1">
+              Sign in to Access Your Account
+            </h1>
+            <p className="text-xs text-ink-500">
+              View orders, manage delivery addresses, and save favorite plants.
+            </p>
           </div>
 
           <div className="space-y-3">
             <GoogleOAuthButton label="Sign in with Google" />
-            
+
             <div className="relative flex py-1 items-center">
               <div className="flex-grow border-t border-floria-border"></div>
-              <span className="flex-shrink mx-4 text-[10px] font-bold text-ink-400 uppercase tracking-widest">or</span>
+              <span className="flex-shrink mx-4 text-[10px] font-bold text-ink-400 uppercase tracking-widest">
+                or
+              </span>
               <div className="flex-grow border-t border-floria-border"></div>
             </div>
 
@@ -324,32 +350,54 @@ export default function AccountPage() {
     <CustomerShell>
       {/* Toast Feedback Notification */}
       {feedback && (
-        <div className={`fixed top-4 right-4 z-50 p-4 rounded-xl border shadow-lg text-xs font-bold flex items-center gap-2 transition-all ${
-          feedback.type === "success" ? "bg-success-50 border-success-200 text-success-800" : "bg-error-50 border-error-200 text-error-800"
-        }`}>
-          {feedback.type === "success" ? <CheckIcon size={16} /> : <AlertIcon size={16} />}
+        <div
+          className={`fixed top-4 right-4 z-50 p-4 rounded-xl border shadow-lg text-xs font-bold flex items-center gap-2 transition-all ${
+            feedback.type === "success"
+              ? "bg-success-50 border-success-200 text-success-800"
+              : "bg-error-50 border-error-200 text-error-800"
+          }`}
+        >
+          {feedback.type === "success" ? (
+            <CheckIcon size={16} />
+          ) : (
+            <AlertIcon size={16} />
+          )}
           <span>{feedback.message}</span>
         </div>
       )}
 
       {/* Breadcrumb */}
-      <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-ink-400 mb-6">
-        <Link href="/" className="hover:text-forest-700 transition-colors">Home</Link>
-        <span aria-hidden="true" className="select-none text-ink-300">/</span>
+      <nav
+        aria-label="Breadcrumb"
+        className="flex items-center gap-2 text-xs text-ink-400 mb-6"
+      >
+        <Link href="/" className="hover:text-forest-700 transition-colors">
+          Home
+        </Link>
+        <span aria-hidden="true" className="select-none text-ink-300">
+          /
+        </span>
         <span className="text-ink-700 font-medium">My Account</span>
       </nav>
 
       {/* Page Title */}
-      <h1 className="font-serif text-3xl font-bold text-ink-900 mb-6">My Account</h1>
+      <h1 className="font-serif text-3xl font-bold text-ink-900 mb-6">
+        My Account
+      </h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8 items-start">
         {/* ── LEFT COLUMN: Profile, Addresses, Orders & Wishlist Shortcuts ──── */}
         <div className="space-y-6">
-
           {/* 1. PERSONAL INFORMATION CARD */}
-          <section aria-labelledby="section-profile" className="bg-floria-linen rounded-2xl border border-floria-border p-6 shadow-sm space-y-4">
+          <section
+            aria-labelledby="section-profile"
+            className="bg-floria-linen rounded-2xl border border-floria-border p-6 shadow-sm space-y-4"
+          >
             <div className="flex items-center justify-between pb-4 border-b border-floria-border">
-              <h2 id="section-profile" className="font-serif text-lg font-bold text-ink-900">
+              <h2
+                id="section-profile"
+                className="font-serif text-lg font-bold text-ink-900"
+              >
                 Personal Information
               </h2>
               <button
@@ -384,8 +432,12 @@ export default function AccountPage() {
               <div className="pt-2">
                 <div className="p-4 bg-forest-900 text-white rounded-xl shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-forest-800">
                   <div>
-                    <p className="font-serif font-bold text-sm">Seller Partner Portal</p>
-                    <p className="text-xs text-forest-200">Manage your nursery inventory, products &amp; orders</p>
+                    <p className="font-serif font-bold text-sm">
+                      Seller Partner Portal
+                    </p>
+                    <p className="text-xs text-forest-200">
+                      Manage your nursery inventory, products &amp; orders
+                    </p>
                   </div>
                   <Link
                     href="/seller/dashboard"
@@ -401,8 +453,13 @@ export default function AccountPage() {
               <div className="pt-2">
                 <div className="p-4 bg-ink-900 text-white rounded-xl shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-ink-800">
                   <div>
-                    <p className="font-serif font-bold text-sm">Platform Admin Console</p>
-                    <p className="text-xs text-ink-300">Access seller approvals, catalog, settings &amp; audit logs</p>
+                    <p className="font-serif font-bold text-sm">
+                      Platform Admin Console
+                    </p>
+                    <p className="text-xs text-ink-300">
+                      Access seller approvals, catalog, settings &amp; audit
+                      logs
+                    </p>
                   </div>
                   <Link
                     href="/admin/dashboard"
@@ -418,8 +475,12 @@ export default function AccountPage() {
               <div className="pt-2">
                 <div className="p-4 bg-forest-800 text-white rounded-xl shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-forest-700">
                   <div>
-                    <p className="font-serif font-bold text-sm">Operations &amp; Delivery Portal</p>
-                    <p className="text-xs text-forest-200">Manage order pickup, packing &amp; delivery assignments</p>
+                    <p className="font-serif font-bold text-sm">
+                      Operations &amp; Delivery Portal
+                    </p>
+                    <p className="text-xs text-forest-200">
+                      Manage order pickup, packing &amp; delivery assignments
+                    </p>
                   </div>
                   <Link
                     href="/operations"
@@ -444,9 +505,15 @@ export default function AccountPage() {
           </section>
 
           {/* 2. SAVED ADDRESSES SECTION (Shared with Checkout) */}
-          <section aria-labelledby="section-addresses" className="bg-floria-linen rounded-2xl border border-floria-border p-6 shadow-sm">
+          <section
+            aria-labelledby="section-addresses"
+            className="bg-floria-linen rounded-2xl border border-floria-border p-6 shadow-sm"
+          >
             <div className="flex items-center justify-between pb-4 border-b border-floria-border mb-4">
-              <h2 id="section-addresses" className="font-serif text-lg font-bold text-ink-900">
+              <h2
+                id="section-addresses"
+                className="font-serif text-lg font-bold text-ink-900"
+              >
                 Saved Delivery Addresses ({addresses.length})
               </h2>
               <button
@@ -463,8 +530,12 @@ export default function AccountPage() {
 
             {addresses.length === 0 ? (
               <div className="p-6 text-center bg-floria-soft-sand rounded-xl border border-dashed border-floria-border space-y-2">
-                <p className="text-xs font-bold text-ink-700">No saved delivery addresses</p>
-                <p className="text-[11px] text-ink-400">Add an address to speed up your checkout process.</p>
+                <p className="text-xs font-bold text-ink-700">
+                  No saved delivery addresses
+                </p>
+                <p className="text-[11px] text-ink-400">
+                  Add an address to speed up your checkout process.
+                </p>
                 <button
                   type="button"
                   onClick={() => {
@@ -486,7 +557,9 @@ export default function AccountPage() {
                   >
                     <div className="flex items-start justify-between gap-2 mb-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-sans text-sm font-bold text-ink-900">{addr.full_name}</span>
+                        <span className="font-sans text-sm font-bold text-ink-900">
+                          {addr.full_name}
+                        </span>
                         {addr.is_default && (
                           <span className="text-[10px] font-bold text-forest-800 bg-forest-100 px-1.5 py-0.5 rounded uppercase">
                             Default
@@ -525,9 +598,19 @@ export default function AccountPage() {
                     </div>
 
                     <div className="text-xs text-ink-600 space-y-0.5">
-                      <p>{addr.line1}{addr.line2 ? `, ${addr.line2}` : ""}</p>
-                      <p>{addr.city}, {addr.state} - <span className="font-semibold text-ink-800">{addr.pincode}</span></p>
-                      <p className="text-ink-500 font-medium">Phone: {addr.phone}</p>
+                      <p>
+                        {addr.line1}
+                        {addr.line2 ? `, ${addr.line2}` : ""}
+                      </p>
+                      <p>
+                        {addr.city}, {addr.state} -{" "}
+                        <span className="font-semibold text-ink-800">
+                          {addr.pincode}
+                        </span>
+                      </p>
+                      <p className="text-ink-500 font-medium">
+                        Phone: {addr.phone}
+                      </p>
                     </div>
                   </div>
                 ))}
@@ -548,9 +631,12 @@ export default function AccountPage() {
                     {orders.length} {orders.length === 1 ? "Order" : "Orders"}
                   </span>
                 </div>
-                <h3 className="font-serif font-bold text-ink-900 text-base">My Orders</h3>
+                <h3 className="font-serif font-bold text-ink-900 text-base">
+                  My Orders
+                </h3>
                 <p className="text-xs text-ink-500 leading-relaxed">
-                  View your order history, track live deliveries, and check nursery status updates.
+                  View your order history, track live deliveries, and check
+                  nursery status updates.
                 </p>
               </div>
               <Link
@@ -572,9 +658,12 @@ export default function AccountPage() {
                     {wishlistItems.length} Saved
                   </span>
                 </div>
-                <h3 className="font-serif font-bold text-ink-900 text-base">Wishlist</h3>
+                <h3 className="font-serif font-bold text-ink-900 text-base">
+                  Wishlist
+                </h3>
                 <p className="text-xs text-ink-500 leading-relaxed">
-                  Access your saved favorite plants and move items to your cart anytime.
+                  Access your saved favorite plants and move items to your cart
+                  anytime.
                 </p>
               </div>
               <Link
@@ -587,22 +676,36 @@ export default function AccountPage() {
           </div>
 
           {/* 4. MY PRODUCT REVIEWS SECTION (Edit Reviews from Account) */}
-          <section aria-labelledby="section-reviews" className="bg-floria-linen rounded-2xl border border-floria-border p-6 shadow-sm">
+          <section
+            aria-labelledby="section-reviews"
+            className="bg-floria-linen rounded-2xl border border-floria-border p-6 shadow-sm"
+          >
             <div className="flex items-center justify-between pb-4 border-b border-floria-border mb-4">
-              <h2 id="section-reviews" className="font-serif text-lg font-bold text-ink-900">
+              <h2
+                id="section-reviews"
+                className="font-serif text-lg font-bold text-ink-900"
+              >
                 My Product Reviews &amp; Ratings ({myReviews.length})
               </h2>
             </div>
 
             {myReviews.length === 0 ? (
               <div className="p-5 text-center bg-floria-soft-sand rounded-xl border border-dashed border-floria-border space-y-1 font-ui">
-                <p className="text-xs font-bold text-ink-700">No product reviews yet</p>
-                <p className="text-[11px] text-ink-400">Reviews for delivered products will appear here. You can edit them anytime.</p>
+                <p className="text-xs font-bold text-ink-700">
+                  No product reviews yet
+                </p>
+                <p className="text-[11px] text-ink-400">
+                  Reviews for delivered products will appear here. You can edit
+                  them anytime.
+                </p>
               </div>
             ) : (
               <div className="space-y-3">
                 {myReviews.map((rev) => (
-                  <div key={rev.id} className="p-4 rounded-xl border border-floria-border bg-floria-linen hover:border-forest-400 transition-all font-ui space-y-2">
+                  <div
+                    key={rev.id}
+                    className="p-4 rounded-xl border border-floria-border bg-floria-linen hover:border-forest-400 transition-all font-ui space-y-2"
+                  >
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <Link
@@ -613,7 +716,9 @@ export default function AccountPage() {
                         </Link>
                         <div className="flex items-center gap-1.5 mt-1">
                           <StarRating rating={rev.rating} size="sm" />
-                          <span className="text-xs font-bold text-ink-800">{rev.rating}/5</span>
+                          <span className="text-xs font-bold text-ink-800">
+                            {rev.rating}/5
+                          </span>
                           <span className="text-[10px] text-forest-800 bg-forest-100 px-1.5 py-0.5 rounded border border-forest-200 font-semibold ml-1">
                             Verified Purchase
                           </span>
@@ -633,8 +738,16 @@ export default function AccountPage() {
                       </button>
                     </div>
 
-                    {rev.title && <p className="text-xs font-bold text-ink-800">{rev.title}</p>}
-                    {rev.body && <p className="text-xs text-ink-600 leading-relaxed">{rev.body}</p>}
+                    {rev.title && (
+                      <p className="text-xs font-bold text-ink-800">
+                        {rev.title}
+                      </p>
+                    )}
+                    {rev.body && (
+                      <p className="text-xs text-ink-600 leading-relaxed">
+                        {rev.body}
+                      </p>
+                    )}
                   </div>
                 ))}
               </div>
@@ -644,10 +757,15 @@ export default function AccountPage() {
 
         {/* ── RIGHT COLUMN: Settings, Help & Logout ──────────────────────────── */}
         <div className="space-y-6">
-
           {/* 4. ACCOUNT SETTINGS SECTION */}
-          <section aria-labelledby="section-settings" className="bg-floria-linen rounded-2xl border border-floria-border p-6 shadow-sm">
-            <h2 id="section-settings" className="font-serif text-lg font-bold text-ink-900 pb-3 border-b border-floria-border mb-4">
+          <section
+            aria-labelledby="section-settings"
+            className="bg-floria-linen rounded-2xl border border-floria-border p-6 shadow-sm"
+          >
+            <h2
+              id="section-settings"
+              className="font-serif text-lg font-bold text-ink-900 pb-3 border-b border-floria-border mb-4"
+            >
               Preferences &amp; Settings
             </h2>
 
@@ -655,14 +773,20 @@ export default function AccountPage() {
               {/* Order Status Alerts Toggle */}
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-xs font-bold text-ink-900">Order Updates</p>
-                  <p className="text-[11px] text-ink-400">Receive SMS &amp; email delivery notifications</p>
+                  <p className="text-xs font-bold text-ink-900">
+                    Order Updates
+                  </p>
+                  <p className="text-[11px] text-ink-400">
+                    Receive SMS &amp; email delivery notifications
+                  </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => handleToggleSetting("orderAlerts")}
                   className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors ${
-                    settings.orderAlerts ? "bg-forest-800 justify-end" : "bg-floria-sand justify-start"
+                    settings.orderAlerts
+                      ? "bg-forest-800 justify-end"
+                      : "bg-floria-sand justify-start"
                   }`}
                   aria-label="Toggle Order Updates"
                 >
@@ -673,14 +797,20 @@ export default function AccountPage() {
               {/* Marketing Preferences */}
               <div className="flex items-center justify-between gap-3 pt-2 border-t border-floria-border">
                 <div>
-                  <p className="text-xs font-bold text-ink-900">Offers &amp; Plant Care Tips</p>
-                  <p className="text-[11px] text-ink-400">Seasonal care tips and nursery discounts</p>
+                  <p className="text-xs font-bold text-ink-900">
+                    Offers &amp; Plant Care Tips
+                  </p>
+                  <p className="text-[11px] text-ink-400">
+                    Seasonal care tips and nursery discounts
+                  </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => handleToggleSetting("promotionalEmail")}
                   className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors ${
-                    settings.promotionalEmail ? "bg-forest-800 justify-end" : "bg-floria-sand justify-start"
+                    settings.promotionalEmail
+                      ? "bg-forest-800 justify-end"
+                      : "bg-floria-sand justify-start"
                   }`}
                   aria-label="Toggle Offers and Care Tips"
                 >
@@ -729,10 +859,13 @@ export default function AccountPage() {
           <div className="p-6 bg-floria-soft-sand rounded-2xl border border-floria-border shadow-sm space-y-3">
             <div className="flex items-center gap-2">
               <LeafIcon size={18} className="text-forest-700" />
-              <h3 className="font-serif font-bold text-ink-900 text-base">Help &amp; Support</h3>
+              <h3 className="font-serif font-bold text-ink-900 text-base">
+                Help &amp; Support
+              </h3>
             </div>
             <p className="text-xs text-ink-500 leading-relaxed">
-              Have questions about multi-nursery orders, delivery policies, or plant guarantees?
+              Have questions about multi-nursery orders, delivery policies, or
+              plant guarantees?
             </p>
             <Link
               href="/help"
@@ -769,7 +902,9 @@ export default function AccountPage() {
             <div className="flex items-center justify-between border-b border-floria-border pb-3">
               <div className="flex items-center gap-2 text-forest-700">
                 <ShieldIcon size={20} />
-                <h3 className="font-serif font-bold text-ink-900 text-base">Password &amp; Security</h3>
+                <h3 className="font-serif font-bold text-ink-900 text-base">
+                  Password &amp; Security
+                </h3>
               </div>
               <button
                 type="button"
@@ -781,7 +916,8 @@ export default function AccountPage() {
             </div>
 
             <p className="text-xs text-ink-500">
-              Update your account authentication password. This will update your encrypted credentials stored in Supabase Auth.
+              Update your account authentication password. This will update your
+              encrypted credentials stored in Supabase Auth.
             </p>
 
             {passwordError && (
@@ -852,9 +988,12 @@ export default function AccountPage() {
               <UserIcon size={24} />
             </div>
             <div>
-              <h3 className="font-serif font-bold text-ink-900 text-base">Sign Out of Floria</h3>
+              <h3 className="font-serif font-bold text-ink-900 text-base">
+                Sign Out of Floria
+              </h3>
               <p className="text-xs text-ink-500 mt-1">
-                Are you sure you want to sign out? Your session will be invalidated across all browser tabs.
+                Are you sure you want to sign out? Your session will be
+                invalidated across all browser tabs.
               </p>
             </div>
             <div className="flex gap-2 pt-2">
@@ -883,7 +1022,9 @@ export default function AccountPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-900/40 backdrop-blur-xs">
           <div className="bg-floria-linen rounded-2xl p-6 max-w-md w-full border border-floria-border shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-floria-border pb-3">
-              <h3 className="font-serif font-bold text-red-700 text-base">Delete Account Permanently</h3>
+              <h3 className="font-serif font-bold text-red-700 text-base">
+                Delete Account Permanently
+              </h3>
               <button
                 type="button"
                 onClick={() => setShowDeleteAccountModal(false)}
@@ -894,7 +1035,9 @@ export default function AccountPage() {
             </div>
 
             <p className="text-xs text-ink-600 leading-relaxed">
-              This action is permanent and cannot be undone. All of your personal profile details, saved delivery addresses, cart items, and wishlist preferences will be wiped from Floria.
+              This action is permanent and cannot be undone. All of your
+              personal profile details, saved delivery addresses, cart items,
+              and wishlist preferences will be wiped from Floria.
             </p>
 
             {deleteError && (
@@ -907,7 +1050,8 @@ export default function AccountPage() {
             <form onSubmit={handleDeleteAccountConfirm} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-ink-700 mb-1">
-                  Type <strong className="text-red-700">DELETE</strong> to confirm *
+                  Type <strong className="text-red-700">DELETE</strong> to
+                  confirm *
                 </label>
                 <input
                   type="text"
@@ -929,10 +1073,15 @@ export default function AccountPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={deletingAccount || deleteConfirmationText.trim().toUpperCase() !== "DELETE"}
+                  disabled={
+                    deletingAccount ||
+                    deleteConfirmationText.trim().toUpperCase() !== "DELETE"
+                  }
                   className="flex-1 py-2.5 bg-red-700 hover:bg-red-800 text-white font-bold text-xs uppercase rounded-xl disabled:opacity-50 transition-colors"
                 >
-                  {deletingAccount ? "Deleting Account..." : "Confirm Permanently Delete"}
+                  {deletingAccount
+                    ? "Deleting Account..."
+                    : "Confirm Permanently Delete"}
                 </button>
               </div>
             </form>
@@ -945,7 +1094,9 @@ export default function AccountPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-900/60 backdrop-blur-xs">
           <div className="bg-floria-linen rounded-2xl border border-floria-border shadow-xl max-w-md w-full p-6 space-y-4 font-ui">
             <div className="flex items-center justify-between pb-3 border-b border-floria-border">
-              <h3 className="font-serif font-bold text-lg text-ink-900">Edit Your Review</h3>
+              <h3 className="font-serif font-bold text-lg text-ink-900">
+                Edit Your Review
+              </h3>
               <button
                 type="button"
                 onClick={() => setEditingReview(null)}
@@ -956,11 +1107,19 @@ export default function AccountPage() {
             </div>
 
             <div className="space-y-3">
-              <p className="text-xs font-bold text-ink-800">{editingReview.product?.name || "Product"}</p>
+              <p className="text-xs font-bold text-ink-800">
+                {editingReview.product?.name || "Product"}
+              </p>
 
               <div>
-                <label className="block text-xs font-bold uppercase text-ink-600 mb-1">Rating</label>
-                <div className="flex gap-1" role="radiogroup" aria-label="Star rating">
+                <label className="block text-xs font-bold uppercase text-ink-600 mb-1">
+                  Rating
+                </label>
+                <div
+                  className="flex gap-1"
+                  role="radiogroup"
+                  aria-label="Star rating"
+                >
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
                       key={star}
@@ -970,7 +1129,11 @@ export default function AccountPage() {
                     >
                       <StarIcon
                         size={24}
-                        className={star <= editRating ? "text-amber-400 fill-amber-400" : "text-ink-200"}
+                        className={
+                          star <= editRating
+                            ? "text-amber-400 fill-amber-400"
+                            : "text-ink-200"
+                        }
                       />
                     </button>
                   ))}
@@ -978,7 +1141,9 @@ export default function AccountPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase text-ink-600 mb-1">Title (optional)</label>
+                <label className="block text-xs font-bold uppercase text-ink-600 mb-1">
+                  Title (optional)
+                </label>
                 <input
                   type="text"
                   value={editTitle}
@@ -989,7 +1154,9 @@ export default function AccountPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase text-ink-600 mb-1">Review Body (optional)</label>
+                <label className="block text-xs font-bold uppercase text-ink-600 mb-1">
+                  Review Body (optional)
+                </label>
                 <textarea
                   value={editBody}
                   onChange={(e) => setEditBody(e.target.value)}

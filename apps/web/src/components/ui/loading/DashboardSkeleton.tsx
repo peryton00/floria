@@ -4,7 +4,11 @@ import { TableSkeleton } from "./TableSkeleton";
 
 export function AdminDashboardSkeleton() {
   return (
-    <div aria-busy="true" aria-label="Loading admin dashboard" className="space-y-6 max-w-7xl mx-auto">
+    <div
+      aria-busy="true"
+      aria-label="Loading admin dashboard"
+      className="space-y-6 max-w-7xl mx-auto"
+    >
       {/* Header Skeleton */}
       <div className="flex justify-between items-center">
         <div className="space-y-2">
@@ -51,7 +55,11 @@ export function AdminDashboardSkeleton() {
 
 export function SellerDashboardSkeleton() {
   return (
-    <div aria-busy="true" aria-label="Loading seller dashboard" className="space-y-6 max-w-6xl mx-auto">
+    <div
+      aria-busy="true"
+      aria-label="Loading seller dashboard"
+      className="space-y-6 max-w-6xl mx-auto"
+    >
       <div className="p-6 bg-stone-100/70 rounded-2xl space-y-3 border border-stone-200">
         <Skeleton variant="text" className="h-6 w-48" />
         <Skeleton variant="text" className="h-4 w-80" />
@@ -74,7 +82,11 @@ export function SellerDashboardSkeleton() {
 
 export function OperationsDashboardSkeleton() {
   return (
-    <div aria-busy="true" aria-label="Loading operations dashboard" className="space-y-6 max-w-7xl mx-auto">
+    <div
+      aria-busy="true"
+      aria-label="Loading operations dashboard"
+      className="space-y-6 max-w-7xl mx-auto"
+    >
       <div className="space-y-2">
         <Skeleton variant="text" className="h-7 w-56" />
         <Skeleton variant="text" className="h-4 w-72" />

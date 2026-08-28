@@ -4,14 +4,15 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-
 export async function getSupabaseServerClient() {
   const url = process.env["NEXT_PUBLIC_SUPABASE_URL"];
-  const key = process.env["NEXT_PUBLIC_SUPABASE_ANON_KEY"] || process.env["NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"];
+  const key =
+    process.env["NEXT_PUBLIC_SUPABASE_ANON_KEY"] ||
+    process.env["NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"];
 
   if (!url || !key) {
     throw new Error(
-      "[Floria] Supabase env vars missing. Copy .env.example to .env.local."
+      "[Floria] Supabase env vars missing. Copy .env.example to .env.local.",
     );
   }
 
@@ -22,10 +23,20 @@ export async function getSupabaseServerClient() {
       getAll() {
         return cookieStore.getAll();
       },
-      setAll(cookiesToSet: Array<{ name: string; value: string; options?: Record<string, unknown> }>) {
+      setAll(
+        cookiesToSet: Array<{
+          name: string;
+          value: string;
+          options?: Record<string, unknown>;
+        }>,
+      ) {
         try {
           cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options as Parameters<typeof cookieStore.set>[2]);
+            cookieStore.set(
+              name,
+              value,
+              options as Parameters<typeof cookieStore.set>[2],
+            );
           });
         } catch {
           // setAll called from Server Component — cookies can only be set in
@@ -44,7 +55,7 @@ export async function getSupabaseServiceClient() {
 
   if (!url || !serviceKey) {
     throw new Error(
-      "[Floria] SUPABASE_SERVICE_ROLE_KEY missing. Required for service-role operations."
+      "[Floria] SUPABASE_SERVICE_ROLE_KEY missing. Required for service-role operations.",
     );
   }
 

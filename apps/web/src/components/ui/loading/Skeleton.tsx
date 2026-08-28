@@ -1,6 +1,7 @@
 import React from "react";
 
-export type SkeletonVariant = "text" | "avatar" | "image" | "rectangle" | "circle";
+export type SkeletonVariant =
+  "text" | "avatar" | "image" | "rectangle" | "circle";
 
 interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: SkeletonVariant;
@@ -34,8 +35,12 @@ export function Skeleton({
   };
 
   const customStyle: React.CSSProperties = {
-    ...(width !== undefined ? { width: typeof width === "number" ? `${width}px` : width } : {}),
-    ...(height !== undefined ? { height: typeof height === "number" ? `${height}px` : height } : {}),
+    ...(width !== undefined
+      ? { width: typeof width === "number" ? `${width}px` : width }
+      : {}),
+    ...(height !== undefined
+      ? { height: typeof height === "number" ? `${height}px` : height }
+      : {}),
     ...style,
   };
 

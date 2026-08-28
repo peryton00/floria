@@ -67,11 +67,13 @@ export class PolicyService {
       freeDeliveryRecoveryPaise: number;
       notes?: string;
     },
-    adminUserId: string
+    adminUserId: string,
   ): Promise<PricingPolicyVersion> {
     // Validate bounds
     if (params.sellerCommissionRate < 0 || params.sellerCommissionRate > 50) {
-      throw Errors.validation("Seller commission rate must be between 0% and 50%");
+      throw Errors.validation(
+        "Seller commission rate must be between 0% and 50%",
+      );
     }
     if (params.floriaProfitRate < 0 || params.floriaProfitRate > 50) {
       throw Errors.validation("Floria profit rate must be between 0% and 50%");
@@ -115,7 +117,9 @@ export class PolicyService {
       .single();
 
     if (error || !created) {
-      throw Errors.internal(`Failed to create pricing policy draft: ${error?.message}`);
+      throw Errors.internal(
+        `Failed to create pricing policy draft: ${error?.message}`,
+      );
     }
 
     await auditRepository.log({
@@ -172,7 +176,10 @@ export class PolicyService {
 
     for (const item of items) {
       const basePaise = item.base_price_paise ?? item.price_paise ?? 0;
-      const newCalc = pricingService.calculateProductPricingSync(basePaise, policySettings);
+      const newCalc = pricingService.calculateProductPricingSync(
+        basePaise,
+        policySettings,
+      );
       const currentPrice = item.price_paise ?? 0;
       const diff = newCalc.customerProductPricePaise - currentPrice;
 
@@ -187,7 +194,9 @@ export class PolicyService {
     return {
       policyVersionId: policyId,
       affectedListingsCount: items.length,
-      averageCustomerPriceChangePaise: Math.round(totalDiffPaise / items.length),
+      averageCustomerPriceChangePaise: Math.round(
+        totalDiffPaise / items.length,
+      ),
       freeDeliveryEligibleListingsCount: freeDeliveryCount,
       priceIncreaseCount: increaseCount,
       priceDecreaseCount: decreaseCount,
@@ -198,7 +207,10 @@ export class PolicyService {
   /**
    * Atomically activates a prepared policy version and archives the previously active one.
    */
-  async activatePolicy(policyId: string, adminUserId: string): Promise<PricingPolicyVersion> {
+  async activatePolicy(
+    policyId: string,
+    adminUserId: string,
+  ): Promise<PricingPolicyVersion> {
     const policy = await this.getPolicyById(policyId);
     if (!policy) throw Errors.notFound("Pricing policy version");
 
@@ -232,16 +244,43 @@ export class PolicyService {
       .single();
 
     if (error || !activated) {
-      throw Errors.internal(`Failed to activate pricing policy: ${error?.message}`);
+      throw Errors.internal(
+        `Failed to activate pricing policy: ${error?.message}`,
+      );
     }
 
     // 3. Mirror to platform_settings for backward compatibility
     await db.from("platform_settings").upsert([
-      { key: "seller_commission_rate", value: activated.seller_commission_rate, updated_at: now, updated_by: adminUserId },
-      { key: "floria_profit_rate", value: activated.floria_profit_rate, updated_at: now, updated_by: adminUserId },
-      { key: "platform_maintenance_fee_paise", value: activated.platform_maintenance_fee_paise, updated_at: now, updated_by: adminUserId },
-      { key: "free_delivery_threshold_paise", value: activated.free_delivery_threshold_paise, updated_at: now, updated_by: adminUserId },
-      { key: "free_delivery_recovery_paise", value: activated.free_delivery_recovery_paise, updated_at: now, updated_by: adminUserId },
+      {
+        key: "seller_commission_rate",
+        value: activated.seller_commission_rate,
+        updated_at: now,
+        updated_by: adminUserId,
+      },
+      {
+        key: "floria_profit_rate",
+        value: activated.floria_profit_rate,
+        updated_at: now,
+        updated_by: adminUserId,
+      },
+      {
+        key: "platform_maintenance_fee_paise",
+        value: activated.platform_maintenance_fee_paise,
+        updated_at: now,
+        updated_by: adminUserId,
+      },
+      {
+        key: "free_delivery_threshold_paise",
+        value: activated.free_delivery_threshold_paise,
+        updated_at: now,
+        updated_by: adminUserId,
+      },
+      {
+        key: "free_delivery_recovery_paise",
+        value: activated.free_delivery_recovery_paise,
+        updated_at: now,
+        updated_by: adminUserId,
+      },
     ]);
 
     await auditRepository.log({
@@ -265,13 +304,15 @@ export class PolicyService {
       customCustomerPricePaise: number;
       reason: string;
     },
-    adminUserId: string
+    adminUserId: string,
   ) {
     if (params.customCustomerPricePaise <= 0) {
       throw Errors.validation("Custom price must be greater than 0");
     }
     if (!params.reason || params.reason.trim().length === 0) {
-      throw Errors.validation("A reason is mandatory for setting a price override");
+      throw Errors.validation(
+        "A reason is mandatory for setting a price override",
+      );
     }
 
     const db = getAdminDb();
@@ -290,7 +331,9 @@ export class PolicyService {
       .single();
 
     if (error || !override) {
-      throw Errors.internal(`Failed to set product override: ${error?.message}`);
+      throw Errors.internal(
+        `Failed to set product override: ${error?.message}`,
+      );
     }
 
     await auditRepository.log({
@@ -316,7 +359,9 @@ export class PolicyService {
       .eq("product_id", productId);
 
     if (error) {
-      throw Errors.internal(`Failed to remove product override: ${error.message}`);
+      throw Errors.internal(
+        `Failed to remove product override: ${error.message}`,
+      );
     }
 
     await auditRepository.log({

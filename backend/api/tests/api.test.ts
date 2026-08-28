@@ -29,7 +29,11 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
     app = createApp();
   });
 
-  const setupAuthUser = (userId: string, role: string, sellerStatus = "approved") => {
+  const setupAuthUser = (
+    userId: string,
+    role: string,
+    sellerStatus = "approved",
+  ) => {
     mockGetUser.mockResolvedValue({
       data: { user: { id: userId, email: `${role}@floria.test` } },
       error: null,
@@ -40,7 +44,10 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
         return {
           select: () => ({
             eq: () => ({
-              maybeSingle: async () => ({ data: { id: userId, role }, error: null }),
+              maybeSingle: async () => ({
+                data: { id: userId, role },
+                error: null,
+              }),
             }),
           }),
         };
@@ -50,7 +57,11 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
           select: () => ({
             eq: () => ({
               maybeSingle: async () => ({
-                data: { id: `sel-${userId}`, user_id: userId, status: sellerStatus },
+                data: {
+                  id: `sel-${userId}`,
+                  user_id: userId,
+                  status: sellerStatus,
+                },
                 error: null,
               }),
             }),
@@ -62,7 +73,11 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
           select: () => ({
             eq: (col: string, val: string) => ({
               maybeSingle: async () => {
-                if (val === userId) return { data: { id: `cart-${userId}`, user_id: userId }, error: null };
+                if (val === userId)
+                  return {
+                    data: { id: `cart-${userId}`, user_id: userId },
+                    error: null,
+                  };
                 return { data: null, error: null };
               },
             }),
@@ -97,7 +112,11 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
               maybeSingle: async () => ({ data: null, error: null }),
             }),
           }),
-          insert: () => ({ select: () => ({ single: async () => ({ data: { id: "FLR-NEW-1" } }) }) }),
+          insert: () => ({
+            select: () => ({
+              single: async () => ({ data: { id: "FLR-NEW-1" } }),
+            }),
+          }),
           delete: () => ({ eq: async () => ({ error: null }) }),
         };
       }
@@ -114,7 +133,10 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
         return {
           select: () => ({
             eq: () => ({
-              maybeSingle: async () => ({ data: { key: "seller_commission_rate", value: 12.0 }, error: null }),
+              maybeSingle: async () => ({
+                data: { key: "seller_commission_rate", value: 12.0 },
+                error: null,
+              }),
             }),
             in: async () => ({
               data: [
@@ -129,7 +151,13 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
           }),
           upsert: (_payload: any) => ({
             select: () => ({
-              single: async () => ({ data: { key: "seller_commission_rate", value: _payload?.value ?? 12.0 }, error: null }),
+              single: async () => ({
+                data: {
+                  key: "seller_commission_rate",
+                  value: _payload?.value ?? 12.0,
+                },
+                error: null,
+              }),
             }),
           }),
         };
@@ -189,7 +217,10 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
     });
 
     it("9. Invalid JWT returns 401 AUTH_REQUIRED", async () => {
-      mockGetUser.mockResolvedValue({ data: { user: null }, error: new Error("Invalid token") });
+      mockGetUser.mockResolvedValue({
+        data: { user: null },
+        error: new Error("Invalid token"),
+      });
 
       const res = await request(app)
         .get("/api/v1/admin/dashboard")
@@ -256,7 +287,9 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
     it("6. Operations -> Seller approval = 403 FORBIDDEN", async () => {
       setupAuthUser("op-1", "operations");
       const res = await request(app)
-        .post("/api/v1/admin/sellers/11111111-1111-1111-1111-111111111111/approve")
+        .post(
+          "/api/v1/admin/sellers/11111111-1111-1111-1111-111111111111/approve",
+        )
         .set("Authorization", "Bearer valid_op_token");
 
       expect(res.status).toBe(403);
@@ -296,7 +329,12 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
       const res = await request(app)
         .post("/api/v1/seller/products")
         .set("Authorization", "Bearer valid_suspended_token")
-        .send({ name: "Plant", category_id: "cat-1", price_paise: 100, stock_quantity: 5 });
+        .send({
+          name: "Plant",
+          category_id: "cat-1",
+          price_paise: 100,
+          stock_quantity: 5,
+        });
 
       expect(res.status).toBe(403);
     });
@@ -313,7 +351,9 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
     it("26. Operations cannot approve sellers (403 FORBIDDEN)", async () => {
       setupAuthUser("op-1", "operations");
       const res = await request(app)
-        .post("/api/v1/admin/sellers/11111111-1111-1111-1111-111111111111/approve")
+        .post(
+          "/api/v1/admin/sellers/11111111-1111-1111-1111-111111111111/approve",
+        )
         .set("Authorization", "Bearer valid_op_token");
 
       expect(res.status).toBe(403);
@@ -339,7 +379,12 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
   describe("5. Payment Webhook Idempotency (28)", () => {
     it("28. Duplicate payment webhook processed idempotently", async () => {
       setupAuthUser("system", "admin");
-      const payload = { eventId: "evt_test_unique_999", orderId: "FLR-260812-7020", amountPaise: 29900, status: "captured" };
+      const payload = {
+        eventId: "evt_test_unique_999",
+        orderId: "FLR-260812-7020",
+        amountPaise: 29900,
+        status: "captured",
+      };
 
       // First webhook delivery -> processed
       const res1 = await paymentsService.processWebhook(payload);
@@ -362,24 +407,65 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
 
       mockFrom.mockImplementation((table: string) => {
         if (table === "addresses") {
-          return { select: () => ({ eq: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { id: "addr-1" } }) }) }) }) };
+          return {
+            select: () => ({
+              eq: () => ({
+                eq: () => ({
+                  maybeSingle: async () => ({ data: { id: "addr-1" } }),
+                }),
+              }),
+            }),
+          };
         }
         if (table === "carts") {
-          return { select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { id: "cart-1" } }) }) }) };
+          return {
+            select: () => ({
+              eq: () => ({
+                maybeSingle: async () => ({ data: { id: "cart-1" } }),
+              }),
+            }),
+          };
         }
         if (table === "cart_items") {
           return {
-            select: () => ({ eq: async () => ({ data: [{ product_id: "prod-1", quantity: 1 }] }) }),
+            select: () => ({
+              eq: async () => ({
+                data: [{ product_id: "prod-1", quantity: 1 }],
+              }),
+            }),
             delete: () => ({ eq: async () => ({ error: null }) }),
           };
         }
         if (table === "products") {
-          return { select: () => ({ in: () => ({ eq: async () => ({ data: [{ id: "prod-1", name: "Plant", seller_id: "sel-1", status: "active" }] }) }) }) };
+          return {
+            select: () => ({
+              in: () => ({
+                eq: async () => ({
+                  data: [
+                    {
+                      id: "prod-1",
+                      name: "Plant",
+                      seller_id: "sel-1",
+                      status: "active",
+                    },
+                  ],
+                }),
+              }),
+            }),
+          };
         }
         if (table === "inventory") {
           return {
             select: () => ({
-              in: async () => ({ data: [{ product_id: "prod-1", price_paise: 29900, stock_quantity: currentStock }] }),
+              in: async () => ({
+                data: [
+                  {
+                    product_id: "prod-1",
+                    price_paise: 29900,
+                    stock_quantity: currentStock,
+                  },
+                ],
+              }),
             }),
             update: (payload: any) => ({
               eq: () => ({
@@ -387,7 +473,15 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
                   select: async () => {
                     if (currentStock >= 1) {
                       currentStock -= 1;
-                      return { data: [{ product_id: "prod-1", stock_quantity: currentStock }], error: null };
+                      return {
+                        data: [
+                          {
+                            product_id: "prod-1",
+                            stock_quantity: currentStock,
+                          },
+                        ],
+                        error: null,
+                      };
                     }
                     return { data: [], error: null };
                   },
@@ -398,7 +492,11 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
         }
         if (table === "orders") {
           return {
-            insert: () => ({ select: () => ({ single: async () => ({ data: { id: "FLR-NEW-1" } }) }) }),
+            insert: () => ({
+              select: () => ({
+                single: async () => ({ data: { id: "FLR-NEW-1" } }),
+              }),
+            }),
             delete: () => ({ eq: async () => ({}) }),
           };
         }
@@ -420,12 +518,20 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
       });
 
       // Request A (Stock = 1 -> 0)
-      const resA = await checkoutService.processCheckout({ userId: "cust-1", addressId: "addr-1", paymentMethod: "online" });
+      const resA = await checkoutService.processCheckout({
+        userId: "cust-1",
+        addressId: "addr-1",
+        paymentMethod: "online",
+      });
       expect(resA.orderId).toBe("FLR-NEW-1");
 
       // Request B (Stock = 0 -> throws OUT_OF_STOCK)
       await expect(
-        checkoutService.processCheckout({ userId: "cust-2", addressId: "addr-1", paymentMethod: "online" })
+        checkoutService.processCheckout({
+          userId: "cust-2",
+          addressId: "addr-1",
+          paymentMethod: "online",
+        }),
       ).rejects.toThrow("out of stock");
     });
   });
@@ -449,7 +555,11 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
       const res = await request(app)
         .post("/api/v1/seller/products")
         .set("Authorization", "Bearer pending_token")
-        .send({ name: "Unapproved Plant", price_paise: 5000, stock_quantity: 10 });
+        .send({
+          name: "Unapproved Plant",
+          price_paise: 5000,
+          stock_quantity: 10,
+        });
 
       expect(res.status).toBe(403);
       expect(res.body.error.message).toContain("pending approval");
@@ -583,12 +693,31 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
       mockFrom.mockImplementation((table: string) => {
         if (table === "user_profiles") {
           return {
-            select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { id: "seller-1", role: "seller" }, error: null }) }) }),
+            select: () => ({
+              eq: () => ({
+                maybeSingle: async () => ({
+                  data: { id: "seller-1", role: "seller" },
+                  error: null,
+                }),
+              }),
+            }),
           };
         }
         if (table === "seller_profiles") {
           return {
-            select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { id: "sel-prof-1", user_id: "seller-1", business_name: "Green Nursery", status: "approved" }, error: null }) }) }),
+            select: () => ({
+              eq: () => ({
+                maybeSingle: async () => ({
+                  data: {
+                    id: "sel-prof-1",
+                    user_id: "seller-1",
+                    business_name: "Green Nursery",
+                    status: "approved",
+                  },
+                  error: null,
+                }),
+              }),
+            }),
           };
         }
         return {};
@@ -613,7 +742,14 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
       mockFrom.mockImplementation((table: string) => {
         if (table === "user_profiles") {
           return {
-            select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { id: "user-1", role: "customer" }, error: null }) }) }),
+            select: () => ({
+              eq: () => ({
+                maybeSingle: async () => ({
+                  data: { id: "user-1", role: "customer" },
+                  error: null,
+                }),
+              }),
+            }),
           };
         }
         if (table === "notifications") {
@@ -623,13 +759,31 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
                 order: () => ({
                   is: () => ({
                     range: async () => ({
-                      data: [{ id: "notif-1", user_id: "user-1", title: "Test", message: "Hello", read_at: null, created_at: new Date().toISOString() }],
+                      data: [
+                        {
+                          id: "notif-1",
+                          user_id: "user-1",
+                          title: "Test",
+                          message: "Hello",
+                          read_at: null,
+                          created_at: new Date().toISOString(),
+                        },
+                      ],
                       count: 1,
                       error: null,
                     }),
                   }),
                   range: async () => ({
-                    data: [{ id: "notif-1", user_id: "user-1", title: "Test", message: "Hello", read_at: null, created_at: new Date().toISOString() }],
+                    data: [
+                      {
+                        id: "notif-1",
+                        user_id: "user-1",
+                        title: "Test",
+                        message: "Hello",
+                        read_at: null,
+                        created_at: new Date().toISOString(),
+                      },
+                    ],
                     count: 1,
                     error: null,
                   }),
@@ -656,7 +810,14 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
       mockFrom.mockImplementation((table: string) => {
         if (table === "user_profiles") {
           return {
-            select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { id: "user-1", role: "customer" }, error: null }) }) }),
+            select: () => ({
+              eq: () => ({
+                maybeSingle: async () => ({
+                  data: { id: "user-1", role: "customer" },
+                  error: null,
+                }),
+              }),
+            }),
           };
         }
         if (table === "notifications") {
@@ -685,7 +846,14 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
       mockFrom.mockImplementation((table: string) => {
         if (table === "user_profiles") {
           return {
-            select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { id: "user-1", role: "customer" }, error: null }) }) }),
+            select: () => ({
+              eq: () => ({
+                maybeSingle: async () => ({
+                  data: { id: "user-1", role: "customer" },
+                  error: null,
+                }),
+              }),
+            }),
           };
         }
         if (table === "notifications") {
@@ -713,7 +881,14 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
       mockFrom.mockImplementation((table: string) => {
         if (table === "user_profiles") {
           return {
-            select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { id: "user-1", role: "customer" }, error: null }) }) }),
+            select: () => ({
+              eq: () => ({
+                maybeSingle: async () => ({
+                  data: { id: "user-1", role: "customer" },
+                  error: null,
+                }),
+              }),
+            }),
           };
         }
         if (table === "notifications") {
@@ -738,7 +913,8 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
     });
 
     it("NotificationRepository -> Allows sequential distinct notifications of same type with different source_id", async () => {
-      const { notificationRepository } = await import("../src/database/repositories/notification.repository.js");
+      const { notificationRepository } =
+        await import("../src/database/repositories/notification.repository.js");
       const savedRows: any[] = [];
 
       mockFrom.mockImplementation((table: string) => {
@@ -750,7 +926,10 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
                   eq: (field3: string, val3: string) => ({
                     maybeSingle: async () => {
                       const match = savedRows.find(
-                        (r) => r.user_id === val1 && r.source_type === val2 && r.source_id === val3
+                        (r) =>
+                          r.user_id === val1 &&
+                          r.source_type === val2 &&
+                          r.source_id === val3,
                       );
                       return { data: match || null, error: null };
                     },
@@ -761,7 +940,10 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
             insert: (row: any) => ({
               select: () => ({
                 single: async () => {
-                  const inserted = { id: `notif-${savedRows.length + 1}`, ...row };
+                  const inserted = {
+                    id: `notif-${savedRows.length + 1}`,
+                    ...row,
+                  };
                   savedRows.push(inserted);
                   return { data: inserted, error: null };
                 },
@@ -803,19 +985,29 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
     });
 
     it("NotificationService -> Structured navigation payload is preserved", async () => {
-      const { notificationService } = await import("../src/notifications/notification.service.js");
+      const { notificationService } =
+        await import("../src/notifications/notification.service.js");
       const savedRows: any[] = [];
 
       mockFrom.mockImplementation((table: string) => {
         if (table === "notifications") {
           return {
             select: () => ({
-              eq: () => ({ eq: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null, error: null }) }) }) }),
+              eq: () => ({
+                eq: () => ({
+                  eq: () => ({
+                    maybeSingle: async () => ({ data: null, error: null }),
+                  }),
+                }),
+              }),
             }),
             insert: (row: any) => ({
               select: () => ({
                 single: async () => {
-                  const inserted = { id: `notif-${savedRows.length + 1}`, ...row };
+                  const inserted = {
+                    id: `notif-${savedRows.length + 1}`,
+                    ...row,
+                  };
                   savedRows.push(inserted);
                   return { data: inserted, error: null };
                 },
@@ -845,7 +1037,8 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
     });
 
     it("User A cannot delete User B notification -> Scoped by user_id", async () => {
-      const { notificationService } = await import("../src/notifications/notification.service.js");
+      const { notificationService } =
+        await import("../src/notifications/notification.service.js");
       let scopedUserId: string | null = null;
 
       mockFrom.mockImplementation((table: string) => {
@@ -864,7 +1057,10 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
         return {};
       });
 
-      await notificationService.deleteNotification("user-owner-123", "notif-target-456");
+      await notificationService.deleteNotification(
+        "user-owner-123",
+        "notif-target-456",
+      );
       expect(scopedUserId).toBe("user-owner-123");
     });
 
@@ -875,18 +1071,40 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
       mockFrom.mockImplementation((table: string) => {
         if (table === "seller_profiles") {
           return {
-            select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { id: "seller-100", user_id: "user-seller-100", status: "pending" }, error: null }) }) }),
+            select: () => ({
+              eq: () => ({
+                maybeSingle: async () => ({
+                  data: {
+                    id: "seller-100",
+                    user_id: "user-seller-100",
+                    status: "pending",
+                  },
+                  error: null,
+                }),
+              }),
+            }),
             update: () => ({ eq: async () => ({ error: null }) }),
           };
         }
         if (table === "notifications") {
           return {
-            select: () => ({ eq: () => ({ eq: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null, error: null }) }) }) }) }),
+            select: () => ({
+              eq: () => ({
+                eq: () => ({
+                  eq: () => ({
+                    maybeSingle: async () => ({ data: null, error: null }),
+                  }),
+                }),
+              }),
+            }),
             insert: (row: any) => ({
               select: () => ({
                 single: async () => {
                   createdNotifs.push(row);
-                  return { data: { id: "notif-approved", ...row }, error: null };
+                  return {
+                    data: { id: "notif-approved", ...row },
+                    error: null,
+                  };
                 },
               }),
             }),
@@ -895,7 +1113,11 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
         return {};
       });
 
-      await adminService.updateSellerStatus("admin-1", "seller-100", "approved");
+      await adminService.updateSellerStatus(
+        "admin-1",
+        "seller-100",
+        "approved",
+      );
       expect(createdNotifs.length).toBe(1);
       expect(createdNotifs[0].user_id).toBe("user-seller-100");
       expect(createdNotifs[0].type).toBe("SELLER_APPROVED");
@@ -903,30 +1125,61 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
     });
 
     it("Cashfree -> PaymentsService.createPaymentSession creates session for authenticated order owner", async () => {
-      const { paymentsService } = await import("../src/payments/payments.service.js");
+      const { paymentsService } =
+        await import("../src/payments/payments.service.js");
 
       mockFrom.mockImplementation((table: string) => {
         if (table === "orders") {
           return {
-            select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { id: "00000000-0000-0000-0000-000000000101", customer_id: "user-cf-1", total_paise: 49900, status: "pending" }, error: null }) }) }),
+            select: () => ({
+              eq: () => ({
+                maybeSingle: async () => ({
+                  data: {
+                    id: "00000000-0000-0000-0000-000000000101",
+                    customer_id: "user-cf-1",
+                    total_paise: 49900,
+                    status: "pending",
+                  },
+                  error: null,
+                }),
+              }),
+            }),
           };
         }
         if (table === "user_profiles") {
           return {
-            select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { email: "test@floria.local", full_name: "Test Customer" }, error: null }) }) }),
+            select: () => ({
+              eq: () => ({
+                maybeSingle: async () => ({
+                  data: {
+                    email: "test@floria.local",
+                    full_name: "Test Customer",
+                  },
+                  error: null,
+                }),
+              }),
+            }),
           };
         }
         if (table === "payments") {
           return {
             upsert: (row: any) => ({
-              select: () => ({ maybeSingle: async () => ({ data: { id: "pay-cf-101", ...row }, error: null }) }),
+              select: () => ({
+                maybeSingle: async () => ({
+                  data: { id: "pay-cf-101", ...row },
+                  error: null,
+                }),
+              }),
             }),
           };
         }
         return {};
       });
 
-      const session = await paymentsService.createPaymentSession("user-cf-1", "00000000-0000-0000-0000-000000000101");
+      const session = await paymentsService.createPaymentSession(
+        "user-cf-1",
+        "00000000-0000-0000-0000-000000000101",
+      );
       expect(session.orderId).toBe("00000000-0000-0000-0000-000000000101");
       expect(session.amountPaise).toBe(49900);
       expect(session.currency).toBe("INR");
@@ -934,14 +1187,28 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
     });
 
     it("Cashfree -> Webhook processing is idempotent and updates order & payment status", async () => {
-      const { paymentsService } = await import("../src/payments/payments.service.js");
+      const { paymentsService } =
+        await import("../src/payments/payments.service.js");
       let paymentStatusUpdated: string | null = null;
       let orderStatusUpdated: string | null = null;
 
       mockFrom.mockImplementation((table: string) => {
         if (table === "payments") {
           return {
-            select: () => ({ or: () => ({ maybeSingle: async () => ({ data: { id: "pay-1", order_id: "ord-1", customer_id: "user-1", amount_paise: 25000, status: "pending" }, error: null }) }) }),
+            select: () => ({
+              or: () => ({
+                maybeSingle: async () => ({
+                  data: {
+                    id: "pay-1",
+                    order_id: "ord-1",
+                    customer_id: "user-1",
+                    amount_paise: 25000,
+                    status: "pending",
+                  },
+                  error: null,
+                }),
+              }),
+            }),
             update: (payload: any) => {
               paymentStatusUpdated = payload.status;
               return { eq: async () => ({ error: null }) };
@@ -960,7 +1227,22 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
           return { update: () => ({ eq: async () => ({ error: null }) }) };
         }
         if (table === "notifications") {
-          return { select: () => ({ eq: () => ({ eq: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null, error: null }) }) }) }) }), insert: () => ({ select: () => ({ single: async () => ({ data: {}, error: null }) }) }) };
+          return {
+            select: () => ({
+              eq: () => ({
+                eq: () => ({
+                  eq: () => ({
+                    maybeSingle: async () => ({ data: null, error: null }),
+                  }),
+                }),
+              }),
+            }),
+            insert: () => ({
+              select: () => ({
+                single: async () => ({ data: {}, error: null }),
+              }),
+            }),
+          };
         }
         return {};
       });
@@ -972,7 +1254,11 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
           event_time: "2026-08-26T00:00:00Z",
           data: {
             order: { order_id: "CF-ORD-001" },
-            payment: { cf_payment_id: "999888", payment_status: "SUCCESS", payment_amount: 250 },
+            payment: {
+              cf_payment_id: "999888",
+              payment_status: "SUCCESS",
+              payment_amount: 250,
+            },
           },
         }),
         headers: {},
@@ -995,12 +1281,31 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
       mockFrom.mockImplementation((table: string) => {
         if (table === "user_profiles") {
           return {
-            select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { id: "seller-1", role: "seller" }, error: null }) }) }),
+            select: () => ({
+              eq: () => ({
+                maybeSingle: async () => ({
+                  data: { id: "seller-1", role: "seller" },
+                  error: null,
+                }),
+              }),
+            }),
           };
         }
         if (table === "seller_profiles") {
           return {
-            select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { id: "sel-prof-1", user_id: "seller-1", business_name: "Green Nursery", status: "approved" }, error: null }) }) }),
+            select: () => ({
+              eq: () => ({
+                maybeSingle: async () => ({
+                  data: {
+                    id: "sel-prof-1",
+                    user_id: "seller-1",
+                    business_name: "Green Nursery",
+                    status: "approved",
+                  },
+                  error: null,
+                }),
+              }),
+            }),
           };
         }
         if (table === "seller_documents") {
@@ -1050,12 +1355,31 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
       mockFrom.mockImplementation((table: string) => {
         if (table === "user_profiles") {
           return {
-            select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { id: "seller-1", role: "seller" }, error: null }) }) }),
+            select: () => ({
+              eq: () => ({
+                maybeSingle: async () => ({
+                  data: { id: "seller-1", role: "seller" },
+                  error: null,
+                }),
+              }),
+            }),
           };
         }
         if (table === "seller_profiles") {
           return {
-            select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { id: "sel-prof-1", user_id: "seller-1", business_name: "Green Nursery", status: "approved" }, error: null }) }) }),
+            select: () => ({
+              eq: () => ({
+                maybeSingle: async () => ({
+                  data: {
+                    id: "sel-prof-1",
+                    user_id: "seller-1",
+                    business_name: "Green Nursery",
+                    status: "approved",
+                  },
+                  error: null,
+                }),
+              }),
+            }),
           };
         }
         return {};
@@ -1081,12 +1405,30 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
       mockFrom.mockImplementation((table: string) => {
         if (table === "user_profiles") {
           return {
-            select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { id: "seller-1", role: "seller" }, error: null }) }) }),
+            select: () => ({
+              eq: () => ({
+                maybeSingle: async () => ({
+                  data: { id: "seller-1", role: "seller" },
+                  error: null,
+                }),
+              }),
+            }),
           };
         }
         if (table === "seller_profiles") {
           return {
-            select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { id: "sel-prof-1", user_id: "seller-1", status: "approved" }, error: null }) }) }),
+            select: () => ({
+              eq: () => ({
+                maybeSingle: async () => ({
+                  data: {
+                    id: "sel-prof-1",
+                    user_id: "seller-1",
+                    status: "approved",
+                  },
+                  error: null,
+                }),
+              }),
+            }),
           };
         }
         if (table === "seller_settings") {

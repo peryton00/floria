@@ -15,7 +15,7 @@ type SellerStage = (typeof SELLER_STAGES)[number];
 
 const TIMESTAMP_COLS: Record<string, string> = {
   "Nursery Confirmed": "confirmed_at",
-  "Preparing": "preparing_at",
+  Preparing: "preparing_at",
   "Ready for Pickup": "ready_at",
   "Picked Up": "picked_up_at",
 };
@@ -25,18 +25,30 @@ export class FulfillmentService {
     return fulfillmentRepository.findBySellerId(sellerId);
   }
 
-  async updateStatus(actorUserId: string, sellerId: string, masterOrderId: string, newStatus: string) {
+  async updateStatus(
+    actorUserId: string,
+    sellerId: string,
+    masterOrderId: string,
+    newStatus: string,
+  ) {
     if (!SELLER_STAGES.includes(newStatus as SellerStage)) {
       throw Errors.validation(`Invalid fulfillment status: ${newStatus}`);
     }
 
-    let record = await fulfillmentRepository.findByOrderAndSeller(masterOrderId, sellerId);
+    let record = await fulfillmentRepository.findByOrderAndSeller(
+      masterOrderId,
+      sellerId,
+    );
     if (!record) {
       // Check if order exists in orders table to support legacy/demo/seed orders
       const { getAdminDb } = await import("../config/database.js");
       const db = getAdminDb();
-      const { data: order } = await db.from("orders").select("id, status").eq("id", masterOrderId).maybeSingle();
-      
+      const { data: order } = await db
+        .from("orders")
+        .select("id, status")
+        .eq("id", masterOrderId)
+        .maybeSingle();
+
       if (!order) {
         // IDOR protection: throw 404 if order does not exist at all
         throw Errors.notFound("Fulfillment record");
@@ -75,7 +87,7 @@ export class FulfillmentService {
       record.id,
       sellerId,
       newStatus,
-      tsCol
+      tsCol,
     );
 
     if (!success) throw Errors.database("Failed to update fulfillment status.");
@@ -86,7 +98,12 @@ export class FulfillmentService {
       action: "SELLER_FULFILLMENT_CHANGED",
       resource_type: "seller_order_fulfillment",
       resource_id: record.id,
-      metadata: { order_id: masterOrderId, seller_id: sellerId, from: currentStatus, to: newStatus },
+      metadata: {
+        order_id: masterOrderId,
+        seller_id: sellerId,
+        from: currentStatus,
+        to: newStatus,
+      },
     });
 
     return { status: newStatus, orderId: masterOrderId };

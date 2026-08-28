@@ -8,11 +8,14 @@ describe("Pricing Engine & Business Rule Verification Suite", () => {
     floriaProfitRate: 2.0,
     platformMaintenanceFeePaise: 1000, // ₹10.00
     freeDeliveryThresholdPaise: 59900, // ₹599.00
-    freeDeliveryRecoveryPaise: 2000,   // ₹20.00
+    freeDeliveryRecoveryPaise: 2000, // ₹20.00
   };
 
   it("Case 1: Base = ₹500.00 -> Pre-recovery ₹510.00 < ₹599.00 -> Not free delivery", async () => {
-    const res = await pricingService.calculateProductPricing(50000, testSettings);
+    const res = await pricingService.calculateProductPricing(
+      50000,
+      testSettings,
+    );
     expect(res.sellerBasePricePaise).toBe(50000);
     expect(res.floriaProfitPaise).toBe(1000);
     expect(res.isFreeDeliveryEligible).toBe(false);
@@ -23,7 +26,10 @@ describe("Pricing Engine & Business Rule Verification Suite", () => {
   });
 
   it("Case 2: Base = ₹580.00 -> Pre-recovery ₹591.60 < ₹599.00 -> Not free delivery", async () => {
-    const res = await pricingService.calculateProductPricing(58000, testSettings);
+    const res = await pricingService.calculateProductPricing(
+      58000,
+      testSettings,
+    );
     expect(res.floriaProfitPaise).toBe(1160);
     expect(res.isFreeDeliveryEligible).toBe(false);
     expect(res.deliveryRecoveryPaise).toBe(0);
@@ -31,7 +37,10 @@ describe("Pricing Engine & Business Rule Verification Suite", () => {
   });
 
   it("Case 3: Base = ₹588.00 -> Pre-recovery ₹599.76 >= ₹599.00 -> Free delivery eligible (+₹20 recovery)", async () => {
-    const res = await pricingService.calculateProductPricing(58800, testSettings);
+    const res = await pricingService.calculateProductPricing(
+      58800,
+      testSettings,
+    );
     expect(res.floriaProfitPaise).toBe(1176);
     expect(res.isFreeDeliveryEligible).toBe(true);
     expect(res.deliveryRecoveryPaise).toBe(2000);
@@ -39,7 +48,10 @@ describe("Pricing Engine & Business Rule Verification Suite", () => {
   });
 
   it("Case 4: Base = ₹600.00 -> Pre-recovery ₹612.00 >= ₹599.00 -> Free delivery eligible (+₹20 recovery)", async () => {
-    const res = await pricingService.calculateProductPricing(60000, testSettings);
+    const res = await pricingService.calculateProductPricing(
+      60000,
+      testSettings,
+    );
     expect(res.floriaProfitPaise).toBe(1200);
     expect(res.isFreeDeliveryEligible).toBe(true);
     expect(res.deliveryRecoveryPaise).toBe(2000);
@@ -49,7 +61,10 @@ describe("Pricing Engine & Business Rule Verification Suite", () => {
   });
 
   it("Case 5: Base = ₹599.00 -> Pre-recovery ₹610.98 >= ₹599.00 -> Free delivery eligible (+₹20 recovery)", async () => {
-    const res = await pricingService.calculateProductPricing(59900, testSettings);
+    const res = await pricingService.calculateProductPricing(
+      59900,
+      testSettings,
+    );
     expect(res.floriaProfitPaise).toBe(1198);
     expect(res.isFreeDeliveryEligible).toBe(true);
     expect(res.deliveryRecoveryPaise).toBe(2000);
@@ -64,7 +79,10 @@ describe("Pricing Engine & Business Rule Verification Suite", () => {
       freeDeliveryThresholdPaise: 69900,
       freeDeliveryRecoveryPaise: 2500,
     };
-    const res = await pricingService.calculateProductPricing(60000, customSettings);
+    const res = await pricingService.calculateProductPricing(
+      60000,
+      customSettings,
+    );
     expect(res.floriaProfitPaise).toBe(1800);
     expect(res.isFreeDeliveryEligible).toBe(false); // 61800 < 69900
     expect(res.deliveryRecoveryPaise).toBe(0);

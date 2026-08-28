@@ -29,7 +29,7 @@ const mergeCartSchema = {
       z.object({
         productId: z.string().uuid(),
         quantity: z.number().int().positive(),
-      })
+      }),
     ),
   }),
 };
@@ -38,9 +38,17 @@ router.use(authenticateToken);
 
 router.get("/", cartController.getCart);
 router.post("/items", validateRequest(addToCartSchema), cartController.addItem);
-router.patch("/items/:productId", validateRequest(updateQuantitySchema), cartController.updateQuantity);
+router.patch(
+  "/items/:productId",
+  validateRequest(updateQuantitySchema),
+  cartController.updateQuantity,
+);
 router.delete("/items/:productId", cartController.removeItem);
 router.delete("/", cartController.clearCart);
-router.post("/merge", validateRequest(mergeCartSchema), cartController.mergeCart);
+router.post(
+  "/merge",
+  validateRequest(mergeCartSchema),
+  cartController.mergeCart,
+);
 
 export default router;

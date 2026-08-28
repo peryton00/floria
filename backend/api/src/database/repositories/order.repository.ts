@@ -6,7 +6,9 @@ export class OrderRepository {
     const db = getAdminDb();
     const { data, error } = await db
       .from("orders")
-      .select("*, order_items(*, product:products(id,name,slug)), seller_order_fulfillments(*)")
+      .select(
+        "*, order_items(*, product:products(id,name,slug)), seller_order_fulfillments(*)",
+      )
       .eq("customer_id", customerId)
       .order("created_at", { ascending: false });
 
@@ -18,7 +20,9 @@ export class OrderRepository {
     const db = getAdminDb();
     const { data, error } = await db
       .from("orders")
-      .select("*, order_items(*, product:products(id,name,slug)), seller_order_fulfillments(*)")
+      .select(
+        "*, order_items(*, product:products(id,name,slug)), seller_order_fulfillments(*)",
+      )
       .eq("id", orderId)
       .maybeSingle();
 
@@ -26,11 +30,15 @@ export class OrderRepository {
     return data;
   }
 
-  async findAllMasterOrders(filters?: { status?: string; search?: string }): Promise<any[]> {
+  async findAllMasterOrders(filters?: {
+    status?: string;
+    search?: string;
+  }): Promise<any[]> {
     const db = getAdminDb();
     let q = db
       .from("orders")
-      .select(`
+      .select(
+        `
         *,
         order_items(
           *,
@@ -41,7 +49,8 @@ export class OrderRepository {
           )
         ),
         seller_order_fulfillments(*)
-      `)
+      `,
+      )
       .order("created_at", { ascending: false });
 
     if (filters?.status && filters.status !== "all") {
@@ -57,7 +66,9 @@ export class OrderRepository {
       results = results.filter(
         (o: any) =>
           o.id.toLowerCase().includes(queryStr) ||
-          (o.delivery_address_snapshot?.full_name || "").toLowerCase().includes(queryStr)
+          (o.delivery_address_snapshot?.full_name || "")
+            .toLowerCase()
+            .includes(queryStr),
       );
     }
     return results;
@@ -97,7 +108,11 @@ export class OrderRepository {
     return true;
   }
 
-  async createOrder(orderPayload: any, lineItems: any[], fulfillments: any[]): Promise<string> {
+  async createOrder(
+    orderPayload: any,
+    lineItems: any[],
+    fulfillments: any[],
+  ): Promise<string> {
     const db = getAdminDb();
     const { data: order, error: orderErr } = await db
       .from("orders")
@@ -111,15 +126,23 @@ export class OrderRepository {
 
     const orderId = order.id;
 
-    const itemsWithOrderId = lineItems.map((li) => ({ ...li, order_id: orderId }));
-    const { error: itemsErr } = await db.from("order_items").insert(itemsWithOrderId);
+    const itemsWithOrderId = lineItems.map((li) => ({
+      ...li,
+      order_id: orderId,
+    }));
+    const { error: itemsErr } = await db
+      .from("order_items")
+      .insert(itemsWithOrderId);
 
     if (itemsErr) {
       await db.from("orders").delete().eq("id", orderId);
       throw new Error(`Order items insertion failed: ${itemsErr.message}`);
     }
 
-    const fulfillmentsWithOrderId = fulfillments.map((f) => ({ ...f, order_id: orderId }));
+    const fulfillmentsWithOrderId = fulfillments.map((f) => ({
+      ...f,
+      order_id: orderId,
+    }));
     await db.from("seller_order_fulfillments").insert(fulfillmentsWithOrderId);
 
     return orderId;

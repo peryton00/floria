@@ -8,14 +8,20 @@ import { auditLog } from "@/lib/server/audit";
 export async function POST(req: NextRequest) {
   try {
     const supabase = await getSupabaseServerClient();
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     const body = await req.json().catch(() => ({}));
     const { action, role, metadata } = body;
 
     if (action !== "USER_LOGIN" && action !== "USER_LOGOUT") {
       return NextResponse.json(
-        { success: false, error: "Only USER_LOGIN and USER_LOGOUT events permitted via auth endpoint" },
-        { status: 400 }
+        {
+          success: false,
+          error:
+            "Only USER_LOGIN and USER_LOGOUT events permitted via auth endpoint",
+        },
+        { status: 400 },
       );
     }
 
@@ -38,6 +44,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (err: any) {
     console.error("[api/auth/audit] Failed to record auth audit:", err.message);
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: err.message },
+      { status: 500 },
+    );
   }
 }

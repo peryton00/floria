@@ -39,7 +39,9 @@ export default function OperationsLoginPage() {
       const role = profile?.role || data.user.user_metadata?.role;
       if (role !== "operations" && role !== "admin" && role !== "super_admin") {
         await supabase.auth.signOut();
-        throw new Error("Access restricted: Your account does not have Operations privileges.");
+        throw new Error(
+          "Access restricted: Your account does not have Operations privileges.",
+        );
       }
 
       router.replace("/operations");
@@ -55,10 +57,20 @@ export default function OperationsLoginPage() {
       <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-8 max-w-md w-full shadow-2xl space-y-6">
         <div className="text-center space-y-2">
           <Link href="/" className="inline-flex items-center gap-2">
-            <Image src="/floria-logo.png" alt="Floria Logo" width={32} height={32} className="object-contain brightness-[5]" />
-            <span className="font-serif text-xl font-bold text-white tracking-tight">Floria Ops</span>
+            <Image
+              src="/floria-logo.png"
+              alt="Floria Logo"
+              width={32}
+              height={32}
+              className="object-contain brightness-[5]"
+            />
+            <span className="font-serif text-xl font-bold text-white tracking-tight">
+              Floria Ops
+            </span>
           </Link>
-          <p className="text-xs text-white/60">Fulfillment & Logistics Operator Login.</p>
+          <p className="text-xs text-white/60">
+            Fulfillment & Logistics Operator Login.
+          </p>
         </div>
 
         {error && (
@@ -68,11 +80,16 @@ export default function OperationsLoginPage() {
         )}
 
         {/* Google OAuth for Operations */}
-        <GoogleOAuthButton label="Sign in with Google" redirectTo="/operations" />
+        <GoogleOAuthButton
+          label="Sign in with Google"
+          redirectTo="/operations"
+        />
 
         <div className="relative flex py-1 items-center">
           <div className="flex-grow border-t border-white/10"></div>
-          <span className="flex-shrink mx-4 text-[10px] font-bold text-white/40 uppercase tracking-widest">or password</span>
+          <span className="flex-shrink mx-4 text-[10px] font-bold text-white/40 uppercase tracking-widest">
+            or password
+          </span>
           <div className="flex-grow border-t border-white/10"></div>
         </div>
 
@@ -110,12 +127,17 @@ export default function OperationsLoginPage() {
             disabled={loading}
             className="w-full py-3 rounded-xl bg-forest-600 hover:bg-forest-500 font-bold text-xs uppercase tracking-wider text-white transition-colors focus:outline-none disabled:opacity-50 min-h-[44px]"
           >
-            {loading ? "Authenticating Operator..." : "Sign In to Operations Console"}
+            {loading
+              ? "Authenticating Operator..."
+              : "Sign In to Operations Console"}
           </button>
         </form>
 
         <div className="text-center pt-2">
-          <Link href="/" className="text-xs text-white/50 hover:text-white transition-colors">
+          <Link
+            href="/"
+            className="text-xs text-white/50 hover:text-white transition-colors"
+          >
             ← Return to Floria Storefront
           </Link>
         </div>

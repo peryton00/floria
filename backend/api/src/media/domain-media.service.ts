@@ -10,7 +10,7 @@ export class DomainMediaService {
    */
   public static async updateSellerLogo(
     user: AuthenticatedUser,
-    assetId: string
+    assetId: string,
   ) {
     const adminDb = getAdminDb();
     const sellerId = user.sellerId;
@@ -27,7 +27,11 @@ export class DomainMediaService {
       .maybeSingle();
 
     if (sErr || !seller) throw Errors.notFound("Seller profile");
-    if (seller.user_id !== user.id && user.role !== "admin" && user.role !== "super_admin") {
+    if (
+      seller.user_id !== user.id &&
+      user.role !== "admin" &&
+      user.role !== "super_admin"
+    ) {
       throw Errors.forbidden("You do not own this seller profile.");
     }
 
@@ -40,7 +44,9 @@ export class DomainMediaService {
 
     if (aErr || !asset) throw Errors.notFound("Media asset");
     if (asset.seller_id && asset.seller_id !== sellerId) {
-      throw Errors.forbidden("Cross-seller media asset attachment is prohibited.");
+      throw Errors.forbidden(
+        "Cross-seller media asset attachment is prohibited.",
+      );
     }
     if (asset.status !== "READY") {
       throw Errors.validation("Media asset is not READY for logo attachment.");
@@ -49,11 +55,15 @@ export class DomainMediaService {
       throw Errors.validation("Only image assets can be used as seller logo.");
     }
     if (asset.storage_bucket !== "public-media") {
-      throw Errors.validation("Only public-media assets can be used as seller logo.");
+      throw Errors.validation(
+        "Only public-media assets can be used as seller logo.",
+      );
     }
 
     // 3. Resolve logo WebP URL
-    const variantMap = await MediaResolverService.resolveAssetVariants([assetId]);
+    const variantMap = await MediaResolverService.resolveAssetVariants([
+      assetId,
+    ]);
     const vars = variantMap.get(assetId) || {};
     const logoUrl = vars.standard || vars.medium || vars.thumbnail || "";
 
@@ -73,7 +83,9 @@ export class DomainMediaService {
       throw Errors.database(`Failed to update seller logo: ${uErr?.message}`);
     }
 
-    const [enriched] = await MediaResolverService.enrichSellerProfiles([updated]);
+    const [enriched] = await MediaResolverService.enrichSellerProfiles([
+      updated,
+    ]);
     return enriched;
   }
 
@@ -82,7 +94,7 @@ export class DomainMediaService {
    */
   public static async updateUserAvatar(
     user: AuthenticatedUser,
-    assetId: string
+    assetId: string,
   ) {
     const adminDb = getAdminDb();
 
@@ -103,21 +115,33 @@ export class DomainMediaService {
       .maybeSingle();
 
     if (aErr || !asset) throw Errors.notFound("Media asset");
-    if (asset.uploaded_by_user_id !== user.id && user.role !== "admin" && user.role !== "super_admin") {
-      throw Errors.forbidden("Cross-user media asset attachment is prohibited.");
+    if (
+      asset.uploaded_by_user_id !== user.id &&
+      user.role !== "admin" &&
+      user.role !== "super_admin"
+    ) {
+      throw Errors.forbidden(
+        "Cross-user media asset attachment is prohibited.",
+      );
     }
     if (asset.status !== "READY") {
-      throw Errors.validation("Media asset is not READY for avatar attachment.");
+      throw Errors.validation(
+        "Media asset is not READY for avatar attachment.",
+      );
     }
     if (asset.media_category !== "IMAGE") {
       throw Errors.validation("Only image assets can be used as avatar.");
     }
     if (asset.storage_bucket !== "public-media") {
-      throw Errors.validation("Only public-media assets can be used as avatar.");
+      throw Errors.validation(
+        "Only public-media assets can be used as avatar.",
+      );
     }
 
     // 3. Resolve avatar WebP URL
-    const variantMap = await MediaResolverService.resolveAssetVariants([assetId]);
+    const variantMap = await MediaResolverService.resolveAssetVariants([
+      assetId,
+    ]);
     const vars = variantMap.get(assetId) || {};
     const avatarUrl = vars.avatar || vars.thumbnail || vars.medium || "";
 
@@ -147,12 +171,14 @@ export class DomainMediaService {
   public static async updateCategoryBanner(
     user: AuthenticatedUser,
     categoryId: string,
-    assetId: string
+    assetId: string,
   ) {
     const adminDb = getAdminDb();
 
     if (user.role !== "admin" && user.role !== "super_admin") {
-      throw Errors.forbidden("Only administrators can update category banners.");
+      throw Errors.forbidden(
+        "Only administrators can update category banners.",
+      );
     }
 
     // 1. Verify category existence
@@ -176,14 +202,20 @@ export class DomainMediaService {
       throw Errors.validation("Media asset is not READY for category banner.");
     }
     if (asset.media_category !== "IMAGE") {
-      throw Errors.validation("Only image assets can be used as category banner.");
+      throw Errors.validation(
+        "Only image assets can be used as category banner.",
+      );
     }
     if (asset.storage_bucket !== "public-media") {
-      throw Errors.validation("Only public-media assets can be used as category banner.");
+      throw Errors.validation(
+        "Only public-media assets can be used as category banner.",
+      );
     }
 
     // 3. Resolve banner WebP URL
-    const variantMap = await MediaResolverService.resolveAssetVariants([assetId]);
+    const variantMap = await MediaResolverService.resolveAssetVariants([
+      assetId,
+    ]);
     const vars = variantMap.get(assetId) || {};
     const bannerUrl = vars.banner || vars.medium || vars.cover || "";
 
@@ -200,7 +232,9 @@ export class DomainMediaService {
       .single();
 
     if (uErr || !updated) {
-      throw Errors.database(`Failed to update category banner: ${uErr?.message}`);
+      throw Errors.database(
+        `Failed to update category banner: ${uErr?.message}`,
+      );
     }
 
     const [enriched] = await MediaResolverService.enrichCategories([updated]);
@@ -214,7 +248,7 @@ export class DomainMediaService {
     user: AuthenticatedUser,
     reviewId: string,
     assetId: string,
-    displayOrder = 0
+    displayOrder = 0,
   ) {
     const adminDb = getAdminDb();
 
@@ -226,7 +260,11 @@ export class DomainMediaService {
       .maybeSingle();
 
     if (rErr || !review) throw Errors.notFound("Product review");
-    if (review.customer_id !== user.id && user.role !== "admin" && user.role !== "super_admin") {
+    if (
+      review.customer_id !== user.id &&
+      user.role !== "admin" &&
+      user.role !== "super_admin"
+    ) {
       throw Errors.forbidden("You do not own this product review.");
     }
 
@@ -238,8 +276,14 @@ export class DomainMediaService {
       .maybeSingle();
 
     if (aErr || !asset) throw Errors.notFound("Media asset");
-    if (asset.uploaded_by_user_id !== user.id && user.role !== "admin" && user.role !== "super_admin") {
-      throw Errors.forbidden("Cross-user review image attachment is prohibited.");
+    if (
+      asset.uploaded_by_user_id !== user.id &&
+      user.role !== "admin" &&
+      user.role !== "super_admin"
+    ) {
+      throw Errors.forbidden(
+        "Cross-user review image attachment is prohibited.",
+      );
     }
     if (asset.status !== "READY") {
       throw Errors.validation("Media asset is not READY for review image.");
@@ -248,7 +292,9 @@ export class DomainMediaService {
       throw Errors.validation("Only image assets can be attached to reviews.");
     }
     if (asset.storage_bucket !== "public-media") {
-      throw Errors.validation("Only public-media assets can be attached to reviews.");
+      throw Errors.validation(
+        "Only public-media assets can be attached to reviews.",
+      );
     }
 
     // 3. Upsert into review_media table
@@ -263,7 +309,9 @@ export class DomainMediaService {
       .single();
 
     if (insErr || !attached) {
-      throw Errors.database(`Failed to attach review image: ${insErr?.message}`);
+      throw Errors.database(
+        `Failed to attach review image: ${insErr?.message}`,
+      );
     }
 
     const [enriched] = await MediaResolverService.enrichReviewMedia([attached]);
@@ -276,19 +324,23 @@ export class DomainMediaService {
   public static async attachSellerDocument(
     user: AuthenticatedUser,
     documentType: string,
-    fileAssetId: string
+    fileAssetId: string,
   ) {
     const adminDb = getAdminDb();
     const sellerId = user.sellerId;
 
     if (!sellerId) {
-      throw Errors.forbidden("Seller profile required to upload seller documents.");
+      throw Errors.forbidden(
+        "Seller profile required to upload seller documents.",
+      );
     }
 
     // 1. Verify media asset in private-documents
     const { data: asset, error: aErr } = await adminDb
       .from("media_assets")
-      .select("id, seller_id, status, media_category, storage_bucket, original_path, original_filename, mime_type, file_size_bytes")
+      .select(
+        "id, seller_id, status, media_category, storage_bucket, original_path, original_filename, mime_type, file_size_bytes",
+      )
       .eq("id", fileAssetId)
       .maybeSingle();
 
@@ -297,7 +349,9 @@ export class DomainMediaService {
       throw Errors.forbidden("Cross-seller document upload is prohibited.");
     }
     if (asset.storage_bucket !== "private-documents") {
-      throw Errors.validation("Seller documents must be stored in 'private-documents' bucket.");
+      throw Errors.validation(
+        "Seller documents must be stored in 'private-documents' bucket.",
+      );
     }
 
     // 2. Create seller_documents record
@@ -313,7 +367,9 @@ export class DomainMediaService {
       .single();
 
     if (dErr || !doc) {
-      throw Errors.database(`Failed to record seller document: ${dErr?.message}`);
+      throw Errors.database(
+        `Failed to record seller document: ${dErr?.message}`,
+      );
     }
 
     return doc;
@@ -324,7 +380,7 @@ export class DomainMediaService {
    */
   public static async getSignedDocumentUrl(
     user: AuthenticatedUser,
-    documentId: string
+    documentId: string,
   ): Promise<{ signedUrl: string; filename?: string }> {
     const adminDb = getAdminDb();
 
@@ -339,7 +395,11 @@ export class DomainMediaService {
 
     // Security check: Only seller owner or admin can access private document
     const sellerUserId = (doc.seller as any)?.user_id;
-    if (sellerUserId !== user.id && user.role !== "admin" && user.role !== "super_admin") {
+    if (
+      sellerUserId !== user.id &&
+      user.role !== "admin" &&
+      user.role !== "super_admin"
+    ) {
       throw Errors.forbidden("Unauthorized access to private seller document.");
     }
 
@@ -366,7 +426,9 @@ export class DomainMediaService {
       .createSignedUrl(storagePath, 3600);
 
     if (sErr || !urlData?.signedUrl) {
-      throw Errors.database(`Failed to generate signed document URL: ${sErr?.message}`);
+      throw Errors.database(
+        `Failed to generate signed document URL: ${sErr?.message}`,
+      );
     }
 
     return {
@@ -380,13 +442,15 @@ export class DomainMediaService {
    */
   public static async updateNurseryBanner(
     user: AuthenticatedUser,
-    assetId: string
+    assetId: string,
   ) {
     const adminDb = getAdminDb();
     const sellerId = user.sellerId;
 
     if (!sellerId) {
-      throw Errors.forbidden("Seller profile required to update nursery banner.");
+      throw Errors.forbidden(
+        "Seller profile required to update nursery banner.",
+      );
     }
 
     // 1. Verify seller profile ownership
@@ -397,7 +461,11 @@ export class DomainMediaService {
       .maybeSingle();
 
     if (sErr || !seller) throw Errors.notFound("Seller profile");
-    if (seller.user_id !== user.id && user.role !== "admin" && user.role !== "super_admin") {
+    if (
+      seller.user_id !== user.id &&
+      user.role !== "admin" &&
+      user.role !== "super_admin"
+    ) {
       throw Errors.forbidden("You do not own this nursery profile.");
     }
 
@@ -410,20 +478,28 @@ export class DomainMediaService {
 
     if (aErr || !asset) throw Errors.notFound("Media asset");
     if (asset.seller_id && asset.seller_id !== sellerId) {
-      throw Errors.forbidden("Cross-seller media asset attachment is prohibited.");
+      throw Errors.forbidden(
+        "Cross-seller media asset attachment is prohibited.",
+      );
     }
     if (asset.status !== "READY") {
       throw Errors.validation("Media asset is not READY for nursery banner.");
     }
     if (asset.media_category !== "IMAGE") {
-      throw Errors.validation("Only image assets can be used as nursery banner.");
+      throw Errors.validation(
+        "Only image assets can be used as nursery banner.",
+      );
     }
     if (asset.storage_bucket !== "public-media") {
-      throw Errors.validation("Only public-media assets can be used as nursery banner.");
+      throw Errors.validation(
+        "Only public-media assets can be used as nursery banner.",
+      );
     }
 
     // 3. Resolve nursery cover WebP URL
-    const variantMap = await MediaResolverService.resolveAssetVariants([assetId]);
+    const variantMap = await MediaResolverService.resolveAssetVariants([
+      assetId,
+    ]);
     const vars = variantMap.get(assetId) || {};
     const bannerUrl = vars.cover || vars.card || vars.medium || "";
 
@@ -440,10 +516,14 @@ export class DomainMediaService {
       .single();
 
     if (uErr || !updated) {
-      throw Errors.database(`Failed to update nursery banner: ${uErr?.message}`);
+      throw Errors.database(
+        `Failed to update nursery banner: ${uErr?.message}`,
+      );
     }
 
-    const [enriched] = await MediaResolverService.enrichSellerProfiles([updated]);
+    const [enriched] = await MediaResolverService.enrichSellerProfiles([
+      updated,
+    ]);
     return enriched;
   }
 }

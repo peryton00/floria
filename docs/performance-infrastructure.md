@@ -20,20 +20,20 @@ The Floria platform is built on a decoupled, production-grade 4-tier architectur
 
 ## 2. Infrastructure Environments Comparison
 
-| Environment Layer | Render Free Tier (Current Testing) | Render Production (Recommended Always-On) |
-|---|---|---|
-| **Instance Type** | Free Web Service (512MB RAM, shared CPU) | Paid Starter / Standard ($7–$25/mo) |
-| **Idle Behavior** | Enters sleep mode after 15 min inactivity | Always-On (0 ms cold start) |
-| **Cold Start Overhead** | ~3.8s – 5.2s initial wake latency | 0 ms (100% active process state) |
-| **Warm Request Latency** | ~45 ms – 95 ms | ~20 ms – 45 ms |
-| **Database Pooler Connection** | Direct / Single process connection | Supabase Transaction Pooler (Port 6543) |
-| **Concurrency Limit** | ~20 concurrent requests | 500+ concurrent requests |
+| Environment Layer              | Render Free Tier (Current Testing)        | Render Production (Recommended Always-On) |
+| ------------------------------ | ----------------------------------------- | ----------------------------------------- |
+| **Instance Type**              | Free Web Service (512MB RAM, shared CPU)  | Paid Starter / Standard ($7–$25/mo)       |
+| **Idle Behavior**              | Enters sleep mode after 15 min inactivity | Always-On (0 ms cold start)               |
+| **Cold Start Overhead**        | ~3.8s – 5.2s initial wake latency         | 0 ms (100% active process state)          |
+| **Warm Request Latency**       | ~45 ms – 95 ms                            | ~20 ms – 45 ms                            |
+| **Database Pooler Connection** | Direct / Single process connection        | Supabase Transaction Pooler (Port 6543)   |
+| **Concurrency Limit**          | ~20 concurrent requests                   | 500+ concurrent requests                  |
 
 ---
 
 ## 3. Handling Cold Starts Gracefully in UX
 
-While deployed on Render Free for testing/staging, cold-start latency is an **infrastructure-level behavior** that cannot be eliminated without an always-on backend instance. 
+While deployed on Render Free for testing/staging, cold-start latency is an **infrastructure-level behavior** that cannot be eliminated without an always-on backend instance.
 
 Floria solves this from a User Experience perspective by implementing a **Progressive First-Paint Strategy**:
 

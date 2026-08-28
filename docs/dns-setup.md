@@ -6,11 +6,11 @@ This guide provides step-by-step instructions for pointing your custom domain (e
 
 ## 1. Domain Overview & Subdomains
 
-| Service | Target Domain / Subdomain | Target Provider Record Type | Target Destination |
-|---|---|---|---|
-| **Web App Root** | `floria.in` | **A Record** | `76.76.21.21` (Vercel IP) |
-| **Web App WWW** | `www.floria.in` | **CNAME Record** | `cname.vercel-dns.com` |
-| **Backend REST API** | `api.floria.in` | **CNAME Record** | `<your-render-service>.onrender.com` |
+| Service              | Target Domain / Subdomain | Target Provider Record Type | Target Destination                   |
+| -------------------- | ------------------------- | --------------------------- | ------------------------------------ |
+| **Web App Root**     | `floria.in`               | **A Record**                | `76.76.21.21` (Vercel IP)            |
+| **Web App WWW**      | `www.floria.in`           | **CNAME Record**            | `cname.vercel-dns.com`               |
+| **Backend REST API** | `api.floria.in`           | **CNAME Record**            | `<your-render-service>.onrender.com` |
 
 ---
 
@@ -19,6 +19,7 @@ This guide provides step-by-step instructions for pointing your custom domain (e
 Log into your DNS Registrar dashboard (where you bought `floria.in`) and add the following records under **DNS Management**:
 
 ### A. Point Web Frontend (`floria.in` & `www.floria.in`)
+
 1. **Apex/Root (`@`)**:
    - **Type**: `A`
    - **Name**: `@` (or leave blank depending on provider)
@@ -31,16 +32,18 @@ Log into your DNS Registrar dashboard (where you bought `floria.in`) and add the
    - **TTL**: Auto / 3600
 
 ### B. Point Backend API (`api.floria.in`)
+
 1. In your **Render Dashboard** → Select `floria-api` web service → **Settings** → **Custom Domains** → Click **Add Custom Domain** → Enter `api.floria.in`.
 2. In your **DNS Registrar Dashboard**:
    - **Type**: `CNAME`
    - **Name**: `api`
-   - **Value**: `floria-api.onrender.com` *(Copy exact CNAME provided by Render)*
+   - **Value**: `floria-api.onrender.com` _(Copy exact CNAME provided by Render)_
    - **TTL**: Auto / 3600
 
 ---
 
 ## 3. Update Vercel / Web Host Dashboard
+
 1. Go to **Vercel Dashboard → Project Settings → Domains**.
 2. Add `floria.in` and `www.floria.in`.
 3. Vercel will automatically verify DNS propagation and issue a free Let's Encrypt TLS/SSL Certificate.

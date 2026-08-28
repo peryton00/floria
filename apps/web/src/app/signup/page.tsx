@@ -72,8 +72,12 @@ export default function SignupPage() {
   return (
     <CustomerShell>
       <div className="max-w-md mx-auto py-12 px-6 bg-white rounded-2xl border border-ink-100 shadow-sm animate-fade-in my-8">
-        <h1 className="font-serif text-2xl font-bold text-ink-900 mb-1 text-center">Create Account</h1>
-        <p className="text-xs text-ink-400 text-center mb-6">Join Floria and start your plant journey.</p>
+        <h1 className="font-serif text-2xl font-bold text-ink-900 mb-1 text-center">
+          Create Account
+        </h1>
+        <p className="text-xs text-ink-400 text-center mb-6">
+          Join Floria and start your plant journey.
+        </p>
 
         {error && (
           <div className="mb-6 p-3 bg-error-50 border border-error-100 rounded-xl text-xs text-error-700 flex items-start gap-2">
@@ -96,13 +100,18 @@ export default function SignupPage() {
 
         <div className="relative flex py-2 items-center mb-6">
           <div className="flex-grow border-t border-ink-100"></div>
-          <span className="flex-shrink mx-4 text-[10px] font-bold text-ink-400 uppercase tracking-widest">or email</span>
+          <span className="flex-shrink mx-4 text-[10px] font-bold text-ink-400 uppercase tracking-widest">
+            or email
+          </span>
           <div className="flex-grow border-t border-ink-100"></div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="signup-name" className="block text-xs font-bold uppercase tracking-wider text-ink-500 mb-2">
+            <label
+              htmlFor="signup-name"
+              className="block text-xs font-bold uppercase tracking-wider text-ink-500 mb-2"
+            >
               Full Name *
             </label>
             <input
@@ -117,7 +126,10 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label htmlFor="signup-email" className="block text-xs font-bold uppercase tracking-wider text-ink-500 mb-2">
+            <label
+              htmlFor="signup-email"
+              className="block text-xs font-bold uppercase tracking-wider text-ink-500 mb-2"
+            >
               Email Address *
             </label>
             <input
@@ -132,7 +144,10 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label htmlFor="signup-phone" className="block text-xs font-bold uppercase tracking-wider text-ink-500 mb-2">
+            <label
+              htmlFor="signup-phone"
+              className="block text-xs font-bold uppercase tracking-wider text-ink-500 mb-2"
+            >
               Phone Number
             </label>
             <input
@@ -146,7 +161,10 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label htmlFor="signup-pass" className="block text-xs font-bold uppercase tracking-wider text-ink-500 mb-2">
+            <label
+              htmlFor="signup-pass"
+              className="block text-xs font-bold uppercase tracking-wider text-ink-500 mb-2"
+            >
               Password *
             </label>
             <input
@@ -172,9 +190,20 @@ export default function SignupPage() {
             />
             <span>
               I agree to the{" "}
-              <a href="#" className="text-forest-700 font-semibold hover:text-forest-900">Terms &amp; Conditions</a>
-              {" "}and{" "}
-              <a href="#" className="text-forest-700 font-semibold hover:text-forest-900">Privacy Policy</a>.
+              <a
+                href="#"
+                className="text-forest-700 font-semibold hover:text-forest-900"
+              >
+                Terms &amp; Conditions
+              </a>{" "}
+              and{" "}
+              <a
+                href="#"
+                className="text-forest-700 font-semibold hover:text-forest-900"
+              >
+                Privacy Policy
+              </a>
+              .
             </span>
           </label>
 
@@ -190,7 +219,10 @@ export default function SignupPage() {
 
         <p className="text-xs text-ink-400 text-center mt-6">
           Already have an account?{" "}
-          <Link href="/login" className="text-forest-700 font-semibold hover:text-forest-900">
+          <Link
+            href="/login"
+            className="text-forest-700 font-semibold hover:text-forest-900"
+          >
             Login
           </Link>
         </p>

@@ -11,13 +11,18 @@ Floria uses an abstract interface (`PaymentProvider`) to decouple checkout logic
 ```typescript
 export interface PaymentProvider {
   providerName: string;
-  createPaymentIntent(input: CreatePaymentIntentInput): Promise<PaymentProviderResult>;
-  verifyWebhookSignature(input: VerifyWebhookInput): Promise<WebhookVerificationResult>;
+  createPaymentIntent(
+    input: CreatePaymentIntentInput,
+  ): Promise<PaymentProviderResult>;
+  verifyWebhookSignature(
+    input: VerifyWebhookInput,
+  ): Promise<WebhookVerificationResult>;
   processRefund(input: RefundInput): Promise<RefundResult>;
 }
 ```
 
 Active Implementations:
+
 - `CodPaymentProvider`: Manages Cash on Delivery transactions.
 - `CashfreePaymentProvider`: Manages online card, UPI, netbanking, and wallet payments via Cashfree Payment Gateway API (`CASHFREE_CLIENT_ID` / `CASHFREE_CLIENT_SECRET`).
 

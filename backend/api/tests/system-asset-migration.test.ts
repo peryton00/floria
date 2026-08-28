@@ -1,4 +1,3 @@
-
 // Floria Media Infrastructure — Stage 6 System Asset Migration Unit Test Suite
 import { describe, it, expect, vi } from "vitest";
 import sharp from "sharp";
@@ -37,13 +36,19 @@ describe("Stage 6 — System Asset Migration Manifest & Security Validation", ()
   });
 
   it("correctly maps category assets to CATEGORY profile and nursery/hero assets to NURSERY profile", () => {
-    const catPlants = SYSTEM_ASSETS_MANIFEST.find((a) => a.originalFilename === "cat-plants.png")!;
+    const catPlants = SYSTEM_ASSETS_MANIFEST.find(
+      (a) => a.originalFilename === "cat-plants.png",
+    )!;
     expect(catPlants.profile).toBe("CATEGORY");
 
-    const nursery1 = SYSTEM_ASSETS_MANIFEST.find((a) => a.originalFilename === "nursery-1.png")!;
+    const nursery1 = SYSTEM_ASSETS_MANIFEST.find(
+      (a) => a.originalFilename === "nursery-1.png",
+    )!;
     expect(nursery1.profile).toBe("NURSERY");
 
-    const hero = SYSTEM_ASSETS_MANIFEST.find((a) => a.originalFilename === "hero-plants.png")!;
+    const hero = SYSTEM_ASSETS_MANIFEST.find(
+      (a) => a.originalFilename === "hero-plants.png",
+    )!;
     expect(hero.profile).toBe("NURSERY");
   });
 });
@@ -62,7 +67,10 @@ describe("Stage 6 — System Asset Migration Execution & Idempotency", () => {
       })),
     };
 
-    vi.spyOn(await import("../src/config/database.js"), "getAdminDb").mockReturnValue(mockAdminDb as any);
+    vi.spyOn(
+      await import("../src/config/database.js"),
+      "getAdminDb",
+    ).mockReturnValue(mockAdminDb as any);
 
     const userId = await resolveSystemUploaderUserId();
     expect(userId).toBe(DEFAULT_SYSTEM_USER_ID);
@@ -70,7 +78,12 @@ describe("Stage 6 — System Asset Migration Execution & Idempotency", () => {
 
   it("executes idempotent migration: assigns is_system_seeded = TRUE and seller_id = NULL", async () => {
     const mockPng = await sharp({
-      create: { width: 400, height: 300, channels: 4, background: { r: 30, g: 130, b: 30, alpha: 1 } },
+      create: {
+        width: 400,
+        height: 300,
+        channels: 4,
+        background: { r: 30, g: 130, b: 30, alpha: 1 },
+      },
     })
       .png()
       .toBuffer();
@@ -98,7 +111,12 @@ describe("Stage 6 — System Asset Migration Execution & Idempotency", () => {
             select: vi.fn().mockReturnThis(),
             eq: vi.fn().mockReturnThis(),
             limit: vi.fn().mockReturnThis(),
-            maybeSingle: vi.fn().mockResolvedValue({ data: { id: DEFAULT_SYSTEM_USER_ID }, error: null }),
+            maybeSingle: vi
+              .fn()
+              .mockResolvedValue({
+                data: { id: DEFAULT_SYSTEM_USER_ID },
+                error: null,
+              }),
           };
         }
         if (table === "media_assets") {
@@ -129,7 +147,10 @@ describe("Stage 6 — System Asset Migration Execution & Idempotency", () => {
       },
     };
 
-    vi.spyOn(await import("../src/config/database.js"), "getAdminDb").mockReturnValue(mockAdminDb as any);
+    vi.spyOn(
+      await import("../src/config/database.js"),
+      "getAdminDb",
+    ).mockReturnValue(mockAdminDb as any);
 
     const results = await migrateSystemAssets(mockBuffers);
     expect(results.length).toBeGreaterThan(0);

@@ -1,11 +1,13 @@
-
 // Floria Media Infrastructure — System Assets Migration Script (Stage 6)
 import fs from "fs";
 import path from "path";
 import crypto from "crypto";
 import { getAdminDb } from "../../config/database.js";
 import { ImageEngine } from "../image-engine/image-engine.js";
-import { SYSTEM_ASSETS_MANIFEST, SystemAssetDefinition } from "./system-assets-manifest.js";
+import {
+  SYSTEM_ASSETS_MANIFEST,
+  SystemAssetDefinition,
+} from "./system-assets-manifest.js";
 
 export interface MigratedAssetResult {
   legacyPath: string;
@@ -55,7 +57,9 @@ export async function resolveSystemUploaderUserId(): Promise<string> {
  * processes through Stage 3 ImageEngine, uploads WebP variants to public-media,
  * and records database records with is_system_seeded = TRUE and seller_id = NULL.
  */
-export async function migrateSystemAssets(overrideBuffers?: Record<string, Buffer>): Promise<MigratedAssetResult[]> {
+export async function migrateSystemAssets(
+  overrideBuffers?: Record<string, Buffer>,
+): Promise<MigratedAssetResult[]> {
   const adminDb = getAdminDb();
   const systemUserId = await resolveSystemUploaderUserId();
   const results: MigratedAssetResult[] = [];
@@ -66,8 +70,8 @@ export async function migrateSystemAssets(overrideBuffers?: Record<string, Buffe
   const effectivePublicDir = fs.existsSync(publicDir)
     ? publicDir
     : fs.existsSync(fallbackPublicDir)
-    ? fallbackPublicDir
-    : process.cwd();
+      ? fallbackPublicDir
+      : process.cwd();
 
   const supabaseUrl = process.env.SUPABASE_URL || "https://supabase.co";
 
@@ -84,10 +88,15 @@ export async function migrateSystemAssets(overrideBuffers?: Record<string, Buffe
     }
 
     if (!fileBuffer) {
-      console.warn(`[SystemMigration] Source file '${assetDef.legacyPath}' not found. Skipping.`);
+      console.warn(
+        `[SystemMigration] Source file '${assetDef.legacyPath}' not found. Skipping.`,
+      );
       continue;
     }
-    const sha256Hash = crypto.createHash("sha256").update(fileBuffer).digest("hex");
+    const sha256Hash = crypto
+      .createHash("sha256")
+      .update(fileBuffer)
+      .digest("hex");
 
     // 1. SHA-256 Deduplication Check (for system-seeded READY assets)
     const { data: existingAsset } = await adminDb
@@ -108,7 +117,8 @@ export async function migrateSystemAssets(overrideBuffers?: Record<string, Buffe
       const variantMap: Record<string, string> = {};
       if (variantRows) {
         for (const v of variantRows) {
-          variantMap[v.variant_name] = `${supabaseUrl}/storage/v1/object/public/${v.storage_bucket}/${v.storage_path}`;
+          variantMap[v.variant_name] =
+            `${supabaseUrl}/storage/v1/object/public/${v.storage_bucket}/${v.storage_path}`;
         }
       }
 
@@ -124,7 +134,10 @@ export async function migrateSystemAssets(overrideBuffers?: Record<string, Buffe
     }
 
     // 2. Process Binary through Stage 3 ImageEngine
-    const engineResult = await ImageEngine.process(fileBuffer, assetDef.profile);
+    const engineResult = await ImageEngine.process(
+      fileBuffer,
+      assetDef.profile,
+    );
 
     // 3. Generate Asset UUID & Upload WebP Variants to public-media
     const assetId = crypto.randomUUID();
@@ -154,7 +167,9 @@ export async function migrateSystemAssets(overrideBuffers?: Record<string, Buffe
           });
 
         if (uploadErr) {
-          throw new Error(`Failed to upload variant '${variant.variantName}' to '${storagePath}': ${uploadErr.message}`);
+          throw new Error(
+            `Failed to upload variant '${variant.variantName}' to '${storagePath}': ${uploadErr.message}`,
+          );
         }
 
         uploadedVariantPaths.push(storagePath);
@@ -169,7 +184,8 @@ export async function migrateSystemAssets(overrideBuffers?: Record<string, Buffe
           storage_path: storagePath,
         });
 
-        variantMap[variant.variantName] = `${supabaseUrl}/storage/v1/object/public/public-media/${storagePath}`;
+        variantMap[variant.variantName] =
+          `${supabaseUrl}/storage/v1/object/public/public-media/${storagePath}`;
       }
 
       // 4. Database Records Creation
@@ -188,12 +204,18 @@ export async function migrateSystemAssets(overrideBuffers?: Record<string, Buffe
       });
 
       if (assetErr) {
-        throw new Error(`Failed to insert media_assets record: ${assetErr.message}`);
+        throw new Error(
+          `Failed to insert media_assets record: ${assetErr.message}`,
+        );
       }
 
-      const { error: variantErr } = await adminDb.from("media_variants").insert(variantRecords);
+      const { error: variantErr } = await adminDb
+        .from("media_variants")
+        .insert(variantRecords);
       if (variantErr) {
-        throw new Error(`Failed to insert media_variants records: ${variantErr.message}`);
+        throw new Error(
+          `Failed to insert media_variants records: ${variantErr.message}`,
+        );
       }
 
       results.push({
@@ -208,9 +230,13 @@ export async function migrateSystemAssets(overrideBuffers?: Record<string, Buffe
       // ROLLBACK: Delete any partial storage variants uploaded during this failed migration attempt
       if (uploadedVariantPaths.length > 0) {
         try {
-          await adminDb.storage.from("public-media").remove(uploadedVariantPaths);
+          await adminDb.storage
+            .from("public-media")
+            .remove(uploadedVariantPaths);
         } catch (cleanupErr: any) {
-          console.error(`[SystemMigration] Rollback cleanup error for '${assetDef.legacyPath}': ${cleanupErr.message}`);
+          console.error(
+            `[SystemMigration] Rollback cleanup error for '${assetDef.legacyPath}': ${cleanupErr.message}`,
+          );
         }
       }
       throw err;

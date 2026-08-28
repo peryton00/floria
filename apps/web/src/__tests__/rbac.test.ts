@@ -26,7 +26,10 @@ describe("RBAC Authorization System (src/lib/server/auth.ts)", () => {
 
   describe("Unauthenticated Access", () => {
     it("requireUser throws 401 AUTH_REQUIRED when session is missing", async () => {
-      mockGetUser.mockResolvedValue({ data: { user: null }, error: new Error("No session") });
+      mockGetUser.mockResolvedValue({
+        data: { user: null },
+        error: new Error("No session"),
+      });
       const { requireUser } = await import("@/lib/server/auth");
       const { FloriaError } = await import("@/lib/server/errors");
 
@@ -52,7 +55,10 @@ describe("RBAC Authorization System (src/lib/server/auth.ts)", () => {
           return {
             select: () => ({
               eq: () => ({
-                maybeSingle: async () => ({ data: { id: userId, role }, error: null }),
+                maybeSingle: async () => ({
+                  data: { id: userId, role },
+                  error: null,
+                }),
               }),
             }),
           };
@@ -74,7 +80,11 @@ describe("RBAC Authorization System (src/lib/server/auth.ts)", () => {
             }),
           };
         }
-        return { select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null }) }) }) };
+        return {
+          select: () => ({
+            eq: () => ({ maybeSingle: async () => ({ data: null }) }),
+          }),
+        };
       });
     };
 
@@ -101,7 +111,10 @@ describe("RBAC Authorization System (src/lib/server/auth.ts)", () => {
           const user = await requireOperations();
           expect(["operations", "admin"]).toContain(user.role);
         } else {
-          await expect(requireOperations()).rejects.toHaveProperty("status", 403);
+          await expect(requireOperations()).rejects.toHaveProperty(
+            "status",
+            403,
+          );
         }
       }
     });
@@ -111,7 +124,10 @@ describe("RBAC Authorization System (src/lib/server/auth.ts)", () => {
 
       setupUserMock("user-cust", "customer");
       await expect(requireRole("seller")).rejects.toHaveProperty("status", 403);
-      await expect(requireRole("operations")).rejects.toHaveProperty("status", 403);
+      await expect(requireRole("operations")).rejects.toHaveProperty(
+        "status",
+        403,
+      );
       await expect(requireRole("admin")).rejects.toHaveProperty("status", 403);
 
       const cust = await requireRole("customer");
@@ -122,7 +138,9 @@ describe("RBAC Authorization System (src/lib/server/auth.ts)", () => {
   // ── 3. Seller Application & Operational Status Rules ───────────────────────
 
   describe("Seller Application Status (Approved vs Pending vs Suspended)", () => {
-    const setupSellerStatusMock = (status: "pending" | "approved" | "suspended") => {
+    const setupSellerStatusMock = (
+      status: "pending" | "approved" | "suspended",
+    ) => {
       const userId = "seller-123";
       mockGetUser.mockResolvedValue({
         data: { user: { id: userId, email: "nursery@floria.test" } },
@@ -134,7 +152,10 @@ describe("RBAC Authorization System (src/lib/server/auth.ts)", () => {
           return {
             select: () => ({
               eq: () => ({
-                maybeSingle: async () => ({ data: { id: userId, role: "seller" }, error: null }),
+                maybeSingle: async () => ({
+                  data: { id: userId, role: "seller" },
+                  error: null,
+                }),
               }),
             }),
           };
@@ -156,7 +177,11 @@ describe("RBAC Authorization System (src/lib/server/auth.ts)", () => {
             }),
           };
         }
-        return { select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null }) }) }) };
+        return {
+          select: () => ({
+            eq: () => ({ maybeSingle: async () => ({ data: null }) }),
+          }),
+        };
       });
     };
 
@@ -178,7 +203,9 @@ describe("RBAC Authorization System (src/lib/server/auth.ts)", () => {
       const { requireSellerProfile } = await import("@/lib/server/auth");
 
       setupSellerStatusMock("pending");
-      const pendingSeller = await requireSellerProfile({ allowPendingOrSuspended: true });
+      const pendingSeller = await requireSellerProfile({
+        allowPendingOrSuspended: true,
+      });
       expect(pendingSeller.sellerStatus).toBe("pending");
       expect(pendingSeller.businessName).toBe("Green Leaf Nursery");
     });
@@ -205,7 +232,10 @@ describe("RBAC Authorization System (src/lib/server/auth.ts)", () => {
           return {
             select: () => ({
               eq: () => ({
-                maybeSingle: async () => ({ data: { id: userIdA, role: "seller" }, error: null }),
+                maybeSingle: async () => ({
+                  data: { id: userIdA, role: "seller" },
+                  error: null,
+                }),
               }),
             }),
           };
@@ -215,7 +245,12 @@ describe("RBAC Authorization System (src/lib/server/auth.ts)", () => {
             select: () => ({
               eq: () => ({
                 maybeSingle: async () => ({
-                  data: { id: sellerIdA, user_id: userIdA, status: "approved", business_name: "Seller A" },
+                  data: {
+                    id: sellerIdA,
+                    user_id: userIdA,
+                    status: "approved",
+                    business_name: "Seller A",
+                  },
                   error: null,
                 }),
               }),
@@ -229,10 +264,16 @@ describe("RBAC Authorization System (src/lib/server/auth.ts)", () => {
                 maybeSingle: async () => {
                   if (val === "p-seller-b") {
                     // Product belongs to Seller B
-                    return { data: { id: "p-seller-b", seller_id: sellerIdB }, error: null };
+                    return {
+                      data: { id: "p-seller-b", seller_id: sellerIdB },
+                      error: null,
+                    };
                   }
                   if (val === "p-seller-a") {
-                    return { data: { id: "p-seller-a", seller_id: sellerIdA }, error: null };
+                    return {
+                      data: { id: "p-seller-a", seller_id: sellerIdA },
+                      error: null,
+                    };
                   }
                   return { data: null, error: null };
                 },
@@ -240,7 +281,11 @@ describe("RBAC Authorization System (src/lib/server/auth.ts)", () => {
             }),
           };
         }
-        return { select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null }) }) }) };
+        return {
+          select: () => ({
+            eq: () => ({ maybeSingle: async () => ({ data: null }) }),
+          }),
+        };
       });
 
       // Seller A accessing own product -> allowed
@@ -248,7 +293,10 @@ describe("RBAC Authorization System (src/lib/server/auth.ts)", () => {
       expect(ownProduct.sellerId).toBe(sellerIdA);
 
       // Seller A accessing Seller B product -> 403 Forbidden
-      await expect(requireOwnedProduct("p-seller-b")).rejects.toHaveProperty("status", 403);
+      await expect(requireOwnedProduct("p-seller-b")).rejects.toHaveProperty(
+        "status",
+        403,
+      );
     });
 
     it("prevents Seller A from modifying Seller B order fulfillment", async () => {
@@ -267,7 +315,10 @@ describe("RBAC Authorization System (src/lib/server/auth.ts)", () => {
           return {
             select: () => ({
               eq: () => ({
-                maybeSingle: async () => ({ data: { id: userIdA, role: "seller" }, error: null }),
+                maybeSingle: async () => ({
+                  data: { id: userIdA, role: "seller" },
+                  error: null,
+                }),
               }),
             }),
           };
@@ -277,7 +328,12 @@ describe("RBAC Authorization System (src/lib/server/auth.ts)", () => {
             select: () => ({
               eq: () => ({
                 maybeSingle: async () => ({
-                  data: { id: sellerIdA, user_id: userIdA, status: "approved", business_name: "Seller A" },
+                  data: {
+                    id: sellerIdA,
+                    user_id: userIdA,
+                    status: "approved",
+                    business_name: "Seller A",
+                  },
                   error: null,
                 }),
               }),
@@ -294,14 +350,25 @@ describe("RBAC Authorization System (src/lib/server/auth.ts)", () => {
                       // Does not exist for Seller A
                       return { data: null, error: null };
                     }
-                    return { data: { id: "ful-1", order_id: "order-own", seller_id: sellerIdA }, error: null };
+                    return {
+                      data: {
+                        id: "ful-1",
+                        order_id: "order-own",
+                        seller_id: sellerIdA,
+                      },
+                      error: null,
+                    };
                   },
                 }),
               }),
             }),
           };
         }
-        return { select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null }) }) }) };
+        return {
+          select: () => ({
+            eq: () => ({ maybeSingle: async () => ({ data: null }) }),
+          }),
+        };
       });
 
       // Seller A accessing own order -> allowed
@@ -309,7 +376,9 @@ describe("RBAC Authorization System (src/lib/server/auth.ts)", () => {
       expect(ownOrder.sellerId).toBe(sellerIdA);
 
       // Seller A accessing Seller B order -> 404/403
-      await expect(requireOwnedSellerOrder("order-seller-b-only")).rejects.toHaveProperty("status", 404);
+      await expect(
+        requireOwnedSellerOrder("order-seller-b-only"),
+      ).rejects.toHaveProperty("status", 404);
     });
   });
 });

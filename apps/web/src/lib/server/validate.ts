@@ -5,7 +5,8 @@ import "server-only";
 
 import { Errors } from "./errors";
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 // India: 10-digit number, optionally +91 prefix
 const PHONE_RE = /^(\+91[\s-]?)?[6-9]\d{9}$/;
 const PINCODE_RE = /^\d{6}$/;
@@ -65,11 +66,15 @@ export function validateAddress(input: AddressInput): ValidatedAddress {
   const full_name = String(input.full_name ?? "").trim();
   if (full_name.length < 2) errors.push("Name must be at least 2 characters.");
 
-  const phone = String(input.phone ?? "").trim().replace(/\s/g, "");
-  if (!PHONE_RE.test(phone)) errors.push("Please enter a valid 10-digit Indian mobile number.");
+  const phone = String(input.phone ?? "")
+    .trim()
+    .replace(/\s/g, "");
+  if (!PHONE_RE.test(phone))
+    errors.push("Please enter a valid 10-digit Indian mobile number.");
 
   const line1 = String(input.line1 ?? "").trim();
-  if (line1.length < 5) errors.push("Address line 1 must be at least 5 characters.");
+  if (line1.length < 5)
+    errors.push("Address line 1 must be at least 5 characters.");
 
   const city = String(input.city ?? "").trim();
   if (city.length < 2) errors.push("City is required.");
@@ -78,7 +83,8 @@ export function validateAddress(input: AddressInput): ValidatedAddress {
   if (state.length < 2) errors.push("State is required.");
 
   const pincode = String(input.pincode ?? "").trim();
-  if (!PINCODE_RE.test(pincode)) errors.push("PIN code must be exactly 6 digits.");
+  if (!PINCODE_RE.test(pincode))
+    errors.push("PIN code must be exactly 6 digits.");
 
   if (errors.length > 0) throw Errors.validation(errors.join(" "));
 
@@ -90,7 +96,9 @@ export function validateAddress(input: AddressInput): ValidatedAddress {
     city,
     state,
     pincode,
-    instructions: input.instructions ? String(input.instructions).trim() : undefined,
+    instructions: input.instructions
+      ? String(input.instructions).trim()
+      : undefined,
   };
 }
 
@@ -115,6 +123,7 @@ export function validatePricePaise(value: unknown, field = "Price"): number {
 /** Validate seller product name */
 export function validateProductName(value: unknown): string {
   const s = String(value ?? "").trim();
-  if (s.length < 2 || s.length > 200) throw Errors.validation("Product name must be 2–200 characters.");
+  if (s.length < 2 || s.length > 200)
+    throw Errors.validation("Product name must be 2–200 characters.");
   return s;
 }

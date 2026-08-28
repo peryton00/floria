@@ -26,6 +26,5 @@ vi.mock("next/link", () => ({
     href: string;
     children: React.ReactNode;
     [key: string]: unknown;
-  }) =>
-    React.createElement("a", { href, ...props }, children),
+  }) => React.createElement("a", { href, ...props }, children),
 }));

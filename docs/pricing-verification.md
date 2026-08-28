@@ -2,15 +2,15 @@
 
 ## 1. Verification Matrix
 
-| Area | Test Specification | Result |
-|---|---|---|
-| **Mathematical Correctness** | 6 baseline business rule test cases (Base ₹500, ₹580, ₹588, ₹599, ₹600, Cart rules) | ✅ PASSED (`src/pricing/pricing.test.ts`) |
-| **Policy Validation** | Bounds validation: Commission > 50%, negative values, negative fees | ✅ PASSED (`src/pricing/policy.test.ts`) |
-| **Atomic Activation** | Previous active policy archived, new version set active, platform_settings synchronized | ✅ PASSED (`src/pricing/policy.test.ts`) |
-| **Admin Overrides** | Mandatory reason validation, audit logging, RLS enforcement | ✅ PASSED (`src/pricing/policy.test.ts`) |
-| **Order Immutability** | `/orders` and `/orders/[id]` render historical snapshots without dynamic delivery fee derivation | ✅ PASSED (`apps/web` test suite) |
-| **Checkout Integrity** | Server-authoritative price calculation during checkout; overrides browser prices | ✅ PASSED (`backend/api/tests/api.test.ts`) |
-| **Type Safety** | Clean TypeScript compilation across `@floria/types`, `@floria/api-client`, `@floria/api`, `@floria/web` | ✅ PASSED (`pnpm typecheck`) |
+| Area                         | Test Specification                                                                                      | Result                                      |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| **Mathematical Correctness** | 6 baseline business rule test cases (Base ₹500, ₹580, ₹588, ₹599, ₹600, Cart rules)                     | ✅ PASSED (`src/pricing/pricing.test.ts`)   |
+| **Policy Validation**        | Bounds validation: Commission > 50%, negative values, negative fees                                     | ✅ PASSED (`src/pricing/policy.test.ts`)    |
+| **Atomic Activation**        | Previous active policy archived, new version set active, platform_settings synchronized                 | ✅ PASSED (`src/pricing/policy.test.ts`)    |
+| **Admin Overrides**          | Mandatory reason validation, audit logging, RLS enforcement                                             | ✅ PASSED (`src/pricing/policy.test.ts`)    |
+| **Order Immutability**       | `/orders` and `/orders/[id]` render historical snapshots without dynamic delivery fee derivation        | ✅ PASSED (`apps/web` test suite)           |
+| **Checkout Integrity**       | Server-authoritative price calculation during checkout; overrides browser prices                        | ✅ PASSED (`backend/api/tests/api.test.ts`) |
+| **Type Safety**              | Clean TypeScript compilation across `@floria/types`, `@floria/api-client`, `@floria/api`, `@floria/web` | ✅ PASSED (`pnpm typecheck`)                |
 
 ---
 

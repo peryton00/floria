@@ -11,7 +11,7 @@ export class AdminController {
     try {
       const start = Date.now();
       const db = getAdminDb();
-      
+
       // Ping DB and execute table count aggregations in parallel
       const [
         _,
@@ -36,23 +36,42 @@ export class AdminController {
         db.from("user_profiles").select("*", { count: "exact", head: true }),
         db.from("categories").select("*", { count: "exact", head: true }),
         db.from("audit_logs").select("*", { count: "exact", head: true }),
-        db.from("seller_profiles").select("*", { count: "exact", head: true }).eq("status", "pending"),
-        db.from("seller_order_fulfillments").select("*", { count: "exact", head: true }).eq("status", "preparing"),
-        db.from("inventory").select("*", { count: "exact", head: true }).lte("stock_quantity", 5),
+        db
+          .from("seller_profiles")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "pending"),
+        db
+          .from("seller_order_fulfillments")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "preparing"),
+        db
+          .from("inventory")
+          .select("*", { count: "exact", head: true })
+          .lte("stock_quantity", 5),
         db.from("media_assets").select("*", { count: "exact", head: true }),
         db.from("media_variants").select("*", { count: "exact", head: true }),
-        db.from("media_assets").select("*", { count: "exact", head: true }).eq("status", "READY"),
+        db
+          .from("media_assets")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "READY"),
         db.from("media_variants").select("size_bytes"),
       ]);
 
       const dbPing = Date.now() - start;
 
       const totalStorageBytes = Array.isArray(variantSizes)
-        ? variantSizes.reduce((acc, row) => acc + (Number(row.size_bytes) || 0), 0)
+        ? variantSizes.reduce(
+            (acc, row) => acc + (Number(row.size_bytes) || 0),
+            0,
+          )
         : 0;
-      const totalStorageMb = parseFloat((totalStorageBytes / (1024 * 1024)).toFixed(2));
+      const totalStorageMb = parseFloat(
+        (totalStorageBytes / (1024 * 1024)).toFixed(2),
+      );
       const storageQuotaMb = 1024; // 1 GB standard Supabase project tier
-      const storageFulfillmentPercent = parseFloat(((totalStorageBytes / (1024 * 1024 * 1024)) * 100).toFixed(2));
+      const storageFulfillmentPercent = parseFloat(
+        ((totalStorageBytes / (1024 * 1024 * 1024)) * 100).toFixed(2),
+      );
 
       const freeMem = os.freemem();
       const totalMem = os.totalmem();
@@ -79,9 +98,15 @@ export class AdminController {
             },
             processMemory: {
               rssMb: parseFloat((memUsage.rss / 1024 / 1024).toFixed(1)),
-              heapTotalMb: parseFloat((memUsage.heapTotal / 1024 / 1024).toFixed(1)),
-              heapUsedMb: parseFloat((memUsage.heapUsed / 1024 / 1024).toFixed(1)),
-              externalMb: parseFloat((memUsage.external / 1024 / 1024).toFixed(1)),
+              heapTotalMb: parseFloat(
+                (memUsage.heapTotal / 1024 / 1024).toFixed(1),
+              ),
+              heapUsedMb: parseFloat(
+                (memUsage.heapUsed / 1024 / 1024).toFixed(1),
+              ),
+              externalMb: parseFloat(
+                (memUsage.external / 1024 / 1024).toFixed(1),
+              ),
             },
           },
           database: {
@@ -106,7 +131,9 @@ export class AdminController {
             totalSizeMb: totalStorageMb,
             quotaMb: storageQuotaMb,
             fulfillmentPercentage: storageFulfillmentPercent,
-            remainingMb: parseFloat((storageQuotaMb - totalStorageMb).toFixed(2)),
+            remainingMb: parseFloat(
+              (storageQuotaMb - totalStorageMb).toFixed(2),
+            ),
             imageEngine: {
               status: "active",
               sharpEngine: "v8.x WebP Engine",
@@ -128,7 +155,11 @@ export class AdminController {
     }
   }
 
-  async getDashboard(_req: Request, res: Response, next: NextFunction): Promise<void> {
+  async getDashboard(
+    _req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const stats = await adminService.getDashboard();
       res.json({ success: true, data: stats });
@@ -137,7 +168,11 @@ export class AdminController {
     }
   }
 
-  async getAnalytics(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async getAnalytics(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const range = req.query.range as string | undefined;
       const data = await adminService.getAnalytics({ range });
@@ -147,7 +182,11 @@ export class AdminController {
     }
   }
 
-  async getUsers(_req: Request, res: Response, next: NextFunction): Promise<void> {
+  async getUsers(
+    _req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const users = await adminService.getUsers();
       res.json({ success: true, data: users });
@@ -156,7 +195,11 @@ export class AdminController {
     }
   }
 
-  async getUserById(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async getUserById(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const user = await adminService.getUserById(req.params.id as string);
       res.json({ success: true, data: user });
@@ -165,16 +208,29 @@ export class AdminController {
     }
   }
 
-  async updateUserStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async updateUserStatus(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
-      const result = await adminService.updateUserStatus(req.user!.id, req.params.id as string, req.body.status, req.body.rationale);
+      const result = await adminService.updateUserStatus(
+        req.user!.id,
+        req.params.id as string,
+        req.body.status,
+        req.body.rationale,
+      );
       res.json({ success: true, data: result });
     } catch (err) {
       next(err);
     }
   }
 
-  async getSellers(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async getSellers(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const status = req.query.status as string | undefined;
       const sellers = await adminService.getSellers(status);
@@ -184,7 +240,11 @@ export class AdminController {
     }
   }
 
-  async getSellerById(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async getSellerById(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const seller = await adminService.getSellerById(req.params.id as string);
       res.json({ success: true, data: seller });
@@ -193,66 +253,123 @@ export class AdminController {
     }
   }
 
-  async approveSeller(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async approveSeller(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
-      const result = await adminService.updateSellerStatus(req.user!.id, req.params.id as string, "approved");
+      const result = await adminService.updateSellerStatus(
+        req.user!.id,
+        req.params.id as string,
+        "approved",
+      );
       res.json({ success: true, data: result });
     } catch (err) {
       next(err);
     }
   }
 
-  async rejectSeller(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async rejectSeller(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
-      const result = await adminService.updateSellerStatus(req.user!.id, req.params.id as string, "rejected");
+      const result = await adminService.updateSellerStatus(
+        req.user!.id,
+        req.params.id as string,
+        "rejected",
+      );
       res.json({ success: true, data: result });
     } catch (err) {
       next(err);
     }
   }
 
-  async suspendSeller(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async suspendSeller(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
-      const result = await adminService.updateSellerStatus(req.user!.id, req.params.id as string, "suspended");
+      const result = await adminService.updateSellerStatus(
+        req.user!.id,
+        req.params.id as string,
+        "suspended",
+      );
       res.json({ success: true, data: result });
     } catch (err) {
       next(err);
     }
   }
 
-  async reactivateSeller(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async reactivateSeller(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
-      const result = await adminService.updateSellerStatus(req.user!.id, req.params.id as string, "approved");
+      const result = await adminService.updateSellerStatus(
+        req.user!.id,
+        req.params.id as string,
+        "approved",
+      );
       res.json({ success: true, data: result });
     } catch (err) {
       next(err);
     }
   }
 
-  async getSellerDocuments(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async getSellerDocuments(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
-      const docs = await adminService.getSellerDocuments(req.params.id as string);
+      const docs = await adminService.getSellerDocuments(
+        req.params.id as string,
+      );
       res.json({ success: true, data: docs });
     } catch (err) {
       next(err);
     }
   }
 
-  async getProducts(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async getProducts(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
-      const search = typeof req.query.search === "string" ? req.query.search : undefined;
-      const status = typeof req.query.status === "string" ? req.query.status : undefined;
-      const categoryId = typeof req.query.categoryId === "string" ? req.query.categoryId : undefined;
-      const sellerId = typeof req.query.sellerId === "string" ? req.query.sellerId : undefined;
+      const search =
+        typeof req.query.search === "string" ? req.query.search : undefined;
+      const status =
+        typeof req.query.status === "string" ? req.query.status : undefined;
+      const categoryId =
+        typeof req.query.categoryId === "string"
+          ? req.query.categoryId
+          : undefined;
+      const sellerId =
+        typeof req.query.sellerId === "string" ? req.query.sellerId : undefined;
 
-      const prods = await adminService.getProducts({ search, status, categoryId, sellerId });
+      const prods = await adminService.getProducts({
+        search,
+        status,
+        categoryId,
+        sellerId,
+      });
       res.json({ success: true, data: prods });
     } catch (err) {
       next(err);
     }
   }
 
-  async getProductById(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async getProductById(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const prod = await adminService.getProductById(req.params.id as string);
       res.json({ success: true, data: prod });
@@ -261,43 +378,79 @@ export class AdminController {
     }
   }
 
-  async updateProductStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async updateProductStatus(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
-      const result = await adminService.updateProductStatus(req.user!.id, req.params.id as string, req.body.status);
+      const result = await adminService.updateProductStatus(
+        req.user!.id,
+        req.params.id as string,
+        req.body.status,
+      );
       res.json({ success: true, data: result });
     } catch (err) {
       next(err);
     }
   }
 
-  async publishProduct(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async publishProduct(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
-      const result = await adminService.updateProductStatus(req.user!.id, req.params.id as string, "active");
+      const result = await adminService.updateProductStatus(
+        req.user!.id,
+        req.params.id as string,
+        "active",
+      );
       res.json({ success: true, data: result });
     } catch (err) {
       next(err);
     }
   }
 
-  async unpublishProduct(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async unpublishProduct(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
-      const result = await adminService.updateProductStatus(req.user!.id, req.params.id as string, "inactive");
+      const result = await adminService.updateProductStatus(
+        req.user!.id,
+        req.params.id as string,
+        "inactive",
+      );
       res.json({ success: true, data: result });
     } catch (err) {
       next(err);
     }
   }
 
-  async archiveProduct(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async archiveProduct(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
-      const result = await adminService.updateProductStatus(req.user!.id, req.params.id as string, "deleted");
+      const result = await adminService.updateProductStatus(
+        req.user!.id,
+        req.params.id as string,
+        "deleted",
+      );
       res.json({ success: true, data: result });
     } catch (err) {
       next(err);
     }
   }
 
-  async getCategories(_req: Request, res: Response, next: NextFunction): Promise<void> {
+  async getCategories(
+    _req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const cats = await adminService.getCategories();
       res.json({ success: true, data: cats });
@@ -306,16 +459,26 @@ export class AdminController {
     }
   }
 
-  async getCategoryProductsCount(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async getCategoryProductsCount(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
-      const count = await adminService.getCategoryProductsCount(req.params.id as string);
+      const count = await adminService.getCategoryProductsCount(
+        req.params.id as string,
+      );
       res.json({ success: true, data: count });
     } catch (err) {
       next(err);
     }
   }
 
-  async createCategory(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async createCategory(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const cat = await adminService.createCategory(req.user!.id, req.body);
       res.status(201).json({ success: true, data: cat });
@@ -324,40 +487,71 @@ export class AdminController {
     }
   }
 
-  async updateCategory(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async updateCategory(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
-      const cat = await adminService.updateCategory(req.user!.id, req.params.id as string, req.body);
+      const cat = await adminService.updateCategory(
+        req.user!.id,
+        req.params.id as string,
+        req.body,
+      );
       res.json({ success: true, data: cat });
     } catch (err) {
       next(err);
     }
   }
 
-  async getOrders(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async getOrders(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
-      const search = typeof req.query.search === "string" ? req.query.search : undefined;
-      const status = typeof req.query.status === "string" ? req.query.status : undefined;
-      const orders = await adminService.getOrders(req.user!.id, { search, status });
+      const search =
+        typeof req.query.search === "string" ? req.query.search : undefined;
+      const status =
+        typeof req.query.status === "string" ? req.query.status : undefined;
+      const orders = await adminService.getOrders(req.user!.id, {
+        search,
+        status,
+      });
       res.json({ success: true, data: orders });
     } catch (err) {
       next(err);
     }
   }
 
-  async getOrderById(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async getOrderById(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
-      const order = await adminService.getOrderById(req.user!.id, req.params.id as string);
+      const order = await adminService.getOrderById(
+        req.user!.id,
+        req.params.id as string,
+      );
       res.json({ success: true, data: order });
     } catch (err) {
       next(err);
     }
   }
 
-  async getAuditLogs(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async getAuditLogs(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
-      const role = typeof req.query.role === "string" ? req.query.role : undefined;
-      const action = typeof req.query.action === "string" ? req.query.action : undefined;
-      const actorId = typeof req.query.actorId === "string" ? req.query.actorId : undefined;
+      const role =
+        typeof req.query.role === "string" ? req.query.role : undefined;
+      const action =
+        typeof req.query.action === "string" ? req.query.action : undefined;
+      const actorId =
+        typeof req.query.actorId === "string" ? req.query.actorId : undefined;
 
       const logs = await adminService.getAuditLogs({ role, action, actorId });
       res.json({ success: true, data: logs });
@@ -366,9 +560,14 @@ export class AdminController {
     }
   }
 
-  async getSettings(_req: Request, res: Response, next: NextFunction): Promise<void> {
+  async getSettings(
+    _req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
-      const { settingsRepository } = await import("../database/repositories/settings.repository.js");
+      const { settingsRepository } =
+        await import("../database/repositories/settings.repository.js");
       const commissionRate = await settingsRepository.getCommissionRate();
       res.json({
         success: true,
@@ -381,11 +580,19 @@ export class AdminController {
     }
   }
 
-  async updateCommissionRate(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async updateCommissionRate(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
-      const { settingsRepository } = await import("../database/repositories/settings.repository.js");
+      const { settingsRepository } =
+        await import("../database/repositories/settings.repository.js");
       const rate = Number(req.body.commissionRate);
-      const updatedRate = await settingsRepository.updateCommissionRate(rate, req.user!.id);
+      const updatedRate = await settingsRepository.updateCommissionRate(
+        rate,
+        req.user!.id,
+      );
       res.json({
         success: true,
         data: {
@@ -397,56 +604,103 @@ export class AdminController {
     }
   }
 
-  async updateUser(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async updateUser(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
-      const user = await adminService.updateUser(req.user!.id, req.params.id as string, req.body);
+      const user = await adminService.updateUser(
+        req.user!.id,
+        req.params.id as string,
+        req.body,
+      );
       res.json({ success: true, data: user });
     } catch (err) {
       next(err);
     }
   }
 
-  async updateSeller(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async updateSeller(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
-      const seller = await adminService.updateSeller(req.user!.id, req.params.id as string, req.body);
+      const seller = await adminService.updateSeller(
+        req.user!.id,
+        req.params.id as string,
+        req.body,
+      );
       res.json({ success: true, data: seller });
     } catch (err) {
       next(err);
     }
   }
 
-  async updateProduct(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async updateProduct(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
-      const prod = await adminService.updateProduct(req.user!.id, req.params.id as string, req.body);
+      const prod = await adminService.updateProduct(
+        req.user!.id,
+        req.params.id as string,
+        req.body,
+      );
       res.json({ success: true, data: prod });
     } catch (err) {
       next(err);
     }
   }
 
-  async updateOrder(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async updateOrder(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
-      const order = await adminService.updateOrder(req.user!.id, req.params.id as string, req.body);
+      const order = await adminService.updateOrder(
+        req.user!.id,
+        req.params.id as string,
+        req.body,
+      );
       res.json({ success: true, data: order });
     } catch (err) {
       next(err);
     }
   }
 
-  async getProductFinancialCalculation(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async getProductFinancialCalculation(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
-      const { adminFinancialService } = await import("./admin-financial.service.js");
-      const calculation = await adminFinancialService.getProductFinancialCalculation(req.params.id as string);
+      const { adminFinancialService } =
+        await import("./admin-financial.service.js");
+      const calculation =
+        await adminFinancialService.getProductFinancialCalculation(
+          req.params.id as string,
+        );
       res.json({ success: true, data: calculation });
     } catch (err) {
       next(err);
     }
   }
 
-  async getOrderFinancialBreakdown(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async getOrderFinancialBreakdown(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
-      const { adminFinancialService } = await import("./admin-financial.service.js");
-      const breakdown = await adminFinancialService.getOrderFinancialBreakdown(req.params.id as string);
+      const { adminFinancialService } =
+        await import("./admin-financial.service.js");
+      const breakdown = await adminFinancialService.getOrderFinancialBreakdown(
+        req.params.id as string,
+      );
       res.json({ success: true, data: breakdown });
     } catch (err) {
       next(err);
@@ -454,9 +708,14 @@ export class AdminController {
   }
 
   // ── Delivery Settings & Calculation Preview ──────────────────────────────
-  async getDeliverySettings(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async getDeliverySettings(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
-      const { deliveryService } = await import("../delivery/delivery.service.js");
+      const { deliveryService } =
+        await import("../delivery/delivery.service.js");
       const settings = await deliveryService.getDeliverySettings();
       res.json({ success: true, data: settings });
     } catch (err) {
@@ -464,21 +723,36 @@ export class AdminController {
     }
   }
 
-  async updateDeliverySettings(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async updateDeliverySettings(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
-      const { deliveryService } = await import("../delivery/delivery.service.js");
-      const settings = await deliveryService.updateDeliverySettings(req.body, req.user!.id);
+      const { deliveryService } =
+        await import("../delivery/delivery.service.js");
+      const settings = await deliveryService.updateDeliverySettings(
+        req.body,
+        req.user!.id,
+      );
       res.json({ success: true, data: settings });
     } catch (err) {
       next(err);
     }
   }
 
-  async previewDeliveryFee(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async previewDeliveryFee(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
-      const { deliveryService } = await import("../delivery/delivery.service.js");
+      const { deliveryService } =
+        await import("../delivery/delivery.service.js");
       const subtotalPaise = Number(req.body?.subtotalPaise || 0);
-      const result = await deliveryService.calculateDeliveryFee({ eligibleSubtotalPaise: subtotalPaise });
+      const result = await deliveryService.calculateDeliveryFee({
+        eligibleSubtotalPaise: subtotalPaise,
+      });
       res.json({ success: true, data: result });
     } catch (err) {
       next(err);
@@ -486,7 +760,11 @@ export class AdminController {
   }
 
   // ── Financial Settings & Unified Pricing Engine ───────────────────────────
-  async getFinancialSettings(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async getFinancialSettings(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const { pricingService } = await import("../pricing/pricing.service.js");
       const settings = await pricingService.getFinancialSettings();
@@ -496,10 +774,17 @@ export class AdminController {
     }
   }
 
-  async updateFinancialSettings(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async updateFinancialSettings(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const { pricingService } = await import("../pricing/pricing.service.js");
-      const settings = await pricingService.updateFinancialSettings(req.body, req.user!.id);
+      const settings = await pricingService.updateFinancialSettings(
+        req.body,
+        req.user!.id,
+      );
       res.json({ success: true, data: settings });
     } catch (err) {
       next(err);
@@ -507,7 +792,11 @@ export class AdminController {
   }
 
   // ── Media & Image Management ──────────────────────────────────────────────
-  async getMedia(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async getMedia(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const { adminMediaService } = await import("./admin-media.service.js");
       const category = String(req.query.category || "ALL");
@@ -516,14 +805,29 @@ export class AdminController {
       const page = Number(req.query.page || 1);
       const limit = Number(req.query.limit || 30);
 
-      const result = await adminMediaService.listMedia({ category, status, search, page, limit });
-      res.json({ success: true, data: result.items, pagination: result.pagination, stats: result.stats });
+      const result = await adminMediaService.listMedia({
+        category,
+        status,
+        search,
+        page,
+        limit,
+      });
+      res.json({
+        success: true,
+        data: result.items,
+        pagination: result.pagination,
+        stats: result.stats,
+      });
     } catch (err) {
       next(err);
     }
   }
 
-  async updateMedia(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async updateMedia(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const { adminMediaService } = await import("./admin-media.service.js");
       const id = String(req.params.id);
@@ -534,7 +838,11 @@ export class AdminController {
     }
   }
 
-  async deleteMedia(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async deleteMedia(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const { adminMediaService } = await import("./admin-media.service.js");
       const id = String(req.params.id);
@@ -545,15 +853,31 @@ export class AdminController {
     }
   }
 
-  async uploadMedia(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async uploadMedia(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const { adminMediaService } = await import("./admin-media.service.js");
       const { filename, mimeType, base64Data, profile } = req.body;
       if (!base64Data) {
-        res.status(422).json({ success: false, error: { code: "VALIDATION_ERROR", message: "base64Data is required" } });
+        res
+          .status(422)
+          .json({
+            success: false,
+            error: {
+              code: "VALIDATION_ERROR",
+              message: "base64Data is required",
+            },
+          });
         return;
       }
-      const userId = (req as any).user?.id || (req as any).user?.sub || (req as any).user?.userId || "";
+      const userId =
+        (req as any).user?.id ||
+        (req as any).user?.sub ||
+        (req as any).user?.userId ||
+        "";
       const result = await adminMediaService.uploadDirectAdminMedia(userId, {
         filename: filename || "admin-upload.webp",
         mimeType: mimeType || "image/webp",
@@ -565,7 +889,10 @@ export class AdminController {
       console.error("[AdminController] uploadMedia error:", err);
       res.status(500).json({
         success: false,
-        error: { code: "UPLOAD_ERROR", message: err.message || "Failed to upload image" },
+        error: {
+          code: "UPLOAD_ERROR",
+          message: err.message || "Failed to upload image",
+        },
       });
     }
   }

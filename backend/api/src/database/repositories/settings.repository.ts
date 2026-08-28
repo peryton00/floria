@@ -35,7 +35,10 @@ export class SettingsRepository {
    * Updates platform_commission_rate in database, validates bounds (0.0% <= rate <= 50.0%),
    * and creates an immutable audit trail entry.
    */
-  async updateCommissionRate(newRate: number, adminUserId: string): Promise<number> {
+  async updateCommissionRate(
+    newRate: number,
+    adminUserId: string,
+  ): Promise<number> {
     if (typeof newRate !== "number" || !isFinite(newRate) || isNaN(newRate)) {
       throw Errors.validation("Commission rate must be a valid finite number.");
     }
@@ -45,7 +48,9 @@ export class SettingsRepository {
     }
 
     if (newRate > 50.0) {
-      throw Errors.validation("Commission rate cannot exceed maximum cap of 50.0%.");
+      throw Errors.validation(
+        "Commission rate cannot exceed maximum cap of 50.0%.",
+      );
     }
 
     const previousRate = await this.getCommissionRate();
@@ -53,19 +58,25 @@ export class SettingsRepository {
 
     const { data, error } = await db
       .from("platform_settings")
-      .upsert({
-        key: "platform_commission_rate",
-        value: newRate,
-        value_type: "number",
-        description: "Platform commission rate percentage applied server-side to order subtotals (e.g. 12.0 = 12.0%)",
-        updated_at: new Date().toISOString(),
-        updated_by: adminUserId,
-      }, { onConflict: "key" })
+      .upsert(
+        {
+          key: "platform_commission_rate",
+          value: newRate,
+          value_type: "number",
+          description:
+            "Platform commission rate percentage applied server-side to order subtotals (e.g. 12.0 = 12.0%)",
+          updated_at: new Date().toISOString(),
+          updated_by: adminUserId,
+        },
+        { onConflict: "key" },
+      )
       .select()
       .single();
 
     if (error || !data) {
-      throw Errors.internal("Failed to update platform commission rate setting in database.");
+      throw Errors.internal(
+        "Failed to update platform commission rate setting in database.",
+      );
     }
 
     // Immutable Audit Trail

@@ -9,7 +9,9 @@ export class CartService {
     const db = getAdminDb();
     const { data: cart } = await db
       .from("carts")
-      .select("*, cart_items(*, product:products(*, inventory(*), images:product_images(*)))")
+      .select(
+        "*, cart_items(*, product:products(*, inventory(*), images:product_images(*)))",
+      )
       .eq("user_id", userId)
       .maybeSingle();
 
@@ -32,7 +34,11 @@ export class CartService {
     if (cart.cart_items && Array.isArray(cart.cart_items)) {
       cart.cart_items = cart.cart_items.map((ci: any) => {
         if (ci.product) {
-          ci.product = productsService.enrichWithDbPricing(ci.product, settings, overrideMap);
+          ci.product = productsService.enrichWithDbPricing(
+            ci.product,
+            settings,
+            overrideMap,
+          );
         }
         return ci;
       });
@@ -92,7 +98,10 @@ export class CartService {
 
     const { error: itemErr } = await db
       .from("cart_items")
-      .upsert({ cart_id: cart.id, product_id: productId, quantity: newQty }, { onConflict: "cart_id,product_id" });
+      .upsert(
+        { cart_id: cart.id, product_id: productId, quantity: newQty },
+        { onConflict: "cart_id,product_id" },
+      );
 
     if (itemErr) throw Errors.database("Failed to update cart item.");
 
@@ -161,7 +170,10 @@ export class CartService {
     return this.getCart(userId);
   }
 
-  async mergeCart(userId: string, items: Array<{ productId: string; quantity: number }>) {
+  async mergeCart(
+    userId: string,
+    items: Array<{ productId: string; quantity: number }>,
+  ) {
     for (const item of items) {
       try {
         await this.addItem(userId, item.productId, item.quantity);

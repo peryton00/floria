@@ -9,7 +9,9 @@ import type {
 } from "@floria/types";
 
 export class AdminFinancialService {
-  async getProductFinancialCalculation(productId: string): Promise<AdminProductFinancialCalculation> {
+  async getProductFinancialCalculation(
+    productId: string,
+  ): Promise<AdminProductFinancialCalculation> {
     const db = getAdminDb();
 
     // 1. Fetch Product, Inventory & Seller Info
@@ -69,7 +71,9 @@ export class AdminFinancialService {
     };
   }
 
-  async getOrderFinancialBreakdown(orderId: string): Promise<AdminOrderFinancialBreakdown> {
+  async getOrderFinancialBreakdown(
+    orderId: string,
+  ): Promise<AdminOrderFinancialBreakdown> {
     const db = getAdminDb();
 
     // 1. Fetch Order details
@@ -93,7 +97,9 @@ export class AdminFinancialService {
       .select("*")
       .eq("order_id", orderId);
 
-    const finMap = new Map((sellerFinancials || []).map((f) => [f.seller_id, f]));
+    const finMap = new Map(
+      (sellerFinancials || []).map((f) => [f.seller_id, f]),
+    );
 
     // Group items by seller
     const sellerItemMap = new Map<string, any[]>();
@@ -116,31 +122,45 @@ export class AdminFinancialService {
       // Prefer per-item snapshotted rate, then seller-level, then order-level.
       // All are immutable snapshots stored at checkout. Never fabricate with a hardcode.
       const itemCommRate = sItems[0]?.commission_rate_snapshot;
-      const commRate = itemCommRate ?? fin?.commission_rate ?? order.commission_rate ?? 0;
+      const commRate =
+        itemCommRate ?? fin?.commission_rate ?? order.commission_rate ?? 0;
 
       const mappedItems = sItems.map((it) => {
-        const basePrice = it.base_price_paise_snapshot ?? it.unit_price_paise_snapshot ?? 0;
+        const basePrice =
+          it.base_price_paise_snapshot ?? it.unit_price_paise_snapshot ?? 0;
         const lineGross = basePrice * it.quantity;
         const lineComm = Math.round(lineGross * commRate);
         const lineNet = lineGross - lineComm;
 
-        totalFloriaProfit += (it.floria_profit_paise_snapshot || 0) * it.quantity;
-        totalDeliveryRecovery += (it.delivery_recovery_paise_snapshot || 0) * it.quantity;
+        totalFloriaProfit +=
+          (it.floria_profit_paise_snapshot || 0) * it.quantity;
+        totalDeliveryRecovery +=
+          (it.delivery_recovery_paise_snapshot || 0) * it.quantity;
 
         return {
           productId: it.product_id,
           productName: it.product_name_snapshot || "Product",
-          unitPricePaise: it.customer_price_paise_snapshot || it.unit_price_paise_snapshot || 0,
+          unitPricePaise:
+            it.customer_price_paise_snapshot ||
+            it.unit_price_paise_snapshot ||
+            0,
           quantity: it.quantity,
-          lineTotalPaise: (it.customer_price_paise_snapshot || it.unit_price_paise_snapshot || 0) * it.quantity,
+          lineTotalPaise:
+            (it.customer_price_paise_snapshot ||
+              it.unit_price_paise_snapshot ||
+              0) * it.quantity,
           commissionPaise: lineComm,
           sellerNetPaise: lineNet,
         };
       });
 
-      const sellerGrossPaise = fin?.seller_gross_paise ?? mappedItems.reduce((s, i) => s + (i.unitPricePaise * i.quantity), 0);
-      const commissionPaise = fin?.commission_paise ?? Math.round(sellerGrossPaise * commRate);
-      const sellerNetPaise = fin?.seller_net_paise ?? (sellerGrossPaise - commissionPaise);
+      const sellerGrossPaise =
+        fin?.seller_gross_paise ??
+        mappedItems.reduce((s, i) => s + i.unitPricePaise * i.quantity, 0);
+      const commissionPaise =
+        fin?.commission_paise ?? Math.round(sellerGrossPaise * commRate);
+      const sellerNetPaise =
+        fin?.seller_net_paise ?? sellerGrossPaise - commissionPaise;
 
       totalPlatformCommission += commissionPaise;
 
@@ -155,11 +175,16 @@ export class AdminFinancialService {
       });
     }
 
-    const customerObj = Array.isArray(order.customer) ? order.customer[0] : order.customer;
+    const customerObj = Array.isArray(order.customer)
+      ? order.customer[0]
+      : order.customer;
 
     return {
       masterOrderId: order.id,
-      customerName: customerObj?.full_name || order.delivery_address_snapshot?.full_name || "Customer",
+      customerName:
+        customerObj?.full_name ||
+        order.delivery_address_snapshot?.full_name ||
+        "Customer",
       customerTotalPaise: order.total_paise || order.subtotal_paise || 0,
       subtotalPaise: order.subtotal_paise || 0,
       maintenanceFeePaise: order.maintenance_fee_paise || 0,
@@ -167,7 +192,8 @@ export class AdminFinancialService {
       deliveryFeeReason: order.delivery_fee_reason,
       taxPaise: 0,
       discountPaise: 0,
-      totalPlatformCommissionPaise: totalPlatformCommission || order.commission_paise || 0,
+      totalPlatformCommissionPaise:
+        totalPlatformCommission || order.commission_paise || 0,
       totalFloriaProfitPaise: totalFloriaProfit,
       totalDeliveryRecoveryPaise: totalDeliveryRecovery,
       nurseryBreakdown,

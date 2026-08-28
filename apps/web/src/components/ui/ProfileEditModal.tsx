@@ -61,7 +61,10 @@ export function ProfileEditModal({
     >
       <div className="bg-floria-linen rounded-2xl shadow-xl max-w-md w-full p-6 border border-floria-border">
         <div className="flex items-center justify-between pb-4 border-b border-floria-border mb-4">
-          <h2 id="profile-modal-title" className="font-serif text-lg font-bold text-ink-900">
+          <h2
+            id="profile-modal-title"
+            className="font-serif text-lg font-bold text-ink-900"
+          >
             Edit Personal Information
           </h2>
           <button
@@ -99,23 +102,33 @@ export function ProfileEditModal({
 
           {/* Full Name */}
           <div>
-            <label htmlFor="edit-name" className="block text-xs font-bold text-ink-700 uppercase tracking-wider mb-1">
+            <label
+              htmlFor="edit-name"
+              className="block text-xs font-bold text-ink-700 uppercase tracking-wider mb-1"
+            >
               Full Name *
             </label>
             <input
               id="edit-name"
               type="text"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
               className="w-full px-3 py-2 text-xs rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen text-ink-900 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-forest-800/20"
             />
-            {errors.name && <p className="text-[11px] text-red-600 mt-1">{errors.name}</p>}
+            {errors.name && (
+              <p className="text-[11px] text-red-600 mt-1">{errors.name}</p>
+            )}
           </div>
 
           {/* Email Address (Immutable / Locked) */}
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label htmlFor="edit-email" className="block text-xs font-bold text-ink-700 uppercase tracking-wider">
+              <label
+                htmlFor="edit-email"
+                className="block text-xs font-bold text-ink-700 uppercase tracking-wider"
+              >
                 Email Address (Primary Account Key)
               </label>
               <div className="flex items-center gap-1 text-[10px] font-semibold text-ink-400">
@@ -138,18 +151,25 @@ export function ProfileEditModal({
 
           {/* Phone */}
           <div>
-            <label htmlFor="edit-phone" className="block text-xs font-bold text-ink-700 uppercase tracking-wider mb-1">
+            <label
+              htmlFor="edit-phone"
+              className="block text-xs font-bold text-ink-700 uppercase tracking-wider mb-1"
+            >
               Phone Number *
             </label>
             <input
               id="edit-phone"
               type="tel"
               value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, phone: e.target.value })
+              }
               placeholder="Enter phone number"
               className="w-full px-3 py-2 text-xs rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen text-ink-900 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-forest-800/20"
             />
-            {errors.phone && <p className="text-[11px] text-red-600 mt-1">{errors.phone}</p>}
+            {errors.phone && (
+              <p className="text-[11px] text-red-600 mt-1">{errors.phone}</p>
+            )}
           </div>
 
           {/* Actions */}

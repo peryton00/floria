@@ -46,7 +46,8 @@ function createMockQuery(data: any) {
     limit: vi.fn(() => query),
     single: vi.fn().mockResolvedValue({ data, error: null }),
     maybeSingle: vi.fn().mockResolvedValue({ data, error: null }),
-    then: (resolve: any) => Promise.resolve({ data, error: null }).then(resolve),
+    then: (resolve: any) =>
+      Promise.resolve({ data, error: null }).then(resolve),
   };
   return query;
 }
@@ -75,7 +76,9 @@ describe("Phase 3.23 Pricing Integrity & Regression Test Suite", () => {
       // Order display and payout logic MUST read snapshot values directly
       const displayDeliveryFee = historicalOrderSnapshot.delivery_fee_paise;
       const displayTotal = historicalOrderSnapshot.total_paise;
-      const payoutCommission = historicalOrderSnapshot.subtotal_paise * (historicalOrderSnapshot.commission_rate ?? 0);
+      const payoutCommission =
+        historicalOrderSnapshot.subtotal_paise *
+        (historicalOrderSnapshot.commission_rate ?? 0);
 
       expect(displayDeliveryFee).toBe(0); // Never recomputed to ₹40
       expect(displayTotal).toBe(51000);
@@ -108,10 +111,24 @@ describe("Phase 3.23 Pricing Integrity & Regression Test Suite", () => {
           return createMockQuery([{ product_id: "prod-1", quantity: 1 }]);
         }
         if (table === "products") {
-          return createMockQuery([{ id: "prod-1", name: "Fiddle Leaf Fig", seller_id: "sel-1", status: "active" }]);
+          return createMockQuery([
+            {
+              id: "prod-1",
+              name: "Fiddle Leaf Fig",
+              seller_id: "sel-1",
+              status: "active",
+            },
+          ]);
         }
         if (table === "inventory") {
-          return createMockQuery([{ product_id: "prod-1", base_price_paise: 50000, price_paise: 50000, stock_quantity: 10 }]);
+          return createMockQuery([
+            {
+              product_id: "prod-1",
+              base_price_paise: 50000,
+              price_paise: 50000,
+              stock_quantity: 10,
+            },
+          ]);
         }
         if (table === "addresses" || table === "delivery_addresses") {
           return createMockQuery({
@@ -136,7 +153,11 @@ describe("Phase 3.23 Pricing Integrity & Regression Test Suite", () => {
         if (table === "orders") {
           return createMockQuery({ id: "FLR-NEW-ORDER" });
         }
-        if (table === "order_items" || table === "seller_order_fulfillments" || table === "payments") {
+        if (
+          table === "order_items" ||
+          table === "seller_order_fulfillments" ||
+          table === "payments"
+        ) {
           return createMockQuery({ id: "pay-1" });
         }
         return createMockQuery(null);
@@ -172,15 +193,22 @@ describe("Phase 3.23 Pricing Integrity & Regression Test Suite", () => {
         }
         if (table === "inventory") {
           const q = createMockQuery(null);
-          q.gt = vi.fn().mockResolvedValue({ data: null, error: { message: "Database connection timeout" } });
+          q.gt = vi
+            .fn()
+            .mockResolvedValue({
+              data: null,
+              error: { message: "Database connection timeout" },
+            });
           return q;
         }
         return createMockQuery(null);
       });
 
       await expect(
-        recalculationService.startRecalculationJob("pol-fail", "admin-1")
-      ).rejects.toThrow("Failed to count inventory listings: Database connection timeout");
+        recalculationService.startRecalculationJob("pol-fail", "admin-1"),
+      ).rejects.toThrow(
+        "Failed to count inventory listings: Database connection timeout",
+      );
     });
   });
 
@@ -204,12 +232,26 @@ describe("Phase 3.23 Pricing Integrity & Regression Test Suite", () => {
         }
         if (table === "inventory") {
           return createMockQuery([
-            { product_id: "p1", seller_id: "s1", price_paise: 50000, base_price_paise: 50000 },
-            { product_id: "p2", seller_id: "s1", price_paise: 0, base_price_paise: null },
+            {
+              product_id: "p1",
+              seller_id: "s1",
+              price_paise: 50000,
+              base_price_paise: 50000,
+            },
+            {
+              product_id: "p2",
+              seller_id: "s1",
+              price_paise: 0,
+              base_price_paise: null,
+            },
           ]);
         }
         if (table === "pricing_recalculation_jobs") {
-          return createMockQuery({ id: "job-1", status: "in_progress", total_listings: 2 });
+          return createMockQuery({
+            id: "job-1",
+            status: "in_progress",
+            total_listings: 2,
+          });
         }
         if (table === "product_pricing") {
           return createMockQuery(null);
@@ -217,7 +259,11 @@ describe("Phase 3.23 Pricing Integrity & Regression Test Suite", () => {
         return createMockQuery(null);
       });
 
-      const job = await recalculationService.startRecalculationJob("pol-partial", "admin-1", 10);
+      const job = await recalculationService.startRecalculationJob(
+        "pol-partial",
+        "admin-1",
+        10,
+      );
       expect(job.status).toBe("in_progress");
       expect(job.totalListings).toBe(2);
     });
@@ -261,10 +307,15 @@ describe("Phase 3.23 Pricing Integrity & Regression Test Suite", () => {
         return createMockQuery(null);
       });
 
-      const activated = await policyService.activatePolicy("pol-new", "admin-1");
+      const activated = await policyService.activatePolicy(
+        "pol-new",
+        "admin-1",
+      );
       expect(activated.status).toBe("active");
       expect(syncedSettings.length).toBe(5);
-      expect(syncedSettings.find((s) => s.key === "seller_commission_rate")?.value).toBe(14.0);
+      expect(
+        syncedSettings.find((s) => s.key === "seller_commission_rate")?.value,
+      ).toBe(14.0);
     });
   });
 
@@ -295,10 +346,21 @@ describe("Phase 3.23 Pricing Integrity & Regression Test Suite", () => {
           });
         }
         if (table === "products") {
-          return createMockQuery({ id: "prod-1", name: "Monstera Deliciosa", seller_id: "sel-1", status: "active" });
+          return createMockQuery({
+            id: "prod-1",
+            name: "Monstera Deliciosa",
+            seller_id: "sel-1",
+            status: "active",
+          });
         }
         if (table === "inventory") {
-          return createMockQuery({ product_id: "prod-1", seller_id: "sel-1", price_paise: 50000, base_price_paise: 50000, stock_quantity: 10 });
+          return createMockQuery({
+            product_id: "prod-1",
+            seller_id: "sel-1",
+            price_paise: 50000,
+            base_price_paise: 50000,
+            stock_quantity: 10,
+          });
         }
         if (table === "product_pricing") {
           const q = createMockQuery(null);
@@ -359,10 +421,20 @@ describe("Phase 3.23 Pricing Integrity & Regression Test Suite", () => {
       };
 
       const overrideMap = new Map([
-        ["prod-1", { custom_customer_price_paise: 45000, reason: "Promotional discount" }],
+        [
+          "prod-1",
+          {
+            custom_customer_price_paise: 45000,
+            reason: "Promotional discount",
+          },
+        ],
       ]);
 
-      const enriched = productsService.enrichWithDbPricing(product, settings, overrideMap);
+      const enriched = productsService.enrichWithDbPricing(
+        product,
+        settings,
+        overrideMap,
+      );
 
       expect(enriched.inventory.customer_price_paise).toBe(45000);
       expect(enriched.pricing.sellingPricePaise).toBe(45000);

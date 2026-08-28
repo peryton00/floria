@@ -28,10 +28,16 @@ declare global {
  * Extracts Bearer token, validates with Supabase Auth, resolves role & seller profile from DB.
  * Never trusts user_id, role, or seller_id from request body.
  */
-export async function authenticateToken(req: Request, _res: Response, next: NextFunction): Promise<void> {
+export async function authenticateToken(
+  req: Request,
+  _res: Response,
+  next: NextFunction,
+): Promise<void> {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return next(Errors.authRequired("Missing or invalid Authorization Bearer header."));
+    return next(
+      Errors.authRequired("Missing or invalid Authorization Bearer header."),
+    );
   }
 
   const token = authHeader.substring(7).trim();
@@ -41,7 +47,10 @@ export async function authenticateToken(req: Request, _res: Response, next: Next
 
   try {
     const supabase = getAnonDb();
-    const { data: { user }, error } = await supabase.auth.getUser(token);
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser(token);
 
     if (error || !user) {
       return next(Errors.authRequired("Invalid or expired session token."));
@@ -60,7 +69,11 @@ export async function authenticateToken(req: Request, _res: Response, next: Next
     let sellerId: string | undefined;
     let sellerStatus: "pending" | "approved" | "suspended" | undefined;
 
-    if (roleStr === "seller" || roleStr === "admin" || roleStr === "super_admin") {
+    if (
+      roleStr === "seller" ||
+      roleStr === "admin" ||
+      roleStr === "super_admin"
+    ) {
       const { data: sp } = await adminDb
         .from("seller_profiles")
         .select("id, status")
@@ -94,7 +107,11 @@ export async function authenticateToken(req: Request, _res: Response, next: Next
 /**
  * Optional authentication: attaches user if token is present, proceeds cleanly if missing.
  */
-export async function optionalAuth(req: Request, _res: Response, next: NextFunction): Promise<void> {
+export async function optionalAuth(
+  req: Request,
+  _res: Response,
+  next: NextFunction,
+): Promise<void> {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return next();

@@ -9,7 +9,10 @@ export function ProductCardSkeleton() {
       {/* Image Skeleton */}
       <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden bg-stone-100">
         <Skeleton variant="image" className="w-full h-full" />
-        <Skeleton variant="rectangle" className="absolute top-2 left-2 w-16 h-5 rounded-md" />
+        <Skeleton
+          variant="rectangle"
+          className="absolute top-2 left-2 w-16 h-5 rounded-md"
+        />
       </div>
 
       {/* Nursery Tag */}

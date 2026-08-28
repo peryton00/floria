@@ -7,11 +7,11 @@
 
 ## 1. Classification Breakdown
 
-| Category | Count | Action Plan |
-| :--- | :--- | :--- |
-| **KEEP_IN_REPOSITORY** | 53 | SVG system icons (`floria-svg-icon-system/*`), `floria-logo.png`, `favicon.ico`, Next/Vercel assets. Keep in repository for instant SSR rendering without external network latency. |
-| **MIGRATE_TO_SUPABASE_STORAGE** | 12 | Oversized sample nursery cards (`nursery-1.png` through `nursery-4.png`), category showcase images (`cat-*.png`), and hero banner (`hero-plants.png`). Move to CDN/Supabase Storage. |
-| **REPLACE** | 88 | Hardcoded Unsplash URLs in database seeds & catalog views. Replace with optimized Supabase Storage CDN URLs in production. |
+| Category                        | Count | Action Plan                                                                                                                                                                          |
+| :------------------------------ | :---- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **KEEP_IN_REPOSITORY**          | 53    | SVG system icons (`floria-svg-icon-system/*`), `floria-logo.png`, `favicon.ico`, Next/Vercel assets. Keep in repository for instant SSR rendering without external network latency.  |
+| **MIGRATE_TO_SUPABASE_STORAGE** | 12    | Oversized sample nursery cards (`nursery-1.png` through `nursery-4.png`), category showcase images (`cat-*.png`), and hero banner (`hero-plants.png`). Move to CDN/Supabase Storage. |
+| **REPLACE**                     | 88    | Hardcoded Unsplash URLs in database seeds & catalog views. Replace with optimized Supabase Storage CDN URLs in production.                                                           |
 
 ---
 

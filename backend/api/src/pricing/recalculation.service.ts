@@ -3,10 +3,7 @@ import { getAdminDb } from "../config/database.js";
 import { Errors } from "../utils/errors.js";
 import { policyService } from "./policy.service.js";
 import { pricingService } from "./pricing.service.js";
-import type {
-  PricingRecalculationJob,
-  FinancialSettings,
-} from "@floria/types";
+import type { PricingRecalculationJob, FinancialSettings } from "@floria/types";
 
 export class RecalculationService {
   /**
@@ -15,7 +12,7 @@ export class RecalculationService {
   async startRecalculationJob(
     policyVersionId: string,
     adminUserId: string,
-    batchSize = 500
+    batchSize = 500,
   ): Promise<PricingRecalculationJob> {
     const policy = await policyService.getPolicyById(policyVersionId);
     if (!policy) throw Errors.notFound("Pricing policy version");
@@ -29,7 +26,9 @@ export class RecalculationService {
       .gt("price_paise", 0);
 
     if (countErr) {
-      throw Errors.internal(`Failed to count inventory listings: ${countErr.message}`);
+      throw Errors.internal(
+        `Failed to count inventory listings: ${countErr.message}`,
+      );
     }
 
     const totalListings = listings?.length || 0;
@@ -54,7 +53,9 @@ export class RecalculationService {
       .single();
 
     if (jobErr || !job) {
-      throw Errors.internal(`Failed to create recalculation job: ${jobErr?.message}`);
+      throw Errors.internal(
+        `Failed to create recalculation job: ${jobErr?.message}`,
+      );
     }
 
     // Mark policy status as 'preparing'
@@ -64,9 +65,14 @@ export class RecalculationService {
       .eq("id", policyVersionId);
 
     // Run batch processing asynchronously
-    this.processJobBatches(job.id, policy, listings || [], batchSize).catch((err) => {
-      console.error(`[RecalculationService] Job ${job.id} execution failed:`, err);
-    });
+    this.processJobBatches(job.id, policy, listings || [], batchSize).catch(
+      (err) => {
+        console.error(
+          `[RecalculationService] Job ${job.id} execution failed:`,
+          err,
+        );
+      },
+    );
 
     return this.mapDbToJob(job);
   }
@@ -89,7 +95,9 @@ export class RecalculationService {
   /**
    * Retrieves the latest recalculation job for a given policy version.
    */
-  async getLatestJobForPolicy(policyVersionId: string): Promise<PricingRecalculationJob | null> {
+  async getLatestJobForPolicy(
+    policyVersionId: string,
+  ): Promise<PricingRecalculationJob | null> {
     const db = getAdminDb();
     const { data, error } = await db
       .from("pricing_recalculation_jobs")
@@ -110,7 +118,7 @@ export class RecalculationService {
     jobId: string,
     policy: any,
     listings: any[],
-    batchSize: number
+    batchSize: number,
   ) {
     const db = getAdminDb();
     const policySettings: FinancialSettings = {
@@ -136,7 +144,10 @@ export class RecalculationService {
         for (const item of batchListings) {
           try {
             const basePaise = item.base_price_paise ?? item.price_paise ?? 0;
-            const calc = pricingService.calculateProductPricingSync(basePaise, policySettings);
+            const calc = pricingService.calculateProductPricingSync(
+              basePaise,
+              policySettings,
+            );
 
             rowsToUpsert.push({
               product_id: item.product_id,
@@ -165,9 +176,14 @@ export class RecalculationService {
           try {
             await db
               .from("product_pricing")
-              .upsert(rowsToUpsert, { onConflict: "policy_version_id,product_id" });
+              .upsert(rowsToUpsert, {
+                onConflict: "policy_version_id,product_id",
+              });
           } catch (e: any) {
-            console.warn(`[RecalculationService] Batch ${batchIdx + 1} upsert warning:`, e?.message);
+            console.warn(
+              `[RecalculationService] Batch ${batchIdx + 1} upsert warning:`,
+              e?.message,
+            );
           }
         }
 
@@ -192,7 +208,10 @@ export class RecalculationService {
         .from("pricing_recalculation_jobs")
         .update({
           status: finalJobStatus,
-          error_message: failedCount > 0 ? `${failedCount} items failed during calculation` : null,
+          error_message:
+            failedCount > 0
+              ? `${failedCount} items failed during calculation`
+              : null,
           completed_at: now,
           updated_at: now,
         })
@@ -208,7 +227,8 @@ export class RecalculationService {
         .from("pricing_recalculation_jobs")
         .update({
           status: "failed",
-          error_message: fatalErr?.message || "Fatal error during batch recalculation",
+          error_message:
+            fatalErr?.message || "Fatal error during batch recalculation",
           completed_at: now,
           updated_at: now,
         })

@@ -109,4 +109,17 @@ export const PROFILES: Record<ImageProfileName, ProfileSpec> = {
     profileName: "DOCUMENT",
     variants: [],
   },
+  DELIVERY_POD: {
+    profileName: "DELIVERY_POD",
+    variants: [
+      {
+        name: "pod",
+        targetWidth: 1600,
+        targetHeight: 1200,
+        fit: "FIT",
+        quality: 80,
+        format: "webp",
+      },
+    ],
+  },
 };

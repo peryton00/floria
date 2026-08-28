@@ -3,7 +3,11 @@
 import React from "react";
 import { Skeleton } from "./Skeleton";
 
-export function ProductPriceSkeleton({ className = "" }: { className?: string }) {
+export function ProductPriceSkeleton({
+  className = "",
+}: {
+  className?: string;
+}) {
   return (
     <div className={`space-y-1.5 ${className}`}>
       <div className="flex items-center gap-2">

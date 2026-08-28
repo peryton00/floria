@@ -1,7 +1,10 @@
 // Floria API — Cashfree Payments & Webhooks Service
 import { getAdminDb } from "../config/database.js";
 import { auditRepository } from "../database/repositories/audit.repository.js";
-import { PaymentProviderFactory, VerifyWebhookInput } from "./payment.provider.js";
+import {
+  PaymentProviderFactory,
+  VerifyWebhookInput,
+} from "./payment.provider.js";
 import { Errors } from "../utils/errors.js";
 
 const processedWebhookEvents = new Set<string>();
@@ -33,7 +36,9 @@ export class PaymentsService {
     }
 
     if (order.customer_id !== userId) {
-      throw Errors.forbidden("You do not have permission to initialize payment for this order.");
+      throw Errors.forbidden(
+        "You do not have permission to initialize payment for this order.",
+      );
     }
 
     // 2. Fetch customer details for Cashfree payload
@@ -61,7 +66,8 @@ export class PaymentsService {
           order_id: order.id,
           customer_id: userId,
           payment_reference: paymentIntent.paymentReference,
-          cf_order_id: paymentIntent.cfOrderId || paymentIntent.paymentReference,
+          cf_order_id:
+            paymentIntent.cfOrderId || paymentIntent.paymentReference,
           payment_session_id: paymentIntent.paymentSessionId,
           provider: "cashfree",
           currency: "INR",
@@ -70,7 +76,7 @@ export class PaymentsService {
           raw_provider_response: paymentIntent.rawProviderResponse as any,
           updated_at: new Date().toISOString(),
         },
-        { onConflict: "order_id" }
+        { onConflict: "order_id" },
       )
       .select()
       .maybeSingle();
@@ -86,14 +92,18 @@ export class PaymentsService {
       orderId: order.id,
       amountPaise: order.total_paise,
       currency: "INR",
-      environment: (process.env.CASHFREE_ENVIRONMENT || "SANDBOX").toUpperCase() as "SANDBOX" | "PRODUCTION",
+      environment: (
+        process.env.CASHFREE_ENVIRONMENT || "SANDBOX"
+      ).toUpperCase() as "SANDBOX" | "PRODUCTION",
     };
   }
 
   /**
    * Process incoming Cashfree webhooks with HMAC-SHA256 signature verification & DB idempotency.
    */
-  async processWebhookInput(input: VerifyWebhookInput): Promise<{ success: boolean; idempotent: boolean; message: string }> {
+  async processWebhookInput(
+    input: VerifyWebhookInput,
+  ): Promise<{ success: boolean; idempotent: boolean; message: string }> {
     const provider = PaymentProviderFactory.getProvider("cashfree");
     const verification = await provider.verifyWebhookSignature(input);
 
@@ -101,20 +111,40 @@ export class PaymentsService {
       throw Errors.authRequired("Invalid Cashfree webhook signature");
     }
 
-    const eventId = verification.providerEventId || (input.headers["x-webhook-timestamp"] ? `cf_evt_${input.headers["x-webhook-timestamp"]}` : undefined);
-    const cfOrderId = verification.cfOrderId || (verification.payload?.data as any)?.order?.order_id;
-    const cfPaymentId = verification.cfPaymentId || (verification.payload?.data as any)?.payment?.cf_payment_id;
-    const rawStatus = (verification.status || (verification.payload?.data as any)?.payment?.payment_status || "").toUpperCase();
+    const eventId =
+      verification.providerEventId ||
+      (input.headers["x-webhook-timestamp"]
+        ? `cf_evt_${input.headers["x-webhook-timestamp"]}`
+        : undefined);
+    const cfOrderId =
+      verification.cfOrderId ||
+      (verification.payload?.data as any)?.order?.order_id;
+    const cfPaymentId =
+      verification.cfPaymentId ||
+      (verification.payload?.data as any)?.payment?.cf_payment_id;
+    const rawStatus = (
+      verification.status ||
+      (verification.payload?.data as any)?.payment?.payment_status ||
+      ""
+    ).toUpperCase();
 
     if (!cfOrderId) {
-      return { success: false, idempotent: false, message: "Missing order reference in webhook payload" };
+      return {
+        success: false,
+        idempotent: false,
+        message: "Missing order reference in webhook payload",
+      };
     }
 
     const eventKey = eventId || `cf_${cfOrderId}_${rawStatus}`;
 
     // Idempotency check
     if (processedWebhookEvents.has(eventKey)) {
-      return { success: true, idempotent: true, message: "Webhook event already processed" };
+      return {
+        success: true,
+        idempotent: true,
+        message: "Webhook event already processed",
+      };
     }
 
     const db = getAdminDb();
@@ -128,7 +158,11 @@ export class PaymentsService {
 
         if (existingEvt) {
           processedWebhookEvents.add(eventKey);
-          return { success: true, idempotent: true, message: "Webhook event recorded in payment_events" };
+          return {
+            success: true,
+            idempotent: true,
+            message: "Webhook event recorded in payment_events",
+          };
         }
       } catch {}
     }
@@ -138,26 +172,48 @@ export class PaymentsService {
     // Locate corresponding payment in database by cf_order_id, payment_reference, or order_id
     let payment: any = null;
     try {
-      const q = db.from("payments").select("id, order_id, customer_id, amount_paise, status");
+      const q = db
+        .from("payments")
+        .select("id, order_id, customer_id, amount_paise, status");
       if (typeof q.or === "function") {
-        const { data } = await q.or(`cf_order_id.eq.${cfOrderId},payment_reference.eq.${cfOrderId},order_id.eq.${cfOrderId}`).maybeSingle();
+        const { data } = await q
+          .or(
+            `cf_order_id.eq.${cfOrderId},payment_reference.eq.${cfOrderId},order_id.eq.${cfOrderId}`,
+          )
+          .maybeSingle();
         payment = data;
       } else {
-        const { data } = await q.eq("payment_reference", cfOrderId).maybeSingle();
+        const { data } = await q
+          .eq("payment_reference", cfOrderId)
+          .maybeSingle();
         payment = data;
       }
     } catch {
       try {
-        const { data } = await db.from("payments").select("id, order_id, customer_id, amount_paise, status").eq("order_id", cfOrderId).maybeSingle();
+        const { data } = await db
+          .from("payments")
+          .select("id, order_id, customer_id, amount_paise, status")
+          .eq("order_id", cfOrderId)
+          .maybeSingle();
         payment = data;
       } catch {}
     }
 
-    const isPaidSuccess = rawStatus === "SUCCESS" || rawStatus === "PAID" || rawStatus === "CAPTURED";
-    const isFailed = rawStatus === "FAILED" || rawStatus === "CANCELLED" || rawStatus === "USER_DROPPED";
+    const isPaidSuccess =
+      rawStatus === "SUCCESS" ||
+      rawStatus === "PAID" ||
+      rawStatus === "CAPTURED";
+    const isFailed =
+      rawStatus === "FAILED" ||
+      rawStatus === "CANCELLED" ||
+      rawStatus === "USER_DROPPED";
 
     if (payment) {
-      const newStatus = isPaidSuccess ? "paid" : isFailed ? "failed" : "pending";
+      const newStatus = isPaidSuccess
+        ? "paid"
+        : isFailed
+          ? "failed"
+          : "pending";
 
       await db
         .from("payments")
@@ -174,7 +230,8 @@ export class PaymentsService {
         try {
           await db.from("payment_events").insert({
             payment_id: payment.id,
-            event_type: verification.eventType || `PAYMENT_${newStatus.toUpperCase()}`,
+            event_type:
+              verification.eventType || `PAYMENT_${newStatus.toUpperCase()}`,
             provider_event_id: eventId,
             status: newStatus,
             amount_paise: verification.amountPaise || payment.amount_paise,
@@ -185,7 +242,10 @@ export class PaymentsService {
 
       // Order & Notification state transitions
       if (isPaidSuccess && payment.order_id) {
-        await db.from("orders").update({ status: "seller_pending" }).eq("id", payment.order_id);
+        await db
+          .from("orders")
+          .update({ status: "seller_pending" })
+          .eq("id", payment.order_id);
 
         // Update seller ledger entries to available
         await db
@@ -205,14 +265,18 @@ export class PaymentsService {
               await db.from("cart_items").delete().eq("cart_id", cartRow.id);
             }
           } catch (cartErr) {
-            console.warn("[PaymentsService] Cart clear on payment success warning:", cartErr);
+            console.warn(
+              "[PaymentsService] Cart clear on payment success warning:",
+              cartErr,
+            );
           }
         }
 
         // Trigger PAYMENT_SUCCESS notification
         if (payment.customer_id) {
           try {
-            const { notificationService } = await import("../notifications/notification.service.js");
+            const { notificationService } =
+              await import("../notifications/notification.service.js");
             await notificationService.createNotification({
               user_id: payment.customer_id,
               role: "customer",
@@ -222,10 +286,17 @@ export class PaymentsService {
               data: { orderId: payment.order_id, paymentId: payment.id },
               source_type: "payment",
               source_id: `${payment.id}_paid`,
-              navigation: { entityType: "ORDER", entityId: payment.order_id, action: "VIEW" },
+              navigation: {
+                entityType: "ORDER",
+                entityId: payment.order_id,
+                action: "VIEW",
+              },
             });
           } catch (notifErr) {
-            console.error("[PaymentsService] Payment success notification warning:", notifErr);
+            console.error(
+              "[PaymentsService] Payment success notification warning:",
+              notifErr,
+            );
           }
         }
       }
@@ -249,7 +320,9 @@ export class PaymentsService {
   /**
    * Simplified legacy webhook endpoint support for backward compatibility.
    */
-  async processWebhook(payload: WebhookEventPayload): Promise<{ success: boolean; idempotent: boolean; message: string }> {
+  async processWebhook(
+    payload: WebhookEventPayload,
+  ): Promise<{ success: boolean; idempotent: boolean; message: string }> {
     return this.processWebhookInput({
       signature: "",
       rawBody: JSON.stringify(payload),
@@ -282,7 +355,9 @@ export class PaymentsService {
   /**
    * Lookup orderId by Cashfree order ID (cf_order_id or payment_reference).
    */
-  async lookupOrderByCfOrderId(cfOrderId: string): Promise<{ orderId: string }> {
+  async lookupOrderByCfOrderId(
+    cfOrderId: string,
+  ): Promise<{ orderId: string }> {
     const db = getAdminDb();
     const { data: payment } = await db
       .from("payments")
@@ -300,11 +375,18 @@ export class PaymentsService {
   /**
    * Execute Cashfree refund for an order item/payment.
    */
-  async processRefund(adminOrSellerUserId: string, paymentId: string, amountPaise: number, reason?: string) {
+  async processRefund(
+    adminOrSellerUserId: string,
+    paymentId: string,
+    amountPaise: number,
+    reason?: string,
+  ) {
     const db = getAdminDb();
     const { data: payment } = await db
       .from("payments")
-      .select("id, order_id, cf_order_id, payment_reference, amount_paise, status")
+      .select(
+        "id, order_id, cf_order_id, payment_reference, amount_paise, status",
+      )
       .eq("id", paymentId)
       .maybeSingle();
 
@@ -313,7 +395,9 @@ export class PaymentsService {
     }
 
     if (amountPaise <= 0 || amountPaise > payment.amount_paise) {
-      throw Errors.validation("Refund amount must be between 1 and original total.");
+      throw Errors.validation(
+        "Refund amount must be between 1 and original total.",
+      );
     }
 
     const provider = PaymentProviderFactory.getProvider("cashfree");
@@ -325,20 +409,28 @@ export class PaymentsService {
     });
 
     // Save refund record
-    const { data: refundRow } = await db.from("refunds").insert({
-      payment_id: payment.id,
-      order_id: payment.order_id,
-      refund_reference: refundResult.refundReference,
-      amount_paise: amountPaise,
-      reason: reason || "Floria admin refund",
-      status: refundResult.status,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }).select().maybeSingle();
+    const { data: refundRow } = await db
+      .from("refunds")
+      .insert({
+        payment_id: payment.id,
+        order_id: payment.order_id,
+        refund_reference: refundResult.refundReference,
+        amount_paise: amountPaise,
+        reason: reason || "Floria admin refund",
+        status: refundResult.status,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .select()
+      .maybeSingle();
 
     // Update payment status to refunded or partially_refunded
-    const newPayStatus = amountPaise >= payment.amount_paise ? "refunded" : "partially_refunded";
-    await db.from("payments").update({ status: newPayStatus }).eq("id", payment.id);
+    const newPayStatus =
+      amountPaise >= payment.amount_paise ? "refunded" : "partially_refunded";
+    await db
+      .from("payments")
+      .update({ status: newPayStatus })
+      .eq("id", payment.id);
 
     await auditRepository.log({
       actor_user_id: adminOrSellerUserId,
@@ -355,11 +447,17 @@ export class PaymentsService {
   /**
    * Admin Query: Fetch all payment transactions across platform with customer & order details.
    */
-  async getAdminTransactions(filters: { search?: string; status?: string; limit?: number }) {
+  async getAdminTransactions(filters: {
+    search?: string;
+    status?: string;
+    limit?: number;
+  }) {
     const db = getAdminDb();
     let query = db
       .from("payments")
-      .select("*, orders(id, total_paise, status, notes), user_profiles(email, full_name, phone)")
+      .select(
+        "*, orders(id, total_paise, status, notes), user_profiles(email, full_name, phone)",
+      )
       .order("created_at", { ascending: false });
 
     if (filters.status && filters.status !== "all") {
@@ -374,7 +472,10 @@ export class PaymentsService {
 
     const { data, error } = await query;
     if (error) {
-      console.warn("[PaymentsService] getAdminTransactions query notice:", error.message);
+      console.warn(
+        "[PaymentsService] getAdminTransactions query notice:",
+        error.message,
+      );
       return [];
     }
 
@@ -388,7 +489,8 @@ export class PaymentsService {
         customerName: u.full_name || u.email?.split("@")[0] || "Customer",
         customerEmail: u.email || "",
         customerPhone: u.phone || "",
-        paymentReference: p.payment_reference || p.cf_payment_id || p.cf_order_id || p.id,
+        paymentReference:
+          p.payment_reference || p.cf_payment_id || p.cf_order_id || p.id,
         cfOrderId: p.cf_order_id || null,
         cfPaymentId: p.cf_payment_id || null,
         paymentSessionId: p.payment_session_id || null,
@@ -411,7 +513,7 @@ export class PaymentsService {
           r.customerEmail.toLowerCase().includes(s) ||
           r.paymentReference.toLowerCase().includes(s) ||
           (r.cfOrderId && r.cfOrderId.toLowerCase().includes(s)) ||
-          (r.cfPaymentId && r.cfPaymentId.toLowerCase().includes(s))
+          (r.cfPaymentId && r.cfPaymentId.toLowerCase().includes(s)),
       );
     }
 

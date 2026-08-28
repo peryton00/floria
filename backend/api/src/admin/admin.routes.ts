@@ -15,7 +15,11 @@ const uuidParamSchema = {
   }),
 };
 
-router.use(authenticateToken, requireRole("admin", "super_admin"), adminRateLimiter);
+router.use(
+  authenticateToken,
+  requireRole("admin", "super_admin"),
+  adminRateLimiter,
+);
 
 // Dashboard & Health
 router.get("/health", adminController.getHealth);
@@ -24,39 +28,119 @@ router.get("/analytics", adminController.getAnalytics);
 
 // Customer Management
 router.get("/users", adminController.getUsers);
-router.get("/users/:id", validateRequest(uuidParamSchema), adminController.getUserById);
-router.patch("/users/:id/status", validateRequest(uuidParamSchema), adminController.updateUserStatus);
-router.patch("/users/:id", validateRequest(uuidParamSchema), adminController.updateUser);
+router.get(
+  "/users/:id",
+  validateRequest(uuidParamSchema),
+  adminController.getUserById,
+);
+router.patch(
+  "/users/:id/status",
+  validateRequest(uuidParamSchema),
+  adminController.updateUserStatus,
+);
+router.patch(
+  "/users/:id",
+  validateRequest(uuidParamSchema),
+  adminController.updateUser,
+);
 
 // Seller Administration
 router.get("/sellers", adminController.getSellers);
-router.get("/sellers/:id", validateRequest(uuidParamSchema), adminController.getSellerById);
-router.post("/sellers/:id/approve", validateRequest(uuidParamSchema), adminController.approveSeller);
-router.post("/sellers/:id/reject", validateRequest(uuidParamSchema), adminController.rejectSeller);
-router.post("/sellers/:id/suspend", validateRequest(uuidParamSchema), adminController.suspendSeller);
-router.post("/sellers/:id/reactivate", validateRequest(uuidParamSchema), adminController.reactivateSeller);
-router.get("/sellers/:id/documents", validateRequest(uuidParamSchema), adminController.getSellerDocuments);
-router.patch("/sellers/:id", validateRequest(uuidParamSchema), adminController.updateSeller);
+router.get(
+  "/sellers/:id",
+  validateRequest(uuidParamSchema),
+  adminController.getSellerById,
+);
+router.post(
+  "/sellers/:id/approve",
+  validateRequest(uuidParamSchema),
+  adminController.approveSeller,
+);
+router.post(
+  "/sellers/:id/reject",
+  validateRequest(uuidParamSchema),
+  adminController.rejectSeller,
+);
+router.post(
+  "/sellers/:id/suspend",
+  validateRequest(uuidParamSchema),
+  adminController.suspendSeller,
+);
+router.post(
+  "/sellers/:id/reactivate",
+  validateRequest(uuidParamSchema),
+  adminController.reactivateSeller,
+);
+router.get(
+  "/sellers/:id/documents",
+  validateRequest(uuidParamSchema),
+  adminController.getSellerDocuments,
+);
+router.patch(
+  "/sellers/:id",
+  validateRequest(uuidParamSchema),
+  adminController.updateSeller,
+);
 
 // Product Moderation
 router.get("/products", adminController.getProducts);
-router.get("/products/:id/financial-calculation", validateRequest(uuidParamSchema), adminController.getProductFinancialCalculation);
-router.get("/products/:id", validateRequest(uuidParamSchema), adminController.getProductById);
-router.patch("/products/:id/status", validateRequest(uuidParamSchema), adminController.updateProductStatus);
-router.patch("/products/:id/publish", validateRequest(uuidParamSchema), adminController.publishProduct);
-router.patch("/products/:id/unpublish", validateRequest(uuidParamSchema), adminController.unpublishProduct);
-router.patch("/products/:id/archive", validateRequest(uuidParamSchema), adminController.archiveProduct);
-router.patch("/products/:id", validateRequest(uuidParamSchema), adminController.updateProduct);
+router.get(
+  "/products/:id/financial-calculation",
+  validateRequest(uuidParamSchema),
+  adminController.getProductFinancialCalculation,
+);
+router.get(
+  "/products/:id",
+  validateRequest(uuidParamSchema),
+  adminController.getProductById,
+);
+router.patch(
+  "/products/:id/status",
+  validateRequest(uuidParamSchema),
+  adminController.updateProductStatus,
+);
+router.patch(
+  "/products/:id/publish",
+  validateRequest(uuidParamSchema),
+  adminController.publishProduct,
+);
+router.patch(
+  "/products/:id/unpublish",
+  validateRequest(uuidParamSchema),
+  adminController.unpublishProduct,
+);
+router.patch(
+  "/products/:id/archive",
+  validateRequest(uuidParamSchema),
+  adminController.archiveProduct,
+);
+router.patch(
+  "/products/:id",
+  validateRequest(uuidParamSchema),
+  adminController.updateProduct,
+);
 
 // Category Management
 router.get("/categories", adminController.getCategories);
-router.get("/categories/:id/products-count", validateRequest(uuidParamSchema), adminController.getCategoryProductsCount);
+router.get(
+  "/categories/:id/products-count",
+  validateRequest(uuidParamSchema),
+  adminController.getCategoryProductsCount,
+);
 router.post("/categories", adminController.createCategory);
-router.patch("/categories/:id", validateRequest(uuidParamSchema), adminController.updateCategory);
+router.patch(
+  "/categories/:id",
+  validateRequest(uuidParamSchema),
+  adminController.updateCategory,
+);
 
 // Platform Order Oversight
 router.get("/orders", adminController.getOrders);
-router.get("/orders/:id/financial-breakdown", validateRequest(uuidParamSchema), adminController.getOrderFinancialBreakdown);
+router.get(
+  "/orders/:id/financial-breakdown",
+  validateRequest(uuidParamSchema),
+  adminController.getOrderFinancialBreakdown,
+);
 router.get("/orders/:id", adminController.getOrderById);
 router.patch("/orders/:id", adminController.updateOrder);
 

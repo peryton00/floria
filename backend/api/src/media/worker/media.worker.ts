@@ -13,7 +13,7 @@ import { buildPublicVariantPath } from "./path-builder.js";
 
 export const DEFAULT_WORKER_CONCURRENCY = parseInt(
   process.env.MEDIA_WORKER_CONCURRENCY || "4",
-  10
+  10,
 );
 
 export class MediaWorker {
@@ -35,16 +35,18 @@ export class MediaWorker {
       {
         connection: getRedisOptions(),
         concurrency: DEFAULT_WORKER_CONCURRENCY,
-      }
+      },
     );
 
     this.worker.on("completed", (job) => {
-      console.log(`[MediaWorker] Job ${job.id} (Asset ${job.data.assetId}) completed successfully.`);
+      console.log(
+        `[MediaWorker] Job ${job.id} (Asset ${job.data.assetId}) completed successfully.`,
+      );
     });
 
     this.worker.on("failed", (job, err) => {
       console.error(
-        `[MediaWorker] Job ${job?.id} (Asset ${job?.data?.assetId}) failed: ${err.message}`
+        `[MediaWorker] Job ${job?.id} (Asset ${job?.data?.assetId}) failed: ${err.message}`,
       );
     });
 
@@ -82,18 +84,26 @@ export class MediaWorker {
         .maybeSingle();
 
       if (current?.status === "READY") {
-        console.log(`[MediaWorker] Asset '${payload.assetId}' is already READY. Skipping duplicate job.`);
+        console.log(
+          `[MediaWorker] Asset '${payload.assetId}' is already READY. Skipping duplicate job.`,
+        );
         return;
       }
       if (current?.status === "RETIRED" || current?.status === "DELETED") {
-        console.warn(`[MediaWorker] Asset '${payload.assetId}' is in terminal state '${current.status}'. Aborting job.`);
+        console.warn(
+          `[MediaWorker] Asset '${payload.assetId}' is in terminal state '${current.status}'. Aborting job.`,
+        );
         return;
       }
       if (!current) {
-        console.error(`[MediaWorker] Media asset '${payload.assetId}' not found in database.`);
+        console.error(
+          `[MediaWorker] Media asset '${payload.assetId}' not found in database.`,
+        );
         return;
       }
-      console.warn(`[MediaWorker] Asset '${payload.assetId}' status is '${current.status}'. Aborting redundant job.`);
+      console.warn(
+        `[MediaWorker] Asset '${payload.assetId}' status is '${current.status}'. Aborting redundant job.`,
+      );
       return;
     }
 
@@ -105,7 +115,7 @@ export class MediaWorker {
 
       if (downloadErr || !fileData) {
         throw new Error(
-          `Failed to download staging binary from '${payload.stagingPath}': ${downloadErr?.message}`
+          `Failed to download staging binary from '${payload.stagingPath}': ${downloadErr?.message}`,
         );
       }
 
@@ -136,7 +146,9 @@ export class MediaWorker {
           });
 
         if (privateUploadErr) {
-          throw new Error(`Failed to upload private document to 'private-documents': ${privateUploadErr.message}`);
+          throw new Error(
+            `Failed to upload private document to 'private-documents': ${privateUploadErr.message}`,
+          );
         }
 
         // Database Finalization for DOCUMENT: Transition to READY with private-documents bucket
@@ -153,7 +165,9 @@ export class MediaWorker {
           .maybeSingle();
 
         if (docFinalErr || !finalDocAsset) {
-          throw new Error(`Document asset '${payload.assetId}' failed to finalize to READY.`);
+          throw new Error(
+            `Document asset '${payload.assetId}' failed to finalize to READY.`,
+          );
         }
 
         if (payload.sessionId) {
@@ -168,8 +182,12 @@ export class MediaWorker {
             .eq("id", payload.sessionId);
         }
 
-        await adminDb.storage.from("media-staging").remove([payload.stagingPath]);
-        console.log(`[MediaWorker] Document asset '${payload.assetId}' processed into private-documents.`);
+        await adminDb.storage
+          .from("media-staging")
+          .remove([payload.stagingPath]);
+        console.log(
+          `[MediaWorker] Document asset '${payload.assetId}' processed into private-documents.`,
+        );
         return;
       } else {
         engineResult = await ImageEngine.process(inputBuffer, payload.profile);
@@ -190,7 +208,7 @@ export class MediaWorker {
             payload.sellerId,
             payload.uploadedByUserId,
             payload.assetId,
-            variant.variantName
+            variant.variantName,
           );
 
           const { error: uploadErr } = await adminDb.storage
@@ -202,7 +220,9 @@ export class MediaWorker {
             });
 
           if (uploadErr) {
-            throw new Error(`Failed to upload variant '${variant.variantName}' to '${publicPath}': ${uploadErr.message}`);
+            throw new Error(
+              `Failed to upload variant '${variant.variantName}' to '${publicPath}': ${uploadErr.message}`,
+            );
           }
 
           uploadedVariantPaths.push(publicPath);
@@ -221,9 +241,13 @@ export class MediaWorker {
 
         // 6. Database Finalization: Insert media_variants
         if (variantRecords.length > 0) {
-          const { error: insertErr } = await adminDb.from("media_variants").insert(variantRecords);
+          const { error: insertErr } = await adminDb
+            .from("media_variants")
+            .insert(variantRecords);
           if (insertErr) {
-            throw new Error(`Failed to insert media_variants records: ${insertErr.message}`);
+            throw new Error(
+              `Failed to insert media_variants records: ${insertErr.message}`,
+            );
           }
         }
       }
@@ -242,7 +266,9 @@ export class MediaWorker {
         .maybeSingle();
 
       if (finalErr || !finalAsset) {
-        throw new Error(`Asset '${payload.assetId}' changed state concurrently during finalization. Storage rollback triggered.`);
+        throw new Error(
+          `Asset '${payload.assetId}' changed state concurrently during finalization. Storage rollback triggered.`,
+        );
       }
 
       // Complete Upload Session if present
@@ -262,7 +288,10 @@ export class MediaWorker {
       await adminDb.storage.from("media-staging").remove([payload.stagingPath]);
 
       const durationMs = Date.now() - startTime;
-      const totalOutputBytes = variantRecords.reduce((acc, v) => acc + v.size_bytes, 0);
+      const totalOutputBytes = variantRecords.reduce(
+        (acc, v) => acc + v.size_bytes,
+        0,
+      );
 
       // Structured Worker Logging
       console.log(
@@ -275,26 +304,35 @@ export class MediaWorker {
           durationMs,
           inputSizeBytes: engineResult.input.sizeBytes,
           outputSizeBytes: totalOutputBytes,
-          variantsGenerated: variantRecords.map((v) => ({ name: v.variant_name, path: v.storage_path })),
-        })
+          variantsGenerated: variantRecords.map((v) => ({
+            name: v.variant_name,
+            path: v.storage_path,
+          })),
+        }),
       );
     } catch (err: any) {
       // ROLLBACK: Delete any partial storage variants uploaded during this attempt
       if (uploadedVariantPaths.length > 0) {
         try {
-          await adminDb.storage.from("public-media").remove(uploadedVariantPaths);
+          await adminDb.storage
+            .from("public-media")
+            .remove(uploadedVariantPaths);
         } catch (cleanupErr: any) {
-          console.error(`[MediaWorker] Cleanup error for asset '${payload.assetId}': ${cleanupErr.message}`);
+          console.error(
+            `[MediaWorker] Cleanup error for asset '${payload.assetId}': ${cleanupErr.message}`,
+          );
         }
       }
 
       const isImageEngineError = err instanceof ImageEngineError;
-      const failureStage = updatedAsset?.status === "STORING" ? "STORAGE" : "PROCESSING";
+      const failureStage =
+        updatedAsset?.status === "STORING" ? "STORAGE" : "PROCESSING";
       const failureCode = isImageEngineError ? err.code : "PROCESSING_ERROR";
 
       const maxAttempts = job.opts?.attempts || 3;
       const isFinalAttempt = (job.attemptsMade || 1) >= maxAttempts;
-      const isPermanentError = isImageEngineError || err.message?.includes("not found");
+      const isPermanentError =
+        isImageEngineError || err.message?.includes("not found");
 
       // Record FAILED status in DB ONLY IF permanent error OR final BullMQ attempt
       if (isPermanentError || isFinalAttempt) {
@@ -323,7 +361,7 @@ export class MediaWorker {
         }
       } else {
         console.warn(
-          `[MediaWorker] Transient failure on attempt ${job.attemptsMade || 1}/${maxAttempts} for asset '${payload.assetId}'. Retaining retryable state for BullMQ.`
+          `[MediaWorker] Transient failure on attempt ${job.attemptsMade || 1}/${maxAttempts} for asset '${payload.assetId}'. Retaining retryable state for BullMQ.`,
         );
       }
 

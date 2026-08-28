@@ -33,22 +33,18 @@ export function ProductPriceBlock({
     typeof discountAmountPaise === "number" && discountAmountPaise > 0
       ? discountAmountPaise
       : hasLegitimateDiscount
-      ? (originalPricePaise as number) - sellingPricePaise
-      : 0;
+        ? (originalPricePaise as number) - sellingPricePaise
+        : 0;
 
   const textSize =
     size === "lg"
       ? "text-2xl font-bold"
       : size === "sm"
-      ? "text-sm font-bold"
-      : "text-lg font-bold";
+        ? "text-sm font-bold"
+        : "text-lg font-bold";
 
   const originalTextSize =
-    size === "lg"
-      ? "text-sm"
-      : size === "sm"
-      ? "text-[11px]"
-      : "text-xs";
+    size === "lg" ? "text-sm" : size === "sm" ? "text-[11px]" : "text-xs";
 
   return (
     <div className={`flex flex-col gap-1 ${className}`}>
@@ -60,7 +56,9 @@ export function ProductPriceBlock({
 
         {hasLegitimateDiscount && (
           <>
-            <span className={`text-ink-400 line-through font-ui ${originalTextSize}`}>
+            <span
+              className={`text-ink-400 line-through font-ui ${originalTextSize}`}
+            >
               {formatINR(originalPricePaise as number)}
             </span>
             {discountPercentage && discountPercentage > 0 && (

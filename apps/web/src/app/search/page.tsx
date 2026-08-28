@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CustomerShell } from "@/components/layout/CustomerShell";
-import { searchProductListings, getActiveCategories } from "@/lib/services/storefront";
+import {
+  searchProductListings,
+  getActiveCategories,
+} from "@/lib/services/storefront";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { FilterSidebar } from "@/components/ui/FilterSidebar";
 import { FilterAndSortControls } from "@/components/ui/FilterAndSortControls";
@@ -19,11 +22,14 @@ interface Props {
   }>;
 }
 
-export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+export async function generateMetadata({
+  searchParams,
+}: Props): Promise<Metadata> {
   const { q } = await searchParams;
   return {
     title: q ? `"${q}" — Search — Floria` : "Search — Floria",
-    description: "Search for plants and gardening products across all local nurseries on Floria.",
+    description:
+      "Search for plants and gardening products across all local nurseries on Floria.",
   };
 }
 
@@ -59,9 +65,16 @@ export default async function SearchPage({ searchParams }: Props) {
   return (
     <CustomerShell>
       {/* Breadcrumb */}
-      <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-stone-500 mb-4 sm:mb-6 font-ui">
-        <Link href="/" className="hover:text-forest-800 transition-colors">Home</Link>
-        <span aria-hidden="true" className="select-none text-stone-300">/</span>
+      <nav
+        aria-label="Breadcrumb"
+        className="flex items-center gap-2 text-xs text-stone-500 mb-4 sm:mb-6 font-ui"
+      >
+        <Link href="/" className="hover:text-forest-800 transition-colors">
+          Home
+        </Link>
+        <span aria-hidden="true" className="select-none text-stone-300">
+          /
+        </span>
         <span className="text-stone-900 font-semibold">Search</span>
       </nav>
 
@@ -74,12 +87,18 @@ export default async function SearchPage({ searchParams }: Props) {
           Search Products &amp; Nurseries
         </h1>
         <p className="text-xs sm:text-sm text-stone-500 font-medium max-w-2xl leading-relaxed">
-          Explore live plants, handcrafted pots, organic care essentials, and garden tools direct from verified local growers.
+          Explore live plants, handcrafted pots, organic care essentials, and
+          garden tools direct from verified local growers.
         </p>
       </div>
 
       {/* Flipkart/Swiggy Clean Search Bar (GET Form) */}
-      <form method="GET" action="/search" className="mb-6 sm:mb-8" role="search">
+      <form
+        method="GET"
+        action="/search"
+        className="mb-6 sm:mb-8"
+        role="search"
+      >
         <div className="group relative flex items-center bg-white rounded-2xl border border-stone-200/90 shadow-2xs hover:border-forest-400 focus-within:border-forest-700 focus-within:ring-4 focus-within:ring-forest-800/10 transition-all duration-200 p-1.5">
           <SearchIcon
             className="absolute left-4 text-stone-400 group-focus-within:text-forest-800 transition-colors duration-200 pointer-events-none"
@@ -143,7 +162,10 @@ export default async function SearchPage({ searchParams }: Props) {
                 <h2 className="text-xs font-bold uppercase tracking-wider text-stone-900 font-ui">
                   Explore Top Categories
                 </h2>
-                <Link href="/categories" className="text-xs font-bold text-forest-800 hover:underline font-ui">
+                <Link
+                  href="/categories"
+                  className="text-xs font-bold text-forest-800 hover:underline font-ui"
+                >
                   View All →
                 </Link>
               </div>
@@ -187,9 +209,12 @@ export default async function SearchPage({ searchParams }: Props) {
               <div className="w-14 h-14 rounded-2xl bg-forest-50 border border-forest-200/60 text-forest-800 flex items-center justify-center mx-auto shadow-2xs">
                 <SearchIcon size={26} />
               </div>
-              <h3 className="font-serif font-bold text-stone-900 text-lg sm:text-xl">Explore Floria Marketplace</h3>
+              <h3 className="font-serif font-bold text-stone-900 text-lg sm:text-xl">
+                Explore Floria Marketplace
+              </h3>
               <p className="text-xs sm:text-sm text-stone-500 max-w-md mx-auto leading-relaxed">
-                Enter a search keyword above or tap any popular search tag to discover verified growers near you.
+                Enter a search keyword above or tap any popular search tag to
+                discover verified growers near you.
               </p>
             </div>
           ) : results.length === 0 ? (
@@ -198,9 +223,12 @@ export default async function SearchPage({ searchParams }: Props) {
                 <LeafIcon size={26} />
               </div>
               <div>
-                <h3 className="font-serif font-bold text-stone-900 text-lg sm:text-xl">No products found for &ldquo;{query}&rdquo;</h3>
+                <h3 className="font-serif font-bold text-stone-900 text-lg sm:text-xl">
+                  No products found for &ldquo;{query}&rdquo;
+                </h3>
                 <p className="text-xs sm:text-sm text-stone-500 mt-1 max-w-md mx-auto leading-relaxed">
-                  Try checking your spelling, removing active filters, or exploring all nursery collections.
+                  Try checking your spelling, removing active filters, or
+                  exploring all nursery collections.
                 </p>
               </div>
               <div className="pt-2 flex flex-wrap justify-center gap-3">

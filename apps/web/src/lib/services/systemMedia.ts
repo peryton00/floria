@@ -42,7 +42,8 @@ export const SYSTEM_MEDIA_REGISTRY: Record<string, Record<string, string>> = {
     cover: `${SUPABASE_STORAGE_URL}/storage/v1/object/public/public-media/system/nursery-4/cover.webp`,
   },
   "/hero-plants.png": {
-    cover: "https://flymwzdtsrkiiriqaswc.supabase.co/storage/v1/object/public/public-media/admin-uploads/product/4e3b9c16-257f-413c-90f2-cb6738f25c10/medium.webp",
+    cover:
+      "https://flymwzdtsrkiiriqaswc.supabase.co/storage/v1/object/public/public-media/admin-uploads/product/4e3b9c16-257f-413c-90f2-cb6738f25c10/medium.webp",
     card: "https://flymwzdtsrkiiriqaswc.supabase.co/storage/v1/object/public/public-media/admin-uploads/product/4e3b9c16-257f-413c-90f2-cb6738f25c10/medium.webp",
   },
   "outdoor-plants": {
@@ -67,7 +68,7 @@ export const SYSTEM_MEDIA_REGISTRY: Record<string, Record<string, string>> = {
  */
 export function getSystemMediaUrl(
   path: string,
-  variant: "banner" | "cover" | "card" = "banner"
+  variant: "banner" | "cover" | "card" = "banner",
 ): string {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   const assetVariants = SYSTEM_MEDIA_REGISTRY[normalizedPath];

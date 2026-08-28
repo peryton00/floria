@@ -2,7 +2,11 @@ import { Skeleton } from "./Skeleton";
 
 export function FormSkeleton({ fields = 4 }: { fields?: number }) {
   return (
-    <div aria-busy="true" aria-label="Loading form" className="space-y-4 max-w-md w-full">
+    <div
+      aria-busy="true"
+      aria-label="Loading form"
+      className="space-y-4 max-w-md w-full"
+    >
       {Array.from({ length: fields }).map((_, i) => (
         <div key={i} className="space-y-1.5">
           <Skeleton variant="text" className="h-4 w-28" />

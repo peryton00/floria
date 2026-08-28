@@ -26,11 +26,18 @@ import { CheckoutLoader } from "@/components/ui/loading";
 
 /** Group cart items by seller ID */
 function groupBySeller(items: CartItem[]) {
-  const map = new Map<string, { sellerId: string; sellerName: string; items: CartItem[] }>();
+  const map = new Map<
+    string,
+    { sellerId: string; sellerName: string; items: CartItem[] }
+  >();
   for (const item of items) {
     const id = item.listing.seller.id;
     if (!map.has(id)) {
-      map.set(id, { sellerId: id, sellerName: item.listing.seller.business_name, items: [] });
+      map.set(id, {
+        sellerId: id,
+        sellerName: item.listing.seller.business_name,
+        items: [],
+      });
     }
     map.get(id)!.items.push(item);
   }
@@ -42,21 +49,35 @@ import { useOrders } from "@/lib/contexts/OrderContext";
 
 export default function CheckoutPage() {
   const { cartItems, clearCart } = useCart();
-  const { addresses, saveAddress, deleteAddress, setDefaultAddress, getDefaultAddress } = useCustomer();
+  const {
+    addresses,
+    saveAddress,
+    deleteAddress,
+    setDefaultAddress,
+    getDefaultAddress,
+  } = useCustomer();
   const { refreshOrders } = useOrders();
 
   // State----
   const defaultAddr = getDefaultAddress();
-  const [selectedAddressId, setSelectedAddressId] = useState<string>(defaultAddr?.id ?? "");
-  const [paymentMethod, setPaymentMethod] = useState<"online" | "cod">("online");
-  const [step, setStep] = useState<"checkout" | "confirmation" | "redirecting">("checkout");
+  const [selectedAddressId, setSelectedAddressId] = useState<string>(
+    defaultAddr?.id ?? "",
+  );
+  const [paymentMethod, setPaymentMethod] = useState<"online" | "cod">(
+    "online",
+  );
+  const [step, setStep] = useState<"checkout" | "confirmation" | "redirecting">(
+    "checkout",
+  );
   const [confirmedOrder, setConfirmedOrder] = useState<any>(null);
   const [redirectOrderId, setRedirectOrderId] = useState<string | null>(null);
   const router = useRouter();
 
   // Modal State
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
-  const [editingAddress, setEditingAddress] = useState<AddressItem | null>(null);
+  const [editingAddress, setEditingAddress] = useState<AddressItem | null>(
+    null,
+  );
 
   // Form / Validation errors
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -64,7 +85,9 @@ export default function CheckoutPage() {
   const isPlacingOrderRef = useRef(false);
 
   // Dynamically loaded platform financial and delivery settings
-  const [finSettings, setFinSettings] = useState<FinancialSettings | null>(null);
+  const [finSettings, setFinSettings] = useState<FinancialSettings | null>(
+    null,
+  );
   const [delSettings, setDelSettings] = useState<DeliverySettings | null>(null);
 
   // ── Cashfree Return Redirect Handler ────────────────────────────────────────
@@ -88,9 +111,11 @@ export default function CheckoutPage() {
 
     if (cfOrderId) {
       setRedirectOrderId(cfOrderId);
-      api.getOrderByCfOrderId(cfOrderId)
+      api
+        .getOrderByCfOrderId(cfOrderId)
         .then((res) => {
-          const resolvedOrderId = (res as any)?.data?.orderId || (res as any)?.data?.order_id;
+          const resolvedOrderId =
+            (res as any)?.data?.orderId || (res as any)?.data?.order_id;
           clearCart();
           refreshOrders().catch(() => {});
           if (resolvedOrderId) {
@@ -105,7 +130,7 @@ export default function CheckoutPage() {
           router.replace("/orders");
         });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -134,20 +159,33 @@ export default function CheckoutPage() {
 
   // Calculations
   const subtotalPaise = cartItems.reduce(
-    (sum, item) => sum + (item.listing?.pricing?.sellingPricePaise ?? item.listing?.inventory?.price_paise ?? 0) * item.quantity,
-    0
+    (sum, item) =>
+      sum +
+      (item.listing?.pricing?.sellingPricePaise ??
+        item.listing?.inventory?.price_paise ??
+        0) *
+        item.quantity,
+    0,
   );
 
-  const allItemsFreeDelivery = cartItems.length > 0 && cartItems.every((item) => Boolean(item.listing?.pricing?.isFreeDelivery));
-  const estimatedDeliveryFeePaise = (delSettings?.freeDeliveryEnabled && allItemsFreeDelivery)
-    ? 0
-    : (delSettings?.baseDeliveryFeePaise ?? 0);
-  const estimatedMaintenanceFeePaise = finSettings?.platformMaintenanceFeePaise ?? 0;
-  const estimatedTotalPaise = subtotalPaise + estimatedDeliveryFeePaise + estimatedMaintenanceFeePaise;
+  const allItemsFreeDelivery =
+    cartItems.length > 0 &&
+    cartItems.every((item) => Boolean(item.listing?.pricing?.isFreeDelivery));
+  const estimatedDeliveryFeePaise =
+    delSettings?.freeDeliveryEnabled && allItemsFreeDelivery
+      ? 0
+      : (delSettings?.baseDeliveryFeePaise ?? 0);
+  const estimatedMaintenanceFeePaise =
+    finSettings?.platformMaintenanceFeePaise ?? 0;
+  const estimatedTotalPaise =
+    subtotalPaise + estimatedDeliveryFeePaise + estimatedMaintenanceFeePaise;
 
   // Legitimate discount: only if the API returned a real original price higher than selling price.
   const discountPaise = cartItems.reduce((sum, item) => {
-    const price = item.listing?.pricing?.sellingPricePaise ?? item.listing?.inventory?.price_paise ?? 0;
+    const price =
+      item.listing?.pricing?.sellingPricePaise ??
+      item.listing?.inventory?.price_paise ??
+      0;
     const original = item.listing?.pricing?.originalPricePaise;
     if (typeof original === "number" && original > price) {
       return sum + (original - price) * item.quantity;
@@ -159,7 +197,7 @@ export default function CheckoutPage() {
 
   // Stock checks
   const outOfStockItems = cartItems.filter(
-    (item) => item.listing.inventory.stock_quantity < item.quantity
+    (item) => item.listing.inventory.stock_quantity < item.quantity,
   );
 
   // Address handlers
@@ -203,13 +241,17 @@ export default function CheckoutPage() {
     setValidationError(null);
 
     if (cartItems.length === 0) {
-      setValidationError("Your cart is empty. Please add items before checking out.");
+      setValidationError(
+        "Your cart is empty. Please add items before checking out.",
+      );
       isPlacingOrderRef.current = false;
       return;
     }
 
     if (outOfStockItems.length > 0) {
-      setValidationError("Some items in your cart are currently out of stock. Please update your cart.");
+      setValidationError(
+        "Some items in your cart are currently out of stock. Please update your cart.",
+      );
       isPlacingOrderRef.current = false;
       return;
     }
@@ -231,7 +273,9 @@ export default function CheckoutPage() {
       });
 
       if (!res.success || !res.data) {
-        setValidationError(res.error?.message || "Failed to place order. Please try again.");
+        setValidationError(
+          res.error?.message || "Failed to place order. Please try again.",
+        );
         setIsPlacingOrder(false);
         isPlacingOrderRef.current = false;
         return;
@@ -244,7 +288,8 @@ export default function CheckoutPage() {
         const sessionRes = await api.createPaymentSession(orderId);
         if (!sessionRes.success || !sessionRes.data?.paymentSessionId) {
           setValidationError(
-            sessionRes.error?.message || "Failed to create payment session. Please check your network or try Cash on Delivery."
+            sessionRes.error?.message ||
+              "Failed to create payment session. Please check your network or try Cash on Delivery.",
           );
           setIsPlacingOrder(false);
           isPlacingOrderRef.current = false;
@@ -259,7 +304,8 @@ export default function CheckoutPage() {
               const script = document.createElement("script");
               script.src = "https://sdk.cashfree.com/js/v3/cashfree.js";
               script.onload = () => resolve();
-              script.onerror = () => reject(new Error("Cashfree SDK failed to load"));
+              script.onerror = () =>
+                reject(new Error("Cashfree SDK failed to load"));
               document.head.appendChild(script);
             });
             CashfreeSDK = (window as any).Cashfree;
@@ -270,7 +316,11 @@ export default function CheckoutPage() {
 
         if (CashfreeSDK) {
           try {
-            const environment = (sessionRes.data.environment || "SANDBOX").toLowerCase() === "production" ? "production" : "sandbox";
+            const environment =
+              (sessionRes.data.environment || "SANDBOX").toLowerCase() ===
+              "production"
+                ? "production"
+                : "sandbox";
             const cashfree = CashfreeSDK({ mode: environment });
             await cashfree.checkout({
               paymentSessionId: sessionRes.data.paymentSessionId,
@@ -280,13 +330,18 @@ export default function CheckoutPage() {
             return;
           } catch (cfErr: any) {
             console.error("[Checkout] Cashfree launch error:", cfErr);
-            setValidationError(cfErr.message || "Unable to launch Cashfree payment window. Please try again.");
+            setValidationError(
+              cfErr.message ||
+                "Unable to launch Cashfree payment window. Please try again.",
+            );
             setIsPlacingOrder(false);
             isPlacingOrderRef.current = false;
             return;
           }
         } else {
-          setValidationError("Cashfree Payment SDK could not be loaded. Please check your internet connection or use Cash on Delivery.");
+          setValidationError(
+            "Cashfree Payment SDK could not be loaded. Please check your internet connection or use Cash on Delivery.",
+          );
           setIsPlacingOrder(false);
           isPlacingOrderRef.current = false;
           return;
@@ -297,7 +352,10 @@ export default function CheckoutPage() {
       setConfirmedOrder({
         id: orderId,
         createdAt: new Date().toLocaleString(),
-        paymentMethod: paymentMethod === "cod" ? "Cash on Delivery" : "Online Payment (UPI/Cards/NetBanking)",
+        paymentMethod:
+          paymentMethod === "cod"
+            ? "Cash on Delivery"
+            : "Online Payment (UPI/Cards/NetBanking)",
         address: selectedAddr,
         nurseryGroups,
         subtotalPaise,
@@ -307,9 +365,14 @@ export default function CheckoutPage() {
       });
       setStep("confirmation");
       clearCart();
-      refreshOrders().catch((err) => console.warn("[Checkout] refreshOrders error:", err));
+      refreshOrders().catch((err) =>
+        console.warn("[Checkout] refreshOrders error:", err),
+      );
     } catch (err: any) {
-      setValidationError(err.message || "A network error occurred. Please check your connection and try again.");
+      setValidationError(
+        err.message ||
+          "A network error occurred. Please check your connection and try again.",
+      );
     } finally {
       setIsPlacingOrder(false);
       isPlacingOrderRef.current = false;
@@ -351,23 +414,40 @@ export default function CheckoutPage() {
               Order Placed Successfully!
             </h1>
             <p className="text-sm text-ink-500 mb-6 max-w-md mx-auto">
-              Your order <span className="font-mono font-bold text-ink-900">#{confirmedOrder.id}</span> has been received. Your products are being prepared by the selected nurseries.
+              Your order{" "}
+              <span className="font-mono font-bold text-ink-900">
+                #{confirmedOrder.id}
+              </span>{" "}
+              has been received. Your products are being prepared by the
+              selected nurseries.
             </p>
 
             {/* Order Meta Box */}
             <div className="bg-floria-soft-sand rounded-xl p-4 mb-6 border border-floria-border text-left space-y-3">
               <div className="flex flex-wrap justify-between items-center text-xs pb-3 border-b border-floria-border gap-2">
                 <div>
-                  <span className="text-ink-400 uppercase tracking-wider block text-[10px] font-bold">Order ID</span>
-                  <span className="font-mono font-bold text-ink-900 text-sm">#{confirmedOrder.id}</span>
+                  <span className="text-ink-400 uppercase tracking-wider block text-[10px] font-bold">
+                    Order ID
+                  </span>
+                  <span className="font-mono font-bold text-ink-900 text-sm">
+                    #{confirmedOrder.id}
+                  </span>
                 </div>
                 <div>
-                  <span className="text-ink-400 uppercase tracking-wider block text-[10px] font-bold">Placed On</span>
-                  <span className="font-semibold text-ink-900">{confirmedOrder.createdAt}</span>
+                  <span className="text-ink-400 uppercase tracking-wider block text-[10px] font-bold">
+                    Placed On
+                  </span>
+                  <span className="font-semibold text-ink-900">
+                    {confirmedOrder.createdAt}
+                  </span>
                 </div>
                 <div>
-                  <span className="text-ink-400 uppercase tracking-wider block text-[10px] font-bold">Payment Method</span>
-                  <span className="font-semibold text-forest-700">{confirmedOrder.paymentMethod}</span>
+                  <span className="text-ink-400 uppercase tracking-wider block text-[10px] font-bold">
+                    Payment Method
+                  </span>
+                  <span className="font-semibold text-forest-700">
+                    {confirmedOrder.paymentMethod}
+                  </span>
                 </div>
               </div>
 
@@ -376,10 +456,18 @@ export default function CheckoutPage() {
                 <span className="text-[10px] font-bold uppercase tracking-wider text-ink-400 block mb-1">
                   Deliver To
                 </span>
-                <p className="text-xs font-bold text-ink-900">{confirmedOrder.address.full_name} ({confirmedOrder.address.phone})</p>
+                <p className="text-xs font-bold text-ink-900">
+                  {confirmedOrder.address.full_name} (
+                  {confirmedOrder.address.phone})
+                </p>
                 <p className="text-xs text-ink-600">
-                  {confirmedOrder.address.line1}{confirmedOrder.address.line2 ? `, ${confirmedOrder.address.line2}` : ""},{" "}
-                  {confirmedOrder.address.city}, {confirmedOrder.address.state} - {confirmedOrder.address.pincode}
+                  {confirmedOrder.address.line1}
+                  {confirmedOrder.address.line2
+                    ? `, ${confirmedOrder.address.line2}`
+                    : ""}
+                  , {confirmedOrder.address.city},{" "}
+                  {confirmedOrder.address.state} -{" "}
+                  {confirmedOrder.address.pincode}
                 </p>
               </div>
             </div>
@@ -387,12 +475,19 @@ export default function CheckoutPage() {
             {/* Nurseries Involved Summary */}
             <div className="text-left mb-6">
               <h2 className="text-xs font-bold uppercase tracking-widest text-ink-900 mb-3">
-                Items Being Prepared ({confirmedOrder.nurseryGroups.length} {confirmedOrder.nurseryGroups.length === 1 ? "Nursery" : "Nurseries"})
+                Items Being Prepared ({confirmedOrder.nurseryGroups.length}{" "}
+                {confirmedOrder.nurseryGroups.length === 1
+                  ? "Nursery"
+                  : "Nurseries"}
+                )
               </h2>
 
               <div className="space-y-4">
                 {confirmedOrder.nurseryGroups.map((group: any) => (
-                  <div key={group.sellerId} className="border border-floria-border rounded-xl overflow-hidden bg-floria-linen">
+                  <div
+                    key={group.sellerId}
+                    className="border border-floria-border rounded-xl overflow-hidden bg-floria-linen"
+                  >
                     <div className="bg-floria-soft-sand px-3 py-2 border-b border-floria-border flex items-center gap-2">
                       <LeafIcon size={14} className="text-forest-700" />
                       <span className="text-xs font-bold text-forest-800 uppercase tracking-wider">
@@ -404,7 +499,10 @@ export default function CheckoutPage() {
                         const { listing, quantity } = item;
                         const { product, inventory, primary_image } = listing;
                         return (
-                          <div key={product.id} className="py-2 first:pt-0 last:pb-0 flex items-center justify-between text-xs">
+                          <div
+                            key={product.id}
+                            className="py-2 first:pt-0 last:pb-0 flex items-center justify-between text-xs"
+                          >
                             <div className="flex items-center gap-3">
                               <div className="relative w-10 h-10 rounded bg-floria-natural-sand overflow-hidden flex-shrink-0 border border-floria-border">
                                 <Image
@@ -415,8 +513,12 @@ export default function CheckoutPage() {
                                 />
                               </div>
                               <div>
-                                <p className="font-semibold text-ink-900">{product.name}</p>
-                                <p className="text-[10px] text-ink-400">Qty: {quantity}</p>
+                                <p className="font-semibold text-ink-900">
+                                  {product.name}
+                                </p>
+                                <p className="text-[10px] text-ink-400">
+                                  Qty: {quantity}
+                                </p>
                               </div>
                             </div>
                             <span className="font-bold text-ink-900">
@@ -457,11 +559,25 @@ export default function CheckoutPage() {
   if (cartItems.length === 0) {
     return (
       <CustomerShell>
-        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-ink-400 mb-6">
-          <Link href="/" className="hover:text-forest-700 transition-colors">Home</Link>
-          <span aria-hidden="true" className="select-none text-ink-300">/</span>
-          <Link href="/cart" className="hover:text-forest-700 transition-colors">Cart</Link>
-          <span aria-hidden="true" className="select-none text-ink-300">/</span>
+        <nav
+          aria-label="Breadcrumb"
+          className="flex items-center gap-2 text-xs text-ink-400 mb-6"
+        >
+          <Link href="/" className="hover:text-forest-700 transition-colors">
+            Home
+          </Link>
+          <span aria-hidden="true" className="select-none text-ink-300">
+            /
+          </span>
+          <Link
+            href="/cart"
+            className="hover:text-forest-700 transition-colors"
+          >
+            Cart
+          </Link>
+          <span aria-hidden="true" className="select-none text-ink-300">
+            /
+          </span>
           <span className="text-ink-700 font-medium">Checkout</span>
         </nav>
 
@@ -469,8 +585,12 @@ export default function CheckoutPage() {
           <div className="w-16 h-16 rounded-full bg-forest-50 flex items-center justify-center mx-auto mb-4 text-forest-700">
             <WishlistIcon size={28} className="text-forest-700" />
           </div>
-          <h1 className="text-lg font-bold text-ink-900 mb-1">Your cart is empty</h1>
-          <p className="text-sm text-ink-500 mb-6">Add plants to your cart before proceeding to checkout.</p>
+          <h1 className="text-lg font-bold text-ink-900 mb-1">
+            Your cart is empty
+          </h1>
+          <p className="text-sm text-ink-500 mb-6">
+            Add plants to your cart before proceeding to checkout.
+          </p>
           <Link
             href="/categories"
             className="inline-flex items-center justify-center px-6 py-3 bg-forest-800 hover:bg-forest-900 !text-white font-semibold text-sm rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-forest-800 shadow-sm"
@@ -486,17 +606,38 @@ export default function CheckoutPage() {
   // ── 3. MAIN CHECKOUT PAGE VIEW ─────────────────────────────────────────────
   return (
     <CustomerShell>
-      <CheckoutLoader step={isPlacingOrder ? (paymentMethod === "online" ? "processing-payment" : "creating-order") : "idle"} />
+      <CheckoutLoader
+        step={
+          isPlacingOrder
+            ? paymentMethod === "online"
+              ? "processing-payment"
+              : "creating-order"
+            : "idle"
+        }
+      />
       {/* Breadcrumb */}
-      <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-ink-400 mb-6">
-        <Link href="/" className="hover:text-forest-700 transition-colors">Home</Link>
-        <span aria-hidden="true" className="select-none text-ink-300">/</span>
-        <Link href="/cart" className="hover:text-forest-700 transition-colors">Cart</Link>
-        <span aria-hidden="true" className="select-none text-ink-300">/</span>
+      <nav
+        aria-label="Breadcrumb"
+        className="flex items-center gap-2 text-xs text-ink-400 mb-6"
+      >
+        <Link href="/" className="hover:text-forest-700 transition-colors">
+          Home
+        </Link>
+        <span aria-hidden="true" className="select-none text-ink-300">
+          /
+        </span>
+        <Link href="/cart" className="hover:text-forest-700 transition-colors">
+          Cart
+        </Link>
+        <span aria-hidden="true" className="select-none text-ink-300">
+          /
+        </span>
         <span className="text-ink-700 font-medium">Checkout</span>
       </nav>
 
-      <h1 className="font-serif text-3xl font-bold text-ink-900 mb-6">Checkout</h1>
+      <h1 className="font-serif text-3xl font-bold text-ink-900 mb-6">
+        Checkout
+      </h1>
 
       {/* Validation & Payment Error Alert */}
       {validationError && (
@@ -505,7 +646,9 @@ export default function CheckoutPage() {
             <span className="text-lg leading-none flex-shrink-0">⚠️</span>
             <div className="flex-1 min-w-0">
               <p className="font-bold text-sm text-red-900">Payment Notice</p>
-              <p className="mt-0.5 leading-relaxed font-medium">{validationError}</p>
+              <p className="mt-0.5 leading-relaxed font-medium">
+                {validationError}
+              </p>
             </div>
           </div>
 
@@ -539,7 +682,8 @@ export default function CheckoutPage() {
           <div>
             <p className="font-bold">Items out of stock</p>
             <p className="text-[11px] text-amber-700 mt-0.5">
-              Some items in your cart exceed available stock. Please update your cart before placing order.
+              Some items in your cart exceed available stock. Please update your
+              cart before placing order.
             </p>
           </div>
           <Link
@@ -554,13 +698,20 @@ export default function CheckoutPage() {
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8 items-start">
         {/* ── LEFT COLUMN ───────────────────────────────────────────────────── */}
         <div className="space-y-8">
-
           {/* 1. DELIVERY ADDRESS SECTION */}
-          <section aria-labelledby="section-address" className="bg-floria-linen rounded-2xl border border-floria-border p-6 shadow-sm">
+          <section
+            aria-labelledby="section-address"
+            className="bg-floria-linen rounded-2xl border border-floria-border p-6 shadow-sm"
+          >
             <div className="flex items-center justify-between pb-4 border-b border-floria-border mb-4">
               <div className="flex items-center gap-2">
-                <span className="w-6 h-6 rounded-full bg-forest-800 text-white font-bold text-xs flex items-center justify-center">1</span>
-                <h2 id="section-address" className="font-serif text-lg font-bold text-ink-900">
+                <span className="w-6 h-6 rounded-full bg-forest-800 text-white font-bold text-xs flex items-center justify-center">
+                  1
+                </span>
+                <h2
+                  id="section-address"
+                  className="font-serif text-lg font-bold text-ink-900"
+                >
                   Delivery Address
                 </h2>
               </div>
@@ -596,7 +747,9 @@ export default function CheckoutPage() {
                           onChange={() => handleSelectAddress(addr.id)}
                           className="w-4 h-4 text-forest-800 focus:ring-forest-800 accent-forest-800"
                         />
-                        <span className="font-sans text-sm font-bold text-ink-900">{addr.full_name}</span>
+                        <span className="font-sans text-sm font-bold text-ink-900">
+                          {addr.full_name}
+                        </span>
                         {addr.is_default && (
                           <span className="text-[10px] font-bold text-forest-800 bg-forest-100 px-1.5 py-0.5 rounded uppercase">
                             Default
@@ -633,11 +786,23 @@ export default function CheckoutPage() {
                     </div>
 
                     <div className="pl-6 text-xs text-ink-600 space-y-0.5">
-                      <p>{addr.line1}{addr.line2 ? `, ${addr.line2}` : ""}</p>
-                      <p>{addr.city}, {addr.state} - <span className="font-semibold text-ink-800">{addr.pincode}</span></p>
-                      <p className="text-ink-500 font-medium">Phone: {addr.phone}</p>
+                      <p>
+                        {addr.line1}
+                        {addr.line2 ? `, ${addr.line2}` : ""}
+                      </p>
+                      <p>
+                        {addr.city}, {addr.state} -{" "}
+                        <span className="font-semibold text-ink-800">
+                          {addr.pincode}
+                        </span>
+                      </p>
+                      <p className="text-ink-500 font-medium">
+                        Phone: {addr.phone}
+                      </p>
                       {addr.instructions && (
-                        <p className="text-[11px] text-ink-400 italic mt-1">Note: &quot;{addr.instructions}&quot;</p>
+                        <p className="text-[11px] text-ink-400 italic mt-1">
+                          Note: &quot;{addr.instructions}&quot;
+                        </p>
                       )}
                     </div>
                   </div>
@@ -647,22 +812,36 @@ export default function CheckoutPage() {
           </section>
 
           {/* 2. ORDER REVIEW (GROUPED BY NURSERY) */}
-          <section aria-labelledby="section-review" className="bg-floria-linen rounded-2xl border border-floria-border p-6 shadow-sm">
+          <section
+            aria-labelledby="section-review"
+            className="bg-floria-linen rounded-2xl border border-floria-border p-6 shadow-sm"
+          >
             <div className="flex items-center justify-between pb-4 border-b border-floria-border mb-4">
               <div className="flex items-center gap-2">
-                <span className="w-6 h-6 rounded-full bg-forest-800 text-white font-bold text-xs flex items-center justify-center">2</span>
-                <h2 id="section-review" className="font-serif text-lg font-bold text-ink-900">
+                <span className="w-6 h-6 rounded-full bg-forest-800 text-white font-bold text-xs flex items-center justify-center">
+                  2
+                </span>
+                <h2
+                  id="section-review"
+                  className="font-serif text-lg font-bold text-ink-900"
+                >
                   Order Review
                 </h2>
               </div>
-              <Link href="/cart" className="text-xs font-bold text-forest-800 hover:text-forest-950 transition-colors">
+              <Link
+                href="/cart"
+                className="text-xs font-bold text-forest-800 hover:text-forest-950 transition-colors"
+              >
                 Edit Cart
               </Link>
             </div>
 
             <div className="space-y-4">
               {nurseryGroups.map((group) => (
-                <div key={group.sellerId} className="border border-floria-border rounded-xl overflow-hidden bg-floria-linen">
+                <div
+                  key={group.sellerId}
+                  className="border border-floria-border rounded-xl overflow-hidden bg-floria-linen"
+                >
                   <div className="bg-floria-soft-sand px-3.5 py-2.5 border-b border-floria-border flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <LeafIcon size={14} className="text-forest-700" />
@@ -671,17 +850,27 @@ export default function CheckoutPage() {
                       </span>
                     </div>
                     <span className="text-[11px] text-ink-400 font-medium">
-                      {group.items.reduce((s, i) => s + i.quantity, 0)} {group.items.reduce((s, i) => s + i.quantity, 0) === 1 ? "item" : "items"}
+                      {group.items.reduce((s, i) => s + i.quantity, 0)}{" "}
+                      {group.items.reduce((s, i) => s + i.quantity, 0) === 1
+                        ? "item"
+                        : "items"}
                     </span>
                   </div>
 
                   <div className="p-3.5 divide-y divide-floria-border">
                     {group.items.map((item) => {
                       const { listing, quantity } = item;
-                      const { product, inventory, primary_image, pricing } = listing;
-                      const itemUnitPricePaise = pricing?.sellingPricePaise ?? inventory.price_paise ?? 0;
+                      const { product, inventory, primary_image, pricing } =
+                        listing;
+                      const itemUnitPricePaise =
+                        pricing?.sellingPricePaise ??
+                        inventory.price_paise ??
+                        0;
                       return (
-                        <div key={product.id} className="py-2.5 first:pt-0 last:pb-0 flex items-center gap-3">
+                        <div
+                          key={product.id}
+                          className="py-2.5 first:pt-0 last:pb-0 flex items-center gap-3"
+                        >
                           <div className="relative w-12 h-12 rounded-lg bg-floria-natural-sand overflow-hidden flex-shrink-0 border border-floria-border">
                             <Image
                               src={primary_image?.url || "/floria-logo.png"}
@@ -693,8 +882,13 @@ export default function CheckoutPage() {
                           </div>
 
                           <div className="flex-1 min-w-0">
-                            <p className="text-xs font-bold text-ink-900 line-clamp-1">{product.name}</p>
-                            <p className="text-[11px] text-ink-400">Qty: {quantity} &bull; {formatINR(itemUnitPricePaise)} each</p>
+                            <p className="text-xs font-bold text-ink-900 line-clamp-1">
+                              {product.name}
+                            </p>
+                            <p className="text-[11px] text-ink-400">
+                              Qty: {quantity} &bull;{" "}
+                              {formatINR(itemUnitPricePaise)} each
+                            </p>
                           </div>
 
                           <div className="text-right">
@@ -712,10 +906,18 @@ export default function CheckoutPage() {
           </section>
 
           {/* 3. PAYMENT METHOD SECTION */}
-          <section aria-labelledby="section-payment" className="bg-floria-linen rounded-2xl border border-floria-border p-6 shadow-sm">
+          <section
+            aria-labelledby="section-payment"
+            className="bg-floria-linen rounded-2xl border border-floria-border p-6 shadow-sm"
+          >
             <div className="flex items-center gap-2 pb-4 border-b border-floria-border mb-4">
-              <span className="w-6 h-6 rounded-full bg-forest-800 text-white font-bold text-xs flex items-center justify-center">3</span>
-              <h2 id="section-payment" className="font-serif text-lg font-bold text-ink-900">
+              <span className="w-6 h-6 rounded-full bg-forest-800 text-white font-bold text-xs flex items-center justify-center">
+                3
+              </span>
+              <h2
+                id="section-payment"
+                className="font-serif text-lg font-bold text-ink-900"
+              >
                 Payment Method
               </h2>
             </div>
@@ -742,7 +944,9 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm font-bold text-ink-900">Online Payment</p>
+                    <p className="text-sm font-bold text-ink-900">
+                      Online Payment
+                    </p>
                     <span className="text-[10px] font-bold text-forest-800 bg-forest-100 px-2 py-0.5 rounded uppercase">
                       Fast & Secure
                     </span>
@@ -773,7 +977,9 @@ export default function CheckoutPage() {
                   <LeafIcon size={18} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-ink-900">Cash on Delivery (COD)</p>
+                  <p className="text-sm font-bold text-ink-900">
+                    Cash on Delivery (COD)
+                  </p>
                   <p className="text-xs text-ink-500 mt-0.5">
                     Pay in cash when your plants arrive at your doorstep
                   </p>
@@ -793,20 +999,32 @@ export default function CheckoutPage() {
             <div className="space-y-3 text-sm">
               <div className="flex justify-between text-ink-600">
                 <span>Price ({totalItemsCount} items)</span>
-                <span className="font-semibold text-ink-900">{formatINR(subtotalPaise + discountPaise)}</span>
+                <span className="font-semibold text-ink-900">
+                  {formatINR(subtotalPaise + discountPaise)}
+                </span>
               </div>
 
               {discountPaise > 0 && (
                 <div className="flex justify-between text-forest-700">
                   <span>Discount</span>
-                  <span className="font-semibold">−{formatINR(discountPaise)}</span>
+                  <span className="font-semibold">
+                    −{formatINR(discountPaise)}
+                  </span>
                 </div>
               )}
 
               <div className="flex justify-between text-ink-600">
                 <span>Delivery</span>
-                <span className={estimatedDeliveryFeePaise === 0 ? "text-forest-700 font-semibold text-xs uppercase" : "font-semibold text-ink-900"}>
-                  {estimatedDeliveryFeePaise === 0 ? "FREE (estimated)" : `${formatINR(estimatedDeliveryFeePaise)} (estimated)`}
+                <span
+                  className={
+                    estimatedDeliveryFeePaise === 0
+                      ? "text-forest-700 font-semibold text-xs uppercase"
+                      : "font-semibold text-ink-900"
+                  }
+                >
+                  {estimatedDeliveryFeePaise === 0
+                    ? "FREE (estimated)"
+                    : `${formatINR(estimatedDeliveryFeePaise)} (estimated)`}
                 </span>
               </div>
 
@@ -821,7 +1039,9 @@ export default function CheckoutPage() {
                       ⓘ
                     </span>
                   </span>
-                  <span className="font-semibold text-ink-900">{formatINR(estimatedMaintenanceFeePaise)} (estimated)</span>
+                  <span className="font-semibold text-ink-900">
+                    {formatINR(estimatedMaintenanceFeePaise)} (estimated)
+                  </span>
                 </div>
               )}
 
@@ -850,8 +1070,8 @@ export default function CheckoutPage() {
                 {isPlacingOrder
                   ? "Placing Order..."
                   : paymentMethod === "online"
-                  ? "Continue to Payment"
-                  : "Place Order"}
+                    ? "Continue to Payment"
+                    : "Place Order"}
               </button>
             </div>
 

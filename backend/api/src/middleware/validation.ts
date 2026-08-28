@@ -28,7 +28,9 @@ export function validateRequest(schemas: ValidationSchema) {
       next();
     } catch (error) {
       if (error instanceof ZodError) {
-        const message = error.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join("; ");
+        const message = error.errors
+          .map((e) => `${e.path.join(".")}: ${e.message}`)
+          .join("; ");
         return next(Errors.validation(message));
       }
       next(error);

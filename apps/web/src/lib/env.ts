@@ -19,10 +19,14 @@ function validateEnv(): {
     throw new Error(
       `[Floria] Missing required environment variables:\n${[
         !url ? "NEXT_PUBLIC_SUPABASE_URL" : null,
-        !anonKey ? "NEXT_PUBLIC_SUPABASE_ANON_KEY (or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY)" : null,
+        !anonKey
+          ? "NEXT_PUBLIC_SUPABASE_ANON_KEY (or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY)"
+          : null,
       ]
         .filter(Boolean)
-        .join("\n")}\n\nCopy .env.example to .env.local and fill in the values.`
+        .join(
+          "\n",
+        )}\n\nCopy .env.example to .env.local and fill in the values.`,
     );
   }
 
@@ -30,7 +34,8 @@ function validateEnv(): {
     NEXT_PUBLIC_SUPABASE_URL: url,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: anonKey,
     SUPABASE_SERVICE_ROLE_KEY: process.env["SUPABASE_SERVICE_ROLE_KEY"],
-    NEXT_PUBLIC_APP_URL: process.env["NEXT_PUBLIC_APP_URL"] ?? "http://localhost:3000",
+    NEXT_PUBLIC_APP_URL:
+      process.env["NEXT_PUBLIC_APP_URL"] ?? "http://localhost:3000",
   };
 }
 

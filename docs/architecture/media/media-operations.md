@@ -42,6 +42,7 @@ flowchart TD
 ```
 
 ### Staging & Failed Upload Cleanup Logic
+
 1. **Abandoned Upload Sessions**: `media_upload_sessions` in status `CREATED` or `IN_PROGRESS` where `expires_at < NOW()` are marked `EXPIRED`. Corresponding temporary files in `media-staging` are deleted.
 2. **Orphan Storage Binaries**: Storage objects in `media-staging` older than 24 hours without an active `media_upload_sessions` record are purged.
 3. **Failed Processing Jobs**: Assets in status `FAILED` older than 30 days are purged from storage and database records.
@@ -72,12 +73,12 @@ Workers emit structured JSON logs adhering to Floria's request correlation archi
 
 ### Key Performance Benchmark Targets
 
-| Metric | Target Benchmark | Alerting Threshold |
-| :--- | :--- | :--- |
-| **API Session Latency** | **p95 < 100 ms** | Alert if p95 > 300 ms |
-| **Worker Sharp Processing** | **p95 < 500 ms** (for 2MB input) | Alert if p95 > 1500 ms |
-| **BullMQ Queue Depth** | **< 20 jobs** | Alert if depth > 100 jobs for > 5 min |
-| **Upload Failure Rate** | **< 0.5%** | Alert if failure rate > 2.0% |
+| Metric                      | Target Benchmark                 | Alerting Threshold                    |
+| :-------------------------- | :------------------------------- | :------------------------------------ |
+| **API Session Latency**     | **p95 < 100 ms**                 | Alert if p95 > 300 ms                 |
+| **Worker Sharp Processing** | **p95 < 500 ms** (for 2MB input) | Alert if p95 > 1500 ms                |
+| **BullMQ Queue Depth**      | **< 20 jobs**                    | Alert if depth > 100 jobs for > 5 min |
+| **Upload Failure Rate**     | **< 0.5%**                       | Alert if failure rate > 2.0%          |
 
 ---
 

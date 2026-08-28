@@ -22,7 +22,10 @@ import { rateLimitOrderCreation } from "@/lib/server/rate-limit";
 import { auditLog } from "@/lib/server/audit";
 import { Errors } from "@/lib/server/errors";
 import { ok, handleRoute } from "@/lib/server/response";
-import { getSupabaseServerClient, getSupabaseServiceClient } from "@/lib/supabase/server";
+import {
+  getSupabaseServerClient,
+  getSupabaseServiceClient,
+} from "@/lib/supabase/server";
 
 async function getCommissionRate(supabase: any): Promise<number> {
   try {
@@ -32,7 +35,11 @@ async function getCommissionRate(supabase: any): Promise<number> {
       .eq("status", "active")
       .maybeSingle();
 
-    if (policy && policy.seller_commission_rate !== undefined && policy.seller_commission_rate !== null) {
+    if (
+      policy &&
+      policy.seller_commission_rate !== undefined &&
+      policy.seller_commission_rate !== null
+    ) {
       const ratePct = Number(policy.seller_commission_rate);
       if (!isNaN(ratePct) && ratePct >= 0) {
         return ratePct / 100.0;
@@ -97,7 +104,10 @@ export async function POST(req: NextRequest) {
 
     // Fallback: validate inline address from body
     if (!deliveryAddress && body.address) {
-      deliveryAddress = validateAddress(body.address) as unknown as Record<string, unknown>;
+      deliveryAddress = validateAddress(body.address) as unknown as Record<
+        string,
+        unknown
+      >;
     }
 
     if (!deliveryAddress) {
@@ -142,13 +152,15 @@ export async function POST(req: NextRequest) {
 
     const productMap = new Map(products.map((p) => [p.id as string, p]));
     const inventoryMap = new Map(
-      (inventories ?? []).map((i) => [i.product_id as string, i])
+      (inventories ?? []).map((i) => [i.product_id as string, i]),
     );
 
     // Query active policy and overrides for server-authoritative line pricing
     const { data: activePolicy } = await supabase
       .from("pricing_policy_versions")
-      .select("floria_profit_rate, free_delivery_threshold_paise, free_delivery_recovery_paise")
+      .select(
+        "floria_profit_rate, free_delivery_threshold_paise, free_delivery_recovery_paise",
+      )
       .eq("status", "active")
       .maybeSingle();
 
@@ -158,7 +170,12 @@ export async function POST(req: NextRequest) {
       .in("product_id", productIds)
       .eq("is_active", true);
 
-    const overrideMap = new Map((overrides || []).map((o: any) => [o.product_id, o.custom_customer_price_paise]));
+    const overrideMap = new Map(
+      (overrides || []).map((o: any) => [
+        o.product_id,
+        o.custom_customer_price_paise,
+      ]),
+    );
 
     // 6. Validate stock + compute server-authoritative totals
     const lineItems: Array<{
@@ -175,23 +192,41 @@ export async function POST(req: NextRequest) {
       const product = productMap.get(pid);
       const inventory = inventoryMap.get(pid);
 
-      if (!product) throw Errors.orderInvalid(`A product in your cart is no longer available.`);
-      if (!inventory) throw Errors.orderInvalid(`Price information unavailable for "${product.name}".`);
+      if (!product)
+        throw Errors.orderInvalid(
+          `A product in your cart is no longer available.`,
+        );
+      if (!inventory)
+        throw Errors.orderInvalid(
+          `Price information unavailable for "${product.name}".`,
+        );
       if (inventory.stock_quantity < cartItem.quantity) {
         throw Errors.outOfStock(product.name as string);
       }
 
-      const basePrice = Number((inventory as any).base_price_paise ?? inventory.price_paise ?? 0);
+      const basePrice = Number(
+        (inventory as any).base_price_paise ?? inventory.price_paise ?? 0,
+      );
       const profitRate = Number(activePolicy?.floria_profit_rate ?? 0);
       const profitPaise = Math.round(basePrice * (profitRate / 100.0));
       const preRecovery = basePrice + profitPaise;
-      const thresholdPaise = Number(activePolicy?.free_delivery_threshold_paise ?? 0);
-      const recoveryFee = Number(activePolicy?.free_delivery_recovery_paise ?? 0);
-      const deliveryRecovery = (thresholdPaise > 0 && preRecovery >= thresholdPaise) ? recoveryFee : 0;
+      const thresholdPaise = Number(
+        activePolicy?.free_delivery_threshold_paise ?? 0,
+      );
+      const recoveryFee = Number(
+        activePolicy?.free_delivery_recovery_paise ?? 0,
+      );
+      const deliveryRecovery =
+        thresholdPaise > 0 && preRecovery >= thresholdPaise ? recoveryFee : 0;
       const calculatedCustomerPrice = preRecovery + deliveryRecovery;
 
       const overridePrice = overrideMap.get(pid);
-      const unitPrice = typeof overridePrice === "number" ? overridePrice : (calculatedCustomerPrice > 0 ? calculatedCustomerPrice : Number(inventory.price_paise ?? 0));
+      const unitPrice =
+        typeof overridePrice === "number"
+          ? overridePrice
+          : calculatedCustomerPrice > 0
+            ? calculatedCustomerPrice
+            : Number(inventory.price_paise ?? 0);
 
       lineItems.push({
         product_id: pid,
@@ -203,7 +238,10 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const subtotalPaise = lineItems.reduce((s, li) => s + li.line_total_paise, 0);
+    const subtotalPaise = lineItems.reduce(
+      (s, li) => s + li.line_total_paise,
+      0,
+    );
     const commissionDecimalRate = await getCommissionRate(supabase);
     const commissionPaise = Math.round(subtotalPaise * commissionDecimalRate);
 
@@ -238,9 +276,9 @@ export async function POST(req: NextRequest) {
     const orderId = order.id as string;
 
     // Insert order items
-    const { error: itemsError } = await db.from("order_items").insert(
-      lineItems.map((li) => ({ ...li, order_id: orderId }))
-    );
+    const { error: itemsError } = await db
+      .from("order_items")
+      .insert(lineItems.map((li) => ({ ...li, order_id: orderId })));
 
     if (itemsError) {
       console.error("[checkout] Order items error:", itemsError.message);
@@ -250,17 +288,24 @@ export async function POST(req: NextRequest) {
     }
 
     // Create seller_order_fulfillments for each unique seller
-    const uniqueSellerIds = [...new Set(lineItems.map((li) => li.seller_id_snapshot))];
-    const { error: fulfillmentError } = await db.from("seller_order_fulfillments").insert(
-      uniqueSellerIds.map((sellerId) => ({
-        order_id: orderId,
-        seller_id: sellerId,
-        status: "Order Placed",
-      }))
-    );
+    const uniqueSellerIds = [
+      ...new Set(lineItems.map((li) => li.seller_id_snapshot)),
+    ];
+    const { error: fulfillmentError } = await db
+      .from("seller_order_fulfillments")
+      .insert(
+        uniqueSellerIds.map((sellerId) => ({
+          order_id: orderId,
+          seller_id: sellerId,
+          status: "Order Placed",
+        })),
+      );
 
     if (fulfillmentError) {
-      console.warn("[checkout] Fulfillment record creation warning:", fulfillmentError.message);
+      console.warn(
+        "[checkout] Fulfillment record creation warning:",
+        fulfillmentError.message,
+      );
       // Non-fatal — seller can still see order; fulfillment record will be created on first status update
     }
 

@@ -10,7 +10,10 @@ export interface CreateDeliveryInput {
 export class DeliveryRepository {
   async findAll(status?: string): Promise<any[]> {
     const db = getAdminDb();
-    let q = db.from("delivery_assignments").select("*").order("created_at", { ascending: false });
+    let q = db
+      .from("delivery_assignments")
+      .select("*")
+      .order("created_at", { ascending: false });
     if (status && status !== "all") {
       q = q.eq("status", status);
     }
@@ -65,6 +68,34 @@ export class DeliveryRepository {
     if (newStatus === "picked_up") payload["picked_up_at"] = now;
     if (newStatus === "out_for_delivery") payload["out_for_delivery_at"] = now;
     if (newStatus === "delivered") payload["delivered_at"] = now;
+
+    const { data, error } = await db
+      .from("delivery_assignments")
+      .update(payload)
+      .eq("id", id)
+      .select()
+      .maybeSingle();
+
+    if (error || !data) return null;
+    return data;
+  }
+
+  async completeWithPod(
+    id: string,
+    podAssetId: string,
+    recipientName?: string,
+    notes?: string,
+  ): Promise<any | null> {
+    const db = getAdminDb();
+    const now = new Date().toISOString();
+    const payload: Record<string, unknown> = {
+      status: "delivered",
+      delivered_at: now,
+      pod_asset_id: podAssetId,
+      recipient_name: recipientName || null,
+      pod_notes: notes || null,
+      updated_at: now,
+    };
 
     const { data, error } = await db
       .from("delivery_assignments")

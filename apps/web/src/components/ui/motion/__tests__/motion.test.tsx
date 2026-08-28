@@ -51,7 +51,7 @@ describe("Phase 3.18.2 Global Motion & Interaction System Test Suite", () => {
     const { container } = render(
       <AnimatedSection delay={60}>
         <p>Section Content</p>
-      </AnimatedSection>
+      </AnimatedSection>,
     );
     expect(screen.getByText("Section Content")).toBeDefined();
     const sectionDiv = container.firstElementChild as HTMLElement;

@@ -36,14 +36,20 @@ export default async function NurseriesPage() {
             Our Nursery Network
           </h1>
           <p className="text-sm text-ink-600 leading-relaxed">
-            Floria connects you directly with top-rated local plant nurseries and ceramic artisans across India. Order from multiple nurseries in one smooth checkout!
+            Floria connects you directly with top-rated local plant nurseries
+            and ceramic artisans across India. Order from multiple nurseries in
+            one smooth checkout!
           </p>
         </div>
 
         {nurseries.length === 0 ? (
           <div className="bg-floria-linen rounded-2xl border border-floria-border p-12 text-center shadow-xs max-w-lg mx-auto">
-            <p className="font-serif text-lg font-bold text-ink-900">No nurseries available yet</p>
-            <p className="text-xs text-ink-500 mt-2">Check back soon as our network of verified nurseries grows.</p>
+            <p className="font-serif text-lg font-bold text-ink-900">
+              No nurseries available yet
+            </p>
+            <p className="text-xs text-ink-500 mt-2">
+              Check back soon as our network of verified nurseries grows.
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -83,7 +89,10 @@ export default async function NurseriesPage() {
 
                     {nursery.address && (
                       <div className="flex items-center gap-2 text-xs text-ink-500">
-                        <MapPinIcon size={14} className="text-forest-700 shrink-0" />
+                        <MapPinIcon
+                          size={14}
+                          className="text-forest-700 shrink-0"
+                        />
                         <span className="truncate">{nursery.address}</span>
                       </div>
                     )}
@@ -92,12 +101,18 @@ export default async function NurseriesPage() {
                       <StarRating rating={rating} size="sm" />
                       {rating > 0 && (
                         <>
-                          <span className="text-xs font-bold text-ink-800">{rating.toFixed(1)}</span>
-                          <span className="text-xs text-ink-400">({reviewCount} review{reviewCount !== 1 ? "s" : ""})</span>
+                          <span className="text-xs font-bold text-ink-800">
+                            {rating.toFixed(1)}
+                          </span>
+                          <span className="text-xs text-ink-400">
+                            ({reviewCount} review{reviewCount !== 1 ? "s" : ""})
+                          </span>
                         </>
                       )}
                       {rating === 0 && (
-                        <span className="text-xs text-ink-400">New nursery</span>
+                        <span className="text-xs text-ink-400">
+                          New nursery
+                        </span>
                       )}
                     </div>
 

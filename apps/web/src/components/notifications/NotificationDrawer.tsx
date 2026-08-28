@@ -15,7 +15,7 @@ import {
   Info,
   X,
   ChevronRight,
-  Trash2
+  Trash2,
 } from "lucide-react";
 
 import { resolveNotificationNavigation } from "@/lib/navigation/notificationResolver";
@@ -47,7 +47,9 @@ export function NotificationDrawer({
       setLoading(true);
       setError(null);
       const supabase = getSupabaseBrowserClient();
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session?.access_token) {
         setNotifications([]);
         setLoading(false);
@@ -76,7 +78,11 @@ export function NotificationDrawer({
     try {
       await api.markNotificationRead(id);
       setNotifications((prev) =>
-        prev.map((item) => (item.id === id ? { ...item, read_at: new Date().toISOString() } : item))
+        prev.map((item) =>
+          item.id === id
+            ? { ...item, read_at: new Date().toISOString() }
+            : item,
+        ),
       );
       onRefreshCount();
     } catch (e) {
@@ -88,7 +94,7 @@ export function NotificationDrawer({
     try {
       await api.markAllNotificationsRead();
       setNotifications((prev) =>
-        prev.map((item) => ({ ...item, read_at: new Date().toISOString() }))
+        prev.map((item) => ({ ...item, read_at: new Date().toISOString() })),
       );
       onRefreshCount();
     } catch (e) {
@@ -113,10 +119,14 @@ export function NotificationDrawer({
   };
 
   const getIcon = (type: string) => {
-    if (type.includes("ORDER")) return <ShoppingBag size={16} className="text-forest-700" />;
-    if (type.includes("STOCK")) return <AlertTriangle size={16} className="text-warning-600" />;
-    if (type.includes("SELLER") || type.includes("NURSERY")) return <Store size={16} className="text-purple-700" />;
-    if (type.includes("PICKUP") || type.includes("DELIVERY")) return <Package size={16} className="text-blue-700" />;
+    if (type.includes("ORDER"))
+      return <ShoppingBag size={16} className="text-forest-700" />;
+    if (type.includes("STOCK"))
+      return <AlertTriangle size={16} className="text-warning-600" />;
+    if (type.includes("SELLER") || type.includes("NURSERY"))
+      return <Store size={16} className="text-purple-700" />;
+    if (type.includes("PICKUP") || type.includes("DELIVERY"))
+      return <Package size={16} className="text-blue-700" />;
     return <Info size={16} className="text-ink-500" />;
   };
 
@@ -129,7 +139,9 @@ export function NotificationDrawer({
         <div className="p-4 border-b border-floria-border flex justify-between items-center bg-floria-soft-sand/60">
           <div className="flex items-center gap-2">
             <Bell size={18} className="text-forest-700" />
-            <h2 className="font-serif text-base font-bold text-ink-900">Notifications</h2>
+            <h2 className="font-serif text-base font-bold text-ink-900">
+              Notifications
+            </h2>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -165,8 +177,12 @@ export function NotificationDrawer({
           ) : notifications.length === 0 ? (
             <div className="py-16 text-center space-y-2">
               <Bell size={32} className="mx-auto text-ink-200" />
-              <p className="font-serif font-bold text-ink-800 text-sm">You&apos;re all caught up!</p>
-              <p className="text-xs text-ink-400">No recent notifications to show.</p>
+              <p className="font-serif font-bold text-ink-800 text-sm">
+                You&apos;re all caught up!
+              </p>
+              <p className="text-xs text-ink-400">
+                No recent notifications to show.
+              </p>
             </div>
           ) : (
             notifications.map((item) => {
@@ -195,17 +211,26 @@ export function NotificationDrawer({
                         <div className="w-7 h-7 rounded-lg bg-floria-sand/80 border border-floria-border flex items-center justify-center flex-shrink-0 shadow-2xs">
                           {getIcon(item.type)}
                         </div>
-                        <h3 className="font-bold text-xs text-ink-900 leading-snug">{item.title}</h3>
+                        <h3 className="font-bold text-xs text-ink-900 leading-snug">
+                          {item.title}
+                        </h3>
                       </div>
                       {isUnread && (
                         <span className="w-2 h-2 rounded-full bg-forest-600 flex-shrink-0 mt-1" />
                       )}
                     </div>
 
-                    <p className="text-xs text-ink-600 leading-relaxed pl-9">{item.message}</p>
+                    <p className="text-xs text-ink-600 leading-relaxed pl-9">
+                      {item.message}
+                    </p>
 
                     <div className="pl-9 pt-1 flex justify-between items-center text-[10px] text-ink-400">
-                      <span>{new Date(item.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                      <span>
+                        {new Date(item.created_at).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
                       <span className="text-forest-700 font-medium flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
                         View details <ChevronRight size={10} />
                       </span>
@@ -232,6 +257,6 @@ export function NotificationDrawer({
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

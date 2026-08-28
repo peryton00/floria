@@ -13,44 +13,49 @@ import {
 
 describe("ImageEngine — Core Security & Input Format Safeguards", () => {
   it("rejects empty buffer with EmptyInputError", async () => {
-    await expect(ImageEngine.process(Buffer.alloc(0), "PRODUCT")).rejects.toThrow(
-      EmptyInputError
-    );
+    await expect(
+      ImageEngine.process(Buffer.alloc(0), "PRODUCT"),
+    ).rejects.toThrow(EmptyInputError);
   });
 
   it("rejects buffer > 10 MB with FileTooLargeError", async () => {
     const oversizedBuffer = Buffer.alloc(10 * 1024 * 1024 + 1);
-    await expect(ImageEngine.process(oversizedBuffer, "PRODUCT")).rejects.toThrow(
-      FileTooLargeError
-    );
+    await expect(
+      ImageEngine.process(oversizedBuffer, "PRODUCT"),
+    ).rejects.toThrow(FileTooLargeError);
   });
 
   it("rejects corrupt/garbage binary buffer with CorruptImageError", async () => {
     const garbageBuffer = Buffer.from("NOT_AN_IMAGE_FILE_HEADER_BINARY_DATA");
     await expect(ImageEngine.process(garbageBuffer, "PRODUCT")).rejects.toThrow(
-      CorruptImageError
+      CorruptImageError,
     );
   });
 
   it("explicitly rejects GIF format with UnsupportedFormatError", async () => {
     const gifBuffer = await sharp({
-      create: { width: 100, height: 100, channels: 3, background: { r: 255, g: 0, b: 0 } },
+      create: {
+        width: 100,
+        height: 100,
+        channels: 3,
+        background: { r: 255, g: 0, b: 0 },
+      },
     })
       .gif()
       .toBuffer();
 
     await expect(ImageEngine.process(gifBuffer, "PRODUCT")).rejects.toThrow(
-      UnsupportedFormatError
+      UnsupportedFormatError,
     );
   });
 
   it("explicitly rejects SVG format with UnsupportedFormatError", async () => {
     const svgBuffer = Buffer.from(
-      '<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="blue"/></svg>'
+      '<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="blue"/></svg>',
     );
 
     await expect(ImageEngine.process(svgBuffer, "PRODUCT")).rejects.toThrow(
-      UnsupportedFormatError
+      UnsupportedFormatError,
     );
   });
 
@@ -61,7 +66,9 @@ describe("ImageEngine — Core Security & Input Format Safeguards", () => {
 
   it("rejects HEIC if Sharp libvips runtime does not support it", async () => {
     if (!ImageEngine.isHeicSupported()) {
-      const fakeHeic = Buffer.from([0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70, 0x68, 0x65, 0x69, 0x63]);
+      const fakeHeic = Buffer.from([
+        0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70, 0x68, 0x65, 0x69, 0x63,
+      ]);
       await expect(ImageEngine.process(fakeHeic, "PRODUCT")).rejects.toThrow();
     }
   });
@@ -71,33 +78,48 @@ describe("ImageEngine — Decoded Pixel & Excessive Dimension Security Tests", (
   it("rejects image with width > 16,384 with ExcessiveDimensionsError", async () => {
     // Small byte size input (<100KB) but metadata width > 16,384
     const excessiveWidthBuffer = await sharp({
-      create: { width: 16385, height: 100, channels: 3, background: { r: 0, g: 255, b: 0 } },
+      create: {
+        width: 16385,
+        height: 100,
+        channels: 3,
+        background: { r: 0, g: 255, b: 0 },
+      },
     })
       .jpeg({ quality: 10 })
       .toBuffer();
 
     expect(excessiveWidthBuffer.length).toBeLessThan(10 * 1024 * 1024); // File size is small (<10MB)
-    await expect(ImageEngine.process(excessiveWidthBuffer, "PRODUCT")).rejects.toThrow(
-      ExcessiveDimensionsError
-    );
+    await expect(
+      ImageEngine.process(excessiveWidthBuffer, "PRODUCT"),
+    ).rejects.toThrow(ExcessiveDimensionsError);
   });
 
   it("rejects image with height > 16,384 with ExcessiveDimensionsError", async () => {
     const excessiveHeightBuffer = await sharp({
-      create: { width: 100, height: 16385, channels: 3, background: { r: 0, g: 255, b: 0 } },
+      create: {
+        width: 100,
+        height: 16385,
+        channels: 3,
+        background: { r: 0, g: 255, b: 0 },
+      },
     })
       .jpeg({ quality: 10 })
       .toBuffer();
 
     expect(excessiveHeightBuffer.length).toBeLessThan(10 * 1024 * 1024);
-    await expect(ImageEngine.process(excessiveHeightBuffer, "PRODUCT")).rejects.toThrow(
-      ExcessiveDimensionsError
-    );
+    await expect(
+      ImageEngine.process(excessiveHeightBuffer, "PRODUCT"),
+    ).rejects.toThrow(ExcessiveDimensionsError);
   });
 
   it("accepts valid high-resolution image within dimension limits (1920x1080)", async () => {
     const validLargeBuffer = await sharp({
-      create: { width: 1920, height: 1080, channels: 3, background: { r: 120, g: 120, b: 120 } },
+      create: {
+        width: 1920,
+        height: 1080,
+        channels: 3,
+        background: { r: 120, g: 120, b: 120 },
+      },
     })
       .jpeg()
       .toBuffer();
@@ -115,19 +137,34 @@ describe("ImageEngine — Exhaustive Test Matrix for All 9 Approved Profiles", (
 
   beforeAll(async () => {
     sourceJpegBuffer = await sharp({
-      create: { width: 2000, height: 1500, channels: 3, background: { r: 40, g: 140, b: 40 } },
+      create: {
+        width: 2000,
+        height: 1500,
+        channels: 3,
+        background: { r: 40, g: 140, b: 40 },
+      },
     })
       .jpeg({ quality: 100 })
       .toBuffer();
 
     sourcePngTransparentBuffer = await sharp({
-      create: { width: 500, height: 500, channels: 4, background: { r: 255, g: 0, b: 0, alpha: 0.8 } },
+      create: {
+        width: 500,
+        height: 500,
+        channels: 4,
+        background: { r: 255, g: 0, b: 0, alpha: 0.8 },
+      },
     })
       .png()
       .toBuffer();
 
     sourceWebpBuffer = await sharp({
-      create: { width: 800, height: 600, channels: 3, background: { r: 80, g: 80, b: 200 } },
+      create: {
+        width: 800,
+        height: 600,
+        channels: 3,
+        background: { r: 80, g: 80, b: 200 },
+      },
     })
       .webp()
       .toBuffer();
@@ -187,7 +224,10 @@ describe("ImageEngine — Exhaustive Test Matrix for All 9 Approved Profiles", (
 
   // SELLER_LOGO (1 variant)
   it("6. SELLER_LOGO: standard (400x400, CONTAIN 1:1, quality 85, WebP)", async () => {
-    const res = await ImageEngine.process(sourcePngTransparentBuffer, "SELLER_LOGO");
+    const res = await ImageEngine.process(
+      sourcePngTransparentBuffer,
+      "SELLER_LOGO",
+    );
     const v = res.variants.find((item) => item.variantName === "standard")!;
     expect(v.format).toBe("webp");
     expect(v.contentType).toBe("image/webp");
@@ -236,7 +276,12 @@ describe("ImageEngine — Exhaustive Test Matrix for All 9 Approved Profiles", (
 describe("ImageEngine — Compression Optimization & Worker Metadata Exposure", () => {
   it("compresses raw high-quality input image (input.sizeBytes > output.sizeBytes)", async () => {
     const rawUncompressedJpeg = await sharp({
-      create: { width: 1600, height: 1200, channels: 3, background: { r: 200, g: 50, b: 50 } },
+      create: {
+        width: 1600,
+        height: 1200,
+        channels: 3,
+        background: { r: 200, g: 50, b: 50 },
+      },
     })
       .jpeg({ quality: 100 })
       .toBuffer();
@@ -249,7 +294,12 @@ describe("ImageEngine — Compression Optimization & Worker Metadata Exposure", 
 
   it("exposes all metadata fields required for background worker compression logs", async () => {
     const rawImage = await sharp({
-      create: { width: 800, height: 600, channels: 3, background: { r: 100, g: 100, b: 100 } },
+      create: {
+        width: 800,
+        height: 600,
+        channels: 3,
+        background: { r: 100, g: 100, b: 100 },
+      },
     })
       .jpeg()
       .toBuffer();

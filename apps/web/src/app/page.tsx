@@ -3,7 +3,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { CustomerShell } from "@/components/layout/CustomerShell";
 import { ProductCard } from "@/components/ui/ProductCard";
-import { getActiveCategories, getProductListings } from "@/lib/services/storefront";
+import {
+  getActiveCategories,
+  getProductListings,
+} from "@/lib/services/storefront";
 import { getSystemMediaUrl } from "@/lib/services/systemMedia";
 
 import type { NurserySummary } from "@/lib/api";
@@ -287,7 +290,10 @@ export default async function HomePage() {
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4 md:gap-5">
             {categories.slice(0, 5).map((cat) => {
-              const imgUrl = cat.banner_url || cat.image_url || getSystemMediaUrl("/cat-plants.png", "banner");
+              const imgUrl =
+                cat.banner_url ||
+                cat.image_url ||
+                getSystemMediaUrl("/cat-plants.png", "banner");
               return (
                 <Link
                   key={cat.id}

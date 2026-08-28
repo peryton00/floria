@@ -1,0 +1,131 @@
+import React from "react";
+import {
+  TouchableOpacity,
+  Text,
+  ActivityIndicator,
+  StyleSheet,
+  ViewStyle,
+  TextStyle,
+} from "react-native";
+import { Colors, Typography, BorderRadius } from "../../lib/theme";
+
+export interface ButtonProps {
+  label: string;
+  onPress: () => void;
+  variant?:
+    "primary" | "secondary" | "outline" | "terracotta" | "success" | "danger";
+  size?: "sm" | "md" | "lg";
+  loading?: boolean;
+  disabled?: boolean;
+  style?: ViewStyle;
+  textStyle?: TextStyle;
+}
+
+export function Button({
+  label,
+  onPress,
+  variant = "primary",
+  size = "md",
+  loading = false,
+  disabled = false,
+  style,
+  textStyle,
+}: ButtonProps) {
+  const getBackgroundColor = () => {
+    if (disabled) return Colors.border;
+    switch (variant) {
+      case "secondary":
+        return Colors.sage;
+      case "terracotta":
+        return Colors.terracotta;
+      case "success":
+        return Colors.success;
+      case "danger":
+        return Colors.error;
+      case "outline":
+        return "transparent";
+      case "primary":
+      default:
+        return Colors.forest;
+    }
+  };
+
+  const getTextColor = () => {
+    if (disabled) return Colors.inkMuted;
+    if (variant === "outline") return Colors.forest;
+    return Colors.white;
+  };
+
+  return (
+    <TouchableOpacity
+      activeOpacity={0.8}
+      onPress={onPress}
+      disabled={disabled || loading}
+      style={[
+        styles.base,
+        styles[size],
+        { backgroundColor: getBackgroundColor() },
+        variant === "outline" && styles.outlineBorder,
+        style,
+      ]}
+    >
+      {loading ? (
+        <ActivityIndicator size="small" color={getTextColor()} />
+      ) : (
+        <Text
+          style={[
+            styles.text,
+            styles[`${size}Text`],
+            { color: getTextColor() },
+            textStyle,
+          ]}
+        >
+          {label}
+        </Text>
+      )}
+    </TouchableOpacity>
+  );
+}
+
+const styles = StyleSheet.create({
+  base: {
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: BorderRadius.md,
+    minHeight: 44,
+    paddingHorizontal: 14,
+  },
+  sm: {
+    minHeight: 36,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  md: {
+    minHeight: 44,
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+  },
+  lg: {
+    minHeight: 52,
+    paddingVertical: 14,
+    paddingHorizontal: 22,
+  },
+  outlineBorder: {
+    borderWidth: 1.5,
+    borderColor: Colors.forest,
+  },
+  text: {
+    fontWeight: "700",
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+  },
+  smText: {
+    fontSize: Typography.fontSizes.xs,
+  },
+  mdText: {
+    fontSize: Typography.fontSizes.sm,
+  },
+  lgText: {
+    fontSize: Typography.fontSizes.base,
+  },
+});

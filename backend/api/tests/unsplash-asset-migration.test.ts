@@ -36,20 +36,28 @@ describe("Stage 7 — Unsplash Asset Migration Manifest & Classification", () =>
   });
 
   it("correctly assigns ImageEngine profiles: SELLER_LOGO, PRODUCT, and CATEGORY", () => {
-    const greenleaf = UNSPLASH_ASSETS_MANIFEST.find((a) => a.id === "seller-logo-greenleaf")!;
+    const greenleaf = UNSPLASH_ASSETS_MANIFEST.find(
+      (a) => a.id === "seller-logo-greenleaf",
+    )!;
     expect(greenleaf.profile).toBe("SELLER_LOGO");
 
-    const snake = UNSPLASH_ASSETS_MANIFEST.find((a) => a.id === "product-snake-monstera")!;
+    const snake = UNSPLASH_ASSETS_MANIFEST.find(
+      (a) => a.id === "product-snake-monstera",
+    )!;
     expect(snake.profile).toBe("PRODUCT");
 
-    const outdoor = UNSPLASH_ASSETS_MANIFEST.find((a) => a.id === "category-outdoor-plants")!;
+    const outdoor = UNSPLASH_ASSETS_MANIFEST.find(
+      (a) => a.id === "category-outdoor-plants",
+    )!;
     expect(outdoor.profile).toBe("CATEGORY");
   });
 });
 
 describe("Stage 7 — Download Validation & Image Magic Byte Verification", () => {
   it("rejects empty or non-image binary downloads", async () => {
-    const invalidBuffer = Buffer.from("<html><body>404 Not Found</body></html>");
+    const invalidBuffer = Buffer.from(
+      "<html><body>404 Not Found</body></html>",
+    );
 
     // Test validation logic inside downloadImageBuffer mock
     const isJpeg = invalidBuffer[0] === 0xff && invalidBuffer[1] === 0xd8;
@@ -61,7 +69,12 @@ describe("Stage 7 — Download Validation & Image Magic Byte Verification", () =
 
   it("executes idempotent migration for Unsplash seed assets: assigns is_system_seeded = TRUE and seller_id = NULL", async () => {
     const mockJpeg = await sharp({
-      create: { width: 600, height: 600, channels: 3, background: { r: 50, g: 150, b: 50 } },
+      create: {
+        width: 600,
+        height: 600,
+        channels: 3,
+        background: { r: 50, g: 150, b: 50 },
+      },
     })
       .jpeg()
       .toBuffer();
@@ -81,7 +94,12 @@ describe("Stage 7 — Download Validation & Image Magic Byte Verification", () =
             select: vi.fn().mockReturnThis(),
             eq: vi.fn().mockReturnThis(),
             limit: vi.fn().mockReturnThis(),
-            maybeSingle: vi.fn().mockResolvedValue({ data: { id: DEFAULT_SYSTEM_USER_ID }, error: null }),
+            maybeSingle: vi
+              .fn()
+              .mockResolvedValue({
+                data: { id: DEFAULT_SYSTEM_USER_ID },
+                error: null,
+              }),
           };
         }
         if (table === "media_assets") {
@@ -113,7 +131,10 @@ describe("Stage 7 — Download Validation & Image Magic Byte Verification", () =
       },
     };
 
-    vi.spyOn(await import("../src/config/database.js"), "getAdminDb").mockReturnValue(mockAdminDb as any);
+    vi.spyOn(
+      await import("../src/config/database.js"),
+      "getAdminDb",
+    ).mockReturnValue(mockAdminDb as any);
 
     const results = await migrateUnsplashAssets(mockBuffers);
     expect(results.length).toBe(18);

@@ -7,7 +7,7 @@ export function errorHandler(
   err: Error | ApiError,
   _req: Request,
   res: Response,
-  _next: NextFunction
+  _next: NextFunction,
 ): void {
   if (err instanceof ApiError) {
     res.status(err.statusCode).json({
@@ -28,7 +28,9 @@ export function errorHandler(
     success: false,
     error: {
       code: "INTERNAL_ERROR",
-      message: isProd ? "An unexpected internal server error occurred." : err.message,
+      message: isProd
+        ? "An unexpected internal server error occurred."
+        : err.message,
     },
   });
 }

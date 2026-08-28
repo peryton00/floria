@@ -14,9 +14,12 @@ export class FulfillmentRepository {
     return data;
   }
 
-  async findByOrderAndSeller(orderId: string, sellerId: string): Promise<any | null> {
+  async findByOrderAndSeller(
+    orderId: string,
+    sellerId: string,
+  ): Promise<any | null> {
     const db = getAdminDb();
-    
+
     // Check direct match on seller_id
     const { data, error } = await db
       .from("seller_order_fulfillments")
@@ -55,7 +58,7 @@ export class FulfillmentRepository {
     fulfillmentId: string,
     sellerId: string,
     newStatus: string,
-    timestampField?: string
+    timestampField?: string,
   ): Promise<boolean> {
     const db = getAdminDb();
     const payload: Record<string, unknown> = {

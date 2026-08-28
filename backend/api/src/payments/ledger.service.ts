@@ -29,11 +29,20 @@ export class LedgerService {
       const amt = Number(e.amount_paise || 0);
       if (e.balance_state === "pending" && e.entry_type === "earning_credit") {
         pendingEarningsPaise += amt;
-      } else if (e.balance_state === "available" && e.entry_type === "earning_credit") {
+      } else if (
+        e.balance_state === "available" &&
+        e.entry_type === "earning_credit"
+      ) {
         availableEarningsPaise += amt;
-      } else if (e.entry_type === "payout_debit" || e.balance_state === "paid") {
+      } else if (
+        e.entry_type === "payout_debit" ||
+        e.balance_state === "paid"
+      ) {
         paidEarningsPaise += Math.abs(amt);
-      } else if (e.entry_type === "refund_debit" || e.balance_state === "refunded") {
+      } else if (
+        e.entry_type === "refund_debit" ||
+        e.balance_state === "refunded"
+      ) {
         refundedEarningsPaise += Math.abs(amt);
       }
     }
@@ -56,7 +65,8 @@ export class LedgerService {
       .eq("balance_state", "pending")
       .select("id");
 
-    if (error) console.error("[LedgerService] Error marking earnings available:", error);
+    if (error)
+      console.error("[LedgerService] Error marking earnings available:", error);
     return data?.length ?? 0;
   }
 

@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import { api } from "@/lib/api";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 
@@ -73,7 +79,10 @@ export interface OrderRecord {
   totalItemsCount: number;
 }
 
-export type CreateOrderInput = Omit<OrderRecord, "id" | "createdAt" | "createdAtTimestamp" | "status"> & {
+export type CreateOrderInput = Omit<
+  OrderRecord,
+  "id" | "createdAt" | "createdAtTimestamp" | "status"
+> & {
   id?: string;
   status?: OrderStatus;
 };
@@ -84,7 +93,11 @@ interface OrderContextType {
   getOrders: () => OrderRecord[];
   getOrderById: (id: string) => OrderRecord | undefined;
   updateDemoOrderStatus: (id: string, status: OrderStatus) => void;
-  updateNurseryGroupStatus: (masterOrderId: string, sellerId: string, newStatus: OrderStatus) => void;
+  updateNurseryGroupStatus: (
+    masterOrderId: string,
+    sellerId: string,
+    newStatus: OrderStatus,
+  ) => void;
   refreshOrders: () => Promise<void>;
   isLoading: boolean;
 }
@@ -102,12 +115,15 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
       const groupsMap = new Map<string, OrderNurseryGroup>();
 
       (o.order_items || []).forEach((item: any) => {
-        const sellerId = item.seller_id_snapshot || item.seller?.id || "seller_default";
+        const sellerId =
+          item.seller_id_snapshot || item.seller?.id || "seller_default";
         const sellerName = item.seller?.business_name || "Nursery";
 
-        const fulfillment = fulfillments.find((f: any) => f.seller_id === sellerId);
+        const fulfillment = fulfillments.find(
+          (f: any) => f.seller_id === sellerId,
+        );
         const rawStatus = fulfillment?.status || o.status || "Order Placed";
-        
+
         let displayStatus: OrderStatus = "Order Placed";
         if (rawStatus === "preparing" || rawStatus === "Preparing") {
           displayStatus = "Preparing";
@@ -163,11 +179,14 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
 
       return {
         id: o.id,
-        createdAt: new Date(o.created_at || Date.now()).toLocaleDateString("en-IN", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        }),
+        createdAt: new Date(o.created_at || Date.now()).toLocaleDateString(
+          "en-IN",
+          {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          },
+        ),
         createdAtTimestamp: new Date(o.created_at || Date.now()).getTime(),
         status: displayStatus,
         address: {
@@ -180,15 +199,27 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
           pincode: addr.pincode || "",
           instructions: addr.instructions || undefined,
         },
-        paymentMethod: o.notes?.includes("COD") ? "Cash on Delivery" : "Online Payment",
+        paymentMethod: o.notes?.includes("COD")
+          ? "Cash on Delivery"
+          : "Online Payment",
         nurseryGroups: Array.from(groupsMap.values()),
         subtotalPaise: o.subtotal_paise || 0,
         // Immutable snapshot: use DB value as-is. 0 is valid (free delivery).
-        deliveryFeePaise: typeof o.delivery_fee_paise === "number" ? o.delivery_fee_paise : 0,
-        maintenanceFeePaise: typeof o.maintenance_fee_paise === "number" ? o.maintenance_fee_paise : 0,
-        totalPaise: typeof o.total_paise === "number" ? o.total_paise : (o.subtotal_paise || 0),
+        deliveryFeePaise:
+          typeof o.delivery_fee_paise === "number" ? o.delivery_fee_paise : 0,
+        maintenanceFeePaise:
+          typeof o.maintenance_fee_paise === "number"
+            ? o.maintenance_fee_paise
+            : 0,
+        totalPaise:
+          typeof o.total_paise === "number"
+            ? o.total_paise
+            : o.subtotal_paise || 0,
         discountPaise: 0,
-        totalItemsCount: (o.order_items || []).reduce((s: number, i: any) => s + (i.quantity || 1), 0),
+        totalItemsCount: (o.order_items || []).reduce(
+          (s: number, i: any) => s + (i.quantity || 1),
+          0,
+        ),
       };
     });
   }, []);
@@ -197,12 +228,16 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
       const supabase = getSupabaseBrowserClient();
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
       if (session?.user) {
         const res = await api.getOrders();
         if (res.success && res.data) {
-          const rawOrders = Array.isArray(res.data) ? res.data : ((res.data as any)?.orders || []);
+          const rawOrders = Array.isArray(res.data)
+            ? res.data
+            : (res.data as any)?.orders || [];
           const mapped = mapDbOrders(rawOrders);
           setOrders(mapped);
           return;
@@ -221,8 +256,13 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
     refreshOrders();
 
     const supabase = getSupabaseBrowserClient();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session?.user) {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (
+        (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") &&
+        session?.user
+      ) {
         await refreshOrders();
       } else if (event === "SIGNED_OUT") {
         setOrders([]);
@@ -245,7 +285,7 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
     const newId =
       input.id ||
       `FLR-${new Date().toISOString().slice(2, 10).replace(/-/g, "")}-${Math.floor(
-        1000 + Math.random() * 9000
+        1000 + Math.random() * 9000,
       )}`;
 
     const newOrder: OrderRecord = {
@@ -268,14 +308,16 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
 
   const updateDemoOrderStatus = (id: string, status: OrderStatus) => {
     setOrders((prev) =>
-      prev.map((o) => (o.id.toLowerCase() === id.toLowerCase() ? { ...o, status } : o))
+      prev.map((o) =>
+        o.id.toLowerCase() === id.toLowerCase() ? { ...o, status } : o,
+      ),
     );
   };
 
   const updateNurseryGroupStatus = (
     masterOrderId: string,
     sellerId: string,
-    newStatus: OrderStatus
+    newStatus: OrderStatus,
   ) => {
     setOrders((prev) =>
       prev.map((o) => {
@@ -293,7 +335,7 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
           nurseryGroups: updatedGroups,
           status: newStatus,
         };
-      })
+      }),
     );
   };
 

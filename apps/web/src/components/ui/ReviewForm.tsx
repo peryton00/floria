@@ -40,14 +40,21 @@ export function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
       // Check local order state first
       const hasLocalDeliveredOrder = orders.some(
         (o) =>
-          ["delivered", "picked_up", "order placed", "nursery confirmed", "preparing", "ready for pickup", "out for delivery"].includes(
-            (o.status || "").toLowerCase()
-          ) &&
+          [
+            "delivered",
+            "picked_up",
+            "order placed",
+            "nursery confirmed",
+            "preparing",
+            "ready for pickup",
+            "out for delivery",
+          ].includes((o.status || "").toLowerCase()) &&
           o.nurseryGroups.some((g) =>
             g.items.some(
-              (i) => i.product?.id === productId || i.product?.slug === productId
-            )
-          )
+              (i) =>
+                i.product?.id === productId || i.product?.slug === productId,
+            ),
+          ),
       );
 
       try {
@@ -111,9 +118,13 @@ export function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
         if (res.error?.code === "ALREADY_REVIEWED") {
           setError("You have already reviewed this product.");
         } else if (res.error?.code === "NOT_ELIGIBLE") {
-          setError("You can only review products you have purchased and received.");
+          setError(
+            "You can only review products you have purchased and received.",
+          );
         } else {
-          setError(res.error?.message ?? "Something went wrong. Please try again.");
+          setError(
+            res.error?.message ?? "Something went wrong. Please try again.",
+          );
         }
         return;
       }
@@ -131,7 +142,7 @@ export function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
       });
       toast.success(
         "Review submitted",
-        "Thank you for your feedback! Your review will appear after moderation."
+        "Thank you for your feedback! Your review will appear after moderation.",
       );
       onSuccess?.();
     } catch {
@@ -162,37 +173,60 @@ export function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
 
         <div className="flex items-center gap-2">
           <StarRating rating={rev.rating || rating} size="sm" />
-          <span className="text-xs font-bold text-ink-900">{rev.rating || rating} out of 5 stars</span>
+          <span className="text-xs font-bold text-ink-900">
+            {rev.rating || rating} out of 5 stars
+          </span>
         </div>
 
-        {rev.title && <p className="text-xs font-bold text-ink-900">{rev.title}</p>}
-        {rev.body && <p className="text-xs text-ink-600 leading-relaxed">{rev.body}</p>}
-
-        {"id" in rev && typeof (rev as any).id === "string" && (rev as any).id !== "new" && (
-          <div className="pt-2 border-t border-floria-border">
-            <p className="text-xs font-bold text-ink-700 mb-1.5">Attach Review Photo</p>
-            <MediaUploader
-              profile="REVIEW_IMAGE"
-              onUploadSuccess={async (res) => {
-                try {
-                  const attachRes = await api.attachReviewImage((rev as any).id, res.assetId);
-                  if (attachRes.success) {
-                    toast.success("Review Photo Attached", "Your photo will appear on this product review.");
-                  }
-                } catch (e: any) {
-                  toast.error("Upload Error", e.message || "Failed to attach review photo");
-                }
-              }}
-              label="Upload Review Photo"
-            />
-          </div>
+        {rev.title && (
+          <p className="text-xs font-bold text-ink-900">{rev.title}</p>
         )}
+        {rev.body && (
+          <p className="text-xs text-ink-600 leading-relaxed">{rev.body}</p>
+        )}
+
+        {"id" in rev &&
+          typeof (rev as any).id === "string" &&
+          (rev as any).id !== "new" && (
+            <div className="pt-2 border-t border-floria-border">
+              <p className="text-xs font-bold text-ink-700 mb-1.5">
+                Attach Review Photo
+              </p>
+              <MediaUploader
+                profile="REVIEW_IMAGE"
+                onUploadSuccess={async (res) => {
+                  try {
+                    const attachRes = await api.attachReviewImage(
+                      (rev as any).id,
+                      res.assetId,
+                    );
+                    if (attachRes.success) {
+                      toast.success(
+                        "Review Photo Attached",
+                        "Your photo will appear on this product review.",
+                      );
+                    }
+                  } catch (e: any) {
+                    toast.error(
+                      "Upload Error",
+                      e.message || "Failed to attach review photo",
+                    );
+                  }
+                }}
+                label="Upload Review Photo"
+              />
+            </div>
+          )}
 
         <p className="text-[11px] text-ink-400 pt-1">
           To edit your review, please visit your{" "}
-          <Link href="/account" className="text-forest-700 font-semibold underline hover:text-forest-900">
+          <Link
+            href="/account"
+            className="text-forest-700 font-semibold underline hover:text-forest-900"
+          >
             Account Dashboard
-          </Link>.
+          </Link>
+          .
         </p>
       </div>
     );
@@ -202,16 +236,25 @@ export function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
   if (!isEligible) {
     return (
       <div className="rounded-xl bg-floria-soft-sand/70 border border-floria-border p-3.5 text-center text-xs text-ink-500 font-ui space-y-0.5">
-        <p className="font-semibold text-ink-700">Verified Customer Reviews Only</p>
-        <p className="text-ink-400">You can only review products you have purchased and received.</p>
+        <p className="font-semibold text-ink-700">
+          Verified Customer Reviews Only
+        </p>
+        <p className="text-ink-400">
+          You can only review products you have purchased and received.
+        </p>
       </div>
     );
   }
 
   // Render review form block ONLY for verified buyers who received the item and haven't reviewed it yet
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 bg-floria-linen rounded-xl border border-floria-border p-4">
-      <p className="text-xs font-bold uppercase tracking-wider text-ink-600">Write a Review</p>
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-4 bg-floria-linen rounded-xl border border-floria-border p-4"
+    >
+      <p className="text-xs font-bold uppercase tracking-wider text-ink-600">
+        Write a Review
+      </p>
 
       {/* Star rating picker */}
       <div className="flex gap-1" role="radiogroup" aria-label="Star rating">

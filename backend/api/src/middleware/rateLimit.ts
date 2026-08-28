@@ -14,7 +14,11 @@ export const authRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   handler: (_req, _res, next) => {
-    next(Errors.rateLimited("Too many authentication requests. Please try again in a minute."));
+    next(
+      Errors.rateLimited(
+        "Too many authentication requests. Please try again in a minute.",
+      ),
+    );
   },
 });
 
@@ -25,18 +29,27 @@ export const checkoutRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   handler: (_req, _res, next) => {
-    next(Errors.rateLimited("Too many checkout attempts. Please try again in a minute."));
+    next(
+      Errors.rateLimited(
+        "Too many checkout attempts. Please try again in a minute.",
+      ),
+    );
   },
 });
 
 export const sellerFulfillmentRateLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 30,
-  keyGenerator: (req) => req.user?.sellerId || req.user?.id || req.ip || "unknown",
+  keyGenerator: (req) =>
+    req.user?.sellerId || req.user?.id || req.ip || "unknown",
   standardHeaders: true,
   legacyHeaders: false,
   handler: (_req, _res, next) => {
-    next(Errors.rateLimited("Fulfillment status update rate limit reached. Please slow down."));
+    next(
+      Errors.rateLimited(
+        "Fulfillment status update rate limit reached. Please slow down.",
+      ),
+    );
   },
 });
 
@@ -57,7 +70,11 @@ export const publicCatalogRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   handler: (_req, _res, next) => {
-    next(Errors.rateLimited("Public catalog rate limit reached. Please slow down."));
+    next(
+      Errors.rateLimited(
+        "Public catalog rate limit reached. Please slow down.",
+      ),
+    );
   },
 });
 
@@ -68,6 +85,10 @@ export const mediaUploadRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   handler: (_req, _res, next) => {
-    next(Errors.rateLimited("Media upload rate limit reached. Maximum 30 uploads per minute allowed."));
+    next(
+      Errors.rateLimited(
+        "Media upload rate limit reached. Maximum 30 uploads per minute allowed.",
+      ),
+    );
   },
 });

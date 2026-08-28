@@ -62,7 +62,7 @@ describe("validateAddress", () => {
         city: "Mumbai",
         state: "Maharashtra",
         pincode: "40001",
-      })
+      }),
     ).toThrow(FloriaError);
   });
 
@@ -77,7 +77,7 @@ describe("validateAddress", () => {
         city: "Mumbai",
         state: "Maharashtra",
         pincode: "400001",
-      })
+      }),
     ).toThrow(FloriaError);
   });
 
@@ -92,7 +92,7 @@ describe("validateAddress", () => {
         city: "Mumbai",
         state: "Maharashtra",
         pincode: "400001",
-      })
+      }),
     ).toThrow(FloriaError);
   });
 });
@@ -147,7 +147,9 @@ describe("checkRateLimit", () => {
     const key = `test-under-${Date.now()}-${Math.random()}`;
     // Should not throw
     for (let i = 0; i < 5; i++) {
-      expect(() => checkRateLimit({ key, limit: 10, windowMs: 60_000 })).not.toThrow();
+      expect(() =>
+        checkRateLimit({ key, limit: 10, windowMs: 60_000 }),
+      ).not.toThrow();
     }
   });
 
@@ -158,7 +160,9 @@ describe("checkRateLimit", () => {
     for (let i = 0; i < 3; i++) {
       checkRateLimit({ key, limit: 3, windowMs: 60_000 });
     }
-    expect(() => checkRateLimit({ key, limit: 3, windowMs: 60_000 })).toThrow(FloriaError);
+    expect(() => checkRateLimit({ key, limit: 3, windowMs: 60_000 })).toThrow(
+      FloriaError,
+    );
   });
 
   it("resets after window expires", async () => {
@@ -170,7 +174,9 @@ describe("checkRateLimit", () => {
     // Advance clock past the window
     vi.advanceTimersByTime(1_001);
     // Should be allowed again
-    expect(() => checkRateLimit({ key, limit: 2, windowMs: 1_000 })).not.toThrow();
+    expect(() =>
+      checkRateLimit({ key, limit: 2, windowMs: 1_000 }),
+    ).not.toThrow();
   });
 });
 
@@ -178,22 +184,41 @@ describe("checkRateLimit", () => {
 
 describe("validateSellerStatusTransition (sellerOrders service)", () => {
   it("allows sequential forward transitions", async () => {
-    const { validateSellerStatusTransition } = await import("@/lib/services/sellerOrders");
-    expect(validateSellerStatusTransition("Order Placed", "Nursery Confirmed")).toBe(true);
-    expect(validateSellerStatusTransition("Nursery Confirmed", "Preparing")).toBe(true);
-    expect(validateSellerStatusTransition("Preparing", "Ready for Pickup")).toBe(true);
-    expect(validateSellerStatusTransition("Ready for Pickup", "Picked Up")).toBe(true);
+    const { validateSellerStatusTransition } =
+      await import("@/lib/services/sellerOrders");
+    expect(
+      validateSellerStatusTransition("Order Placed", "Nursery Confirmed"),
+    ).toBe(true);
+    expect(
+      validateSellerStatusTransition("Nursery Confirmed", "Preparing"),
+    ).toBe(true);
+    expect(
+      validateSellerStatusTransition("Preparing", "Ready for Pickup"),
+    ).toBe(true);
+    expect(
+      validateSellerStatusTransition("Ready for Pickup", "Picked Up"),
+    ).toBe(true);
   });
 
   it("rejects skipping a stage", async () => {
-    const { validateSellerStatusTransition } = await import("@/lib/services/sellerOrders");
-    expect(validateSellerStatusTransition("Order Placed", "Preparing")).toBe(false);
-    expect(validateSellerStatusTransition("Order Placed", "Picked Up")).toBe(false);
+    const { validateSellerStatusTransition } =
+      await import("@/lib/services/sellerOrders");
+    expect(validateSellerStatusTransition("Order Placed", "Preparing")).toBe(
+      false,
+    );
+    expect(validateSellerStatusTransition("Order Placed", "Picked Up")).toBe(
+      false,
+    );
   });
 
   it("rejects backward transitions", async () => {
-    const { validateSellerStatusTransition } = await import("@/lib/services/sellerOrders");
-    expect(validateSellerStatusTransition("Preparing", "Order Placed")).toBe(false);
-    expect(validateSellerStatusTransition("Picked Up", "Preparing")).toBe(false);
+    const { validateSellerStatusTransition } =
+      await import("@/lib/services/sellerOrders");
+    expect(validateSellerStatusTransition("Preparing", "Order Placed")).toBe(
+      false,
+    );
+    expect(validateSellerStatusTransition("Picked Up", "Preparing")).toBe(
+      false,
+    );
   });
 });

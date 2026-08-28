@@ -34,15 +34,46 @@ const overrideSchema = {
 // Policies lifecycle
 router.get("/", pricingPolicyController.listPolicies);
 router.get("/active", pricingPolicyController.getActivePolicy);
-router.get("/:id", validateRequest(uuidParamSchema), pricingPolicyController.getPolicyById);
-router.post("/", validateRequest(createPolicySchema), pricingPolicyController.createDraftPolicy);
-router.get("/:id/preview", validateRequest(uuidParamSchema), pricingPolicyController.previewPolicyImpact);
-router.post("/:id/recalculate", validateRequest(uuidParamSchema), pricingPolicyController.startRecalculation);
-router.get("/:id/recalculation-status", validateRequest(uuidParamSchema), pricingPolicyController.getRecalculationStatus);
-router.post("/:id/activate", validateRequest(uuidParamSchema), pricingPolicyController.activatePolicy);
+router.get(
+  "/:id",
+  validateRequest(uuidParamSchema),
+  pricingPolicyController.getPolicyById,
+);
+router.post(
+  "/",
+  validateRequest(createPolicySchema),
+  pricingPolicyController.createDraftPolicy,
+);
+router.get(
+  "/:id/preview",
+  validateRequest(uuidParamSchema),
+  pricingPolicyController.previewPolicyImpact,
+);
+router.post(
+  "/:id/recalculate",
+  validateRequest(uuidParamSchema),
+  pricingPolicyController.startRecalculation,
+);
+router.get(
+  "/:id/recalculation-status",
+  validateRequest(uuidParamSchema),
+  pricingPolicyController.getRecalculationStatus,
+);
+router.post(
+  "/:id/activate",
+  validateRequest(uuidParamSchema),
+  pricingPolicyController.activatePolicy,
+);
 
 // Overrides
-router.post("/overrides", validateRequest(overrideSchema), pricingPolicyController.setProductOverride);
-router.delete("/overrides/:productId", pricingPolicyController.removeProductOverride);
+router.post(
+  "/overrides",
+  validateRequest(overrideSchema),
+  pricingPolicyController.setProductOverride,
+);
+router.delete(
+  "/overrides/:productId",
+  pricingPolicyController.removeProductOverride,
+);
 
 export default router;

@@ -2,14 +2,21 @@
 import { Router } from "express";
 import { reviewsController } from "./reviews.controller.js";
 import { authenticateToken } from "../middleware/auth.js";
-import { requireAdmin, requireApprovedSeller } from "../middleware/authorization.js";
+import {
+  requireAdmin,
+  requireApprovedSeller,
+} from "../middleware/authorization.js";
 import { publicCatalogRateLimiter } from "../middleware/rateLimit.js";
 import { productsController } from "../products/products.controller.js";
 
 const router = Router();
 
 // ── PUBLIC: ranked nursery listing ────────────────────────────────────────
-router.get("/catalog/sellers", publicCatalogRateLimiter, productsController.getRankedNurseries);
+router.get(
+  "/catalog/sellers",
+  publicCatalogRateLimiter,
+  productsController.getRankedNurseries,
+);
 
 // ── PUBLIC: product reviews list + summary ────────────────────────────────
 // Mounted at /api/v1  →  GET /api/v1/catalog/products/:id/reviews
@@ -17,41 +24,41 @@ router.get("/catalog/sellers", publicCatalogRateLimiter, productsController.getR
 router.get(
   "/catalog/products/:id/reviews",
   publicCatalogRateLimiter,
-  reviewsController.getProductReviews
+  reviewsController.getProductReviews,
 );
 
 // ── AUTH: check review eligibility ───────────────────────────────────────
 router.get(
   "/catalog/products/:id/review-eligibility",
   authenticateToken,
-  reviewsController.getReviewEligibility
+  reviewsController.getReviewEligibility,
 );
 
 // ── AUTH: submit review (verified purchase enforced server-side) ──────────
 router.post(
   "/catalog/products/:id/reviews",
   authenticateToken,
-  reviewsController.submitReview
+  reviewsController.submitReview,
 );
 
 // ── AUTH: mark review helpful ─────────────────────────────────────────────
 router.post(
   "/catalog/products/:id/reviews/:rid/helpful",
   authenticateToken,
-  reviewsController.markHelpful
+  reviewsController.markHelpful,
 );
 
 // ── CUSTOMER: own reviews ─────────────────────────────────────────────────
 router.get(
   "/customer/reviews",
   authenticateToken,
-  reviewsController.getMyReviews
+  reviewsController.getMyReviews,
 );
 
 router.patch(
   "/customer/reviews/:id",
   authenticateToken,
-  reviewsController.updateMyReview
+  reviewsController.updateMyReview,
 );
 
 // ── SELLER: list reviews for seller's products ────────────────────────────
@@ -59,7 +66,7 @@ router.get(
   "/seller/reviews",
   authenticateToken,
   requireApprovedSeller,
-  reviewsController.getSellerReviews
+  reviewsController.getSellerReviews,
 );
 
 // ── SELLER: flag a review ─────────────────────────────────────────────────
@@ -67,7 +74,7 @@ router.patch(
   "/seller/reviews/:id/flag",
   authenticateToken,
   requireApprovedSeller,
-  reviewsController.flagReview
+  reviewsController.flagReview,
 );
 
 // ── ADMIN: list + moderate reviews ───────────────────────────────────────
@@ -75,14 +82,14 @@ router.get(
   "/admin/reviews",
   authenticateToken,
   requireAdmin,
-  reviewsController.adminListReviews
+  reviewsController.adminListReviews,
 );
 
 router.patch(
   "/admin/reviews/:id",
   authenticateToken,
   requireAdmin,
-  reviewsController.adminModerateReview
+  reviewsController.adminModerateReview,
 );
 
 export default router;

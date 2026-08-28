@@ -38,7 +38,9 @@ export class ImageEngine {
    */
   public static isHeicSupported(): boolean {
     const formats = sharp.format;
-    return Boolean(formats.heif && formats.heif.input && formats.heif.input.buffer);
+    return Boolean(
+      formats.heif && formats.heif.input && formats.heif.input.buffer,
+    );
   }
 
   /**
@@ -47,7 +49,7 @@ export class ImageEngine {
    */
   public static async process(
     inputBuffer: Buffer,
-    profileName: ImageProfileName
+    profileName: ImageProfileName,
   ): Promise<ImageEngineResult> {
     // 1. Validate Input Buffer presence & Size Limit
     if (!inputBuffer || inputBuffer.length === 0) {
@@ -66,9 +68,13 @@ export class ImageEngine {
     // 2. Decode & Inspect Metadata safely
     let metadata: sharp.Metadata;
     try {
-      metadata = await sharp(inputBuffer, { limitInputPixels: MAX_INPUT_PIXELS }).metadata();
+      metadata = await sharp(inputBuffer, {
+        limitInputPixels: MAX_INPUT_PIXELS,
+      }).metadata();
     } catch (err: any) {
-      throw new CorruptImageError(err?.message || "Failed to parse image headers");
+      throw new CorruptImageError(
+        err?.message || "Failed to parse image headers",
+      );
     }
 
     const format = (metadata.format || "").toLowerCase();
@@ -77,9 +83,12 @@ export class ImageEngine {
     }
 
     // Explicit HEIC runtime check
-    if ((format === "heic" || format === "heif") && !ImageEngine.isHeicSupported()) {
+    if (
+      (format === "heic" || format === "heif") &&
+      !ImageEngine.isHeicSupported()
+    ) {
       throw new UnsupportedFormatError(
-        "heic/heif (libvips HEIC decoder is not compiled into the current Sharp runtime)"
+        "heic/heif (libvips HEIC decoder is not compiled into the current Sharp runtime)",
       );
     }
 
@@ -87,7 +96,9 @@ export class ImageEngine {
     const height = metadata.height || 0;
 
     if (width <= 0 || height <= 0) {
-      throw new CorruptImageError("Invalid image dimensions (width or height <= 0)");
+      throw new CorruptImageError(
+        "Invalid image dimensions (width or height <= 0)",
+      );
     }
 
     if (width > MAX_DIMENSION_PX || height > MAX_DIMENSION_PX) {
@@ -113,7 +124,10 @@ export class ImageEngine {
 
     for (const variantSpec of profile.variants) {
       try {
-        const variant = await ImageEngine.processVariant(inputBuffer, variantSpec);
+        const variant = await ImageEngine.processVariant(
+          inputBuffer,
+          variantSpec,
+        );
         variants.push(variant);
       } catch (err: any) {
         throw new ProcessingFailureError(variantSpec.name, err);
@@ -131,7 +145,7 @@ export class ImageEngine {
    */
   private static async processVariant(
     inputBuffer: Buffer,
-    spec: VariantSpec
+    spec: VariantSpec,
   ): Promise<ProcessedVariant> {
     // Pipeline: Initialize Sharp with pixel bomb guard
     let pipeline = sharp(inputBuffer, { limitInputPixels: MAX_INPUT_PIXELS })

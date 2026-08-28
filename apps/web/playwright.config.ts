@@ -24,16 +24,25 @@ export default defineConfig({
     },
     {
       name: "mobile-430",
-      use: { ...devices["iPhone 14 Plus"], viewport: { width: 430, height: 932 } },
+      use: {
+        ...devices["iPhone 14 Plus"],
+        viewport: { width: 430, height: 932 },
+      },
     },
     // Desktop
     {
       name: "desktop-1440",
-      use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } },
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: 1440, height: 900 },
+      },
     },
     {
       name: "desktop-1024",
-      use: { ...devices["Desktop Chrome"], viewport: { width: 1024, height: 768 } },
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: 1024, height: 768 },
+      },
     },
   ],
   webServer: {

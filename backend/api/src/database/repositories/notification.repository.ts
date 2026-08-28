@@ -76,7 +76,10 @@ export class NotificationRepository {
 
         if (existing) return existing;
       }
-      console.error("[NotificationRepository] createNotification error:", error);
+      console.error(
+        "[NotificationRepository] createNotification error:",
+        error,
+      );
       throw new Error(error.message);
     }
 
@@ -85,7 +88,7 @@ export class NotificationRepository {
 
   async findByUserId(
     userId: string,
-    options: { limit?: number; page?: number; unreadOnly?: boolean } = {}
+    options: { limit?: number; page?: number; unreadOnly?: boolean } = {},
   ) {
     const db = getAdminDb();
     const limit = Math.min(options.limit || 20, 50);
@@ -102,7 +105,10 @@ export class NotificationRepository {
       query = query.is("read_at", null);
     }
 
-    const { data, count, error } = await query.range(offset, offset + limit - 1);
+    const { data, count, error } = await query.range(
+      offset,
+      offset + limit - 1,
+    );
 
     if (error) {
       throw new Error(error.message);
@@ -155,7 +161,10 @@ export class NotificationRepository {
     return true;
   }
 
-  async deleteNotification(userId: string, notificationId: string): Promise<boolean> {
+  async deleteNotification(
+    userId: string,
+    notificationId: string,
+  ): Promise<boolean> {
     const db = getAdminDb();
     const { error } = await db
       .from("notifications")

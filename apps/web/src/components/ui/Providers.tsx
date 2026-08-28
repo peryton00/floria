@@ -13,9 +13,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <CustomerProvider>
         <WishlistProvider>
           <CartProvider>
-            <OrderProvider>
-              {children}
-            </OrderProvider>
+            <OrderProvider>{children}</OrderProvider>
           </CartProvider>
         </WishlistProvider>
       </CustomerProvider>

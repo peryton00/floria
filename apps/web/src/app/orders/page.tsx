@@ -31,21 +31,31 @@ function getStatusBadgeStyle(status: OrderStatus) {
 
 export default function OrdersPage() {
   const { orders } = useOrders();
-  const [activeFilter, setActiveFilter] = useState<"all" | "active" | "completed" | "cancelled">("all");
+  const [activeFilter, setActiveFilter] = useState<
+    "all" | "active" | "completed" | "cancelled"
+  >("all");
 
   const filteredOrders = orders.filter((order) => {
     if (activeFilter === "completed") return order.status === "Delivered";
     if (activeFilter === "cancelled") return order.status === "Cancelled";
-    if (activeFilter === "active") return order.status !== "Delivered" && order.status !== "Cancelled";
+    if (activeFilter === "active")
+      return order.status !== "Delivered" && order.status !== "Cancelled";
     return true;
   });
 
   return (
     <CustomerShell>
       {/* Breadcrumb */}
-      <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-ink-400 mb-6">
-        <Link href="/" className="hover:text-forest-700 transition-colors">Home</Link>
-        <span aria-hidden="true" className="select-none text-ink-300">/</span>
+      <nav
+        aria-label="Breadcrumb"
+        className="flex items-center gap-2 text-xs text-ink-400 mb-6"
+      >
+        <Link href="/" className="hover:text-forest-700 transition-colors">
+          Home
+        </Link>
+        <span aria-hidden="true" className="select-none text-ink-300">
+          /
+        </span>
         <span className="text-ink-700 font-medium">My Orders</span>
       </nav>
 
@@ -53,7 +63,9 @@ export default function OrdersPage() {
       <div className="flex flex-wrap items-baseline justify-between mb-6 gap-2">
         <h1 className="font-serif text-3xl font-bold text-ink-900">
           My Orders
-          <span className="ml-2 font-sans text-lg font-normal text-ink-400">({orders.length})</span>
+          <span className="ml-2 font-sans text-lg font-normal text-ink-400">
+            ({orders.length})
+          </span>
         </h1>
       </div>
 
@@ -127,18 +139,28 @@ export default function OrdersPage() {
                 <div className="flex flex-wrap items-center justify-between gap-3 p-4 bg-floria-soft-sand/70 border-b border-floria-border text-xs">
                   <div className="flex flex-wrap items-center gap-3">
                     <div>
-                      <span className="text-ink-400 font-bold uppercase tracking-wider text-[10px] block">Order ID</span>
-                      <span className="font-mono font-bold text-ink-900 text-sm">#{order.id}</span>
+                      <span className="text-ink-400 font-bold uppercase tracking-wider text-[10px] block">
+                        Order ID
+                      </span>
+                      <span className="font-mono font-bold text-ink-900 text-sm">
+                        #{order.id}
+                      </span>
                     </div>
                     <div className="hidden sm:block border-l border-floria-border h-6" />
                     <div className="hidden sm:block">
-                      <span className="text-ink-400 font-bold uppercase tracking-wider text-[10px] block">Placed On</span>
-                      <span className="font-semibold text-ink-800">{order.createdAt}</span>
+                      <span className="text-ink-400 font-bold uppercase tracking-wider text-[10px] block">
+                        Placed On
+                      </span>
+                      <span className="font-semibold text-ink-800">
+                        {order.createdAt}
+                      </span>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <span className={`px-2.5 py-1 text-xs font-bold border rounded-full ${badgeStyle}`}>
+                    <span
+                      className={`px-2.5 py-1 text-xs font-bold border rounded-full ${badgeStyle}`}
+                    >
                       {order.status}
                     </span>
                   </div>
@@ -150,12 +172,14 @@ export default function OrdersPage() {
                   <div className="space-y-3 flex-1 min-w-0">
                     <div className="flex items-center gap-2 text-xs text-ink-500">
                       <span className="font-semibold text-ink-900">
-                        {order.totalItemsCount} {order.totalItemsCount === 1 ? "item" : "items"}
+                        {order.totalItemsCount}{" "}
+                        {order.totalItemsCount === 1 ? "item" : "items"}
                       </span>
                       <span>&bull;</span>
                       <span className="flex items-center gap-1 font-semibold text-forest-700">
                         <LeafIcon size={12} />
-                        {totalNurseries} {totalNurseries === 1 ? "nursery" : "nurseries"}
+                        {totalNurseries}{" "}
+                        {totalNurseries === 1 ? "nursery" : "nurseries"}
                       </span>
                     </div>
 
@@ -177,7 +201,10 @@ export default function OrdersPage() {
                                 >
                                   <div className="relative w-full h-full rounded-lg overflow-hidden">
                                     <Image
-                                      src={item.primary_image?.url || "/floria-logo.png"}
+                                      src={
+                                        item.primary_image?.url ||
+                                        "/floria-logo.png"
+                                      }
                                       alt={item.product.name}
                                       fill
                                       sizes="40px"
@@ -203,14 +230,25 @@ export default function OrdersPage() {
                                 {group.sellerName}
                               </p>
                               <p className="text-[10px] text-ink-400">
-                                {group.items.reduce((s, i) => s + i.quantity, 0)} {group.items.reduce((s, i) => s + i.quantity, 0) === 1 ? "item" : "items"}
+                                {group.items.reduce(
+                                  (s, i) => s + i.quantity,
+                                  0,
+                                )}{" "}
+                                {group.items.reduce(
+                                  (s, i) => s + i.quantity,
+                                  0,
+                                ) === 1
+                                  ? "item"
+                                  : "items"}
                               </p>
                             </div>
                           </div>
 
                           {/* Nursery tracking status */}
                           <div className="flex-shrink-0">
-                            <span className={`px-2 py-0.5 text-[10px] font-bold border rounded-full ${getStatusBadgeStyle(group.status)}`}>
+                            <span
+                              className={`px-2 py-0.5 text-[10px] font-bold border rounded-full ${getStatusBadgeStyle(group.status)}`}
+                            >
                               {group.status}
                             </span>
                           </div>
@@ -220,14 +258,20 @@ export default function OrdersPage() {
 
                     {/* Delivery summary */}
                     <p className="text-[11px] text-ink-500">
-                      Deliver to: <span className="font-semibold text-ink-850">{order.address.full_name}</span> ({order.address.city})
+                      Deliver to:{" "}
+                      <span className="font-semibold text-ink-850">
+                        {order.address.full_name}
+                      </span>{" "}
+                      ({order.address.city})
                     </p>
                   </div>
 
                   {/* Right: Total & Action button */}
                   <div className="flex md:flex-col items-center md:items-end justify-between border-t md:border-t-0 pt-3 md:pt-0 border-floria-border gap-3">
                     <div className="text-left md:text-right">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-ink-400 block">Total Amount</span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-ink-400 block">
+                        Total Amount
+                      </span>
                       <span className="text-lg font-bold text-forest-800">
                         {formatINR(order.subtotalPaise)}
                       </span>

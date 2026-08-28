@@ -1,0 +1,22 @@
+{
+  "expo": {
+    "name": "Floria",
+    "slug": "floria-customer",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "floria",
+    "userInterfaceStyle": "automatic",
+    "platforms": ["ios", "android"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.floria.customer"
+    },
+    "android": {
+      "package": "com.floria.customer"
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

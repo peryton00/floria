@@ -3,7 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { CustomerShell } from "@/components/layout/CustomerShell";
-import { SearchIcon, ShieldIcon, LeafIcon, TruckIcon } from "@/components/ui/Icons";
+import {
+  SearchIcon,
+  ShieldIcon,
+  LeafIcon,
+  TruckIcon,
+} from "@/components/ui/Icons";
 import { useToast } from "@/lib/contexts/ToastContext";
 
 const HELP_FAQS = [
@@ -51,10 +56,17 @@ export default function HelpPage() {
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
   const [activeCategory, setActiveCategory] = useState<string>("All");
 
-  const categories = ["All", "Orders & Delivery", "Payments & Refunds", "Returns & Plant Guarantee", "Plant Care & Quality"];
+  const categories = [
+    "All",
+    "Orders & Delivery",
+    "Payments & Refunds",
+    "Returns & Plant Guarantee",
+    "Plant Care & Quality",
+  ];
 
   const filteredFaqs = HELP_FAQS.filter((faq) => {
-    const matchesCat = activeCategory === "All" || faq.category === activeCategory;
+    const matchesCat =
+      activeCategory === "All" || faq.category === activeCategory;
     const matchesSearch =
       faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
       faq.answer.toLowerCase().includes(searchQuery.toLowerCase());
@@ -64,11 +76,25 @@ export default function HelpPage() {
   return (
     <CustomerShell>
       {/* Breadcrumb */}
-      <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-ink-400 mb-6">
-        <Link href="/" className="hover:text-forest-700 transition-colors">Home</Link>
-        <span aria-hidden="true" className="select-none text-ink-300">/</span>
-        <Link href="/account" className="hover:text-forest-700 transition-colors">Account</Link>
-        <span aria-hidden="true" className="select-none text-ink-300">/</span>
+      <nav
+        aria-label="Breadcrumb"
+        className="flex items-center gap-2 text-xs text-ink-400 mb-6"
+      >
+        <Link href="/" className="hover:text-forest-700 transition-colors">
+          Home
+        </Link>
+        <span aria-hidden="true" className="select-none text-ink-300">
+          /
+        </span>
+        <Link
+          href="/account"
+          className="hover:text-forest-700 transition-colors"
+        >
+          Account
+        </Link>
+        <span aria-hidden="true" className="select-none text-ink-300">
+          /
+        </span>
         <span className="text-ink-700 font-medium">Help & Support</span>
       </nav>
 
@@ -82,7 +108,8 @@ export default function HelpPage() {
             How can we help you today?
           </h1>
           <p className="text-xs sm:text-sm text-forest-100/90 mb-6">
-            Find answers regarding your orders, local nursery delivery, payments, or plant care guarantee.
+            Find answers regarding your orders, local nursery delivery,
+            payments, or plant care guarantee.
           </p>
 
           {/* Search Input */}
@@ -94,7 +121,10 @@ export default function HelpPage() {
               placeholder="Search help topics or questions..."
               className="w-full pl-10 pr-4 py-3 text-xs sm:text-sm rounded-xl text-ink-900 bg-white placeholder-ink-400 focus:outline-none focus:ring-2 focus:ring-forest-400 shadow-sm"
             />
-            <SearchIcon className="absolute left-3 top-3.5 text-ink-400" size={16} />
+            <SearchIcon
+              className="absolute left-3 top-3.5 text-ink-400"
+              size={16}
+            />
           </div>
         </div>
       </div>
@@ -102,7 +132,6 @@ export default function HelpPage() {
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8 items-start">
         {/* Main Content Area */}
         <div className="space-y-6">
-
           {/* Category Tabs */}
           <div className="flex border-b border-ink-100 gap-4 text-xs font-bold uppercase tracking-wider text-ink-300 overflow-x-auto pb-px">
             {categories.map((cat) => {
@@ -114,7 +143,9 @@ export default function HelpPage() {
                   onClick={() => setActiveCategory(cat)}
                   className={[
                     "pb-3 relative whitespace-nowrap transition-colors focus:outline-none",
-                    isActive ? "text-forest-700 font-bold" : "hover:text-ink-900",
+                    isActive
+                      ? "text-forest-700 font-bold"
+                      : "hover:text-ink-900",
                   ].join(" ")}
                 >
                   {cat}
@@ -133,7 +164,9 @@ export default function HelpPage() {
             </h2>
 
             {filteredFaqs.length === 0 ? (
-              <p className="text-xs text-ink-400 py-4 text-center">No questions found matching your search.</p>
+              <p className="text-xs text-ink-400 py-4 text-center">
+                No questions found matching your search.
+              </p>
             ) : (
               <div className="divide-y divide-ink-100">
                 {filteredFaqs.map((faq, idx) => {
@@ -173,14 +206,23 @@ export default function HelpPage() {
               <LeafIcon size={24} />
             </div>
             <div>
-              <h3 className="font-serif font-bold text-ink-900 text-base">Contact Support</h3>
-              <p className="text-xs text-ink-500 mt-1">Our green support team is available Mon-Sat, 9 AM - 7 PM</p>
+              <h3 className="font-serif font-bold text-ink-900 text-base">
+                Contact Support
+              </h3>
+              <p className="text-xs text-ink-500 mt-1">
+                Our green support team is available Mon-Sat, 9 AM - 7 PM
+              </p>
             </div>
 
             <div className="space-y-2 text-xs font-semibold text-ink-800 text-left pt-2 border-t border-ink-100">
               <div className="flex items-center justify-between py-1">
                 <span className="text-ink-400">Email</span>
-                <a href="mailto:support@floria.in" className="text-forest-700 hover:underline">support@floria.in</a>
+                <a
+                  href="mailto:support@floria.in"
+                  className="text-forest-700 hover:underline"
+                >
+                  support@floria.in
+                </a>
               </div>
               <div className="flex items-center justify-between py-1">
                 <span className="text-ink-400">Toll-Free</span>
@@ -190,7 +232,12 @@ export default function HelpPage() {
 
             <button
               type="button"
-              onClick={() => toast.info("Floria Live Chat", "Support agents available Mon-Sat 9 AM - 7 PM.")}
+              onClick={() =>
+                toast.info(
+                  "Floria Live Chat",
+                  "Support agents available Mon-Sat 9 AM - 7 PM.",
+                )
+              }
               style={{ color: "#ffffff" }}
               className="w-full py-3 bg-forest-800 hover:bg-forest-900 !text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-800"
             >
@@ -200,7 +247,9 @@ export default function HelpPage() {
 
           <div className="p-4 bg-cream-50 rounded-xl border border-ink-100 text-xs text-ink-500 flex items-center gap-3">
             <ShieldIcon size={18} className="text-forest-700 flex-shrink-0" />
-            <span>100% Quality Checked &amp; Direct from Verified Local Nurseries</span>
+            <span>
+              100% Quality Checked &amp; Direct from Verified Local Nurseries
+            </span>
           </div>
         </div>
       </div>

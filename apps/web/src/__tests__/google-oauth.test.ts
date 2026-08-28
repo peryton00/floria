@@ -22,16 +22,44 @@ vi.mock("@/lib/supabase/server", () => ({
             eq: (_col: string, val: string) => ({
               maybeSingle: async () => {
                 if (val === "existing-customer-id") {
-                  return { data: { id: "existing-customer-id", role: "customer", full_name: "Jane Cust" }, error: null };
+                  return {
+                    data: {
+                      id: "existing-customer-id",
+                      role: "customer",
+                      full_name: "Jane Cust",
+                    },
+                    error: null,
+                  };
                 }
                 if (val === "existing-seller-id") {
-                  return { data: { id: "existing-seller-id", role: "seller", full_name: "Nursery Pro" }, error: null };
+                  return {
+                    data: {
+                      id: "existing-seller-id",
+                      role: "seller",
+                      full_name: "Nursery Pro",
+                    },
+                    error: null,
+                  };
                 }
                 if (val === "existing-ops-id") {
-                  return { data: { id: "existing-ops-id", role: "operations", full_name: "Ops Fleet" }, error: null };
+                  return {
+                    data: {
+                      id: "existing-ops-id",
+                      role: "operations",
+                      full_name: "Ops Fleet",
+                    },
+                    error: null,
+                  };
                 }
                 if (val === "existing-admin-id") {
-                  return { data: { id: "existing-admin-id", role: "admin", full_name: "Admin User" }, error: null };
+                  return {
+                    data: {
+                      id: "existing-admin-id",
+                      role: "admin",
+                      full_name: "Admin User",
+                    },
+                    error: null,
+                  };
                 }
                 return { data: null, error: null };
               },
@@ -54,7 +82,11 @@ vi.mock("@/lib/supabase/server", () => ({
           },
         };
       }
-      return { select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null }) }) }) };
+      return {
+        select: () => ({
+          eq: () => ({ maybeSingle: async () => ({ data: null }) }),
+        }),
+      };
     },
   }),
 }));
@@ -78,7 +110,9 @@ describe("Phase 3.10 Google OAuth Authentication & Role Security Matrix", () => 
     });
 
     const { GET } = await import("../app/auth/callback/route");
-    const req = new Request("http://localhost:3000/auth/callback?code=valid-oauth-code");
+    const req = new Request(
+      "http://localhost:3000/auth/callback?code=valid-oauth-code",
+    );
     const res = await GET(req as any);
 
     expect(res.status).toBe(307); // Redirects to customer homepage
@@ -89,7 +123,7 @@ describe("Phase 3.10 Google OAuth Authentication & Role Security Matrix", () => 
         id: newUserId,
         full_name: "New Google User",
         role: "customer",
-      })
+      }),
     );
   });
 
@@ -103,7 +137,9 @@ describe("Phase 3.10 Google OAuth Authentication & Role Security Matrix", () => 
     });
 
     const { GET } = await import("../app/auth/callback/route");
-    const req = new Request("http://localhost:3000/auth/callback?code=valid-oauth-code");
+    const req = new Request(
+      "http://localhost:3000/auth/callback?code=valid-oauth-code",
+    );
     const res = await GET(req as any);
 
     expect(res.status).toBe(307);
@@ -121,11 +157,15 @@ describe("Phase 3.10 Google OAuth Authentication & Role Security Matrix", () => 
     });
 
     const { GET } = await import("../app/auth/callback/route");
-    const req = new Request("http://localhost:3000/auth/callback?code=valid-oauth-code");
+    const req = new Request(
+      "http://localhost:3000/auth/callback?code=valid-oauth-code",
+    );
     const res = await GET(req as any);
 
     expect(res.status).toBe(307);
-    expect(res.headers.get("location")).toBe("http://localhost:3000/seller/dashboard");
+    expect(res.headers.get("location")).toBe(
+      "http://localhost:3000/seller/dashboard",
+    );
     expect(mockInsert).not.toHaveBeenCalled();
   });
 
@@ -139,11 +179,15 @@ describe("Phase 3.10 Google OAuth Authentication & Role Security Matrix", () => 
     });
 
     const { GET } = await import("../app/auth/callback/route");
-    const req = new Request("http://localhost:3000/auth/callback?code=valid-oauth-code");
+    const req = new Request(
+      "http://localhost:3000/auth/callback?code=valid-oauth-code",
+    );
     const res = await GET(req as any);
 
     expect(res.status).toBe(307);
-    expect(res.headers.get("location")).toBe("http://localhost:3000/operations");
+    expect(res.headers.get("location")).toBe(
+      "http://localhost:3000/operations",
+    );
     expect(mockInsert).not.toHaveBeenCalled();
   });
 
@@ -157,11 +201,15 @@ describe("Phase 3.10 Google OAuth Authentication & Role Security Matrix", () => 
     });
 
     const { GET } = await import("../app/auth/callback/route");
-    const req = new Request("http://localhost:3000/auth/callback?code=valid-oauth-code");
+    const req = new Request(
+      "http://localhost:3000/auth/callback?code=valid-oauth-code",
+    );
     const res = await GET(req as any);
 
     expect(res.status).toBe(307);
-    expect(res.headers.get("location")).toBe("http://localhost:3000/admin/dashboard");
+    expect(res.headers.get("location")).toBe(
+      "http://localhost:3000/admin/dashboard",
+    );
     expect(mockInsert).not.toHaveBeenCalled();
   });
 
@@ -179,7 +227,9 @@ describe("Phase 3.10 Google OAuth Authentication & Role Security Matrix", () => 
     });
 
     const { GET } = await import("../app/auth/callback/route");
-    const req = new Request("http://localhost:3000/auth/callback?code=valid-oauth-code");
+    const req = new Request(
+      "http://localhost:3000/auth/callback?code=valid-oauth-code",
+    );
     const res = await GET(req as any);
 
     expect(res.status).toBe(307);
@@ -191,7 +241,7 @@ describe("Phase 3.10 Google OAuth Authentication & Role Security Matrix", () => 
       expect.objectContaining({
         id: maliciousId,
         role: "customer",
-      })
+      }),
     );
   });
 
@@ -211,10 +261,14 @@ describe("Phase 3.10 Google OAuth Authentication & Role Security Matrix", () => 
     });
 
     const { GET } = await import("../app/auth/callback/route");
-    const req = new Request("http://localhost:3000/auth/callback?code=bad-code");
+    const req = new Request(
+      "http://localhost:3000/auth/callback?code=bad-code",
+    );
     const res = await GET(req as any);
 
     expect(res.status).toBe(307);
-    expect(res.headers.get("location")).toContain("/login?error=oauth_exchange_failed");
+    expect(res.headers.get("location")).toContain(
+      "/login?error=oauth_exchange_failed",
+    );
   });
 });

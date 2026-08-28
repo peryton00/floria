@@ -3,10 +3,16 @@ import { Request, Response, NextFunction } from "express";
 import { notificationService } from "./notification.service.js";
 
 export class NotificationsController {
-  async getNotifications(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async getNotifications(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const userId = req.user!.id;
-      const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 20;
+      const limit = req.query.limit
+        ? parseInt(req.query.limit as string, 10)
+        : 20;
       const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
       const unreadOnly = req.query.unreadOnly === "true";
 
@@ -22,7 +28,11 @@ export class NotificationsController {
     }
   }
 
-  async getUnreadCount(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async getUnreadCount(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const userId = req.user!.id;
       const unreadCount = await notificationService.getUnreadCount(userId);
@@ -32,7 +42,11 @@ export class NotificationsController {
     }
   }
 
-  async markAsRead(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async markAsRead(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const userId = req.user!.id;
       const notificationId = req.params.id as string;
@@ -43,17 +57,28 @@ export class NotificationsController {
     }
   }
 
-  async markAllAsRead(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async markAllAsRead(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const userId = req.user!.id;
       await notificationService.markAllAsRead(userId);
-      res.json({ success: true, data: { message: "All notifications marked as read" } });
+      res.json({
+        success: true,
+        data: { message: "All notifications marked as read" },
+      });
     } catch (err) {
       next(err);
     }
   }
 
-  async deleteNotification(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async deleteNotification(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const userId = req.user!.id;
       const notificationId = req.params.id as string;

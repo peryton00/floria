@@ -7,7 +7,10 @@ interface CartBadgeAnimationProps {
   className?: string;
 }
 
-export function CartBadgeAnimation({ count, className = "" }: CartBadgeAnimationProps) {
+export function CartBadgeAnimation({
+  count,
+  className = "",
+}: CartBadgeAnimationProps) {
   const [pulse, setPulse] = useState(false);
 
   useEffect(() => {

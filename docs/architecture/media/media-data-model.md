@@ -141,14 +141,14 @@ CREATE INDEX idx_media_variants_asset ON media_variants(asset_id);
 
 ## 3. Complete Domain Relationship Integration Model
 
-| Audited Field | Target Schema Entity | Relationship Cardinality | FK Constraint & Deletion Rule |
-| :--- | :--- | :--- | :--- |
-| `product_images.url` | `product_images.asset_id` (FK to `media_assets.id`) | 1 Product : N Images | `ON DELETE RESTRICT` (Product deletion triggers cascade on `product_images`, asset transitions to `RETIRED`) |
-| `seller_profiles.logo_url` | `seller_profiles.logo_asset_id` (FK to `media_assets.id`) | 1 Seller : 1 Showcase Asset | `ON DELETE SET NULL` |
-| `categories.image_url` | `categories.banner_asset_id` (FK to `media_assets.id`) | 1 Category : 1 Banner Asset | `ON DELETE SET NULL` |
-| `user_profiles.avatar_url` | `user_profiles.avatar_asset_id` (FK to `media_assets.id`) | 1 User : 1 Avatar Asset | `ON DELETE SET NULL` |
-| `reviews.image_url` | `review_media` join table (`review_id`, `asset_id`) | 1 Review : N Attachments | `ON DELETE CASCADE` on join table |
-| `seller_documents.document_url` | `seller_documents.file_asset_id` (FK to `media_assets.id`) | 1 Seller : N Documents | `ON DELETE CASCADE` (`storage_bucket = 'private-documents'`) |
+| Audited Field                   | Target Schema Entity                                       | Relationship Cardinality    | FK Constraint & Deletion Rule                                                                                |
+| :------------------------------ | :--------------------------------------------------------- | :-------------------------- | :----------------------------------------------------------------------------------------------------------- |
+| `product_images.url`            | `product_images.asset_id` (FK to `media_assets.id`)        | 1 Product : N Images        | `ON DELETE RESTRICT` (Product deletion triggers cascade on `product_images`, asset transitions to `RETIRED`) |
+| `seller_profiles.logo_url`      | `seller_profiles.logo_asset_id` (FK to `media_assets.id`)  | 1 Seller : 1 Showcase Asset | `ON DELETE SET NULL`                                                                                         |
+| `categories.image_url`          | `categories.banner_asset_id` (FK to `media_assets.id`)     | 1 Category : 1 Banner Asset | `ON DELETE SET NULL`                                                                                         |
+| `user_profiles.avatar_url`      | `user_profiles.avatar_asset_id` (FK to `media_assets.id`)  | 1 User : 1 Avatar Asset     | `ON DELETE SET NULL`                                                                                         |
+| `reviews.image_url`             | `review_media` join table (`review_id`, `asset_id`)        | 1 Review : N Attachments    | `ON DELETE CASCADE` on join table                                                                            |
+| `seller_documents.document_url` | `seller_documents.file_asset_id` (FK to `media_assets.id`) | 1 Seller : N Documents      | `ON DELETE CASCADE` (`storage_bucket = 'private-documents'`)                                                 |
 
 ---
 

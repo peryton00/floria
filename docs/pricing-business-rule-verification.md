@@ -24,22 +24,22 @@ The exact pricing pipeline executed by [`PricingService.calculateProductPricing`
 5. Customer Product Price = Pre-Recovery Product Price + Applicable Delivery Recovery
 ```
 
-*Crucial Rule Verification*: The delivery recovery amount (₹20.00) is incorporated **after** evaluating the pre-recovery price against the ₹599.00 threshold. The recovery itself **never** pushes an ineligible product over the threshold.
+_Crucial Rule Verification_: The delivery recovery amount (₹20.00) is incorporated **after** evaluating the pre-recovery price against the ₹599.00 threshold. The recovery itself **never** pushes an ineligible product over the threshold.
 
 ---
 
 ## 2. Test Verification Matrix (6 Mandatory Test Cases)
 
-| Test Case | Seller Base Price | Floria Profit (2%) | Pre-Recovery Price | Threshold >= ₹599? | Free Delivery Eligible? | Delivery Recovery | Customer Product Price |
-|---|---|---|---|---|---|---|---|
-| **Case 1** | ₹500.00 | ₹10.00 | ₹510.00 | NO | **NO** | ₹0.00 | **₹510.00** |
-| **Case 2** | ₹580.00 | ₹11.60 | ₹591.60 | NO | **NO** | ₹0.00 | **₹591.60** |
-| **Case 3** | ₹588.00 | ₹11.76 | ₹599.76 | YES | **YES** | ₹20.00 | **₹619.76** |
-| **Case 4** | ₹600.00 | ₹12.00 | ₹612.00 | YES | **YES** | ₹20.00 | **₹632.00** |
-| **Case 5** | ₹599.00 | ₹11.98 | ₹610.98 | YES | **YES** | ₹20.00 | **₹630.98** |
-| **Case 6** | 2x ₹500.00 (Cart ₹1,000) | ₹10.00 each | ₹510.00 each | NO each | **NO** | ₹0.00 each | **₹510.00 each** |
+| Test Case  | Seller Base Price        | Floria Profit (2%) | Pre-Recovery Price | Threshold >= ₹599? | Free Delivery Eligible? | Delivery Recovery | Customer Product Price |
+| ---------- | ------------------------ | ------------------ | ------------------ | ------------------ | ----------------------- | ----------------- | ---------------------- |
+| **Case 1** | ₹500.00                  | ₹10.00             | ₹510.00            | NO                 | **NO**                  | ₹0.00             | **₹510.00**            |
+| **Case 2** | ₹580.00                  | ₹11.60             | ₹591.60            | NO                 | **NO**                  | ₹0.00             | **₹591.60**            |
+| **Case 3** | ₹588.00                  | ₹11.76             | ₹599.76            | YES                | **YES**                 | ₹20.00            | **₹619.76**            |
+| **Case 4** | ₹600.00                  | ₹12.00             | ₹612.00            | YES                | **YES**                 | ₹20.00            | **₹632.00**            |
+| **Case 5** | ₹599.00                  | ₹11.98             | ₹610.98            | YES                | **YES**                 | ₹20.00            | **₹630.98**            |
+| **Case 6** | 2x ₹500.00 (Cart ₹1,000) | ₹10.00 each        | ₹510.00 each       | NO each            | **NO**                  | ₹0.00 each        | **₹510.00 each**       |
 
-*Case 6 Key Finding*: Cart total of ₹1,000 does **NOT** make either ₹500 product free-delivery eligible. Free delivery eligibility is evaluated strictly **per product**.
+_Case 6 Key Finding_: Cart total of ₹1,000 does **NOT** make either ₹500 product free-delivery eligible. Free delivery eligibility is evaluated strictly **per product**.
 
 ---
 
@@ -65,21 +65,22 @@ The exact pricing pipeline executed by [`PricingService.calculateProductPricing`
 
 ## 5. Security & Visibility Matrix
 
-| Financial Attribute | Customer View | Seller View | Admin View |
-|---|---|---|---|
-| Seller Base Price | Hidden | **Visible** | **Visible** |
-| Seller Commission | Hidden | **Visible** (as settlement cut) | **Visible** |
-| Floria Profit (2%) | **Hidden** | **Hidden** | **Visible** |
-| Delivery Recovery (₹20) | **Hidden** | **Hidden** | **Visible** |
-| Customer Product Price | **Visible** | **Visible** (as listing price) | **Visible** |
-| Platform Maintenance Fee | **Visible** (at Checkout) | Hidden | **Visible** |
-| Delivery Fee & Reason | **Visible** (at Checkout) | Hidden | **Visible** |
+| Financial Attribute      | Customer View             | Seller View                     | Admin View  |
+| ------------------------ | ------------------------- | ------------------------------- | ----------- |
+| Seller Base Price        | Hidden                    | **Visible**                     | **Visible** |
+| Seller Commission        | Hidden                    | **Visible** (as settlement cut) | **Visible** |
+| Floria Profit (2%)       | **Hidden**                | **Hidden**                      | **Visible** |
+| Delivery Recovery (₹20)  | **Hidden**                | **Hidden**                      | **Visible** |
+| Customer Product Price   | **Visible**               | **Visible** (as listing price)  | **Visible** |
+| Platform Maintenance Fee | **Visible** (at Checkout) | Hidden                          | **Visible** |
+| Delivery Fee & Reason    | **Visible** (at Checkout) | Hidden                          | **Visible** |
 
 ---
 
 ## 6. Immutable Historical Snapshots
 
 Order and Order Items tables store immutable snapshot columns:
+
 - `base_price_paise_snapshot`
 - `floria_profit_rate_snapshot` & `floria_profit_paise_snapshot`
 - `delivery_recovery_paise_snapshot`

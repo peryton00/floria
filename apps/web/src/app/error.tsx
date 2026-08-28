@@ -80,7 +80,14 @@ export default function GlobalError({
             We hit an unexpected snag. Try reloading — it usually fixes it.
           </p>
 
-          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+          <div
+            style={{
+              display: "flex",
+              gap: 12,
+              justifyContent: "center",
+              flexWrap: "wrap",
+            }}
+          >
             <button
               onClick={reset}
               style={{

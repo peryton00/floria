@@ -7,7 +7,13 @@ export interface TableSkeletonProps {
   className?: string;
 }
 
-export function TableRowSkeleton({ columns = 5, columnWidths }: { columns?: number; columnWidths?: string[] }) {
+export function TableRowSkeleton({
+  columns = 5,
+  columnWidths,
+}: {
+  columns?: number;
+  columnWidths?: string[];
+}) {
   return (
     <tr aria-hidden="true" className="border-b border-stone-100">
       {Array.from({ length: columns }).map((_, colIdx) => (
@@ -15,7 +21,11 @@ export function TableRowSkeleton({ columns = 5, columnWidths }: { columns?: numb
           <Skeleton
             variant="text"
             className="h-4 rounded-md"
-            style={{ width: columnWidths?.[colIdx] || `${Math.floor(50 + ((colIdx * 17) % 45))}%` }}
+            style={{
+              width:
+                columnWidths?.[colIdx] ||
+                `${Math.floor(50 + ((colIdx * 17) % 45))}%`,
+            }}
           />
         </td>
       ))}
@@ -55,7 +65,11 @@ export function TableSkeleton({
           </thead>
           <tbody>
             {Array.from({ length: rows }).map((_, rowIdx) => (
-              <TableRowSkeleton key={rowIdx} columns={columns} columnWidths={columnWidths} />
+              <TableRowSkeleton
+                key={rowIdx}
+                columns={columns}
+                columnWidths={columnWidths}
+              />
             ))}
           </tbody>
         </table>

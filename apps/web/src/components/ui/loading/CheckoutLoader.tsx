@@ -47,14 +47,21 @@ export function CheckoutLoader({ step, message }: CheckoutLoaderProps) {
 
         <div className="space-y-2">
           <h3 className="font-serif text-lg font-bold text-stone-900 leading-tight">
-            {isSuccess ? "Order Confirmed!" : isFailure ? "Checkout Error" : "Processing Your Order"}
+            {isSuccess
+              ? "Order Confirmed!"
+              : isFailure
+                ? "Checkout Error"
+                : "Processing Your Order"}
           </h3>
-          <p className="text-xs text-stone-600 leading-relaxed">{currentMessage}</p>
+          <p className="text-xs text-stone-600 leading-relaxed">
+            {currentMessage}
+          </p>
         </div>
 
         {!isSuccess && !isFailure && (
           <div className="p-3 bg-cream-50 rounded-xl border border-stone-200/60 text-[11px] text-stone-500">
-            Please do not refresh or close this window while we secure your plants.
+            Please do not refresh or close this window while we secure your
+            plants.
           </div>
         )}
       </div>

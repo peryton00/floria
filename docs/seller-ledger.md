@@ -15,6 +15,7 @@ This document details the append-only ledger architecture used for seller earnin
 ## 2. Entry Types & Balance States
 
 ### Entry Types
+
 - `earning_credit`: Net earnings credited to seller from a placed order.
 - `commission_debit`: Platform commission deducted.
 - `refund_debit`: Deductions from customer refunds.
@@ -22,6 +23,7 @@ This document details the append-only ledger architecture used for seller earnin
 - `adjustment_credit` / `adjustment_debit`: Admin manual adjustments.
 
 ### Balance States
+
 - `pending`: Earnings from active orders that are not yet delivered.
 - `available`: Earnings from delivered orders past return policy window, eligible for payout.
 - `paid`: Earnings already paid out via seller bank settlements.

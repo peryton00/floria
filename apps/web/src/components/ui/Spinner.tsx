@@ -14,9 +14,17 @@ interface SpinnerProps {
   className?: string;
 }
 
-export function Spinner({ size = "md", label = "Loading…", className = "" }: SpinnerProps) {
+export function Spinner({
+  size = "md",
+  label = "Loading…",
+  className = "",
+}: SpinnerProps) {
   return (
-    <span role="status" aria-label={label} className={`inline-flex ${className}`}>
+    <span
+      role="status"
+      aria-label={label}
+      className={`inline-flex ${className}`}
+    >
       <svg
         aria-hidden="true"
         className={`animate-spin text-forest-700 ${sizeClass[size]}`}
@@ -26,7 +34,9 @@ export function Spinner({ size = "md", label = "Loading…", className = "" }: S
       >
         <circle
           className="opacity-25"
-          cx="12" cy="12" r="10"
+          cx="12"
+          cy="12"
+          r="10"
           stroke="currentColor"
           strokeWidth="4"
         />

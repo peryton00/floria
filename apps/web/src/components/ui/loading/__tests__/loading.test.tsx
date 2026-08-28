@@ -26,7 +26,9 @@ describe("Phase 3.18.1 Global Loading & Skeleton System Test Suite", () => {
   });
 
   it("2. Skeleton primitive applies variant styles and reduced-motion fallbacks", () => {
-    const { container } = render(<Skeleton variant="avatar" width={48} height={48} />);
+    const { container } = render(
+      <Skeleton variant="avatar" width={48} height={48} />,
+    );
     const skeletonDiv = container.firstElementChild as HTMLElement;
     expect(skeletonDiv).toBeDefined();
     expect(skeletonDiv.className).toContain("rounded-full");
@@ -78,12 +80,14 @@ describe("Phase 3.18.1 Global Loading & Skeleton System Test Suite", () => {
         fileSize="2.4 MB"
         progress={72}
         status="uploading"
-      />
+      />,
     );
     expect(screen.getByText("GST_Certificate.pdf")).toBeDefined();
     expect(screen.getByText("72%")).toBeDefined();
     const statusEl = screen.getByRole("status");
-    expect(statusEl.getAttribute("aria-label")).toBe("Upload status for GST_Certificate.pdf");
+    expect(statusEl.getAttribute("aria-label")).toBe(
+      "Upload status for GST_Certificate.pdf",
+    );
   });
 
   it("9. CheckoutLoader renders dialog modal with explicit step messages", () => {

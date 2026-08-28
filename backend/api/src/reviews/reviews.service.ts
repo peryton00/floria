@@ -14,7 +14,7 @@ export const reviewsService = {
   async submitReview(
     customerId: string,
     productId: string,
-    payload: { rating: number; title?: string; body?: string }
+    payload: { rating: number; title?: string; body?: string },
   ) {
     if (payload.rating < 1 || payload.rating > 5) {
       const err = new Error("Rating must be between 1 and 5") as any;
@@ -22,9 +22,14 @@ export const reviewsService = {
       throw err;
     }
 
-    const eligible = await reviewRepository.findEligibleOrderItem(customerId, productId);
+    const eligible = await reviewRepository.findEligibleOrderItem(
+      customerId,
+      productId,
+    );
     if (!eligible) {
-      const err = new Error("You can only review products you have purchased and received.") as any;
+      const err = new Error(
+        "You can only review products you have purchased and received.",
+      ) as any;
       err.status = 403;
       err.code = "NOT_ELIGIBLE";
       throw err;
@@ -42,11 +47,20 @@ export const reviewsService = {
     // Notify seller of new review
     try {
       const { getAdminDb } = await import("../config/database.js");
-      const { notificationService } = await import("../notifications/notification.service.js");
+      const { notificationService } =
+        await import("../notifications/notification.service.js");
       const db = getAdminDb();
-      const { data: prod } = await db.from("products").select("seller_id, name").eq("id", productId).maybeSingle();
+      const { data: prod } = await db
+        .from("products")
+        .select("seller_id, name")
+        .eq("id", productId)
+        .maybeSingle();
       if (prod?.seller_id) {
-        const { data: sellerProf } = await db.from("seller_profiles").select("user_id").or(`id.eq.${prod.seller_id},user_id.eq.${prod.seller_id}`).maybeSingle();
+        const { data: sellerProf } = await db
+          .from("seller_profiles")
+          .select("user_id")
+          .or(`id.eq.${prod.seller_id},user_id.eq.${prod.seller_id}`)
+          .maybeSingle();
         if (sellerProf?.user_id) {
           await notificationService.createNotification({
             user_id: sellerProf.user_id,
@@ -57,12 +71,19 @@ export const reviewsService = {
             data: { productId, rating: payload.rating, reviewId: review.id },
             source_type: "review",
             source_id: review.id,
-            navigation: { entityType: "REVIEW", entityId: productId, action: "VIEW" },
+            navigation: {
+              entityType: "REVIEW",
+              entityId: productId,
+              action: "VIEW",
+            },
           });
         }
       }
     } catch (notifErr) {
-      console.error("[ReviewsService] Seller review notification error:", notifErr);
+      console.error(
+        "[ReviewsService] Seller review notification error:",
+        notifErr,
+      );
     }
 
     return review;
@@ -71,7 +92,7 @@ export const reviewsService = {
   async moderateReview(
     reviewId: string,
     action: "approve" | "reject" | "hide",
-    note?: string
+    note?: string,
   ) {
     const result = await reviewRepository.moderate(reviewId, action, note);
     if (!result) return null;

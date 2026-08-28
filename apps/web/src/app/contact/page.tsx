@@ -30,7 +30,8 @@ export default function ContactPage() {
             Contact Floria Support
           </h1>
           <p className="text-xs text-ink-500">
-            Have a question about your plant order, nursery onboarding, or plant care? We&apos;re here to help!
+            Have a question about your plant order, nursery onboarding, or plant
+            care? We&apos;re here to help!
           </p>
         </div>
 
@@ -40,9 +41,14 @@ export default function ContactPage() {
               <div className="w-12 h-12 rounded-full bg-success-100 text-success-800 flex items-center justify-center mx-auto">
                 <CheckIcon size={24} />
               </div>
-              <h2 className="font-serif text-lg font-bold text-ink-900">Message Received!</h2>
+              <h2 className="font-serif text-lg font-bold text-ink-900">
+                Message Received!
+              </h2>
               <p className="text-xs text-ink-500 max-w-sm mx-auto">
-                Thank you for contacting Floria. Our horticulture support team will reply to <strong className="text-ink-900">{formData.email}</strong> within 24 hours.
+                Thank you for contacting Floria. Our horticulture support team
+                will reply to{" "}
+                <strong className="text-ink-900">{formData.email}</strong>{" "}
+                within 24 hours.
               </p>
             </div>
           ) : (
@@ -55,7 +61,9 @@ export default function ContactPage() {
                   type="text"
                   required
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                   placeholder="Enter full name"
                   className="w-full px-3 py-2.5 rounded-xl border border-ink-200 focus:outline-none focus:ring-2 focus:ring-forest-700"
                 />
@@ -69,7 +77,9 @@ export default function ContactPage() {
                   type="email"
                   required
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
                   placeholder="name@example.com"
                   className="w-full px-3 py-2.5 rounded-xl border border-ink-200 focus:outline-none focus:ring-2 focus:ring-forest-700"
                 />
@@ -81,13 +91,21 @@ export default function ContactPage() {
                 </label>
                 <select
                   value={formData.subject}
-                  onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, subject: e.target.value })
+                  }
                   className="w-full px-3 py-2.5 rounded-xl border border-ink-200 focus:outline-none focus:ring-2 focus:ring-forest-700 bg-white"
                 >
                   <option value="General Inquiry">General Inquiry</option>
-                  <option value="Order Status & Delivery">Order Status &amp; Delivery</option>
-                  <option value="Plant Care & Advice">Plant Care &amp; Advice</option>
-                  <option value="Nursery Partnership">Nursery Partner Onboarding</option>
+                  <option value="Order Status & Delivery">
+                    Order Status &amp; Delivery
+                  </option>
+                  <option value="Plant Care & Advice">
+                    Plant Care &amp; Advice
+                  </option>
+                  <option value="Nursery Partnership">
+                    Nursery Partner Onboarding
+                  </option>
                 </select>
               </div>
 
@@ -99,7 +117,9 @@ export default function ContactPage() {
                   required
                   rows={4}
                   value={formData.message}
-                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, message: e.target.value })
+                  }
                   placeholder="Describe your inquiry..."
                   className="w-full px-3 py-2.5 rounded-xl border border-ink-200 focus:outline-none focus:ring-2 focus:ring-forest-700"
                 />

@@ -5,8 +5,13 @@ import { requireRole } from "../middleware/authorization.js";
 
 const router = Router();
 
-router.get("/", authenticateToken, requireRole("admin", "super_admin"), (_req: Request, res: Response) => {
-  res.json({ success: true, data: { status: "reports_foundation" } });
-});
+router.get(
+  "/",
+  authenticateToken,
+  requireRole("admin", "super_admin"),
+  (_req: Request, res: Response) => {
+    res.json({ success: true, data: { status: "reports_foundation" } });
+  },
+);
 
 export default router;

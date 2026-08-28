@@ -16,12 +16,21 @@ function stockStatus(qty: number, threshold: number) {
 }
 
 /** Group cart items by seller ID, preserving insertion order of nurseries */
-function groupBySeller(items: CartItem[]): { sellerId: string; sellerName: string; items: CartItem[] }[] {
-  const map = new Map<string, { sellerId: string; sellerName: string; items: CartItem[] }>();
+function groupBySeller(
+  items: CartItem[],
+): { sellerId: string; sellerName: string; items: CartItem[] }[] {
+  const map = new Map<
+    string,
+    { sellerId: string; sellerName: string; items: CartItem[] }
+  >();
   for (const item of items) {
     const id = item.listing.seller.id;
     if (!map.has(id)) {
-      map.set(id, { sellerId: id, sellerName: item.listing.seller.business_name, items: [] });
+      map.set(id, {
+        sellerId: id,
+        sellerName: item.listing.seller.business_name,
+        items: [],
+      });
     }
     map.get(id)!.items.push(item);
   }
@@ -34,13 +43,18 @@ export default function CartPage() {
 
   const getItemPrice = (item: CartItem) => {
     const listing = item.listing;
-    return listing.pricing?.sellingPricePaise ?? listing.inventory?.price_paise ?? 0;
+    return (
+      listing.pricing?.sellingPricePaise ?? listing.inventory?.price_paise ?? 0
+    );
   };
 
   const getOriginalPrice = (item: CartItem) => {
     const listing = item.listing;
     const itemPrice = getItemPrice(item);
-    if (listing.pricing?.originalPricePaise && listing.pricing.originalPricePaise > itemPrice) {
+    if (
+      listing.pricing?.originalPricePaise &&
+      listing.pricing.originalPricePaise > itemPrice
+    ) {
       return listing.pricing.originalPricePaise;
     }
     const rawOriginal = (listing.inventory as any)?.original_price_paise;
@@ -53,7 +67,7 @@ export default function CartPage() {
   // ── Calculations ────────────────────────────────────────────────────────────
   const subtotalPaise = cartItems.reduce(
     (sum, item) => sum + getItemPrice(item) * item.quantity,
-    0
+    0,
   );
   // Real MRP discount
   const discountPaise = cartItems.reduce((sum, item) => {
@@ -63,7 +77,12 @@ export default function CartPage() {
     return sum + (original - price) * item.quantity;
   }, 0);
 
-  const handleQtyChange = (productId: string, current: number, delta: number, maxStock: number) => {
+  const handleQtyChange = (
+    productId: string,
+    current: number,
+    delta: number,
+    maxStock: number,
+  ) => {
     const next = current + delta;
     if (next < 1 || next > maxStock) return;
     updateQuantity(productId, next);
@@ -80,18 +99,28 @@ export default function CartPage() {
   if (cartItems.length === 0) {
     return (
       <CustomerShell>
-        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-ink-400 mb-6">
-          <Link href="/" className="hover:text-forest-700 transition-colors">Home</Link>
-          <span aria-hidden="true" className="select-none text-ink-300">/</span>
+        <nav
+          aria-label="Breadcrumb"
+          className="flex items-center gap-2 text-xs text-ink-400 mb-6"
+        >
+          <Link href="/" className="hover:text-forest-700 transition-colors">
+            Home
+          </Link>
+          <span aria-hidden="true" className="select-none text-ink-300">
+            /
+          </span>
           <span className="text-ink-700 font-medium">Cart</span>
         </nav>
         <div className="flex flex-col items-center justify-center py-20 text-center max-w-sm mx-auto">
           <div className="w-20 h-20 rounded-full bg-forest-50 flex items-center justify-center mb-6 text-forest-700">
             <BagIcon size={36} />
           </div>
-          <h1 className="font-serif text-2xl font-bold text-ink-900 mb-2">Your cart is empty</h1>
+          <h1 className="font-serif text-2xl font-bold text-ink-900 mb-2">
+            Your cart is empty
+          </h1>
           <p className="text-sm text-ink-500 mb-8 leading-relaxed">
-            Explore our curated plant collection and add something green to your life.
+            Explore our curated plant collection and add something green to your
+            life.
           </p>
           <Link
             href="/categories"
@@ -111,24 +140,35 @@ export default function CartPage() {
   return (
     <CustomerShell>
       {/* Breadcrumb */}
-      <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-ink-400 mb-6">
-        <Link href="/" className="hover:text-forest-700 transition-colors">Home</Link>
-        <span aria-hidden="true" className="select-none text-ink-300">/</span>
+      <nav
+        aria-label="Breadcrumb"
+        className="flex items-center gap-2 text-xs text-ink-400 mb-6"
+      >
+        <Link href="/" className="hover:text-forest-700 transition-colors">
+          Home
+        </Link>
+        <span aria-hidden="true" className="select-none text-ink-300">
+          /
+        </span>
         <span className="text-ink-700 font-medium">Cart</span>
       </nav>
 
       {/* Header */}
       <h1 className="font-serif text-3xl font-bold text-ink-900 mb-6">
         Your Cart
-        <span className="ml-2 font-sans text-lg font-normal text-ink-400">({cartCount} items)</span>
+        <span className="ml-2 font-sans text-lg font-normal text-ink-400">
+          ({cartCount} items)
+        </span>
       </h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8 items-start">
-
         {/* ── LEFT: Nursery-grouped items ─────────────────────────────────── */}
         <div className="space-y-6">
           {nurseryGroups.map((group) => (
-            <div key={group.sellerId} className="bg-floria-linen rounded-2xl border border-floria-border shadow-sm overflow-hidden">
+            <div
+              key={group.sellerId}
+              className="bg-floria-linen rounded-2xl border border-floria-border shadow-sm overflow-hidden"
+            >
               {/* Nursery header */}
               <div className="flex items-center gap-2.5 px-4 py-3 bg-floria-soft-sand border-b border-floria-border">
                 <LeafIcon size={14} className="text-forest-700 flex-shrink-0" />
@@ -137,7 +177,9 @@ export default function CartPage() {
                 </span>
                 <span className="ml-auto text-[11px] text-ink-400 font-medium">
                   {group.items.reduce((s, i) => s + i.quantity, 0)}{" "}
-                  {group.items.reduce((s, i) => s + i.quantity, 0) === 1 ? "item" : "items"}
+                  {group.items.reduce((s, i) => s + i.quantity, 0) === 1
+                    ? "item"
+                    : "items"}
                 </span>
               </div>
 
@@ -145,23 +187,39 @@ export default function CartPage() {
               <div className="divide-y divide-floria-border">
                 {group.items.map((item) => {
                   const { listing, quantity } = item;
-                  const { product, inventory, primary_image, category } = listing;
-                  const status = stockStatus(inventory.stock_quantity, inventory.low_stock_threshold);
+                  const { product, inventory, primary_image, category } =
+                    listing;
+                  const status = stockStatus(
+                    inventory.stock_quantity,
+                    inventory.low_stock_threshold,
+                  );
                   const isOOS = status === "out";
                   const isLow = status === "low";
                   const customerUnitPricePaise = getItemPrice(item);
                   const originalPricePaise = getOriginalPrice(item);
-                  const discountPct = (originalPricePaise && originalPricePaise > customerUnitPricePaise)
-                    ? Math.round(((originalPricePaise - customerUnitPricePaise) / originalPricePaise) * 100)
-                    : 0;
+                  const discountPct =
+                    originalPricePaise &&
+                    originalPricePaise > customerUnitPricePaise
+                      ? Math.round(
+                          ((originalPricePaise - customerUnitPricePaise) /
+                            originalPricePaise) *
+                            100,
+                        )
+                      : 0;
 
                   return (
                     <div
                       key={product.id}
-                      className={["flex gap-4 p-4", isOOS ? "opacity-75" : ""].join(" ")}
+                      className={[
+                        "flex gap-4 p-4",
+                        isOOS ? "opacity-75" : "",
+                      ].join(" ")}
                     >
                       {/* Image */}
-                      <Link href={`/products/${product.slug}`} className="flex-shrink-0">
+                      <Link
+                        href={`/products/${product.slug}`}
+                        className="flex-shrink-0"
+                      >
                         <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-floria-natural-sand border border-floria-border">
                           <Image
                             src={primary_image?.url || "/floria-logo.png"}
@@ -184,7 +242,10 @@ export default function CartPage() {
                       <div className="flex-1 min-w-0 flex flex-col">
                         {/* Name + remove */}
                         <div className="flex items-start justify-between gap-2 mb-1">
-                          <Link href={`/products/${product.slug}`} className="min-w-0">
+                          <Link
+                            href={`/products/${product.slug}`}
+                            className="min-w-0"
+                          >
                             <h2 className="font-sans text-sm font-bold text-ink-900 line-clamp-2 leading-snug hover:text-forest-700 transition-colors">
                               {product.name}
                             </h2>
@@ -195,14 +256,29 @@ export default function CartPage() {
                             onClick={() => removeFromCart(product.id)}
                             className="flex-shrink-0 text-ink-300 hover:text-red-500 transition-colors focus:outline-none focus:ring-2 focus:ring-red-300 rounded p-0.5"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                              <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="15"
+                              height="15"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              aria-hidden="true"
+                            >
+                              <path d="M3 6h18" />
+                              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
                             </svg>
                           </button>
                         </div>
 
                         {/* Category */}
-                        <p className="text-[11px] text-ink-400 mb-2">{category?.name || "Indoor Plant"}</p>
+                        <p className="text-[11px] text-ink-400 mb-2">
+                          {category?.name || "Indoor Plant"}
+                        </p>
 
                         {/* Stock badges */}
                         {isLow && (
@@ -225,7 +301,14 @@ export default function CartPage() {
                                 type="button"
                                 aria-label={`Decrease quantity of ${product.name}`}
                                 disabled={isOOS || quantity <= 1}
-                                onClick={() => handleQtyChange(product.id, quantity, -1, inventory.stock_quantity)}
+                                onClick={() =>
+                                  handleQtyChange(
+                                    product.id,
+                                    quantity,
+                                    -1,
+                                    inventory.stock_quantity,
+                                  )
+                                }
                                 className="w-8 h-8 flex items-center justify-center text-ink-500 hover:bg-floria-soft-sand font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none"
                               >
                                 −
@@ -236,8 +319,17 @@ export default function CartPage() {
                               <button
                                 type="button"
                                 aria-label={`Increase quantity of ${product.name}`}
-                                disabled={isOOS || quantity >= inventory.stock_quantity}
-                                onClick={() => handleQtyChange(product.id, quantity, +1, inventory.stock_quantity)}
+                                disabled={
+                                  isOOS || quantity >= inventory.stock_quantity
+                                }
+                                onClick={() =>
+                                  handleQtyChange(
+                                    product.id,
+                                    quantity,
+                                    +1,
+                                    inventory.stock_quantity,
+                                  )
+                                }
                                 className="w-8 h-8 flex items-center justify-center text-ink-500 hover:bg-floria-soft-sand font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none"
                               >
                                 +
@@ -267,7 +359,8 @@ export default function CartPage() {
                               <p className="text-sm font-bold text-ink-900">
                                 {formatINR(customerUnitPricePaise * quantity)}
                               </p>
-                              {originalPricePaise && originalPricePaise > customerUnitPricePaise ? (
+                              {originalPricePaise &&
+                              originalPricePaise > customerUnitPricePaise ? (
                                 <p className="text-[11px] text-ink-300 line-through">
                                   {formatINR(originalPricePaise * quantity)}
                                 </p>
@@ -294,7 +387,9 @@ export default function CartPage() {
 
             <div className="space-y-3 text-sm">
               <div className="flex justify-between text-ink-600">
-                <span>Price ({cartItems.reduce((s, i) => s + i.quantity, 0)} items)</span>
+                <span>
+                  Price ({cartItems.reduce((s, i) => s + i.quantity, 0)} items)
+                </span>
                 <span className="font-semibold text-ink-900">
                   {formatINR(subtotalPaise + discountPaise)}
                 </span>
@@ -302,16 +397,22 @@ export default function CartPage() {
               {discountPaise > 0 && (
                 <div className="flex justify-between text-forest-800">
                   <span>Discount</span>
-                  <span className="font-semibold">−{formatINR(discountPaise)}</span>
+                  <span className="font-semibold">
+                    −{formatINR(discountPaise)}
+                  </span>
                 </div>
               )}
               <div className="flex justify-between text-ink-600">
                 <span>Delivery</span>
-                <span className="text-ink-500 font-medium italic text-xs">Calculated at checkout</span>
+                <span className="text-ink-500 font-medium italic text-xs">
+                  Calculated at checkout
+                </span>
               </div>
               <div className="flex justify-between pt-3 border-t border-floria-border text-ink-900 font-bold text-base">
                 <span>Subtotal</span>
-                <span className="text-forest-800">{formatINR(subtotalPaise)}</span>
+                <span className="text-forest-800">
+                  {formatINR(subtotalPaise)}
+                </span>
               </div>
               {discountPaise > 0 && (
                 <p className="text-[11px] text-forest-800 bg-forest-100 rounded-lg px-3 py-2 text-center font-semibold border border-forest-200">
@@ -348,7 +449,6 @@ export default function CartPage() {
           </div>
         </div>
       </div>
-
     </CustomerShell>
   );
 }

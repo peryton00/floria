@@ -47,7 +47,7 @@ function validateTransition(current: SellerStage, next: SellerStage): void {
 // Timestamp columns to set based on new status
 const STATUS_TIMESTAMP_COLS: Partial<Record<SellerStage, string>> = {
   "Nursery Confirmed": "confirmed_at",
-  "Preparing": "preparing_at",
+  Preparing: "preparing_at",
   "Ready for Pickup": "ready_at",
   "Picked Up": "picked_up_at",
 };
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
     const newStatus = body.newStatus;
     if (!isSellerStage(newStatus)) {
       throw Errors.validation(
-        `newStatus must be one of: ${SELLER_STAGES.join(", ")}.`
+        `newStatus must be one of: ${SELLER_STAGES.join(", ")}.`,
       );
     }
 

@@ -14,18 +14,18 @@ This document specifies Floria's financial data structures, money representation
 
 ## 2. Terminology & Standards
 
-| Field | Meaning | Calculation / Attribution |
-|---|---|---|
-| `subtotal_paise` | Sum of item price * quantity | `sum(unit_price_paise * quantity)` |
-| `discount_paise` | Applied coupon or promo discount | Subtracted from gross subtotal |
-| `delivery_fee_paise` | Logistics delivery charge | Added to customer total (0 / Free) |
-| `tax_paise` | Applicable GST / taxes | 0 (Not Configured) |
-| `total_paise` / `customer_total` | Total amount charged to customer | `subtotal - discount + delivery + tax` |
-| `commission_rate` | Platform commission percentage | Configured in `platform_settings` (e.g. 12 = 12%) |
-| `commission_paise` | Platform commission amount | `Math.round(seller_gross_paise * (commission_rate / 100))` |
-| `seller_gross_paise` | Total value of seller's items in order | `sum(seller_line_items * quantity)` |
-| `seller_net_paise` | Net earnings credited to seller | `seller_gross_paise - commission_paise` |
-| `payout_amount_paise` | Amount transferred to seller bank | Sum of `available` ledger entries |
+| Field                            | Meaning                                | Calculation / Attribution                                  |
+| -------------------------------- | -------------------------------------- | ---------------------------------------------------------- |
+| `subtotal_paise`                 | Sum of item price * quantity           | `sum(unit_price_paise * quantity)`                         |
+| `discount_paise`                 | Applied coupon or promo discount       | Subtracted from gross subtotal                             |
+| `delivery_fee_paise`             | Logistics delivery charge              | Added to customer total (0 / Free)                         |
+| `tax_paise`                      | Applicable GST / taxes                 | 0 (Not Configured)                                         |
+| `total_paise` / `customer_total` | Total amount charged to customer       | `subtotal - discount + delivery + tax`                     |
+| `commission_rate`                | Platform commission percentage         | Configured in `platform_settings` (e.g. 12 = 12%)          |
+| `commission_paise`               | Platform commission amount             | `Math.round(seller_gross_paise * (commission_rate / 100))` |
+| `seller_gross_paise`             | Total value of seller's items in order | `sum(seller_line_items * quantity)`                        |
+| `seller_net_paise`               | Net earnings credited to seller        | `seller_gross_paise - commission_paise`                    |
+| `payout_amount_paise`            | Amount transferred to seller bank      | Sum of `available` ledger entries                          |
 
 ---
 
@@ -63,6 +63,7 @@ CUSTOMER TOTAL:           ₹500.00
 ```
 
 Formulas:
+
 - `Selling Price` = `Base Price - Discount`
 - `Commission` = `Selling Price × Commission Rate`
 - `Seller Net` = `Selling Price - Commission`

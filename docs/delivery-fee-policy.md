@@ -16,13 +16,13 @@ This document describes Floria's server-authoritative delivery fee engine, minim
 
 Default settings stored in `public.platform_settings`:
 
-| Key | Value | Description |
-|---|---|---|
-| `delivery_enabled` | `true` | Master toggle for platform delivery calculation |
-| `base_delivery_fee_paise` | `4000` | Base delivery fee (4000 paise = ₹40.00) |
-| `free_delivery_enabled` | `true` | Toggle for free delivery threshold rule |
-| `free_delivery_threshold_paise` | `99900` | Free delivery minimum subtotal threshold (99900 paise = ₹999.00) |
-| `master_order_delivery_mode` | `"master_order_single"` | Delivery fee mode: single master fee per order |
+| Key                             | Value                   | Description                                                      |
+| ------------------------------- | ----------------------- | ---------------------------------------------------------------- |
+| `delivery_enabled`              | `true`                  | Master toggle for platform delivery calculation                  |
+| `base_delivery_fee_paise`       | `4000`                  | Base delivery fee (4000 paise = ₹40.00)                          |
+| `free_delivery_enabled`         | `true`                  | Toggle for free delivery threshold rule                          |
+| `free_delivery_threshold_paise` | `99900`                 | Free delivery minimum subtotal threshold (99900 paise = ₹999.00) |
+| `master_order_delivery_mode`    | `"master_order_single"` | Delivery fee mode: single master fee per order                   |
 
 ---
 
@@ -43,6 +43,7 @@ Else:
 ```
 
 ### Reason Codes (`DeliveryFeeReason`)
+
 - `FREE_DELIVERY_THRESHOLD`: Order eligible subtotal >= configured threshold (e.g. ₹999.00).
 - `PAID_BELOW_THRESHOLD`: Order eligible subtotal < configured threshold (charged base fee ₹40.00).
 - `FREE_DELIVERY_PROMOTION`: Server-applied promotional free delivery.
@@ -54,6 +55,7 @@ Else:
 ## 4. Historical Order Snapshots
 
 When an order is created, the checkout service records:
+
 - `delivery_fee_paise`
 - `delivery_fee_reason`
 - `delivery_threshold_paise_snapshot`

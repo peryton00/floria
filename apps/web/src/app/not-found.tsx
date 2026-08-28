@@ -7,7 +7,10 @@ import { LeafIcon } from "@/components/ui/Icons";
 export default function NotFound() {
   return (
     <CustomerShell>
-      <main id="main-content" className="flex flex-col items-center justify-center min-h-[60vh] py-16 px-4 text-center">
+      <main
+        id="main-content"
+        className="flex flex-col items-center justify-center min-h-[60vh] py-16 px-4 text-center"
+      >
         {/* Decorative Plant Pot SVG Icon */}
         <div className="relative w-24 h-24 mb-6 text-forest-700/80 bg-forest-50 rounded-full flex items-center justify-center border border-forest-100 shadow-inner">
           <svg
@@ -25,7 +28,14 @@ export default function NotFound() {
             {/* The pot */}
             <path d="M7 14h10l-1 5a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2Z" />
             {/* A small question mark on the pot */}
-            <text x="10.5" y="19" className="font-sans text-[6px] font-bold fill-forest-800" stroke="none">?</text>
+            <text
+              x="10.5"
+              y="19"
+              className="font-sans text-[6px] font-bold fill-forest-800"
+              stroke="none"
+            >
+              ?
+            </text>
           </svg>
         </div>
 
@@ -33,7 +43,7 @@ export default function NotFound() {
         <h1 className="font-serif text-3xl sm:text-4xl font-bold text-ink-900 mb-3 tracking-tight">
           Lost in the Foliage
         </h1>
-        
+
         {/* Error Code Badge */}
         <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-bold text-forest-700 bg-forest-50 border border-forest-100 rounded-full uppercase tracking-wider mb-4 shadow-sm">
           <LeafIcon size={12} />
@@ -42,7 +52,9 @@ export default function NotFound() {
 
         {/* Message */}
         <p className="text-sm text-ink-500 max-w-md mb-8 leading-relaxed">
-          The path you followed seems to have withered away, or the page has been transplanted to a different location. Let’s get you back on track.
+          The path you followed seems to have withered away, or the page has
+          been transplanted to a different location. Let’s get you back on
+          track.
         </p>
 
         {/* Action Buttons */}

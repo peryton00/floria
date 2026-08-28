@@ -114,7 +114,11 @@ export interface ProductReview {
   updated_at?: string;
   customer?: { full_name: string | null };
   product?: { id: string; name: string; slug: string };
-  images?: Array<{ id: string; url: string; variants?: Record<string, string> }>;
+  images?: Array<{
+    id: string;
+    url: string;
+    variants?: Record<string, string>;
+  }>;
 }
 
 export interface ReviewSummary {
@@ -152,7 +156,9 @@ export interface NurserySummary {
 
 function buildQueryString(params?: QueryParams): string {
   if (!params) return "";
-  const cleanEntries = Object.entries(params).filter(([_, v]) => v !== undefined && v !== "");
+  const cleanEntries = Object.entries(params).filter(
+    ([_, v]) => v !== undefined && v !== "",
+  );
   if (cleanEntries.length === 0) return "";
   return `?${new URLSearchParams(cleanEntries.map(([k, v]) => [k, String(v)])).toString()}`;
 }
@@ -162,18 +168,24 @@ export class FloriaApiClient {
   private getAccessToken?: () => Promise<string | null> | string | null;
   private customFetch: typeof fetch;
   private pendingGetRequests = new Map<string, Promise<ApiResponse<any>>>();
-  private staticCache = new Map<string, { timestamp: number; data: ApiResponse<any> }>();
+  private staticCache = new Map<
+    string,
+    { timestamp: number; data: ApiResponse<any> }
+  >();
 
   constructor(config: ApiClientConfig) {
     this.baseUrl = config.baseUrl.replace(/\/$/, "");
     this.getAccessToken = config.getAccessToken;
-    const fn = config.fetch || (typeof window !== "undefined" ? window.fetch : globalThis.fetch);
-    this.customFetch = typeof window !== "undefined" ? fn.bind(window) : fn.bind(globalThis);
+    const fn =
+      config.fetch ||
+      (typeof window !== "undefined" ? window.fetch : globalThis.fetch);
+    this.customFetch =
+      typeof window !== "undefined" ? fn.bind(window) : fn.bind(globalThis);
   }
 
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
   ): Promise<ApiResponse<T>> {
     const isGet = !options.method || options.method.toUpperCase() === "GET";
     const url = `${this.baseUrl}${endpoint.startsWith("/") ? "" : "/"}${endpoint}`;
@@ -212,11 +224,18 @@ export class FloriaApiClient {
       }
 
       // Add 15s timeout to release browser socket pool on Render cold starts
-      const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
-      const timeoutId = controller ? setTimeout(() => controller.abort(), 15000) : null;
+      const controller =
+        typeof AbortController !== "undefined" ? new AbortController() : null;
+      const timeoutId = controller
+        ? setTimeout(() => controller.abort(), 15000)
+        : null;
 
       try {
-        const fetchFn = this.customFetch || (typeof window !== "undefined" ? window.fetch.bind(window) : globalThis.fetch.bind(globalThis));
+        const fetchFn =
+          this.customFetch ||
+          (typeof window !== "undefined"
+            ? window.fetch.bind(window)
+            : globalThis.fetch.bind(globalThis));
         const response = await fetchFn(url, {
           ...options,
           headers,
@@ -228,7 +247,11 @@ export class FloriaApiClient {
         const json = await response.json();
         const apiRes = json as ApiResponse<T>;
 
-        if (isGet && endpoint.includes("/catalog/categories") && apiRes.success) {
+        if (
+          isGet &&
+          endpoint.includes("/catalog/categories") &&
+          apiRes.success
+        ) {
           this.staticCache.set(url, { timestamp: Date.now(), data: apiRes });
         }
 
@@ -240,7 +263,11 @@ export class FloriaApiClient {
           success: false,
           error: {
             code: isAbort ? "REQUEST_TIMEOUT" : "NETWORK_ERROR",
-            message: isAbort ? "Request timed out waiting for server response." : (error instanceof Error ? error.message : "Network request failed"),
+            message: isAbort
+              ? "Request timed out waiting for server response."
+              : error instanceof Error
+                ? error.message
+                : "Network request failed",
           },
         };
       } finally {
@@ -260,24 +287,39 @@ export class FloriaApiClient {
   }
 
   // Health check
-  public async getHealth(): Promise<ApiResponse<{ status: string; service: string }>> {
+  public async getHealth(): Promise<
+    ApiResponse<{ status: string; service: string }>
+  > {
     return this.request<{ status: string; service: string }>("/health");
   }
 
-  public async getReadiness(): Promise<ApiResponse<{ status: string; database: string }>> {
+  public async getReadiness(): Promise<
+    ApiResponse<{ status: string; database: string }>
+  > {
     return this.request<{ status: string; database: string }>("/ready");
   }
 
   // Public Catalog API (/api/v1/catalog)
-  public async getProducts(params?: QueryParams, options: RequestInit = {}): Promise<ApiResponse<any[]>> {
-    return this.request<any[]>(`/api/v1/catalog/products${buildQueryString(params)}`, options);
+  public async getProducts(
+    params?: QueryParams,
+    options: RequestInit = {},
+  ): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>(
+      `/api/v1/catalog/products${buildQueryString(params)}`,
+      options,
+    );
   }
 
-  public async getProductBySlug(slug: string, options: RequestInit = {}): Promise<ApiResponse<any>> {
+  public async getProductBySlug(
+    slug: string,
+    options: RequestInit = {},
+  ): Promise<ApiResponse<any>> {
     return this.request<any>(`/api/v1/catalog/products/${slug}`, options);
   }
 
-  public async getCategories(options: RequestInit = {}): Promise<ApiResponse<any[]>> {
+  public async getCategories(
+    options: RequestInit = {},
+  ): Promise<ApiResponse<any[]>> {
     return this.request<any[]>("/api/v1/catalog/categories", options);
   }
 
@@ -286,14 +328,20 @@ export class FloriaApiClient {
     return this.request<any>("/api/v1/customer/cart");
   }
 
-  public async addToCart(productId: string, quantity: number): Promise<ApiResponse<any>> {
+  public async addToCart(
+    productId: string,
+    quantity: number,
+  ): Promise<ApiResponse<any>> {
     return this.request<any>("/api/v1/customer/cart/items", {
       method: "POST",
       body: JSON.stringify({ productId, quantity }),
     });
   }
 
-  public async updateCartQuantity(productId: string, quantity: number): Promise<ApiResponse<any>> {
+  public async updateCartQuantity(
+    productId: string,
+    quantity: number,
+  ): Promise<ApiResponse<any>> {
     return this.request<any>(`/api/v1/customer/cart/items/${productId}`, {
       method: "PATCH",
       body: JSON.stringify({ quantity }),
@@ -312,7 +360,9 @@ export class FloriaApiClient {
     });
   }
 
-  public async mergeCart(items: Array<{ productId: string; quantity: number }>): Promise<ApiResponse<any>> {
+  public async mergeCart(
+    items: Array<{ productId: string; quantity: number }>,
+  ): Promise<ApiResponse<any>> {
     return this.request<any>("/api/v1/customer/cart/merge", {
       method: "POST",
       body: JSON.stringify({ items }),
@@ -331,7 +381,9 @@ export class FloriaApiClient {
     });
   }
 
-  public async removeFromWishlist(productId: string): Promise<ApiResponse<any>> {
+  public async removeFromWishlist(
+    productId: string,
+  ): Promise<ApiResponse<any>> {
     return this.request<any>(`/api/v1/customer/wishlist/items/${productId}`, {
       method: "DELETE",
     });
@@ -373,27 +425,42 @@ export class FloriaApiClient {
     });
   }
 
-  public async updateAddress(addressId: string, addressData: any): Promise<ApiResponse<any>> {
+  public async updateAddress(
+    addressId: string,
+    addressData: any,
+  ): Promise<ApiResponse<any>> {
     return this.request<any>(`/api/v1/customer/users/addresses/${addressId}`, {
       method: "PATCH",
       body: JSON.stringify(addressData),
     });
   }
 
-  public async setDefaultAddress(addressId: string): Promise<ApiResponse<any[]>> {
-    return this.request<any[]>(`/api/v1/customer/users/addresses/${addressId}/default`, {
-      method: "PATCH",
-    });
+  public async setDefaultAddress(
+    addressId: string,
+  ): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>(
+      `/api/v1/customer/users/addresses/${addressId}/default`,
+      {
+        method: "PATCH",
+      },
+    );
   }
 
   public async deleteAddress(addressId: string): Promise<ApiResponse<any[]>> {
-    return this.request<any[]>(`/api/v1/customer/users/addresses/${addressId}`, {
-      method: "DELETE",
-    });
+    return this.request<any[]>(
+      `/api/v1/customer/users/addresses/${addressId}`,
+      {
+        method: "DELETE",
+      },
+    );
   }
 
   // Customer Checkout & Orders
-  public async createCheckout(data: { addressId?: string; address?: any; paymentMethod: "online" | "cod" }): Promise<ApiResponse<{ orderId: string }>> {
+  public async createCheckout(data: {
+    addressId?: string;
+    address?: any;
+    paymentMethod: "online" | "cod";
+  }): Promise<ApiResponse<{ orderId: string }>> {
     return this.request<{ orderId: string }>("/api/v1/customer/checkout", {
       method: "POST",
       body: JSON.stringify(data),
@@ -401,47 +468,69 @@ export class FloriaApiClient {
   }
 
   // Cashfree Payment Session & Verification
-  public async createPaymentSession(orderId: string): Promise<ApiResponse<{
-    paymentId: string;
-    paymentSessionId: string;
-    cfOrderId: string;
-    orderId: string;
-    amountPaise: number;
-    currency: string;
-    environment: "SANDBOX" | "PRODUCTION";
-  }>> {
+  public async createPaymentSession(orderId: string): Promise<
+    ApiResponse<{
+      paymentId: string;
+      paymentSessionId: string;
+      cfOrderId: string;
+      orderId: string;
+      amountPaise: number;
+      currency: string;
+      environment: "SANDBOX" | "PRODUCTION";
+    }>
+  > {
     return this.request<any>("/api/v1/payments/create-session", {
       method: "POST",
       body: JSON.stringify({ orderId }),
     });
   }
 
-  public async getOrderByCfOrderId(cfOrderId: string): Promise<ApiResponse<{ orderId: string }>> {
-    return this.request<{ orderId: string }>(`/api/v1/payments/lookup-order?cf_order_id=${encodeURIComponent(cfOrderId)}`);
+  public async getOrderByCfOrderId(
+    cfOrderId: string,
+  ): Promise<ApiResponse<{ orderId: string }>> {
+    return this.request<{ orderId: string }>(
+      `/api/v1/payments/lookup-order?cf_order_id=${encodeURIComponent(cfOrderId)}`,
+    );
   }
 
   public async getPaymentStatus(paymentId: string): Promise<ApiResponse<any>> {
     return this.request<any>(`/api/v1/payments/${paymentId}/status`);
   }
 
-  public async requestRefund(paymentId: string, amountPaise: number, reason?: string): Promise<ApiResponse<any>> {
+  public async requestRefund(
+    paymentId: string,
+    amountPaise: number,
+    reason?: string,
+  ): Promise<ApiResponse<any>> {
     return this.request<any>(`/api/v1/payments/${paymentId}/refund`, {
       method: "POST",
       body: JSON.stringify({ amountPaise, reason }),
     });
   }
 
-  public async getAdminTransactions(params?: { status?: string; search?: string; limit?: number }): Promise<ApiResponse<any[]>> {
+  public async getAdminTransactions(params?: {
+    status?: string;
+    search?: string;
+    limit?: number;
+  }): Promise<ApiResponse<any[]>> {
     const query = new URLSearchParams();
     if (params?.status) query.set("status", params.status);
     if (params?.search) query.set("search", params.search);
     if (params?.limit) query.set("limit", String(params.limit));
     const qStr = query.toString();
-    return this.request<any[]>(`/api/v1/payments/admin/all${qStr ? `?${qStr}` : ""}`);
+    return this.request<any[]>(
+      `/api/v1/payments/admin/all${qStr ? `?${qStr}` : ""}`,
+    );
   }
 
   // Admin Media & Images Management
-  public async getAdminMedia(params?: { category?: string; status?: string; search?: string; page?: number; limit?: number }): Promise<ApiResponse<any>> {
+  public async getAdminMedia(params?: {
+    category?: string;
+    status?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<ApiResponse<any>> {
     const query = new URLSearchParams();
     if (params?.category) query.set("category", params.category);
     if (params?.status) query.set("status", params.status);
@@ -452,7 +541,10 @@ export class FloriaApiClient {
     return this.request<any>(`/api/v1/admin/media${qStr ? `?${qStr}` : ""}`);
   }
 
-  public async updateAdminMedia(id: string, data: { filename?: string; altText?: string; category?: string }): Promise<ApiResponse<any>> {
+  public async updateAdminMedia(
+    id: string,
+    data: { filename?: string; altText?: string; category?: string },
+  ): Promise<ApiResponse<any>> {
     return this.request<any>(`/api/v1/admin/media/${id}`, {
       method: "PATCH",
       body: JSON.stringify(data),
@@ -465,7 +557,12 @@ export class FloriaApiClient {
     });
   }
 
-  public async uploadAdminMedia(data: { filename: string; mimeType: string; base64Data: string; profile?: string }): Promise<ApiResponse<any>> {
+  public async uploadAdminMedia(data: {
+    filename: string;
+    mimeType: string;
+    base64Data: string;
+    profile?: string;
+  }): Promise<ApiResponse<any>> {
     return this.request<any>("/api/v1/admin/media/upload", {
       method: "POST",
       body: JSON.stringify(data),
@@ -503,8 +600,12 @@ export class FloriaApiClient {
     return this.request<any>("/api/v1/seller/applications");
   }
 
-  public async getSellerProducts(params?: QueryParams): Promise<ApiResponse<any[]>> {
-    return this.request<any[]>(`/api/v1/seller/products${buildQueryString(params)}`);
+  public async getSellerProducts(
+    params?: QueryParams,
+  ): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>(
+      `/api/v1/seller/products${buildQueryString(params)}`,
+    );
   }
 
   public async getSellerProductById(id: string): Promise<ApiResponse<any>> {
@@ -518,7 +619,10 @@ export class FloriaApiClient {
     });
   }
 
-  public async updateSellerProduct(id: string, data: any): Promise<ApiResponse<any>> {
+  public async updateSellerProduct(
+    id: string,
+    data: any,
+  ): Promise<ApiResponse<any>> {
     return this.request<any>(`/api/v1/seller/products/${id}`, {
       method: "PATCH",
       body: JSON.stringify(data),
@@ -531,7 +635,10 @@ export class FloriaApiClient {
     });
   }
 
-  public async updateSellerProductStatus(id: string, status: "active" | "draft" | "inactive"): Promise<ApiResponse<any>> {
+  public async updateSellerProductStatus(
+    id: string,
+    status: "active" | "draft" | "inactive",
+  ): Promise<ApiResponse<any>> {
     return this.request<any>(`/api/v1/seller/products/${id}/status`, {
       method: "PATCH",
       body: JSON.stringify({ status }),
@@ -552,52 +659,87 @@ export class FloriaApiClient {
     });
   }
 
-  public async completeMediaUploadSession(sessionId: string): Promise<ApiResponse<any>> {
-    return this.request<any>(`/api/v1/media/upload-session/${sessionId}/complete`, {
-      method: "POST",
-    });
+  public async completeMediaUploadSession(
+    sessionId: string,
+  ): Promise<ApiResponse<any>> {
+    return this.request<any>(
+      `/api/v1/media/upload-session/${sessionId}/complete`,
+      {
+        method: "POST",
+      },
+    );
   }
 
-  public async getMediaUploadSessionStatus(sessionId: string): Promise<ApiResponse<any>> {
+  public async getMediaUploadSessionStatus(
+    sessionId: string,
+  ): Promise<ApiResponse<any>> {
     return this.request<any>(`/api/v1/media/upload-session/${sessionId}`);
   }
 
-  public async attachProductImage(productId: string, params: {
-    assetId: string;
-    altText?: string;
-    isPrimary?: boolean;
-    displayOrder?: number;
-  }): Promise<ApiResponse<any>> {
+  public async attachProductImage(
+    productId: string,
+    params: {
+      assetId: string;
+      altText?: string;
+      isPrimary?: boolean;
+      displayOrder?: number;
+    },
+  ): Promise<ApiResponse<any>> {
     return this.request<any>(`/api/v1/seller/products/${productId}/images`, {
       method: "POST",
       body: JSON.stringify(params),
     });
   }
 
-  public async removeProductImage(productId: string, imageId: string): Promise<ApiResponse<any>> {
-    return this.request<any>(`/api/v1/seller/products/${productId}/images/${imageId}`, {
-      method: "DELETE",
-    });
+  public async removeProductImage(
+    productId: string,
+    imageId: string,
+  ): Promise<ApiResponse<any>> {
+    return this.request<any>(
+      `/api/v1/seller/products/${productId}/images/${imageId}`,
+      {
+        method: "DELETE",
+      },
+    );
   }
 
-  public async reorderProductImages(productId: string, imageOrders: Array<{ imageId: string; displayOrder: number }>): Promise<ApiResponse<any>> {
-    return this.request<any>(`/api/v1/seller/products/${productId}/images/reorder`, {
-      method: "PATCH",
-      body: JSON.stringify({ imageOrders }),
-    });
+  public async reorderProductImages(
+    productId: string,
+    imageOrders: Array<{ imageId: string; displayOrder: number }>,
+  ): Promise<ApiResponse<any>> {
+    return this.request<any>(
+      `/api/v1/seller/products/${productId}/images/reorder`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ imageOrders }),
+      },
+    );
   }
 
-  public async setPrimaryProductImage(productId: string, imageId: string): Promise<ApiResponse<any>> {
-    return this.request<any>(`/api/v1/seller/products/${productId}/images/${imageId}/primary`, {
-      method: "PATCH",
-    });
+  public async setPrimaryProductImage(
+    productId: string,
+    imageId: string,
+  ): Promise<ApiResponse<any>> {
+    return this.request<any>(
+      `/api/v1/seller/products/${productId}/images/${imageId}/primary`,
+      {
+        method: "PATCH",
+      },
+    );
   }
 
-  public async replaceProductImage(productId: string, imageId: string, params: { assetId: string; altText?: string }): Promise<ApiResponse<any>> {
-    return this.request<any>(`/api/v1/seller/products/${productId}/images/${imageId}`, {
-      method: "PUT",
-      body: JSON.stringify(params),
-    });
+  public async replaceProductImage(
+    productId: string,
+    imageId: string,
+    params: { assetId: string; altText?: string },
+  ): Promise<ApiResponse<any>> {
+    return this.request<any>(
+      `/api/v1/seller/products/${productId}/images/${imageId}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(params),
+      },
+    );
   }
 
   // ── STAGE 9 REMAINING MEDIA DOMAIN INTEGRATIONS ─────────────────────────
@@ -616,29 +758,43 @@ export class FloriaApiClient {
     });
   }
 
-  public async updateCategoryBanner(categoryId: string, assetId: string): Promise<ApiResponse<any>> {
+  public async updateCategoryBanner(
+    categoryId: string,
+    assetId: string,
+  ): Promise<ApiResponse<any>> {
     return this.request<any>(`/api/v1/media/category-banner/${categoryId}`, {
       method: "PATCH",
       body: JSON.stringify({ assetId }),
     });
   }
 
-  public async attachReviewImage(reviewId: string, assetId: string, displayOrder = 0): Promise<ApiResponse<any>> {
+  public async attachReviewImage(
+    reviewId: string,
+    assetId: string,
+    displayOrder = 0,
+  ): Promise<ApiResponse<any>> {
     return this.request<any>(`/api/v1/media/reviews/${reviewId}/images`, {
       method: "POST",
       body: JSON.stringify({ assetId, displayOrder }),
     });
   }
 
-  public async attachSellerDocument(documentType: string, fileAssetId: string): Promise<ApiResponse<any>> {
+  public async attachSellerDocument(
+    documentType: string,
+    fileAssetId: string,
+  ): Promise<ApiResponse<any>> {
     return this.request<any>("/api/v1/media/seller-documents", {
       method: "POST",
       body: JSON.stringify({ documentType, fileAssetId }),
     });
   }
 
-  public async getSignedDocumentUrl(documentId: string): Promise<ApiResponse<{ signedUrl: string; filename?: string }>> {
-    return this.request<{ signedUrl: string; filename?: string }>(`/api/v1/media/seller-documents/${documentId}/download`);
+  public async getSignedDocumentUrl(
+    documentId: string,
+  ): Promise<ApiResponse<{ signedUrl: string; filename?: string }>> {
+    return this.request<{ signedUrl: string; filename?: string }>(
+      `/api/v1/media/seller-documents/${documentId}/download`,
+    );
   }
 
   public async updateNurseryBanner(assetId: string): Promise<ApiResponse<any>> {
@@ -652,22 +808,32 @@ export class FloriaApiClient {
     return this.request<any[]>("/api/v1/seller/inventory");
   }
 
-  public async updateSellerInventory(productId: string, data: any): Promise<ApiResponse<any>> {
+  public async updateSellerInventory(
+    productId: string,
+    data: any,
+  ): Promise<ApiResponse<any>> {
     return this.request<any>(`/api/v1/seller/inventory/${productId}`, {
       method: "PATCH",
       body: JSON.stringify(data),
     });
   }
 
-  public async getSellerOrders(params?: QueryParams): Promise<ApiResponse<any[]>> {
-    return this.request<any[]>(`/api/v1/seller/orders${buildQueryString(params)}`);
+  public async getSellerOrders(
+    params?: QueryParams,
+  ): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>(
+      `/api/v1/seller/orders${buildQueryString(params)}`,
+    );
   }
 
   public async getSellerOrderById(id: string): Promise<ApiResponse<any>> {
     return this.request<any>(`/api/v1/seller/orders/${id}`);
   }
 
-  public async updateFulfillmentStatus(masterOrderId: string, newStatus: string): Promise<ApiResponse<any>> {
+  public async updateFulfillmentStatus(
+    masterOrderId: string,
+    newStatus: string,
+  ): Promise<ApiResponse<any>> {
     return this.request<any>("/api/v1/seller/fulfillment", {
       method: "POST",
       body: JSON.stringify({ masterOrderId, newStatus }),
@@ -686,8 +852,12 @@ export class FloriaApiClient {
     return this.request<any>("/api/v1/seller/payouts");
   }
 
-  public async getSellerAnalytics(params?: QueryParams): Promise<ApiResponse<any>> {
-    return this.request<any>(`/api/v1/seller/analytics${buildQueryString(params)}`);
+  public async getSellerAnalytics(
+    params?: QueryParams,
+  ): Promise<ApiResponse<any>> {
+    return this.request<any>(
+      `/api/v1/seller/analytics${buildQueryString(params)}`,
+    );
   }
 
   public async getSellerDocuments(): Promise<ApiResponse<SellerDocument[]>> {
@@ -707,24 +877,41 @@ export class FloriaApiClient {
     });
   }
 
-  public async getSellerNotificationSettings(): Promise<ApiResponse<SellerNotificationSettings>> {
-    return this.request<SellerNotificationSettings>("/api/v1/seller/settings/notifications");
+  public async getSellerNotificationSettings(): Promise<
+    ApiResponse<SellerNotificationSettings>
+  > {
+    return this.request<SellerNotificationSettings>(
+      "/api/v1/seller/settings/notifications",
+    );
   }
 
-  public async updateSellerNotificationSettings(settings: Partial<SellerNotificationSettings>): Promise<ApiResponse<SellerNotificationSettings>> {
-    return this.request<SellerNotificationSettings>("/api/v1/seller/settings/notifications", {
-      method: "PATCH",
-      body: JSON.stringify(settings),
-    });
+  public async updateSellerNotificationSettings(
+    settings: Partial<SellerNotificationSettings>,
+  ): Promise<ApiResponse<SellerNotificationSettings>> {
+    return this.request<SellerNotificationSettings>(
+      "/api/v1/seller/settings/notifications",
+      {
+        method: "PATCH",
+        body: JSON.stringify(settings),
+      },
+    );
   }
 
   // ── Notifications API (/api/v1/notifications) ─────────────────────────────
-  public async getNotifications(params?: QueryParams): Promise<ApiResponse<NotificationListResponse>> {
-    return this.request<NotificationListResponse>(`/api/v1/notifications${buildQueryString(params)}`);
+  public async getNotifications(
+    params?: QueryParams,
+  ): Promise<ApiResponse<NotificationListResponse>> {
+    return this.request<NotificationListResponse>(
+      `/api/v1/notifications${buildQueryString(params)}`,
+    );
   }
 
-  public async getUnreadNotificationCount(): Promise<ApiResponse<{ unreadCount: number }>> {
-    return this.request<{ unreadCount: number }>("/api/v1/notifications/unread-count");
+  public async getUnreadNotificationCount(): Promise<
+    ApiResponse<{ unreadCount: number }>
+  > {
+    return this.request<{ unreadCount: number }>(
+      "/api/v1/notifications/unread-count",
+    );
   }
 
   public async markNotificationRead(id: string): Promise<ApiResponse<any>> {
@@ -758,55 +945,83 @@ export class FloriaApiClient {
     return this.request<any>("/api/v1/admin/dashboard");
   }
 
-  public async getAdminAnalytics(params?: QueryParams): Promise<ApiResponse<any>> {
-    return this.request<any>(`/api/v1/admin/analytics${buildQueryString(params)}`);
+  public async getAdminAnalytics(
+    params?: QueryParams,
+  ): Promise<ApiResponse<any>> {
+    return this.request<any>(
+      `/api/v1/admin/analytics${buildQueryString(params)}`,
+    );
   }
 
-  public async updateAdminUser(id: string, payload: any): Promise<ApiResponse<any>> {
+  public async updateAdminUser(
+    id: string,
+    payload: any,
+  ): Promise<ApiResponse<any>> {
     return this.request<any>(`/api/v1/admin/users/${id}`, {
       method: "PATCH",
       body: JSON.stringify(payload),
     });
   }
 
-  public async updateAdminSeller(id: string, payload: any): Promise<ApiResponse<any>> {
+  public async updateAdminSeller(
+    id: string,
+    payload: any,
+  ): Promise<ApiResponse<any>> {
     return this.request<any>(`/api/v1/admin/sellers/${id}`, {
       method: "PATCH",
       body: JSON.stringify(payload),
     });
   }
 
-  public async updateAdminProduct(id: string, payload: any): Promise<ApiResponse<any>> {
+  public async updateAdminProduct(
+    id: string,
+    payload: any,
+  ): Promise<ApiResponse<any>> {
     return this.request<any>(`/api/v1/admin/products/${id}`, {
       method: "PATCH",
       body: JSON.stringify(payload),
     });
   }
 
-  public async updateAdminOrder(id: string, payload: any): Promise<ApiResponse<any>> {
+  public async updateAdminOrder(
+    id: string,
+    payload: any,
+  ): Promise<ApiResponse<any>> {
     return this.request<any>(`/api/v1/admin/orders/${id}`, {
       method: "PATCH",
       body: JSON.stringify(payload),
     });
   }
 
-  public async getAdminUsers(params?: QueryParams): Promise<ApiResponse<any[]>> {
-    return this.request<any[]>(`/api/v1/admin/users${buildQueryString(params)}`);
+  public async getAdminUsers(
+    params?: QueryParams,
+  ): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>(
+      `/api/v1/admin/users${buildQueryString(params)}`,
+    );
   }
 
   public async getAdminUserById(id: string): Promise<ApiResponse<any>> {
     return this.request<any>(`/api/v1/admin/users/${id}`);
   }
 
-  public async updateAdminUserStatus(id: string, status: "active" | "suspended", rationale?: string): Promise<ApiResponse<any>> {
+  public async updateAdminUserStatus(
+    id: string,
+    status: "active" | "suspended",
+    rationale?: string,
+  ): Promise<ApiResponse<any>> {
     return this.request<any>(`/api/v1/admin/users/${id}/status`, {
       method: "PATCH",
       body: JSON.stringify({ status, rationale }),
     });
   }
 
-  public async getAdminSellers(params?: QueryParams): Promise<ApiResponse<any[]>> {
-    return this.request<any[]>(`/api/v1/admin/sellers${buildQueryString(params)}`);
+  public async getAdminSellers(
+    params?: QueryParams,
+  ): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>(
+      `/api/v1/admin/sellers${buildQueryString(params)}`,
+    );
   }
 
   public async getAdminSellerById(id: string): Promise<ApiResponse<any>> {
@@ -841,15 +1056,22 @@ export class FloriaApiClient {
     return this.request<any>(`/api/v1/admin/sellers/${id}/documents`);
   }
 
-  public async getAdminProducts(params?: QueryParams): Promise<ApiResponse<any[]>> {
-    return this.request<any[]>(`/api/v1/admin/products${buildQueryString(params)}`);
+  public async getAdminProducts(
+    params?: QueryParams,
+  ): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>(
+      `/api/v1/admin/products${buildQueryString(params)}`,
+    );
   }
 
   public async getAdminProductById(id: string): Promise<ApiResponse<any>> {
     return this.request<any>(`/api/v1/admin/products/${id}`);
   }
 
-  public async updateAdminProductStatus(id: string, status: string): Promise<ApiResponse<any>> {
+  public async updateAdminProductStatus(
+    id: string,
+    status: string,
+  ): Promise<ApiResponse<any>> {
     return this.request<any>(`/api/v1/admin/products/${id}/status`, {
       method: "PATCH",
       body: JSON.stringify({ status }),
@@ -857,23 +1079,33 @@ export class FloriaApiClient {
   }
 
   public async publishProduct(id: string): Promise<ApiResponse<any>> {
-    return this.request<any>(`/api/v1/admin/products/${id}/publish`, { method: "PATCH" });
+    return this.request<any>(`/api/v1/admin/products/${id}/publish`, {
+      method: "PATCH",
+    });
   }
 
   public async unpublishProduct(id: string): Promise<ApiResponse<any>> {
-    return this.request<any>(`/api/v1/admin/products/${id}/unpublish`, { method: "PATCH" });
+    return this.request<any>(`/api/v1/admin/products/${id}/unpublish`, {
+      method: "PATCH",
+    });
   }
 
   public async archiveProduct(id: string): Promise<ApiResponse<any>> {
-    return this.request<any>(`/api/v1/admin/products/${id}/archive`, { method: "PATCH" });
+    return this.request<any>(`/api/v1/admin/products/${id}/archive`, {
+      method: "PATCH",
+    });
   }
 
   public async getAdminCategories(): Promise<ApiResponse<any[]>> {
     return this.request<any[]>("/api/v1/admin/categories");
   }
 
-  public async getCategoryProductsCount(id: string): Promise<ApiResponse<{ categoryId: string; activeProductsCount: number }>> {
-    return this.request<{ categoryId: string; activeProductsCount: number }>(`/api/v1/admin/categories/${id}/products-count`);
+  public async getCategoryProductsCount(
+    id: string,
+  ): Promise<ApiResponse<{ categoryId: string; activeProductsCount: number }>> {
+    return this.request<{ categoryId: string; activeProductsCount: number }>(
+      `/api/v1/admin/categories/${id}/products-count`,
+    );
   }
 
   public async createAdminCategory(data: any): Promise<ApiResponse<any>> {
@@ -883,15 +1115,22 @@ export class FloriaApiClient {
     });
   }
 
-  public async updateAdminCategory(id: string, data: any): Promise<ApiResponse<any>> {
+  public async updateAdminCategory(
+    id: string,
+    data: any,
+  ): Promise<ApiResponse<any>> {
     return this.request<any>(`/api/v1/admin/categories/${id}`, {
       method: "PATCH",
       body: JSON.stringify(data),
     });
   }
 
-  public async getAdminOrders(params?: QueryParams): Promise<ApiResponse<any[]>> {
-    return this.request<any[]>(`/api/v1/admin/orders${buildQueryString(params)}`);
+  public async getAdminOrders(
+    params?: QueryParams,
+  ): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>(
+      `/api/v1/admin/orders${buildQueryString(params)}`,
+    );
   }
 
   public async getAdminOrderById(id: string): Promise<ApiResponse<any>> {
@@ -899,18 +1138,29 @@ export class FloriaApiClient {
   }
 
   public async getAuditLogs(params?: QueryParams): Promise<ApiResponse<any[]>> {
-    return this.request<any[]>(`/api/v1/admin/audit-logs${buildQueryString(params)}`);
+    return this.request<any[]>(
+      `/api/v1/admin/audit-logs${buildQueryString(params)}`,
+    );
   }
 
-  public async getPlatformSettings(): Promise<ApiResponse<{ commissionRate: number }>> {
-    return this.request<{ commissionRate: number }>("/api/v1/admin/settings/platform");
+  public async getPlatformSettings(): Promise<
+    ApiResponse<{ commissionRate: number }>
+  > {
+    return this.request<{ commissionRate: number }>(
+      "/api/v1/admin/settings/platform",
+    );
   }
 
-  public async updateCommissionRate(commissionRate: number): Promise<ApiResponse<{ commissionRate: number }>> {
-    return this.request<{ commissionRate: number }>("/api/v1/admin/settings/commission", {
-      method: "PATCH",
-      body: JSON.stringify({ commissionRate }),
-    });
+  public async updateCommissionRate(
+    commissionRate: number,
+  ): Promise<ApiResponse<{ commissionRate: number }>> {
+    return this.request<{ commissionRate: number }>(
+      "/api/v1/admin/settings/commission",
+      {
+        method: "PATCH",
+        body: JSON.stringify({ commissionRate }),
+      },
+    );
   }
 
   // ── Operations API (/api/v1/operations) ──────────────────────────────────
@@ -918,19 +1168,40 @@ export class FloriaApiClient {
     return this.request<any>("/api/v1/operations/health");
   }
 
-  public async getOperationsDashboard(): Promise<ApiResponse<any>> {
-    return this.request<any>("/api/v1/operations/dashboard");
+  public async getOperationsDashboard(): Promise<
+    ApiResponse<{
+      pendingPickup: number;
+      packing: number;
+      outForDelivery: number;
+      delivered: number;
+      totalActiveDeliveries: number;
+    }>
+  > {
+    return this.request<{
+      pendingPickup: number;
+      packing: number;
+      outForDelivery: number;
+      delivered: number;
+      totalActiveDeliveries: number;
+    }>("/api/v1/operations/dashboard");
   }
 
-  public async getOperationsOrders(params?: QueryParams): Promise<ApiResponse<any[]>> {
-    return this.request<any[]>(`/api/v1/operations/orders${buildQueryString(params)}`);
+  public async getOperationsOrders(
+    params?: QueryParams,
+  ): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>(
+      `/api/v1/operations/orders${buildQueryString(params)}`,
+    );
   }
 
   public async getOperationsOrderById(id: string): Promise<ApiResponse<any>> {
     return this.request<any>(`/api/v1/operations/orders/${id}`);
   }
 
-  public async updateOperationsOrderStatus(id: string, status: string): Promise<ApiResponse<any>> {
+  public async updateOperationsOrderStatus(
+    id: string,
+    status: string,
+  ): Promise<ApiResponse<any>> {
     return this.request<any>(`/api/v1/operations/orders/${id}/status`, {
       method: "POST",
       body: JSON.stringify({ status }),
@@ -938,53 +1209,161 @@ export class FloriaApiClient {
   }
 
   public async getPickups(params?: QueryParams): Promise<ApiResponse<any[]>> {
-    return this.request<any[]>(`/api/v1/operations/pickups${buildQueryString(params)}`);
+    return this.request<any[]>(
+      `/api/v1/operations/pickups${buildQueryString(params)}`,
+    );
   }
 
-  public async updatePickupStatus(id: string, status: string, notes?: string): Promise<ApiResponse<any>> {
+  public async updatePickupStatus(
+    id: string,
+    status: string,
+    notes?: string,
+  ): Promise<ApiResponse<any>> {
     return this.request<any>(`/api/v1/operations/pickups/${id}/status`, {
       method: "POST",
       body: JSON.stringify({ status, notes }),
     });
   }
 
-  public async getPackingTasks(params?: QueryParams): Promise<ApiResponse<any[]>> {
-    return this.request<any[]>(`/api/v1/operations/packing${buildQueryString(params)}`);
+  public async getPackingTasks(
+    params?: QueryParams,
+  ): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>(
+      `/api/v1/operations/packing${buildQueryString(params)}`,
+    );
   }
 
-  public async updatePackingTask(id: string, status: string, verifiedItemsCount?: number): Promise<ApiResponse<any>> {
+  public async updatePackingTask(
+    id: string,
+    status: string,
+    verifiedItemsCount?: number,
+  ): Promise<ApiResponse<any>> {
     return this.request<any>(`/api/v1/operations/packing/${id}/status`, {
       method: "POST",
       body: JSON.stringify({ status, verifiedItemsCount }),
     });
   }
 
-  public async getDeliveries(params?: QueryParams): Promise<ApiResponse<any[]>> {
-    return this.request<any[]>(`/api/v1/operations/deliveries${buildQueryString(params)}`);
+  public async getDeliveries(
+    params?: QueryParams,
+  ): Promise<ApiResponse<import("@floria/types").DeliveryAssignment[]>> {
+    return this.request<import("@floria/types").DeliveryAssignment[]>(
+      `/api/v1/operations/deliveries${buildQueryString(params)}`,
+    );
   }
 
-  public async getDeliveryById(id: string): Promise<ApiResponse<any>> {
-    return this.request<any>(`/api/v1/operations/deliveries/${id}`);
+  public async getDeliveryById(
+    id: string,
+  ): Promise<ApiResponse<import("@floria/types").DeliveryAssignment>> {
+    return this.request<import("@floria/types").DeliveryAssignment>(
+      `/api/v1/operations/deliveries/${id}`,
+    );
   }
 
-  public async assignDelivery(id: string, data: { assignedTo: string }): Promise<ApiResponse<any>> {
-    return this.request<any>(`/api/v1/operations/deliveries/${id}/assign`, {
+  public async assignDelivery(
+    id: string,
+    data: { assignedTo: string },
+  ): Promise<ApiResponse<import("@floria/types").DeliveryAssignment>> {
+    return this.request<import("@floria/types").DeliveryAssignment>(
+      `/api/v1/operations/deliveries/${id}/assign`,
+      {
+        method: "POST",
+        body: JSON.stringify(data),
+      },
+    );
+  }
+
+  public async reassignDelivery(
+    id: string,
+    data: { assignedTo: string },
+  ): Promise<ApiResponse<import("@floria/types").DeliveryAssignment>> {
+    return this.request<import("@floria/types").DeliveryAssignment>(
+      `/api/v1/operations/deliveries/${id}/reassign`,
+      {
+        method: "POST",
+        body: JSON.stringify(data),
+      },
+    );
+  }
+
+  public async updateDeliveryStatus(
+    id: string,
+    status: import("@floria/types").DeliveryAssignmentStatus | string,
+  ): Promise<ApiResponse<import("@floria/types").DeliveryAssignment>> {
+    return this.request<import("@floria/types").DeliveryAssignment>(
+      `/api/v1/operations/deliveries/${id}/status`,
+      {
+        method: "POST",
+        body: JSON.stringify({ status }),
+      },
+    );
+  }
+
+  public async completeDeliveryWithPod(
+    id: string,
+    data: import("@floria/types").CompleteDeliveryPayload,
+  ): Promise<ApiResponse<import("@floria/types").DeliveryAssignment>> {
+    return this.request<import("@floria/types").DeliveryAssignment>(
+      `/api/v1/operations/deliveries/${id}/complete`,
+      {
+        method: "POST",
+        body: JSON.stringify(data),
+      },
+    );
+  }
+
+  public async getDeliveryPod(
+    id: string,
+  ): Promise<ApiResponse<import("@floria/types").DeliveryPodDetails>> {
+    return this.request<import("@floria/types").DeliveryPodDetails>(
+      `/api/v1/operations/deliveries/${id}/pod`,
+    );
+  }
+
+  // ── Media Upload Sessions (/api/v1/media) ──────────────────────────────────
+  public async createUploadSession(data: {
+    profile: string;
+    filename: string;
+    mimeType: string;
+    sizeBytes: number;
+  }): Promise<
+    ApiResponse<{
+      sessionId: string;
+      assetId: string;
+      stagingPath: string;
+      signedUploadUrl?: string;
+      expiresAt: string;
+    }>
+  > {
+    return this.request<{
+      sessionId: string;
+      assetId: string;
+      stagingPath: string;
+      signedUploadUrl?: string;
+      expiresAt: string;
+    }>("/api/v1/media/upload-session", {
       method: "POST",
       body: JSON.stringify(data),
     });
   }
 
-  public async reassignDelivery(id: string, data: { assignedTo: string }): Promise<ApiResponse<any>> {
-    return this.request<any>(`/api/v1/operations/deliveries/${id}/reassign`, {
+  public async completeUploadSession(sessionId: string): Promise<
+    ApiResponse<{
+      sessionId: string;
+      assetId: string;
+      sessionStatus: string;
+      assetStatus: string;
+      deduplicated: boolean;
+    }>
+  > {
+    return this.request<{
+      sessionId: string;
+      assetId: string;
+      sessionStatus: string;
+      assetStatus: string;
+      deduplicated: boolean;
+    }>(`/api/v1/media/upload-session/${sessionId}/complete`, {
       method: "POST",
-      body: JSON.stringify(data),
-    });
-  }
-
-  public async updateDeliveryStatus(id: string, status: string): Promise<ApiResponse<any>> {
-    return this.request<any>(`/api/v1/operations/deliveries/${id}/status`, {
-      method: "POST",
-      body: JSON.stringify({ status }),
     });
   }
 
@@ -992,24 +1371,32 @@ export class FloriaApiClient {
 
   public async getProductReviews(
     productId: string,
-    params?: { page?: number; pageSize?: number }
+    params?: { page?: number; pageSize?: number },
   ): Promise<ApiResponse<ReviewListResponse>> {
     return this.request<ReviewListResponse>(
-      `/api/v1/catalog/products/${productId}/reviews${buildQueryString(params)}`
+      `/api/v1/catalog/products/${productId}/reviews${buildQueryString(params)}`,
     );
   }
 
   public async getReviewEligibility(
-    productId: string
-  ): Promise<ApiResponse<{ canReview: boolean; reason?: string; userReview?: ProductReview | null }>> {
-    return this.request<{ canReview: boolean; reason?: string; userReview?: ProductReview | null }>(
-      `/api/v1/catalog/products/${productId}/review-eligibility`
-    );
+    productId: string,
+  ): Promise<
+    ApiResponse<{
+      canReview: boolean;
+      reason?: string;
+      userReview?: ProductReview | null;
+    }>
+  > {
+    return this.request<{
+      canReview: boolean;
+      reason?: string;
+      userReview?: ProductReview | null;
+    }>(`/api/v1/catalog/products/${productId}/review-eligibility`);
   }
 
   public async submitReview(
     productId: string,
-    payload: { rating: number; title?: string; body?: string }
+    payload: { rating: number; title?: string; body?: string },
   ): Promise<ApiResponse<{ id: string; status: string; created_at: string }>> {
     return this.request(`/api/v1/catalog/products/${productId}/reviews`, {
       method: "POST",
@@ -1019,7 +1406,7 @@ export class FloriaApiClient {
 
   public async updateMyReview(
     reviewId: string,
-    payload: { rating?: number; title?: string; body?: string }
+    payload: { rating?: number; title?: string; body?: string },
   ): Promise<ApiResponse<ProductReview>> {
     return this.request<ProductReview>(`/api/v1/customer/reviews/${reviewId}`, {
       method: "PATCH",
@@ -1029,45 +1416,55 @@ export class FloriaApiClient {
 
   public async markReviewHelpful(
     productId: string,
-    reviewId: string
+    reviewId: string,
   ): Promise<ApiResponse<{ action: "added" | "removed" }>> {
-    return this.request(`/api/v1/catalog/products/${productId}/reviews/${reviewId}/helpful`, {
-      method: "POST",
+    return this.request(
+      `/api/v1/catalog/products/${productId}/reviews/${reviewId}/helpful`,
+      {
+        method: "POST",
+      },
+    );
+  }
+
+  public async getMyReviews(params?: {
+    page?: number;
+  }): Promise<ApiResponse<ReviewListResponse>> {
+    return this.request<ReviewListResponse>(
+      `/api/v1/customer/reviews${buildQueryString(params)}`,
+    );
+  }
+
+  public async getSellerReviews(params?: {
+    page?: number;
+  }): Promise<ApiResponse<ReviewListResponse>> {
+    return this.request<ReviewListResponse>(
+      `/api/v1/seller/reviews${buildQueryString(params)}`,
+    );
+  }
+
+  public async flagReview(
+    reviewId: string,
+  ): Promise<ApiResponse<{ flagged: boolean }>> {
+    return this.request(`/api/v1/seller/reviews/${reviewId}/flag`, {
+      method: "PATCH",
     });
   }
 
-  public async getMyReviews(
-    params?: { page?: number }
-  ): Promise<ApiResponse<ReviewListResponse>> {
+  public async adminGetReviews(params?: {
+    status?: string;
+    productId?: string;
+    page?: number;
+    pageSize?: number;
+  }): Promise<ApiResponse<ReviewListResponse>> {
     return this.request<ReviewListResponse>(
-      `/api/v1/customer/reviews${buildQueryString(params)}`
-    );
-  }
-
-  public async getSellerReviews(
-    params?: { page?: number }
-  ): Promise<ApiResponse<ReviewListResponse>> {
-    return this.request<ReviewListResponse>(
-      `/api/v1/seller/reviews${buildQueryString(params)}`
-    );
-  }
-
-  public async flagReview(reviewId: string): Promise<ApiResponse<{ flagged: boolean }>> {
-    return this.request(`/api/v1/seller/reviews/${reviewId}/flag`, { method: "PATCH" });
-  }
-
-  public async adminGetReviews(
-    params?: { status?: string; productId?: string; page?: number; pageSize?: number }
-  ): Promise<ApiResponse<ReviewListResponse>> {
-    return this.request<ReviewListResponse>(
-      `/api/v1/admin/reviews${buildQueryString(params)}`
+      `/api/v1/admin/reviews${buildQueryString(params)}`,
     );
   }
 
   public async adminModerateReview(
     reviewId: string,
     action: "approve" | "reject" | "hide",
-    note?: string
+    note?: string,
   ): Promise<ApiResponse<{ moderated: boolean }>> {
     return this.request(`/api/v1/admin/reviews/${reviewId}`, {
       method: "PATCH",
@@ -1079,37 +1476,49 @@ export class FloriaApiClient {
 
   public async getTrendingProducts(
     params?: { limit?: number },
-    options: RequestInit = {}
+    options: RequestInit = {},
   ): Promise<ApiResponse<any[]>> {
     return this.request<any[]>(
       `/api/v1/catalog/products/trending${buildQueryString(params)}`,
-      options
+      options,
     );
   }
 
-  public async getRelatedProducts(slug: string, options: RequestInit = {}): Promise<ApiResponse<any[]>> {
-    return this.request<any[]>(`/api/v1/catalog/products/${slug}/related`, options);
+  public async getRelatedProducts(
+    slug: string,
+    options: RequestInit = {},
+  ): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>(
+      `/api/v1/catalog/products/${slug}/related`,
+      options,
+    );
   }
 
-  public async getRankedNurseries(options: RequestInit = {}): Promise<ApiResponse<NurserySummary[]>> {
+  public async getRankedNurseries(
+    options: RequestInit = {},
+  ): Promise<ApiResponse<NurserySummary[]>> {
     return this.request<NurserySummary[]>(`/api/v1/catalog/sellers`, options);
   }
 
   // ── ADMIN FINANCIAL TRANSPARENCY ─────────────────────────────────────────
 
   public async getAdminProductFinancialCalculation(
-    productId: string
-  ): Promise<ApiResponse<import("@floria/types").AdminProductFinancialCalculation>> {
-    return this.request<import("@floria/types").AdminProductFinancialCalculation>(
-      `/api/v1/admin/products/${productId}/financial-calculation`
-    );
+    productId: string,
+  ): Promise<
+    ApiResponse<import("@floria/types").AdminProductFinancialCalculation>
+  > {
+    return this.request<
+      import("@floria/types").AdminProductFinancialCalculation
+    >(`/api/v1/admin/products/${productId}/financial-calculation`);
   }
 
   public async getAdminOrderFinancialBreakdown(
-    orderId: string
-  ): Promise<ApiResponse<import("@floria/types").AdminOrderFinancialBreakdown>> {
+    orderId: string,
+  ): Promise<
+    ApiResponse<import("@floria/types").AdminOrderFinancialBreakdown>
+  > {
     return this.request<import("@floria/types").AdminOrderFinancialBreakdown>(
-      `/api/v1/admin/orders/${orderId}/financial-breakdown`
+      `/api/v1/admin/orders/${orderId}/financial-breakdown`,
     );
   }
 
@@ -1119,31 +1528,31 @@ export class FloriaApiClient {
     ApiResponse<import("@floria/types").DeliverySettings>
   > {
     return this.request<import("@floria/types").DeliverySettings>(
-      "/api/v1/admin/settings/delivery"
+      "/api/v1/admin/settings/delivery",
     );
   }
 
   public async updateDeliverySettings(
-    updates: Partial<import("@floria/types").DeliverySettings>
+    updates: Partial<import("@floria/types").DeliverySettings>,
   ): Promise<ApiResponse<import("@floria/types").DeliverySettings>> {
     return this.request<import("@floria/types").DeliverySettings>(
       "/api/v1/admin/settings/delivery",
       {
         method: "PATCH",
         body: JSON.stringify(updates),
-      }
+      },
     );
   }
 
   public async previewDeliveryFee(
-    subtotalPaise: number
+    subtotalPaise: number,
   ): Promise<ApiResponse<import("@floria/types").DeliveryCalculationResult>> {
     return this.request<import("@floria/types").DeliveryCalculationResult>(
       "/api/v1/admin/delivery/preview",
       {
         method: "POST",
         body: JSON.stringify({ subtotalPaise }),
-      }
+      },
     );
   }
 
@@ -1153,19 +1562,19 @@ export class FloriaApiClient {
     ApiResponse<import("@floria/types").FinancialSettings>
   > {
     return this.request<import("@floria/types").FinancialSettings>(
-      "/api/v1/admin/settings/financials"
+      "/api/v1/admin/settings/financials",
     );
   }
 
   public async updateFinancialSettings(
-    updates: Partial<import("@floria/types").FinancialSettings>
+    updates: Partial<import("@floria/types").FinancialSettings>,
   ): Promise<ApiResponse<import("@floria/types").FinancialSettings>> {
     return this.request<import("@floria/types").FinancialSettings>(
       "/api/v1/admin/settings/financials",
       {
         method: "PATCH",
         body: JSON.stringify(updates),
-      }
+      },
     );
   }
 
@@ -1174,16 +1583,16 @@ export class FloriaApiClient {
   public async getPricingPolicies(): Promise<
     ApiResponse<{ policies: import("@floria/types").PricingPolicyVersion[] }>
   > {
-    return this.request<{ policies: import("@floria/types").PricingPolicyVersion[] }>(
-      "/api/v1/admin/pricing-policies"
-    );
+    return this.request<{
+      policies: import("@floria/types").PricingPolicyVersion[];
+    }>("/api/v1/admin/pricing-policies");
   }
 
   public async getActivePricingPolicy(): Promise<
     ApiResponse<import("@floria/types").PricingPolicyVersion | null>
   > {
     return this.request<import("@floria/types").PricingPolicyVersion | null>(
-      "/api/v1/admin/pricing-policies/active"
+      "/api/v1/admin/pricing-policies/active",
     );
   }
 
@@ -1200,41 +1609,43 @@ export class FloriaApiClient {
       {
         method: "POST",
         body: JSON.stringify(params),
-      }
+      },
     );
   }
 
   public async previewPricingPolicyImpact(
-    policyId: string
+    policyId: string,
   ): Promise<ApiResponse<import("@floria/types").PolicyImpactPreview>> {
     return this.request<import("@floria/types").PolicyImpactPreview>(
-      `/api/v1/admin/pricing-policies/${policyId}/preview`
+      `/api/v1/admin/pricing-policies/${policyId}/preview`,
     );
   }
 
   public async startPricingRecalculation(
-    policyId: string
+    policyId: string,
   ): Promise<ApiResponse<import("@floria/types").PricingRecalculationJob>> {
     return this.request<import("@floria/types").PricingRecalculationJob>(
       `/api/v1/admin/pricing-policies/${policyId}/recalculate`,
-      { method: "POST" }
+      { method: "POST" },
     );
   }
 
   public async getPricingRecalculationStatus(
-    policyId: string
-  ): Promise<ApiResponse<import("@floria/types").PricingRecalculationJob | null>> {
+    policyId: string,
+  ): Promise<
+    ApiResponse<import("@floria/types").PricingRecalculationJob | null>
+  > {
     return this.request<import("@floria/types").PricingRecalculationJob | null>(
-      `/api/v1/admin/pricing-policies/${policyId}/recalculation-status`
+      `/api/v1/admin/pricing-policies/${policyId}/recalculation-status`,
     );
   }
 
   public async activatePricingPolicy(
-    policyId: string
+    policyId: string,
   ): Promise<ApiResponse<import("@floria/types").PricingPolicyVersion>> {
     return this.request<import("@floria/types").PricingPolicyVersion>(
       `/api/v1/admin/pricing-policies/${policyId}/activate`,
-      { method: "POST" }
+      { method: "POST" },
     );
   }
 
@@ -1248,16 +1659,25 @@ export class FloriaApiClient {
       {
         method: "POST",
         body: JSON.stringify(params),
-      }
+      },
     );
   }
 
   public async removePricingOverride(
-    productId: string
+    productId: string,
   ): Promise<ApiResponse<{ removed: boolean }>> {
     return this.request<{ removed: boolean }>(
       `/api/v1/admin/pricing-policies/overrides/${productId}`,
-      { method: "DELETE" }
+      { method: "DELETE" },
     );
   }
 }
+
+export type {
+  DeliveryAssignment,
+  DeliveryAssignmentStatus,
+  DeliveryListParams,
+  UpdateDeliveryStatusPayload,
+  CompleteDeliveryPayload,
+  DeliveryPodDetails,
+} from "@floria/types";

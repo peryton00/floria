@@ -1,6 +1,15 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
-type Variant = "primary" | "secondary" | "cta" | "action" | "terracotta" | "muted" | "ghost" | "destructive" | "outline";
+type Variant =
+  | "primary"
+  | "secondary"
+  | "cta"
+  | "action"
+  | "terracotta"
+  | "muted"
+  | "ghost"
+  | "destructive"
+  | "outline";
 type Size = "sm" | "md" | "lg";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -12,8 +21,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantStyles: Record<Variant, string> = {
-  cta:
-    "bg-terracotta-700 !text-white hover:bg-terracotta-800 active:bg-terracotta-900 focus-visible:ring-terracotta-700 shadow-xs font-semibold",
+  cta: "bg-terracotta-700 !text-white hover:bg-terracotta-800 active:bg-terracotta-900 focus-visible:ring-terracotta-700 shadow-xs font-semibold",
   action:
     "bg-terracotta-700 !text-white hover:bg-terracotta-800 active:bg-terracotta-900 focus-visible:ring-terracotta-700 shadow-xs font-semibold",
   terracotta:
@@ -38,7 +46,14 @@ const sizeStyles: Record<Size, string> = {
   lg: "h-13 px-6 text-base gap-2",
 };
 
-const darkVariants = new Set<Variant>(["primary", "cta", "action", "terracotta", "secondary", "destructive"]);
+const darkVariants = new Set<Variant>([
+  "primary",
+  "cta",
+  "action",
+  "terracotta",
+  "secondary",
+  "destructive",
+]);
 
 export function Button({
   variant = "primary",
@@ -90,7 +105,8 @@ export function Button({
 
 // Inline Spinner used by Button — keep co-located to avoid circular deps
 function Spinner({ size }: { size: "sm" | "md" | "lg" }) {
-  const sizeClass = size === "sm" ? "w-4 h-4" : size === "lg" ? "w-6 h-6" : "w-5 h-5";
+  const sizeClass =
+    size === "sm" ? "w-4 h-4" : size === "lg" ? "w-6 h-6" : "w-5 h-5";
   return (
     <svg
       aria-hidden="true"

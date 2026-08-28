@@ -17,9 +17,16 @@ export default async function CategoriesPage() {
   return (
     <CustomerShell>
       {/* Breadcrumb */}
-      <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-ink-500 mb-6 flex-wrap font-ui">
-        <Link href="/" className="hover:text-forest-800 transition-colors">Home</Link>
-        <span aria-hidden="true" className="select-none text-ink-300">/</span>
+      <nav
+        aria-label="Breadcrumb"
+        className="flex items-center gap-2 text-xs text-ink-500 mb-6 flex-wrap font-ui"
+      >
+        <Link href="/" className="hover:text-forest-800 transition-colors">
+          Home
+        </Link>
+        <span aria-hidden="true" className="select-none text-ink-300">
+          /
+        </span>
         <span className="text-ink-900 font-semibold">Categories</span>
       </nav>
 
@@ -33,7 +40,8 @@ export default async function CategoriesPage() {
             Browse Categories
           </h1>
           <p className="text-xs md:text-sm text-ink-500 mt-1">
-            {categories.length} curated marketplace collections from verified local nurseries.
+            {categories.length} curated marketplace collections from verified
+            local nurseries.
           </p>
         </div>
         <Link
@@ -52,7 +60,10 @@ export default async function CategoriesPage() {
         aria-label="All product categories"
       >
         {categories.map((cat) => {
-          const catImgUrl = cat.banner_url || cat.image_url || getSystemMediaUrl("/cat-plants.png", "banner");
+          const catImgUrl =
+            cat.banner_url ||
+            cat.image_url ||
+            getSystemMediaUrl("/cat-plants.png", "banner");
 
           return (
             <div key={cat.id} role="listitem">
@@ -93,7 +104,9 @@ export default async function CategoriesPage() {
                   {/* Bottom link prompt */}
                   <div className="mt-auto pt-3 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-forest-800">
                     <span>Explore</span>
-                    <span className="group-hover:translate-x-1 transition-transform duration-200">&rarr;</span>
+                    <span className="group-hover:translate-x-1 transition-transform duration-200">
+                      &rarr;
+                    </span>
                   </div>
                 </div>
               </Link>

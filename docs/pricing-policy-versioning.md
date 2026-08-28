@@ -18,14 +18,14 @@ stateDiagram-v2
 
 ## 2. Policy Version Lifecycle States
 
-| State | Description | Next Allowed State |
-|---|---|---|
-| `draft` | Policy created with proposed parameters. Not yet applied to products. | `preparing` |
-| `preparing` | Background recalculation job is running across active listings. | `ready`, `failed` |
-| `ready` | All listing pricing read models calculated and verified. | `active` |
-| `active` | Current production policy used for product discovery and new orders. | `archived` |
-| `archived` | Superseded past version preserved for audit and historical linkage. | Terminal |
-| `failed` | Recalculation encountered errors; requires admin retry or parameter update. | `draft`, `preparing` |
+| State       | Description                                                                 | Next Allowed State   |
+| ----------- | --------------------------------------------------------------------------- | -------------------- |
+| `draft`     | Policy created with proposed parameters. Not yet applied to products.       | `preparing`          |
+| `preparing` | Background recalculation job is running across active listings.             | `ready`, `failed`    |
+| `ready`     | All listing pricing read models calculated and verified.                    | `active`             |
+| `active`    | Current production policy used for product discovery and new orders.        | `archived`           |
+| `archived`  | Superseded past version preserved for audit and historical linkage.         | Terminal             |
+| `failed`    | Recalculation encountered errors; requires admin retry or parameter update. | `draft`, `preparing` |
 
 ---
 
@@ -42,6 +42,7 @@ stateDiagram-v2
 ## 4. Product Pricing Read Model (`product_pricing`)
 
 To eliminate runtime calculation latency at scale while guaranteeing absolute transparency, every policy version generates a read model:
+
 - `policy_version_id` (UUID)
 - `product_id` (UUID)
 - `seller_id` (UUID)
@@ -59,6 +60,7 @@ To eliminate runtime calculation latency at scale while guaranteeing absolute tr
 ## 5. Historical Order Price Immutability Guarantee
 
 Once an order is created:
+
 1. `orders.subtotal_paise`, `orders.delivery_fee_paise`, `orders.maintenance_fee_paise`, and `orders.total_paise` are permanently locked.
 2. `order_items` stores exact financial snapshots: `base_price_paise_snapshot`, `unit_price_paise_snapshot`, `floria_profit_paise_snapshot`, `delivery_recovery_paise_snapshot`, `commission_rate_snapshot`, `commission_paise_snapshot`.
 3. Customer order tracking (`/orders` and `/orders/[id]`) and seller payout settlements strictly render historical snapshot columns.

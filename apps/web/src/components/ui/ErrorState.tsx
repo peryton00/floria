@@ -24,13 +24,26 @@ export function ErrorState({
     >
       <div className="w-12 h-12 flex items-center justify-center rounded-full bg-error-100 text-error-600">
         {/* Simple X icon */}
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <circle cx="12" cy="12" r="10"/>
-          <path d="m15 9-6 6M9 9l6 6"/>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <path d="m15 9-6 6M9 9l6 6" />
         </svg>
       </div>
       <div className="space-y-1">
-        <h3 className="text-base font-semibold text-ink-900 font-sans">{title}</h3>
+        <h3 className="text-base font-semibold text-ink-900 font-sans">
+          {title}
+        </h3>
         {message && (
           <p className="text-sm text-ink-500 max-w-xs mx-auto">{message}</p>
         )}

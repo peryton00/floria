@@ -68,7 +68,9 @@ export async function requireRole(role: UserRole): Promise<AuthUser> {
 export async function requireAnyRole(roles: UserRole[]): Promise<AuthUser> {
   const user = await requireUser();
   if (!roles.includes(user.role)) {
-    throw Errors.forbidden(`Access requires one of the following roles: ${roles.join(", ")}.`);
+    throw Errors.forbidden(
+      `Access requires one of the following roles: ${roles.join(", ")}.`,
+    );
   }
   return user;
 }
@@ -85,7 +87,9 @@ export async function requireCustomer(): Promise<AuthUser> {
  * Supports checking status: for operational actions, requires role = seller AND status = approved.
  * If allowPendingOrSuspended is true, allows viewing onboarding/profile info.
  */
-export async function requireSellerProfile(options?: { allowPendingOrSuspended?: boolean }): Promise<AuthSeller> {
+export async function requireSellerProfile(options?: {
+  allowPendingOrSuspended?: boolean;
+}): Promise<AuthSeller> {
   const user = await requireUser();
 
   if (user.role !== "seller" && user.role !== "admin") {
@@ -99,13 +103,16 @@ export async function requireSellerProfile(options?: { allowPendingOrSuspended?:
     .eq("user_id", user.id)
     .maybeSingle();
 
-  if (error || !sp) throw Errors.forbidden("No seller profile found for this account.");
+  if (error || !sp)
+    throw Errors.forbidden("No seller profile found for this account.");
 
   const sellerStatus = sp.status as "pending" | "approved" | "suspended";
 
   if (!options?.allowPendingOrSuspended) {
-    if (sellerStatus === "suspended") throw Errors.forbidden("Your seller account has been suspended.");
-    if (sellerStatus === "pending") throw Errors.forbidden("Your seller account is pending approval.");
+    if (sellerStatus === "suspended")
+      throw Errors.forbidden("Your seller account has been suspended.");
+    if (sellerStatus === "pending")
+      throw Errors.forbidden("Your seller account is pending approval.");
   }
 
   return {
@@ -141,7 +148,9 @@ export async function requireAdmin(): Promise<AuthUser> {
  * Verifies that the authenticated seller owns the specified product.
  * Admin and operations roles bypass seller ownership check.
  */
-export async function requireOwnedProduct(productId: string): Promise<{ user: AuthUser; sellerId?: string }> {
+export async function requireOwnedProduct(
+  productId: string,
+): Promise<{ user: AuthUser; sellerId?: string }> {
   const user = await requireUser();
 
   if (user.role === "admin" || user.role === "operations") {
@@ -172,7 +181,9 @@ export async function requireOwnedProduct(productId: string): Promise<{ user: Au
  * Verifies that the authenticated seller owns / is associated with the seller order fulfillment.
  * Admin and operations roles bypass seller ownership check.
  */
-export async function requireOwnedSellerOrder(orderId: string): Promise<{ user: AuthUser; sellerId?: string }> {
+export async function requireOwnedSellerOrder(
+  orderId: string,
+): Promise<{ user: AuthUser; sellerId?: string }> {
   const user = await requireUser();
 
   if (user.role === "admin" || user.role === "operations") {

@@ -46,24 +46,61 @@ export class AdminMediaService {
       { data: docs, error: docsErr },
       { data: storageFiles, error: storageErr },
     ] = await Promise.all([
-      db.from("media_assets").select("*").order("created_at", { ascending: false }).limit(300),
+      db
+        .from("media_assets")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(300),
       db.from("media_variants").select("*"),
-      db.from("product_images").select("*").order("created_at", { ascending: false }).limit(500),
+      db
+        .from("product_images")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(500),
       db.from("products").select("id, name, slug, seller_id"),
-      db.from("categories").select("id, name, slug, image_url, banner_asset_id, created_at"),
-      db.from("seller_profiles").select("id, business_name, logo_url, banner_url, logo_asset_id, banner_asset_id, created_at"),
-      db.from("user_profiles").select("id, full_name, email, avatar_url, avatar_asset_id, created_at"),
-      db.from("seller_documents").select("id, seller_id, file_name, file_url, document_type, file_asset_id, created_at"),
-      db.storage.from("public-media").list("", { limit: 100 }).catch(() => ({ data: null, error: null })),
+      db
+        .from("categories")
+        .select("id, name, slug, image_url, banner_asset_id, created_at"),
+      db
+        .from("seller_profiles")
+        .select(
+          "id, business_name, logo_url, banner_url, logo_asset_id, banner_asset_id, created_at",
+        ),
+      db
+        .from("user_profiles")
+        .select(
+          "id, full_name, email, avatar_url, avatar_asset_id, created_at",
+        ),
+      db
+        .from("seller_documents")
+        .select(
+          "id, seller_id, file_name, file_url, document_type, file_asset_id, created_at",
+        ),
+      db.storage
+        .from("public-media")
+        .list("", { limit: 100 })
+        .catch(() => ({ data: null, error: null })),
     ]);
 
-    if (assetsErr) console.warn("[AdminMediaService] media_assets query notice:", assetsErr.message);
-    if (prodImgsErr) console.warn("[AdminMediaService] product_images query notice:", prodImgsErr.message);
+    if (assetsErr)
+      console.warn(
+        "[AdminMediaService] media_assets query notice:",
+        assetsErr.message,
+      );
+    if (prodImgsErr)
+      console.warn(
+        "[AdminMediaService] product_images query notice:",
+        prodImgsErr.message,
+      );
 
     // Fast in-memory lookup maps
-    const sellerMap = new Map((sellers || []).map((s: any) => [s.id, s.business_name]));
+    const sellerMap = new Map(
+      (sellers || []).map((s: any) => [s.id, s.business_name]),
+    );
     const productMap = new Map((products || []).map((p: any) => [p.id, p]));
-    const userMap = new Map((users || []).map((u: any) => [u.id, u.full_name || u.email]));
+    const userMap = new Map(
+      (users || []).map((u: any) => [u.id, u.full_name || u.email]),
+    );
 
     // Asset ID Domain Cross-Reference Sets
     const categoryAssetIds = new Set<string>();
@@ -101,7 +138,8 @@ export class AdminMediaService {
       const variants = variantsByAssetId.get(asset.id) || [];
       const variantsMap: Record<string, string> = {};
       variants.forEach((v: any) => {
-        variantsMap[v.variant_name] = `${supabaseUrl}/storage/v1/object/public/${v.storage_bucket}/${v.storage_path}`;
+        variantsMap[v.variant_name] =
+          `${supabaseUrl}/storage/v1/object/public/${v.storage_bucket}/${v.storage_path}`;
       });
 
       const primaryUrl =
@@ -111,7 +149,9 @@ export class AdminMediaService {
         variantsMap.standard ||
         variantsMap.avatar ||
         variantsMap.banner ||
-        (asset.original_path ? `${supabaseUrl}/storage/v1/object/public/${asset.storage_bucket}/${asset.original_path}` : "/floria-logo.png");
+        (asset.original_path
+          ? `${supabaseUrl}/storage/v1/object/public/${asset.storage_bucket}/${asset.original_path}`
+          : "/floria-logo.png");
 
       if (primaryUrl && !seenUrls.has(primaryUrl)) {
         seenUrls.add(primaryUrl);
@@ -134,13 +174,24 @@ export class AdminMediaService {
             const allPaths = [
               asset.original_path || "",
               ...variants.map((v: any) => v.storage_path || ""),
-            ].join(" ").toLowerCase();
+            ]
+              .join(" ")
+              .toLowerCase();
 
-            if (allPaths.includes("categor") || allPaths.includes("/category")) {
+            if (
+              allPaths.includes("categor") ||
+              allPaths.includes("/category")
+            ) {
               domainCategory = "CATEGORY";
-            } else if (allPaths.includes("seller_logo") || allPaths.includes("logo")) {
+            } else if (
+              allPaths.includes("seller_logo") ||
+              allPaths.includes("logo")
+            ) {
               domainCategory = "SELLER_LOGO";
-            } else if (allPaths.includes("nursery") || allPaths.includes("nurseries")) {
+            } else if (
+              allPaths.includes("nursery") ||
+              allPaths.includes("nurseries")
+            ) {
               domainCategory = "NURSERY";
             } else if (allPaths.includes("avatar")) {
               domainCategory = "USER_AVATAR";
@@ -180,7 +231,9 @@ export class AdminMediaService {
         seenUrls.add(fullUrl);
         const prod = productMap.get(img.product_id);
         const pName = prod?.name || "Product Item";
-        const sellerName = prod?.seller_id ? sellerMap.get(prod.seller_id) : null;
+        const sellerName = prod?.seller_id
+          ? sellerMap.get(prod.seller_id)
+          : null;
         allMediaItems.push({
           id: `prod_img_${img.id}`,
           product_image_id: img.id,
@@ -338,9 +391,13 @@ export class AdminMediaService {
             id: `seller_doc_${doc.id}`,
             source_type: "seller_document",
             document_id: doc.id,
-            original_filename: doc.file_name || `Document #${doc.id.slice(0, 8)} (${doc.document_type || "VERIFICATION"})`,
+            original_filename:
+              doc.file_name ||
+              `Document #${doc.id.slice(0, 8)} (${doc.document_type || "VERIFICATION"})`,
             media_category: "DOCUMENT",
-            mime_type: doc.file_name?.endsWith(".pdf") ? "application/pdf" : "image/jpeg",
+            mime_type: doc.file_name?.endsWith(".pdf")
+              ? "application/pdf"
+              : "image/jpeg",
             file_size_bytes: 450000,
             status: "READY",
             storage_bucket: "private-documents",
@@ -370,7 +427,8 @@ export class AdminMediaService {
             mime_type: f.metadata?.mimetype || "image/webp",
             file_size_bytes: Number(f.metadata?.size || 0),
             status: "READY",
-            created_at: f.created_at || f.updated_at || new Date().toISOString(),
+            created_at:
+              f.created_at || f.updated_at || new Date().toISOString(),
             public_url: publicUrl,
             uploader_name: "Supabase Storage",
             seller_name: null,
@@ -387,7 +445,11 @@ export class AdminMediaService {
       if (params.category === "LEGACY") {
         filtered = filtered.filter((i) => i.is_legacy);
       } else if (params.category === "SELLER_LOGO") {
-        filtered = filtered.filter((i) => i.media_category === "SELLER_LOGO" || i.media_category === "NURSERY");
+        filtered = filtered.filter(
+          (i) =>
+            i.media_category === "SELLER_LOGO" ||
+            i.media_category === "NURSERY",
+        );
       } else {
         filtered = filtered.filter((i) => i.media_category === params.category);
       }
@@ -404,17 +466,23 @@ export class AdminMediaService {
           (i.original_filename || "").toLowerCase().includes(s) ||
           (i.product_name || "").toLowerCase().includes(s) ||
           (i.seller_name || "").toLowerCase().includes(s) ||
-          (i.id || "").toLowerCase().includes(s)
+          (i.id || "").toLowerCase().includes(s),
       );
     }
 
-    filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    filtered.sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    );
 
     const totalCount = filtered.length;
     const offset = (page - 1) * limit;
     const paginatedItems = filtered.slice(offset, offset + limit);
 
-    const totalStorageBytes = filtered.reduce((acc, r) => acc + (Number(r.file_size_bytes) || 0), 0);
+    const totalStorageBytes = filtered.reduce(
+      (acc, r) => acc + (Number(r.file_size_bytes) || 0),
+      0,
+    );
 
     return {
       items: paginatedItems,
@@ -433,13 +501,19 @@ export class AdminMediaService {
     };
   }
 
-  async updateMedia(assetId: string, updates: { filename?: string; altText?: string; category?: string }) {
+  async updateMedia(
+    assetId: string,
+    updates: { filename?: string; altText?: string; category?: string },
+  ) {
     const db = getAdminDb();
 
     if (assetId.startsWith("prod_img_") || assetId.startsWith("legacy_")) {
       const realId = assetId.replace("prod_img_", "").replace("legacy_", "");
       if (updates.altText !== undefined) {
-        await db.from("product_images").update({ alt_text: updates.altText }).eq("id", realId);
+        await db
+          .from("product_images")
+          .update({ alt_text: updates.altText })
+          .eq("id", realId);
       }
       return { success: true, message: "Product image metadata updated" };
     }
@@ -448,7 +522,10 @@ export class AdminMediaService {
       return { success: true, message: "Category image updated" };
     }
 
-    if (assetId.startsWith("seller_logo_") || assetId.startsWith("seller_banner_")) {
+    if (
+      assetId.startsWith("seller_logo_") ||
+      assetId.startsWith("seller_banner_")
+    ) {
       return { success: true, message: "Seller profile image updated" };
     }
 
@@ -456,7 +533,8 @@ export class AdminMediaService {
     if (updates.filename) payload.original_filename = updates.filename.trim();
     if (updates.category) {
       // Map category safely to valid DB enum ('IMAGE' or 'DOCUMENT') to prevent PostgreSQL invalid enum error
-      payload.media_category = updates.category === "DOCUMENT" ? "DOCUMENT" : "IMAGE";
+      payload.media_category =
+        updates.category === "DOCUMENT" ? "DOCUMENT" : "IMAGE";
     }
 
     const { data: updated, error } = await db
@@ -467,7 +545,10 @@ export class AdminMediaService {
       .maybeSingle();
 
     if (updates.altText !== undefined) {
-      await db.from("product_images").update({ alt_text: updates.altText }).eq("asset_id", assetId);
+      await db
+        .from("product_images")
+        .update({ alt_text: updates.altText })
+        .eq("asset_id", assetId);
     }
 
     return updated || { success: true, message: "Media asset updated" };
@@ -492,31 +573,46 @@ export class AdminMediaService {
 
     if (assetId.startsWith("cat_img_")) {
       const catId = assetId.replace("cat_img_", "");
-      await db.from("categories").update({ image_url: null, asset_id: null }).eq("id", catId);
+      await db
+        .from("categories")
+        .update({ image_url: null, asset_id: null })
+        .eq("id", catId);
       return { success: true, message: "Category cover image removed" };
     }
 
     if (assetId.startsWith("cat_banner_")) {
       const catId = assetId.replace("cat_banner_", "");
-      await db.from("categories").update({ banner_url: null, banner_asset_id: null }).eq("id", catId);
+      await db
+        .from("categories")
+        .update({ banner_url: null, banner_asset_id: null })
+        .eq("id", catId);
       return { success: true, message: "Category banner image removed" };
     }
 
     if (assetId.startsWith("seller_logo_")) {
       const sellerId = assetId.replace("seller_logo_", "");
-      await db.from("seller_profiles").update({ logo_url: null, logo_asset_id: null }).eq("id", sellerId);
+      await db
+        .from("seller_profiles")
+        .update({ logo_url: null, logo_asset_id: null })
+        .eq("id", sellerId);
       return { success: true, message: "Seller logo removed" };
     }
 
     if (assetId.startsWith("seller_banner_")) {
       const sellerId = assetId.replace("seller_banner_", "");
-      await db.from("seller_profiles").update({ banner_url: null, banner_asset_id: null }).eq("id", sellerId);
+      await db
+        .from("seller_profiles")
+        .update({ banner_url: null, banner_asset_id: null })
+        .eq("id", sellerId);
       return { success: true, message: "Seller banner removed" };
     }
 
     if (assetId.startsWith("user_avatar_")) {
       const userId = assetId.replace("user_avatar_", "");
-      await db.from("user_profiles").update({ avatar_url: null, avatar_asset_id: null }).eq("id", userId);
+      await db
+        .from("user_profiles")
+        .update({ avatar_url: null, avatar_asset_id: null })
+        .eq("id", userId);
       return { success: true, message: "User avatar removed" };
     }
 
@@ -533,7 +629,10 @@ export class AdminMediaService {
       try {
         await db.storage.from(bucket).remove([path]);
       } catch (e: any) {
-        console.warn("[AdminMediaService] Direct storage delete notice:", e.message);
+        console.warn(
+          "[AdminMediaService] Direct storage delete notice:",
+          e.message,
+        );
       }
       return { success: true, message: "Storage file deleted" };
     }
@@ -559,18 +658,36 @@ export class AdminMediaService {
       try {
         await db.storage.from(bucket).remove(storagePaths);
       } catch (stErr: any) {
-        console.warn("[AdminMediaService] Storage deletion warning:", stErr?.message || stErr);
+        console.warn(
+          "[AdminMediaService] Storage deletion warning:",
+          stErr?.message || stErr,
+        );
       }
     }
 
     await Promise.all([
       db.from("product_images").delete().eq("asset_id", assetId),
       db.from("categories").update({ asset_id: null }).eq("asset_id", assetId),
-      db.from("categories").update({ banner_asset_id: null }).eq("banner_asset_id", assetId),
-      db.from("seller_profiles").update({ logo_asset_id: null }).eq("logo_asset_id", assetId),
-      db.from("seller_profiles").update({ banner_asset_id: null }).eq("banner_asset_id", assetId),
-      db.from("user_profiles").update({ avatar_asset_id: null }).eq("avatar_asset_id", assetId),
-      db.from("seller_documents").update({ file_asset_id: null }).eq("file_asset_id", assetId),
+      db
+        .from("categories")
+        .update({ banner_asset_id: null })
+        .eq("banner_asset_id", assetId),
+      db
+        .from("seller_profiles")
+        .update({ logo_asset_id: null })
+        .eq("logo_asset_id", assetId),
+      db
+        .from("seller_profiles")
+        .update({ banner_asset_id: null })
+        .eq("banner_asset_id", assetId),
+      db
+        .from("user_profiles")
+        .update({ avatar_asset_id: null })
+        .eq("avatar_asset_id", assetId),
+      db
+        .from("seller_documents")
+        .update({ file_asset_id: null })
+        .eq("file_asset_id", assetId),
     ]);
 
     await db.from("media_variants").delete().eq("asset_id", assetId);
@@ -582,7 +699,10 @@ export class AdminMediaService {
       action: "ADMIN_MEDIA_DELETED",
       resource_type: "media_asset",
       resource_id: assetId,
-      metadata: { original_filename: asset.original_filename, category: asset.media_category },
+      metadata: {
+        original_filename: asset.original_filename,
+        category: asset.media_category,
+      },
     });
 
     return { success: true, message: "Media asset deleted successfully" };
@@ -590,12 +710,19 @@ export class AdminMediaService {
 
   async uploadDirectAdminMedia(
     adminUserId: string,
-    input: { filename: string; mimeType: string; base64Data: string; profile?: ImageProfileName }
+    input: {
+      filename: string;
+      mimeType: string;
+      base64Data: string;
+      profile?: ImageProfileName;
+    },
   ) {
     const db = getAdminDb();
     const profile: ImageProfileName = input.profile || "CATEGORY";
 
-    const cleanBase64 = input.base64Data.replace(/^data:[^;]+;base64,/, "").trim();
+    const cleanBase64 = input.base64Data
+      .replace(/^data:[^;]+;base64,/, "")
+      .trim();
     const buffer = Buffer.from(cleanBase64, "base64");
 
     if (!buffer || buffer.length === 0) {
@@ -636,7 +763,10 @@ export class AdminMediaService {
           const publicUrl = `${supabaseUrl}/storage/v1/object/public/${storageBucket}/${storagePath}`;
           variantsMap[v.variantName] = publicUrl;
         } else {
-          console.error("[AdminMediaService] Storage upload error:", upErr.message);
+          console.error(
+            "[AdminMediaService] Storage upload error:",
+            upErr.message,
+          );
         }
       } catch (stEx: any) {
         console.error("[AdminMediaService] Storage exception:", stEx.message);
@@ -646,7 +776,11 @@ export class AdminMediaService {
     // Verify if adminUserId exists in user_profiles to prevent FK constraint error
     let uploaderId: string | null = null;
     if (adminUserId) {
-      const { data: uProfile } = await db.from("user_profiles").select("id").eq("id", adminUserId).maybeSingle();
+      const { data: uProfile } = await db
+        .from("user_profiles")
+        .select("id")
+        .eq("id", adminUserId)
+        .maybeSingle();
       if (uProfile) uploaderId = adminUserId;
     }
 
@@ -671,14 +805,24 @@ export class AdminMediaService {
       .maybeSingle();
 
     if (assetErr || !newAsset) {
-      console.error("[AdminMediaService] media_assets insert error:", assetErr?.message);
-      throw new Error(`Media asset creation failed: ${assetErr?.message || "Unknown database error"}`);
+      console.error(
+        "[AdminMediaService] media_assets insert error:",
+        assetErr?.message,
+      );
+      throw new Error(
+        `Media asset creation failed: ${assetErr?.message || "Unknown database error"}`,
+      );
     }
 
     if (variantInsertRows.length > 0) {
-      const { error: varErr } = await db.from("media_variants").insert(variantInsertRows);
+      const { error: varErr } = await db
+        .from("media_variants")
+        .insert(variantInsertRows);
       if (varErr) {
-        console.error("[AdminMediaService] media_variants insert error:", varErr.message);
+        console.error(
+          "[AdminMediaService] media_variants insert error:",
+          varErr.message,
+        );
       }
     }
 
@@ -695,7 +839,12 @@ export class AdminMediaService {
       console.warn("[AdminMediaService] audit log notice:", audErr.message);
     }
 
-    const primaryUrl = variantsMap.medium || variantsMap.large || variantsMap.thumbnail || Object.values(variantsMap)[0] || `${supabaseUrl}/storage/v1/object/public/${storageBucket}/admin-uploads/${profile.toLowerCase()}/${assetId}/thumbnail.webp`;
+    const primaryUrl =
+      variantsMap.medium ||
+      variantsMap.large ||
+      variantsMap.thumbnail ||
+      Object.values(variantsMap)[0] ||
+      `${supabaseUrl}/storage/v1/object/public/${storageBucket}/admin-uploads/${profile.toLowerCase()}/${assetId}/thumbnail.webp`;
 
     return {
       asset: newAsset,

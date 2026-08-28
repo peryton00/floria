@@ -7,7 +7,11 @@ import type { UserRole } from "@floria/types";
 /**
  * Ensures request has an authenticated user context.
  */
-export function requireAuth(req: Request, _res: Response, next: NextFunction): void {
+export function requireAuth(
+  req: Request,
+  _res: Response,
+  next: NextFunction,
+): void {
   if (!req.user) {
     return next(Errors.authRequired());
   }
@@ -26,18 +30,30 @@ export function requireRole(...allowedRoles: (UserRole | "super_admin")[]) {
     }
 
     if (!allowedRoles.includes(req.user.role)) {
-      return next(Errors.forbidden(`Access restricted to roles: ${allowedRoles.join(", ")}.`));
+      return next(
+        Errors.forbidden(
+          `Access restricted to roles: ${allowedRoles.join(", ")}.`,
+        ),
+      );
     }
 
     next();
   };
 }
 
-export function requireAdmin(req: Request, res: Response, next: NextFunction): void {
+export function requireAdmin(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): void {
   return requireRole("admin")(req, res, next);
 }
 
-export function requireOperations(req: Request, res: Response, next: NextFunction): void {
+export function requireOperations(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): void {
   return requireRole("operations", "admin")(req, res, next);
 }
 
@@ -55,7 +71,9 @@ export function requirePermission(permission: Permission) {
     }
 
     if (!req.user.permissions.includes(permission)) {
-      return next(Errors.forbidden(`Missing required permission: ${permission}`));
+      return next(
+        Errors.forbidden(`Missing required permission: ${permission}`),
+      );
     }
 
     next();
@@ -66,7 +84,11 @@ export function requirePermission(permission: Permission) {
  * Requires approved seller role for seller operational actions.
  * Throws 403 if role != seller or status != approved.
  */
-export function requireApprovedSeller(req: Request, _res: Response, next: NextFunction): void {
+export function requireApprovedSeller(
+  req: Request,
+  _res: Response,
+  next: NextFunction,
+): void {
   if (!req.user) {
     return next(Errors.authRequired());
   }

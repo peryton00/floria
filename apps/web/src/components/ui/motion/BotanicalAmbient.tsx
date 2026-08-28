@@ -5,7 +5,11 @@ interface BotanicalAmbientProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
 }
 
-export function BotanicalAmbient({ children, className = "", ...props }: BotanicalAmbientProps) {
+export function BotanicalAmbient({
+  children,
+  className = "",
+  ...props
+}: BotanicalAmbientProps) {
   return (
     <div className={`pointer-events-none select-none ${className}`} {...props}>
       {children}

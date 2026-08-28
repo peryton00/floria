@@ -3,7 +3,11 @@ import { Request, Response, NextFunction } from "express";
 import { checkoutService } from "./checkout.service.js";
 
 export class CheckoutController {
-  async processCheckout(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async processCheckout(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const { addressId, address, paymentMethod } = req.body;
       const result = await checkoutService.processCheckout({

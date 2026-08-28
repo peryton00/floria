@@ -50,17 +50,29 @@ export function checkRateLimit(opts: RateLimitOptions): { remaining: number } {
 
 /** 10 req / 60s — order creation */
 export function rateLimitOrderCreation(userId: string) {
-  return checkRateLimit({ key: `order:${userId}`, limit: 10, windowMs: 60_000 });
+  return checkRateLimit({
+    key: `order:${userId}`,
+    limit: 10,
+    windowMs: 60_000,
+  });
 }
 
 /** 30 req / 60s — seller product mutations */
 export function rateLimitSellerProducts(sellerId: string) {
-  return checkRateLimit({ key: `seller-products:${sellerId}`, limit: 30, windowMs: 60_000 });
+  return checkRateLimit({
+    key: `seller-products:${sellerId}`,
+    limit: 30,
+    windowMs: 60_000,
+  });
 }
 
 /** 30 req / 60s — seller fulfillment mutations */
 export function rateLimitSellerFulfillment(sellerId: string) {
-  return checkRateLimit({ key: `seller-fulfillment:${sellerId}`, limit: 30, windowMs: 60_000 });
+  return checkRateLimit({
+    key: `seller-fulfillment:${sellerId}`,
+    limit: 30,
+    windowMs: 60_000,
+  });
 }
 
 /** 60 req / 60s — search endpoint */

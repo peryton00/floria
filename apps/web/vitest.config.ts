@@ -19,7 +19,10 @@ export default defineConfig({
     alias: {
       "@": resolve(__dirname, "./src"),
       // Mock server-only in tests — it's a no-op outside Next.js server context
-      "server-only": resolve(__dirname, "./src/__tests__/__mocks__/server-only.ts"),
+      "server-only": resolve(
+        __dirname,
+        "./src/__tests__/__mocks__/server-only.ts",
+      ),
     },
   },
 });

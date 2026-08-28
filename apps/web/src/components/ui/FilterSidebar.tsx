@@ -11,7 +11,10 @@ interface FilterSidebarProps {
   onFilterChange?: () => void; // Optional callback for closing mobile drawer
 }
 
-export function FilterSidebar({ currentCategory, onFilterChange }: FilterSidebarProps) {
+export function FilterSidebar({
+  currentCategory,
+  onFilterChange,
+}: FilterSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -29,7 +32,8 @@ export function FilterSidebar({ currentCategory, onFilterChange }: FilterSidebar
   }, []);
 
   // URL state params
-  const activeCategory = currentCategory ?? searchParams.get("category") ?? "all";
+  const activeCategory =
+    currentCategory ?? searchParams.get("category") ?? "all";
   const activeNursery = searchParams.get("nursery") ?? "all";
   const activeMinPrice = searchParams.get("minPrice") ?? "";
   const activeMaxPrice = searchParams.get("maxPrice") ?? "";
@@ -121,12 +125,17 @@ export function FilterSidebar({ currentCategory, onFilterChange }: FilterSidebar
     activeInStock;
 
   return (
-    <aside className="w-full space-y-5 bg-white p-5 rounded-2xl border border-stone-200/80 shadow-2xs" aria-label="Product filters">
+    <aside
+      className="w-full space-y-5 bg-white p-5 rounded-2xl border border-stone-200/80 shadow-2xs"
+      aria-label="Product filters"
+    >
       {/* Header & Reset */}
       <div className="flex items-center justify-between pb-3 border-b border-stone-100">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-forest-800" />
-          <h2 className="text-xs font-bold uppercase tracking-wider text-stone-900 font-ui">Filters</h2>
+          <h2 className="text-xs font-bold uppercase tracking-wider text-stone-900 font-ui">
+            Filters
+          </h2>
         </div>
         {hasActiveFilters && (
           <button
@@ -247,7 +256,9 @@ export function FilterSidebar({ currentCategory, onFilterChange }: FilterSidebar
         <form onSubmit={handlePriceApply} className="space-y-2.5">
           <div className="flex items-center gap-2 font-ui">
             <div className="relative w-1/2">
-              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-stone-400 select-none">₹</span>
+              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-stone-400 select-none">
+                ₹
+              </span>
               <input
                 type="number"
                 placeholder="Min"
@@ -259,7 +270,9 @@ export function FilterSidebar({ currentCategory, onFilterChange }: FilterSidebar
             </div>
             <span className="text-stone-400 text-xs font-bold">–</span>
             <div className="relative w-1/2">
-              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-stone-400 select-none">₹</span>
+              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-stone-400 select-none">
+                ₹
+              </span>
               <input
                 type="number"
                 placeholder="Max"
@@ -291,7 +304,9 @@ export function FilterSidebar({ currentCategory, onFilterChange }: FilterSidebar
           <input
             type="checkbox"
             checked={activeInStock}
-            onChange={(e) => updateParam("inStock", e.target.checked ? "true" : null)}
+            onChange={(e) =>
+              updateParam("inStock", e.target.checked ? "true" : null)
+            }
             className="w-4 h-4 rounded border-stone-300 text-forest-800 focus:ring-forest-800 accent-forest-800 cursor-pointer"
           />
           <span className="font-semibold text-stone-800">In Stock Only</span>

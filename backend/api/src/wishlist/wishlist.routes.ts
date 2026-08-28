@@ -22,8 +22,16 @@ const mergeSchema = {
 router.use(authenticateToken);
 
 router.get("/", wishlistController.getWishlist);
-router.post("/items", validateRequest(addItemSchema), wishlistController.addItem);
+router.post(
+  "/items",
+  validateRequest(addItemSchema),
+  wishlistController.addItem,
+);
 router.delete("/items/:productId", wishlistController.removeItem);
-router.post("/merge", validateRequest(mergeSchema), wishlistController.mergeWishlist);
+router.post(
+  "/merge",
+  validateRequest(mergeSchema),
+  wishlistController.mergeWishlist,
+);
 
 export default router;

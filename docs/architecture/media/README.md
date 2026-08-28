@@ -42,16 +42,16 @@ BullMQ Queue ──► Async Image Worker Pool (Node.js + Sharp Engine)
 
 ## Architecture Documentation Index
 
-| Document | Description |
-| :--- | :--- |
-| [`media-architecture.md`](./media-architecture.md) | High-level system architecture, presigned upload flow, component topologies, and network sequence. |
-| [`media-data-model.md`](./media-data-model.md) | PostgreSQL DDL schema (`media_assets`, `media_variants`, `media_upload_sessions`, domain relationships), FK indexes, and deduplication logic. |
-| [`media-upload-lifecycle.md`](./media-upload-lifecycle.md) | Authoritative state machine (`RECEIVED` → `STORING` → `READY` / `FAILED`), failure codes, Sharp pipeline, and variant profile specs. |
-| [`media-storage-security.md`](./media-storage-security.md) | Bucket topology (`media-staging`, `public-media`, `private-documents`), storage & DB RLS policies, and threat mitigations. |
-| [`media-api-contract.md`](./media-api-contract.md) | REST API specifications for upload sessions, completion triggers, asset queries, batch uploads, and client delivery objects. |
-| [`media-migration-plan.md`](./media-migration-plan.md) | 15-stage zero-downtime rollout strategy, dual-read compatibility layer, and static PNG / Unsplash offloading guide. |
-| [`media-operations.md`](./media-operations.md) | BullMQ worker concurrency, Redis queue specs, reference-aware orphan cleanup cron, and observability log schemas. |
-| [`media-adr.md`](./media-adr.md) | Architectural Decision Records (ADR-001 through ADR-007) explaining design choices and trade-offs. |
+| Document                                                   | Description                                                                                                                                   |
+| :--------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`media-architecture.md`](./media-architecture.md)         | High-level system architecture, presigned upload flow, component topologies, and network sequence.                                            |
+| [`media-data-model.md`](./media-data-model.md)             | PostgreSQL DDL schema (`media_assets`, `media_variants`, `media_upload_sessions`, domain relationships), FK indexes, and deduplication logic. |
+| [`media-upload-lifecycle.md`](./media-upload-lifecycle.md) | Authoritative state machine (`RECEIVED` → `STORING` → `READY` / `FAILED`), failure codes, Sharp pipeline, and variant profile specs.          |
+| [`media-storage-security.md`](./media-storage-security.md) | Bucket topology (`media-staging`, `public-media`, `private-documents`), storage & DB RLS policies, and threat mitigations.                    |
+| [`media-api-contract.md`](./media-api-contract.md)         | REST API specifications for upload sessions, completion triggers, asset queries, batch uploads, and client delivery objects.                  |
+| [`media-migration-plan.md`](./media-migration-plan.md)     | 15-stage zero-downtime rollout strategy, dual-read compatibility layer, and static PNG / Unsplash offloading guide.                           |
+| [`media-operations.md`](./media-operations.md)             | BullMQ worker concurrency, Redis queue specs, reference-aware orphan cleanup cron, and observability log schemas.                             |
+| [`media-adr.md`](./media-adr.md)                           | Architectural Decision Records (ADR-001 through ADR-007) explaining design choices and trade-offs.                                            |
 
 ---
 
@@ -60,7 +60,7 @@ BullMQ Queue ──► Async Image Worker Pool (Node.js + Sharp Engine)
 Based on the factual repository audit recorded in [`tools/image-audit/image-audit-report.md`](file:///c:/Users/sudip/OneDrive/Desktop/webProjects/floria_by/tools/image-audit/image-audit-report.md):
 
 - **65 Physical Media Files**: 48 system SVG icons (`floria-svg-icon-system/*`), 16 web public assets (`apps/web/public/*`), 1 favicon.
-- **Reference Reconciliation**: 
+- **Reference Reconciliation**:
   - **98 Physical Asset Reference Points**: Unique code occurrences importing or referencing local repository files.
   - **186 Total Mapped Code Lines**: Includes duplicated import statements, component re-uses, and test matches.
   - **88 Unsplash URL References**: External links present across SQL seed scripts (`0004_seed_data.sql`), TypeScript seeder scripts (`seedDb.ts`), Vitest test files (`api.test.ts`), and frontend mock arrays.

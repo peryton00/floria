@@ -10,10 +10,17 @@ export function ProductDetailSkeleton() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
         {/* Left Column: Image Gallery */}
         <div className="space-y-4">
-          <Skeleton variant="rectangle" className="w-full aspect-[4/3] rounded-2xl" />
+          <Skeleton
+            variant="rectangle"
+            className="w-full aspect-[4/3] rounded-2xl"
+          />
           <div className="flex gap-3">
             {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} variant="rectangle" className="w-20 h-20 rounded-xl" />
+              <Skeleton
+                key={i}
+                variant="rectangle"
+                className="w-20 h-20 rounded-xl"
+              />
             ))}
           </div>
         </div>

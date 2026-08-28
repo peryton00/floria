@@ -3,7 +3,11 @@ import { Request, Response, NextFunction } from "express";
 import { wishlistService } from "./wishlist.service.js";
 
 export class WishlistController {
-  async getWishlist(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async getWishlist(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const wishlist = await wishlistService.getWishlist(req.user!.id);
       res.json({ success: true, data: wishlist });
@@ -12,7 +16,11 @@ export class WishlistController {
     }
   }
 
-  async addItem(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async addItem(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const { productId } = req.body;
       const wishlist = await wishlistService.addItem(req.user!.id, productId);
@@ -22,20 +30,34 @@ export class WishlistController {
     }
   }
 
-  async removeItem(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async removeItem(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const { productId } = req.params;
-      const wishlist = await wishlistService.removeItem(req.user!.id, String(productId));
+      const wishlist = await wishlistService.removeItem(
+        req.user!.id,
+        String(productId),
+      );
       res.json({ success: true, data: wishlist });
     } catch (err) {
       next(err);
     }
   }
 
-  async mergeWishlist(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async mergeWishlist(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const { productIds } = req.body;
-      const wishlist = await wishlistService.mergeWishlist(req.user!.id, productIds || []);
+      const wishlist = await wishlistService.mergeWishlist(
+        req.user!.id,
+        productIds || [],
+      );
       res.json({ success: true, data: wishlist });
     } catch (err) {
       next(err);

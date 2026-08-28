@@ -687,6 +687,27 @@ var FloriaApiClient = class {
       body: JSON.stringify({ status })
     });
   }
+  async completeDeliveryWithPod(id, data) {
+    return this.request(`/api/v1/operations/deliveries/${id}/complete`, {
+      method: "POST",
+      body: JSON.stringify(data)
+    });
+  }
+  async getDeliveryPod(id) {
+    return this.request(`/api/v1/operations/deliveries/${id}/pod`);
+  }
+  // ── Media Upload Sessions (/api/v1/media) ──────────────────────────────────
+  async createUploadSession(data) {
+    return this.request("/api/v1/media/upload-session", {
+      method: "POST",
+      body: JSON.stringify(data)
+    });
+  }
+  async completeUploadSession(sessionId) {
+    return this.request(`/api/v1/media/upload-session/${sessionId}/complete`, {
+      method: "POST"
+    });
+  }
   // ── REVIEWS & RATINGS ─────────────────────────────────────────────────────
   async getProductReviews(productId, params) {
     return this.request(

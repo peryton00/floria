@@ -14,19 +14,19 @@ This document specifies Floria's customer-facing pricing presentation rules, val
 
 ## 2. Customer-Visible vs. Internal (Admin-Only) Boundary
 
-| Pricing Parameter | Visibility Scope | Presentation / Handling |
-|---|---|---|
-| **Final Customer Selling Price** | **Customer-Facing** | Visually dominant, serif/bold typography (`ProductPriceBlock`) |
-| **Legitimate Comparison / Discount Price** | **Customer-Facing** | Strikethrough text with `{N}% OFF` badge (ONLY when provided by server) |
-| **Free Delivery Qualification** | **Customer-Facing** | `FREE DELIVERY` badge & optional `You save ₹40 on delivery` subtext |
-| **Platform Maintenance Fee** | **Customer-Facing** | Transparently disclosed at checkout (`₹10.00`) with ⓘ explanation tooltip |
-| **Customer Reviews & Ratings** | **Customer-Facing** | Real database values (`avg_rating`, `review_count`) or `"No reviews yet"` |
-| **Nursery Trust Badges** | **Customer-Facing** | `"Sold by {Nursery}"` & `"✓ Verified Nursery"` (real database flag) |
-| **Seller Base Price** | **ADMIN ONLY** | Never exposed to customer clients |
-| **Seller Commission Cut (15%)** | **ADMIN ONLY** | Never exposed to customer clients |
-| **Floria Profit Margin (2%)** | **ADMIN ONLY** | Never exposed to customer clients |
-| **Hidden Free Delivery Recovery (₹20)** | **ADMIN ONLY** | Never exposed to customer clients |
-| **Seller Net Revenue Payout** | **ADMIN ONLY** | Never exposed to customer clients |
+| Pricing Parameter                          | Visibility Scope    | Presentation / Handling                                                   |
+| ------------------------------------------ | ------------------- | ------------------------------------------------------------------------- |
+| **Final Customer Selling Price**           | **Customer-Facing** | Visually dominant, serif/bold typography (`ProductPriceBlock`)            |
+| **Legitimate Comparison / Discount Price** | **Customer-Facing** | Strikethrough text with `{N}% OFF` badge (ONLY when provided by server)   |
+| **Free Delivery Qualification**            | **Customer-Facing** | `FREE DELIVERY` badge & optional `You save ₹40 on delivery` subtext       |
+| **Platform Maintenance Fee**               | **Customer-Facing** | Transparently disclosed at checkout (`₹10.00`) with ⓘ explanation tooltip |
+| **Customer Reviews & Ratings**             | **Customer-Facing** | Real database values (`avg_rating`, `review_count`) or `"No reviews yet"` |
+| **Nursery Trust Badges**                   | **Customer-Facing** | `"Sold by {Nursery}"` & `"✓ Verified Nursery"` (real database flag)       |
+| **Seller Base Price**                      | **ADMIN ONLY**      | Never exposed to customer clients                                         |
+| **Seller Commission Cut (15%)**            | **ADMIN ONLY**      | Never exposed to customer clients                                         |
+| **Floria Profit Margin (2%)**              | **ADMIN ONLY**      | Never exposed to customer clients                                         |
+| **Hidden Free Delivery Recovery (₹20)**    | **ADMIN ONLY**      | Never exposed to customer clients                                         |
+| **Seller Net Revenue Payout**              | **ADMIN ONLY**      | Never exposed to customer clients                                         |
 
 ---
 
@@ -53,7 +53,7 @@ This document specifies Floria's customer-facing pricing presentation rules, val
 
 - **Platform Maintenance Fee**: Charged once per checkout (`₹10.00`). Listed transparently in Cart & Checkout order summaries.
 - **Information Tooltip ⓘ**: Clicking/hovering on the maintenance fee displays:
-  > *"Helps us operate the Floria marketplace and services."*
+  > _"Helps us operate the Floria marketplace and services."_
 
 ---
 

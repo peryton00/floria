@@ -52,22 +52,33 @@ describe("Phase 3.24 Customer-Side Product Price Consistency Suite", () => {
     // Calculate expected price under v12:
     // Profit = 50000 * 0.02 = 1000. Pre-recovery = 51000 (< 59900 threshold). Delivery recovery = 0.
     // Selling price = 51000 paise (₹510.00)
-    const expectedCalcV12 = pricingService.calculateProductPricingSync(50000, policyV12);
+    const expectedCalcV12 = pricingService.calculateProductPricingSync(
+      50000,
+      policyV12,
+    );
     expect(expectedCalcV12.customerProductPricePaise).toBe(51000);
     expect(expectedCalcV12.isFreeDeliveryEligible).toBe(false);
 
     // 1. Enrich listing
-    const enrichedListing = productsService.enrichWithDbPricing(mockProductA, policyV12);
+    const enrichedListing = productsService.enrichWithDbPricing(
+      mockProductA,
+      policyV12,
+    );
     expect(enrichedListing.pricing.sellingPricePaise).toBe(51000);
     expect(enrichedListing.pricing.customerPricePaise).toBe(51000);
     expect(enrichedListing.inventory.price_paise).toBe(51000);
 
     // 2. Wishlist Enrichment
-    const enrichedWishlist = productsService.enrichWithDbPricing(mockProductA, policyV12);
+    const enrichedWishlist = productsService.enrichWithDbPricing(
+      mockProductA,
+      policyV12,
+    );
     expect(enrichedWishlist.pricing.sellingPricePaise).toBe(51000);
 
     // 3. All surfaces match exactly 51000 paise
-    expect(enrichedListing.pricing.sellingPricePaise).toBe(enrichedWishlist.pricing.sellingPricePaise);
+    expect(enrichedListing.pricing.sellingPricePaise).toBe(
+      enrichedWishlist.pricing.sellingPricePaise,
+    );
   });
 
   it("Scenario 2: Dynamic policy transition v12 -> v13 propagates consistently to all catalog surfaces", async () => {
@@ -81,7 +92,10 @@ describe("Phase 3.24 Customer-Side Product Price Consistency Suite", () => {
       freeDeliveryThresholdPaise: 59900,
       freeDeliveryRecoveryPaise: 2000,
     };
-    const calcV12 = pricingService.calculateProductPricingSync(basePrice, policyV12);
+    const calcV12 = pricingService.calculateProductPricingSync(
+      basePrice,
+      policyV12,
+    );
     expect(calcV12.customerProductPricePaise).toBe(63200);
     expect(calcV12.isFreeDeliveryEligible).toBe(true);
 
@@ -93,7 +107,10 @@ describe("Phase 3.24 Customer-Side Product Price Consistency Suite", () => {
       freeDeliveryThresholdPaise: 59900,
       freeDeliveryRecoveryPaise: 2000,
     };
-    const calcV13 = pricingService.calculateProductPricingSync(basePrice, policyV13);
+    const calcV13 = pricingService.calculateProductPricingSync(
+      basePrice,
+      policyV13,
+    );
     expect(calcV13.customerProductPricePaise).toBe(65000);
     expect(calcV13.isFreeDeliveryEligible).toBe(true);
 
@@ -106,11 +123,17 @@ describe("Phase 3.24 Customer-Side Product Price Consistency Suite", () => {
     };
 
     // Before activation
-    const v12Enriched = productsService.enrichWithDbPricing(mockProduct, policyV12);
+    const v12Enriched = productsService.enrichWithDbPricing(
+      mockProduct,
+      policyV12,
+    );
     expect(v12Enriched.pricing.sellingPricePaise).toBe(63200);
 
     // After activation
-    const v13Enriched = productsService.enrichWithDbPricing(mockProduct, policyV13);
+    const v13Enriched = productsService.enrichWithDbPricing(
+      mockProduct,
+      policyV13,
+    );
     expect(v13Enriched.pricing.sellingPricePaise).toBe(65000);
   });
 
@@ -143,14 +166,21 @@ describe("Phase 3.24 Customer-Side Product Price Consistency Suite", () => {
       freeDeliveryThresholdPaise: 59900,
       freeDeliveryRecoveryPaise: 2000,
     };
-    const currentCatalogCalc = pricingService.calculateProductPricingSync(60000, policyV14);
+    const currentCatalogCalc = pricingService.calculateProductPricingSync(
+      60000,
+      policyV14,
+    );
     expect(currentCatalogCalc.customerProductPricePaise).toBe(68000); // Live price is ₹680
 
     // Verify historical order still strictly displays its snapshot price of ₹650 (65000 paise)
-    expect(historicalOrder.order_items[0].unit_price_paise_snapshot).toBe(65000);
+    expect(historicalOrder.order_items[0].unit_price_paise_snapshot).toBe(
+      65000,
+    );
     expect(historicalOrder.subtotal_paise).toBe(130000);
     expect(historicalOrder.total_paise).toBe(131000);
-    expect(historicalOrder.order_items[0].unit_price_paise_snapshot).not.toBe(currentCatalogCalc.customerProductPricePaise);
+    expect(historicalOrder.order_items[0].unit_price_paise_snapshot).not.toBe(
+      currentCatalogCalc.customerProductPricePaise,
+    );
   });
 
   it("Scenario 4: Multi-tab & checkout price integrity (Server enforces active price even with stale browser)", async () => {
@@ -172,8 +202,13 @@ describe("Phase 3.24 Customer-Side Product Price Consistency Suite", () => {
     };
 
     // Checkout service calculates authoritatively on the server
-    const authoritativeLine = await pricingService.calculateProductPricing(50000, activePolicy);
+    const authoritativeLine = await pricingService.calculateProductPricing(
+      50000,
+      activePolicy,
+    );
     expect(authoritativeLine.customerProductPricePaise).toBe(52500);
-    expect(authoritativeLine.customerProductPricePaise).not.toBe(staleClientAttempt.claimedPricePaise);
+    expect(authoritativeLine.customerProductPricePaise).not.toBe(
+      staleClientAttempt.claimedPricePaise,
+    );
   });
 });

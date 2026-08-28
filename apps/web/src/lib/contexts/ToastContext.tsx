@@ -44,11 +44,31 @@ export interface UpdateToastOptions {
 interface ToastContextValue {
   toasts: ToastMessage[];
   toast: {
-    success: (title: string, description?: string, options?: ToastOptions) => string;
-    error: (title: string, description?: string, options?: ToastOptions) => string;
-    warning: (title: string, description?: string, options?: ToastOptions) => string;
-    info: (title: string, description?: string, options?: ToastOptions) => string;
-    loading: (title: string, description?: string, options?: ToastOptions) => string;
+    success: (
+      title: string,
+      description?: string,
+      options?: ToastOptions,
+    ) => string;
+    error: (
+      title: string,
+      description?: string,
+      options?: ToastOptions,
+    ) => string;
+    warning: (
+      title: string,
+      description?: string,
+      options?: ToastOptions,
+    ) => string;
+    info: (
+      title: string,
+      description?: string,
+      options?: ToastOptions,
+    ) => string;
+    loading: (
+      title: string,
+      description?: string,
+      options?: ToastOptions,
+    ) => string;
     dismiss: (id: string) => void;
     update: (id: string, options: UpdateToastOptions) => void;
   };
@@ -89,7 +109,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const addToast = useCallback(
-    (type: ToastType, title: string, description?: string, options?: ToastOptions): string => {
+    (
+      type: ToastType,
+      title: string,
+      description?: string,
+      options?: ToastOptions,
+    ): string => {
       const dedupeKey = `${type}:${title}:${description || ""}`;
       const now = Date.now();
       const lastTime = recentToastsRef.current.get(dedupeKey);
@@ -100,7 +125,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
       recentToastsRef.current.set(dedupeKey, now);
 
-      const id = options?.id || `toast-${now}-${Math.random().toString(36).slice(2, 7)}`;
+      const id =
+        options?.id || `toast-${now}-${Math.random().toString(36).slice(2, 7)}`;
       const duration = options?.duration ?? DEFAULT_DURATIONS[type];
 
       const newToast: ToastMessage = {
@@ -113,7 +139,11 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       };
 
       setToasts((prev) => {
-        if (prev.some((t) => `${t.type}:${t.title}:${t.description || ""}` === dedupeKey)) {
+        if (
+          prev.some(
+            (t) => `${t.type}:${t.title}:${t.description || ""}` === dedupeKey,
+          )
+        ) {
           return prev;
         }
         return [newToast, ...prev];
@@ -127,7 +157,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
       return id;
     },
-    [dismiss]
+    [dismiss],
   );
 
   const update = useCallback(
@@ -147,7 +177,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             type: updatedType,
             title: options.title !== undefined ? options.title : t.title,
             description:
-              options.description !== undefined ? options.description : t.description,
+              options.description !== undefined
+                ? options.description
+                : t.description,
             duration: updatedDuration,
           };
 
@@ -158,28 +190,31 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           }
 
           return updated;
-        })
+        }),
       );
     },
-    [dismiss]
+    [dismiss],
   );
 
   // Memoize so `toast` has a stable reference — prevents infinite loops in
   // consumers that list `toast` as a useCallback / useEffect dependency.
-  const toastHelpers = useMemo(() => ({
-    success: (title: string, description?: string, options?: ToastOptions) =>
-      addToast("success", title, description, options),
-    error: (title: string, description?: string, options?: ToastOptions) =>
-      addToast("error", title, description, options),
-    warning: (title: string, description?: string, options?: ToastOptions) =>
-      addToast("warning", title, description, options),
-    info: (title: string, description?: string, options?: ToastOptions) =>
-      addToast("info", title, description, options),
-    loading: (title: string, description?: string, options?: ToastOptions) =>
-      addToast("loading", title, description, options),
-    dismiss,
-    update,
-  }), [addToast, dismiss, update]);
+  const toastHelpers = useMemo(
+    () => ({
+      success: (title: string, description?: string, options?: ToastOptions) =>
+        addToast("success", title, description, options),
+      error: (title: string, description?: string, options?: ToastOptions) =>
+        addToast("error", title, description, options),
+      warning: (title: string, description?: string, options?: ToastOptions) =>
+        addToast("warning", title, description, options),
+      info: (title: string, description?: string, options?: ToastOptions) =>
+        addToast("info", title, description, options),
+      loading: (title: string, description?: string, options?: ToastOptions) =>
+        addToast("loading", title, description, options),
+      dismiss,
+      update,
+    }),
+    [addToast, dismiss, update],
+  );
 
   const visibleToasts = toasts.slice(0, MAX_VISIBLE_TOASTS);
 
@@ -222,17 +257,23 @@ function ToastItem({
       case "success":
         return {
           bg: "bg-white border-l-4 border-l-emerald-600 border border-stone-200 shadow-lg text-stone-900",
-          icon: <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />,
+          icon: (
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+          ),
         };
       case "error":
         return {
           bg: "bg-white border-l-4 border-l-red-600 border border-stone-200 shadow-lg text-stone-900",
-          icon: <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />,
+          icon: (
+            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+          ),
         };
       case "warning":
         return {
           bg: "bg-white border-l-4 border-l-amber-500 border border-stone-200 shadow-lg text-stone-900",
-          icon: <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />,
+          icon: (
+            <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+          ),
         };
       case "info":
         return {
@@ -242,7 +283,9 @@ function ToastItem({
       case "loading":
         return {
           bg: "bg-white border-l-4 border-l-forest-600 border border-stone-200 shadow-lg text-stone-900",
-          icon: <Loader2 className="w-5 h-5 text-forest-600 animate-spin flex-shrink-0 mt-0.5" />,
+          icon: (
+            <Loader2 className="w-5 h-5 text-forest-600 animate-spin flex-shrink-0 mt-0.5" />
+          ),
         };
     }
   };
@@ -257,9 +300,13 @@ function ToastItem({
     >
       {style.icon}
       <div className="flex-1 min-w-0 pr-1">
-        <h4 className="text-xs font-bold text-stone-900 leading-snug">{toast.title}</h4>
+        <h4 className="text-xs font-bold text-stone-900 leading-snug">
+          {toast.title}
+        </h4>
         {toast.description && (
-          <p className="text-[11px] text-stone-600 mt-0.5 leading-relaxed">{toast.description}</p>
+          <p className="text-[11px] text-stone-600 mt-0.5 leading-relaxed">
+            {toast.description}
+          </p>
         )}
       </div>
       <button

@@ -7,7 +7,8 @@ export type ImageProfileName =
   | "USER_AVATAR"
   | "CATEGORY"
   | "REVIEW_IMAGE"
-  | "DOCUMENT";
+  | "DOCUMENT"
+  | "DELIVERY_POD";
 
 export type FitBehavior = "FIT" | "COVER" | "CONTAIN";
 

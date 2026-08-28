@@ -23,7 +23,7 @@ export class ProductMediaService {
   public static async attachMediaAssetToProduct(
     sellerId: string,
     productId: string,
-    input: AttachProductImageInput
+    input: AttachProductImageInput,
   ) {
     const db = getAdminDb();
 
@@ -55,12 +55,16 @@ export class ProductMediaService {
 
     // 4. Verify seller ownership of asset (Cross-seller protection)
     if (asset.seller_id !== sellerId) {
-      throw Errors.forbidden("Cross-seller media asset attachment is prohibited.");
+      throw Errors.forbidden(
+        "Cross-seller media asset attachment is prohibited.",
+      );
     }
 
     // 5. Verify asset status = READY
     if (asset.status !== "READY") {
-      throw Errors.validation("Media asset is not READY for product attachment.");
+      throw Errors.validation(
+        "Media asset is not READY for product attachment.",
+      );
     }
 
     // 6 & 7. Verify media_category = IMAGE and storage_bucket = public-media
@@ -69,7 +73,9 @@ export class ProductMediaService {
     }
 
     if (asset.storage_bucket !== "public-media") {
-      throw Errors.validation("Only public-media assets can be attached to products.");
+      throw Errors.validation(
+        "Only public-media assets can be attached to products.",
+      );
     }
 
     // 8 & 9. Verify asset is not retired/deleted/document
@@ -118,7 +124,9 @@ export class ProductMediaService {
       .single();
 
     if (insertErr || !newImage) {
-      throw Errors.database(`Failed to attach image to product: ${insertErr?.message}`);
+      throw Errors.database(
+        `Failed to attach image to product: ${insertErr?.message}`,
+      );
     }
 
     // Return enriched product
@@ -132,7 +140,7 @@ export class ProductMediaService {
   public static async removeProductImage(
     sellerId: string,
     productId: string,
-    imageId: string
+    imageId: string,
   ) {
     const db = getAdminDb();
 
@@ -166,7 +174,9 @@ export class ProductMediaService {
       .eq("id", imageId);
 
     if (delErr) {
-      throw Errors.database(`Failed to remove product image: ${delErr.message}`);
+      throw Errors.database(
+        `Failed to remove product image: ${delErr.message}`,
+      );
     }
 
     // If removed image was primary, set the next image (by display_order) as primary
@@ -195,7 +205,7 @@ export class ProductMediaService {
   public static async reorderProductImages(
     sellerId: string,
     productId: string,
-    imageOrders: ImageOrderInput[]
+    imageOrders: ImageOrderInput[],
   ) {
     if (!Array.isArray(imageOrders) || imageOrders.length === 0) {
       throw Errors.validation("imageOrders must be a non-empty array.");
@@ -233,7 +243,7 @@ export class ProductMediaService {
   public static async setPrimaryProductImage(
     sellerId: string,
     productId: string,
-    imageId: string
+    imageId: string,
   ) {
     const db = getAdminDb();
 
@@ -283,7 +293,7 @@ export class ProductMediaService {
     productId: string,
     imageId: string,
     newAssetId: string,
-    options?: { altText?: string }
+    options?: { altText?: string },
   ) {
     const db = getAdminDb();
 
@@ -317,11 +327,19 @@ export class ProductMediaService {
       .maybeSingle();
 
     if (!asset || asset.seller_id !== sellerId) {
-      throw Errors.forbidden("Cross-seller media asset attachment is prohibited.");
+      throw Errors.forbidden(
+        "Cross-seller media asset attachment is prohibited.",
+      );
     }
 
-    if (asset.status !== "READY" || asset.media_category !== "IMAGE" || asset.storage_bucket !== "public-media") {
-      throw Errors.validation("Target media asset is not a valid READY public image.");
+    if (
+      asset.status !== "READY" ||
+      asset.media_category !== "IMAGE" ||
+      asset.storage_bucket !== "public-media"
+    ) {
+      throw Errors.validation(
+        "Target media asset is not a valid READY public image.",
+      );
     }
 
     const supabaseUrl = process.env.SUPABASE_URL || "https://supabase.co";
@@ -332,7 +350,8 @@ export class ProductMediaService {
       .update({
         asset_id: asset.id,
         url: legacyUrl,
-        alt_text: options?.altText?.trim() || existingImg.alt_text || product.name,
+        alt_text:
+          options?.altText?.trim() || existingImg.alt_text || product.name,
       })
       .eq("id", imageId);
 

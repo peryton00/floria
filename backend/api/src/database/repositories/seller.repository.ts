@@ -32,12 +32,21 @@ export class SellerRepository {
     return data as SellerProfile;
   }
 
-  async updateProfile(sellerId: string, updates: Partial<SellerProfile>): Promise<SellerProfile | null> {
+  async updateProfile(
+    sellerId: string,
+    updates: Partial<SellerProfile>,
+  ): Promise<SellerProfile | null> {
     const db = getAdminDb();
 
     // Auto-sync address string if structured components are updated
     let address = updates.address;
-    if (!address && (updates.address_line1 || updates.city || updates.state || updates.pincode)) {
+    if (
+      !address &&
+      (updates.address_line1 ||
+        updates.city ||
+        updates.state ||
+        updates.pincode)
+    ) {
       address = [
         updates.address_line1,
         updates.address_line2,
@@ -49,7 +58,10 @@ export class SellerRepository {
         updates.pincode,
         updates.country || "India",
       ]
-        .filter((part): part is string => typeof part === "string" && part.trim().length > 0)
+        .filter(
+          (part): part is string =>
+            typeof part === "string" && part.trim().length > 0,
+        )
         .join(", ");
     }
 
@@ -77,8 +89,10 @@ export class SellerRepository {
     return data as SellerProfile;
   }
 
-
-  async submitApplication(userId: string, appData: any): Promise<SellerProfile> {
+  async submitApplication(
+    userId: string,
+    appData: any,
+  ): Promise<SellerProfile> {
     const db = getAdminDb();
     const existing = await this.findByUserId(userId);
 
@@ -156,7 +170,10 @@ export class SellerRepository {
     return data as SellerProfile[];
   }
 
-  async updateStatus(sellerId: string, status: "pending" | "approved" | "suspended"): Promise<boolean> {
+  async updateStatus(
+    sellerId: string,
+    status: "pending" | "approved" | "suspended",
+  ): Promise<boolean> {
     const db = getAdminDb();
     const { error } = await db
       .from("seller_profiles")
@@ -171,7 +188,10 @@ export class SellerRepository {
   }
 
   // ── Products ─────────────────────────────────────────────────────────────
-  async findSellerProducts(sellerId: string, filters?: { search?: string; status?: string; stock?: string }): Promise<any[]> {
+  async findSellerProducts(
+    sellerId: string,
+    filters?: { search?: string; status?: string; stock?: string },
+  ): Promise<any[]> {
     const db = getAdminDb();
 
     const profQuery = db.from("seller_profiles").select("id, user_id");
@@ -194,23 +214,32 @@ export class SellerRepository {
     }
 
     if (filters?.search) {
-      q = q.or(`name.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
+      q = q.or(
+        `name.ilike.%${filters.search}%,description.ilike.%${filters.search}%`,
+      );
     }
 
-    const { data } = await (typeof q.order === "function" ? q.order("created_at", { ascending: false }) : q);
+    const { data } = await (typeof q.order === "function"
+      ? q.order("created_at", { ascending: false })
+      : q);
 
     let results = data || [];
 
     results = results.filter((p: any) => p.status !== "deleted");
     if (filters?.stock === "low") {
       results = results.filter((p: any) => {
-        const qty = p.inventory?.[0]?.stock_quantity ?? p.inventory?.stock_quantity ?? 0;
-        const thresh = p.inventory?.[0]?.low_stock_threshold ?? p.inventory?.low_stock_threshold ?? 5;
+        const qty =
+          p.inventory?.[0]?.stock_quantity ?? p.inventory?.stock_quantity ?? 0;
+        const thresh =
+          p.inventory?.[0]?.low_stock_threshold ??
+          p.inventory?.low_stock_threshold ??
+          5;
         return qty > 0 && qty <= thresh;
       });
     } else if (filters?.stock === "out") {
       results = results.filter((p: any) => {
-        const qty = p.inventory?.[0]?.stock_quantity ?? p.inventory?.stock_quantity ?? 0;
+        const qty =
+          p.inventory?.[0]?.stock_quantity ?? p.inventory?.stock_quantity ?? 0;
         return qty <= 0;
       });
     }
@@ -218,14 +247,20 @@ export class SellerRepository {
     results = await productRepo.enrichProductImages(results);
 
     // Self-heal any stale media-staging URLs in product_images
-    const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "https://supabase.co";
+    const supabaseUrl =
+      process.env.SUPABASE_URL ||
+      process.env.NEXT_PUBLIC_SUPABASE_URL ||
+      "https://supabase.co";
     for (const p of results) {
       if (Array.isArray(p.images)) {
         for (const img of p.images) {
           if (img.asset_id && img.url?.includes("/media-staging/")) {
             const cleanUrl = `${supabaseUrl}/storage/v1/object/public/public-media/products/${sellerId}/${img.asset_id}/medium.webp`;
             img.url = cleanUrl;
-            await db.from("product_images").update({ url: cleanUrl }).eq("id", img.id);
+            await db
+              .from("product_images")
+              .update({ url: cleanUrl })
+              .eq("id", img.id);
           }
         }
       }
@@ -234,7 +269,10 @@ export class SellerRepository {
     return results;
   }
 
-  async findSellerProductById(sellerId: string, productId: string): Promise<any | null> {
+  async findSellerProductById(
+    sellerId: string,
+    productId: string,
+  ): Promise<any | null> {
     const db = getAdminDb();
     const { data, error } = await db
       .from("products")
@@ -248,12 +286,18 @@ export class SellerRepository {
 
     const [enriched] = await productRepo.enrichProductImages([data]);
     if (enriched && Array.isArray(enriched.images)) {
-      const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "https://supabase.co";
+      const supabaseUrl =
+        process.env.SUPABASE_URL ||
+        process.env.NEXT_PUBLIC_SUPABASE_URL ||
+        "https://supabase.co";
       for (const img of enriched.images) {
         if (img.asset_id && img.url?.includes("/media-staging/")) {
           const cleanUrl = `${supabaseUrl}/storage/v1/object/public/public-media/products/${sellerId}/${img.asset_id}/medium.webp`;
           img.url = cleanUrl;
-          await db.from("product_images").update({ url: cleanUrl }).eq("id", img.id);
+          await db
+            .from("product_images")
+            .update({ url: cleanUrl })
+            .eq("id", img.id);
         }
       }
     }
@@ -264,11 +308,12 @@ export class SellerRepository {
     const db = getAdminDb();
     const now = new Date().toISOString();
 
-    const slug = (productData.name || "plant")
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9\s-]/g, "")
-      .replace(/\s+/g, "-") + `-${Date.now().toString().slice(-4)}`;
+    const slug =
+      (productData.name || "plant")
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9\s-]/g, "")
+        .replace(/\s+/g, "-") + `-${Date.now().toString().slice(-4)}`;
 
     const { data: prod, error: prodErr } = await db
       .from("products")
@@ -286,10 +331,13 @@ export class SellerRepository {
       .select()
       .single();
 
-    if (prodErr || !prod) throw prodErr || new Error("Failed to create product");
+    if (prodErr || !prod)
+      throw prodErr || new Error("Failed to create product");
 
     // Auto-generate permanent unique SKU if not provided
-    const autoSku = productData.sku?.trim() || `FLR-${prod.id.replace(/-/g, "").slice(0, 8).toUpperCase()}`;
+    const autoSku =
+      productData.sku?.trim() ||
+      `FLR-${prod.id.replace(/-/g, "").slice(0, 8).toUpperCase()}`;
 
     // Inventory
     await db.from("inventory").insert({
@@ -303,8 +351,14 @@ export class SellerRepository {
     });
 
     // Primary & Additional Images Support
-    const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "https://supabase.co";
-    const resolveSanitizedUrl = (aId: string | null, rUrl: string | null): string => {
+    const supabaseUrl =
+      process.env.SUPABASE_URL ||
+      process.env.NEXT_PUBLIC_SUPABASE_URL ||
+      "https://supabase.co";
+    const resolveSanitizedUrl = (
+      aId: string | null,
+      rUrl: string | null,
+    ): string => {
       if (aId) {
         return `${supabaseUrl}/storage/v1/object/public/public-media/products/${sellerId}/${aId}/medium.webp`;
       }
@@ -317,9 +371,18 @@ export class SellerRepository {
     if (Array.isArray(productData.images) && productData.images.length > 0) {
       for (let i = 0; i < productData.images.length; i++) {
         const imgObj = productData.images[i];
-        const assetId = typeof imgObj === "string" ? imgObj : (imgObj.asset_id || imgObj.assetId || null);
-        const rawUrl = typeof imgObj === "string" ? imgObj : (imgObj.url || productData.image_url || "/floria-logo.png");
-        const isPrimary = typeof imgObj === "object" && imgObj.is_primary !== undefined ? imgObj.is_primary : i === 0;
+        const assetId =
+          typeof imgObj === "string"
+            ? imgObj
+            : imgObj.asset_id || imgObj.assetId || null;
+        const rawUrl =
+          typeof imgObj === "string"
+            ? imgObj
+            : imgObj.url || productData.image_url || "/floria-logo.png";
+        const isPrimary =
+          typeof imgObj === "object" && imgObj.is_primary !== undefined
+            ? imgObj.is_primary
+            : i === 0;
 
         await db.from("product_images").insert({
           product_id: prod.id,
@@ -348,7 +411,11 @@ export class SellerRepository {
     return this.findSellerProductById(sellerId, prod.id);
   }
 
-  async updateProduct(sellerId: string, productId: string, updates: any): Promise<any | null> {
+  async updateProduct(
+    sellerId: string,
+    productId: string,
+    updates: any,
+  ): Promise<any | null> {
     const db = getAdminDb();
     const existing = await this.findSellerProductById(sellerId, productId);
     if (!existing) return null;
@@ -358,11 +425,18 @@ export class SellerRepository {
 
     if (updates.name) prodPayload["name"] = updates.name.trim();
     if (updates.category_id) prodPayload["category_id"] = updates.category_id;
-    if (updates.description !== undefined) prodPayload["description"] = updates.description?.trim() || null;
-    if (updates.care_instructions !== undefined) prodPayload["care_instructions"] = updates.care_instructions?.trim() || null;
+    if (updates.description !== undefined)
+      prodPayload["description"] = updates.description?.trim() || null;
+    if (updates.care_instructions !== undefined)
+      prodPayload["care_instructions"] =
+        updates.care_instructions?.trim() || null;
     if (updates.status) prodPayload["status"] = updates.status;
 
-    await db.from("products").update(prodPayload).eq("id", productId).eq("seller_id", sellerId);
+    await db
+      .from("products")
+      .update(prodPayload)
+      .eq("id", productId)
+      .eq("seller_id", sellerId);
 
     // Update Inventory
     if (
@@ -372,17 +446,31 @@ export class SellerRepository {
       updates.sku !== undefined
     ) {
       const invPayload: Record<string, unknown> = { updated_at: now };
-      if (updates.price_paise !== undefined) invPayload["price_paise"] = Math.max(0, updates.price_paise);
-      if (updates.stock_quantity !== undefined) invPayload["stock_quantity"] = Math.max(0, updates.stock_quantity);
-      if (updates.low_stock_threshold !== undefined) invPayload["low_stock_threshold"] = Math.max(0, updates.low_stock_threshold);
-      if (updates.sku !== undefined) invPayload["sku"] = updates.sku?.trim() || null;
+      if (updates.price_paise !== undefined)
+        invPayload["price_paise"] = Math.max(0, updates.price_paise);
+      if (updates.stock_quantity !== undefined)
+        invPayload["stock_quantity"] = Math.max(0, updates.stock_quantity);
+      if (updates.low_stock_threshold !== undefined)
+        invPayload["low_stock_threshold"] = Math.max(
+          0,
+          updates.low_stock_threshold,
+        );
+      if (updates.sku !== undefined)
+        invPayload["sku"] = updates.sku?.trim() || null;
 
-      await db.from("inventory").update(invPayload).eq("product_id", productId).eq("seller_id", sellerId);
+      await db
+        .from("inventory")
+        .update(invPayload)
+        .eq("product_id", productId)
+        .eq("seller_id", sellerId);
     }
 
     // Update Primary image if image_url or asset_id provided
     if (updates.asset_id || updates.image_url) {
-      const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "https://supabase.co";
+      const supabaseUrl =
+        process.env.SUPABASE_URL ||
+        process.env.NEXT_PUBLIC_SUPABASE_URL ||
+        "https://supabase.co";
       const { data: primaryImg } = await db
         .from("product_images")
         .select("id")
@@ -395,13 +483,16 @@ export class SellerRepository {
       const cleanUrl = aId
         ? `${supabaseUrl}/storage/v1/object/public/public-media/products/${sellerId}/${aId}/medium.webp`
         : rawUrl.includes("/media-staging/")
-        ? "/floria-logo.png"
-        : rawUrl;
+          ? "/floria-logo.png"
+          : rawUrl;
 
       if (primaryImg) {
         const imgPayload: Record<string, any> = { url: cleanUrl };
         if (aId) imgPayload["asset_id"] = aId;
-        await db.from("product_images").update(imgPayload).eq("id", primaryImg.id);
+        await db
+          .from("product_images")
+          .update(imgPayload)
+          .eq("id", primaryImg.id);
       } else {
         await db.from("product_images").insert({
           product_id: productId,
@@ -418,7 +509,11 @@ export class SellerRepository {
     return this.findSellerProductById(sellerId, productId);
   }
 
-  async updateProductStatus(sellerId: string, productId: string, status: "active" | "draft" | "inactive"): Promise<any | null> {
+  async updateProductStatus(
+    sellerId: string,
+    productId: string,
+    status: "active" | "draft" | "inactive",
+  ): Promise<any | null> {
     return this.updateProduct(sellerId, productId, { status });
   }
 
@@ -446,11 +541,16 @@ export class SellerRepository {
   }
 
   // ── Orders & Fulfillment ──────────────────────────────────────────────────
-  async findSellerOrders(sellerId: string, filters?: { status?: string; search?: string }): Promise<any[]> {
+  async findSellerOrders(
+    sellerId: string,
+    filters?: { status?: string; search?: string },
+  ): Promise<any[]> {
     const db = getAdminDb();
 
     // Retrieve seller profile to get both seller profile ID and user_id
-    const profQuery = db.from("seller_profiles").select("id, user_id, business_name");
+    const profQuery = db
+      .from("seller_profiles")
+      .select("id, user_id, business_name");
     const { data: sellerProf } = await (typeof profQuery.or === "function"
       ? profQuery.or(`id.eq.${sellerId},user_id.eq.${sellerId}`).maybeSingle()
       : profQuery.eq("id", sellerId).maybeSingle());
@@ -464,7 +564,9 @@ export class SellerRepository {
       .from("order_items")
       .select("*, order:orders(*), product:products(name,slug,seller_id)");
     const { data: items } = await (typeof itemsQuery.or === "function"
-      ? itemsQuery.or(`seller_id_snapshot.eq.${targetSellerId},seller_id_snapshot.eq.${targetUserId}`)
+      ? itemsQuery.or(
+          `seller_id_snapshot.eq.${targetSellerId},seller_id_snapshot.eq.${targetUserId}`,
+        )
       : itemsQuery.eq("seller_id_snapshot", sellerId));
 
     // 2. Fetch orders where order.seller_id matches targetSellerId or targetUserId
@@ -472,7 +574,9 @@ export class SellerRepository {
       .from("orders")
       .select("*, order_items(*, product:products(name,slug,seller_id))");
     const { data: masterOrders } = await (typeof ordersQuery.or === "function"
-      ? ordersQuery.or(`seller_id.eq.${targetSellerId},seller_id.eq.${targetUserId}`)
+      ? ordersQuery.or(
+          `seller_id.eq.${targetSellerId},seller_id.eq.${targetUserId}`,
+        )
       : ordersQuery.eq("seller_id", sellerId));
 
     const orderMap = new Map<string, any>();
@@ -481,9 +585,12 @@ export class SellerRepository {
     (masterOrders || []).forEach((order: any) => {
       const lineItems = (order.order_items || []).map((item: any) => {
         const pricePaise = item.unit_price_paise_snapshot || 0;
-        const basePrice = item.base_price_paise_snapshot ?? item.unit_price_paise_snapshot ?? 0;
-        const commRate = item.commission_rate_snapshot ?? (order.commission_rate ?? 0);
-        const commPaise = item.commission_paise_snapshot ?? Math.round(basePrice * commRate);
+        const basePrice =
+          item.base_price_paise_snapshot ?? item.unit_price_paise_snapshot ?? 0;
+        const commRate =
+          item.commission_rate_snapshot ?? order.commission_rate ?? 0;
+        const commPaise =
+          item.commission_paise_snapshot ?? Math.round(basePrice * commRate);
         const sellerNetPaise = basePrice - commPaise;
 
         return {
@@ -500,8 +607,17 @@ export class SellerRepository {
         };
       });
 
-      const subtotalPaise = lineItems.reduce((sum: number, it: any) => sum + it.pricePaise * it.quantity, 0) || order.subtotal_paise || 0;
-      const sellerPayoutPaise = lineItems.reduce((sum: number, it: any) => sum + it.seller_net_paise * it.quantity, 0);
+      const subtotalPaise =
+        lineItems.reduce(
+          (sum: number, it: any) => sum + it.pricePaise * it.quantity,
+          0,
+        ) ||
+        order.subtotal_paise ||
+        0;
+      const sellerPayoutPaise = lineItems.reduce(
+        (sum: number, it: any) => sum + it.seller_net_paise * it.quantity,
+        0,
+      );
 
       orderMap.set(order.id, {
         masterOrderId: order.id,
@@ -519,12 +635,17 @@ export class SellerRepository {
         totalPaise: subtotalPaise,
         status: order.status === "preparing" ? "Preparing" : "Order Placed",
         masterStatus: order.status,
-        paymentMethod: order.notes?.includes("COD") ? "Cash on Delivery" : "Online Payment",
-        createdAt: new Date(order.created_at || Date.now()).toLocaleDateString("en-IN", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        }),
+        paymentMethod: order.notes?.includes("COD")
+          ? "Cash on Delivery"
+          : "Online Payment",
+        createdAt: new Date(order.created_at || Date.now()).toLocaleDateString(
+          "en-IN",
+          {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          },
+        ),
         createdAtTimestamp: new Date(order.created_at || Date.now()).getTime(),
       });
     });
@@ -550,23 +671,34 @@ export class SellerRepository {
           totalPaise: 0,
           status: order.status === "preparing" ? "Preparing" : "Order Placed",
           masterStatus: order.status,
-          paymentMethod: order.notes?.includes("COD") ? "Cash on Delivery" : "Online Payment",
-          createdAt: new Date(order.created_at || Date.now()).toLocaleDateString("en-IN", {
+          paymentMethod: order.notes?.includes("COD")
+            ? "Cash on Delivery"
+            : "Online Payment",
+          createdAt: new Date(
+            order.created_at || Date.now(),
+          ).toLocaleDateString("en-IN", {
             day: "numeric",
             month: "short",
             year: "numeric",
           }),
-          createdAtTimestamp: new Date(order.created_at || Date.now()).getTime(),
+          createdAtTimestamp: new Date(
+            order.created_at || Date.now(),
+          ).getTime(),
         });
       }
 
       const entry = orderMap.get(order.id);
-      const exists = entry.items.some((it: any) => it.product.id === item.product_id);
+      const exists = entry.items.some(
+        (it: any) => it.product.id === item.product_id,
+      );
       if (!exists) {
         const pricePaise = item.unit_price_paise_snapshot || 0;
-        const basePrice = item.base_price_paise_snapshot ?? item.unit_price_paise_snapshot ?? 0;
-        const commRate = item.commission_rate_snapshot ?? (order.commission_rate ?? 0);
-        const commPaise = item.commission_paise_snapshot ?? Math.round(basePrice * commRate);
+        const basePrice =
+          item.base_price_paise_snapshot ?? item.unit_price_paise_snapshot ?? 0;
+        const commRate =
+          item.commission_rate_snapshot ?? order.commission_rate ?? 0;
+        const commPaise =
+          item.commission_paise_snapshot ?? Math.round(basePrice * commRate);
         const sellerNetPaise = basePrice - commPaise;
 
         entry.items.push({
@@ -583,14 +715,17 @@ export class SellerRepository {
         });
         entry.subtotalPaise += pricePaise * item.quantity;
         entry.totalPaise = entry.subtotalPaise;
-        entry.seller_payout_paise = (entry.seller_payout_paise || 0) + (sellerNetPaise * item.quantity);
+        entry.seller_payout_paise =
+          (entry.seller_payout_paise || 0) + sellerNetPaise * item.quantity;
       }
     });
 
     // Apply status overrides from seller_order_fulfillments table
     const fulQuery = db.from("seller_order_fulfillments").select("*");
     const { data: fulfillments } = await (typeof fulQuery.or === "function"
-      ? fulQuery.or(`seller_id.eq.${targetSellerId},seller_id.eq.${targetUserId}`)
+      ? fulQuery.or(
+          `seller_id.eq.${targetSellerId},seller_id.eq.${targetUserId}`,
+        )
       : fulQuery.eq("seller_id", sellerId));
 
     if (fulfillments) {
@@ -607,7 +742,9 @@ export class SellerRepository {
 
     let results = Array.from(orderMap.values());
     if (filters?.status && filters.status !== "all") {
-      results = results.filter((o) => o.status.toLowerCase() === filters.status!.toLowerCase());
+      results = results.filter(
+        (o) => o.status.toLowerCase() === filters.status!.toLowerCase(),
+      );
     }
 
     if (filters?.search) {
@@ -615,7 +752,7 @@ export class SellerRepository {
       results = results.filter(
         (o) =>
           o.masterOrderId.toLowerCase().includes(q) ||
-          o.customer.name.toLowerCase().includes(q)
+          o.customer.name.toLowerCase().includes(q),
       );
     }
 
@@ -625,23 +762,32 @@ export class SellerRepository {
     return results;
   }
 
-  async findSellerOrderById(sellerId: string, orderId: string): Promise<any | null> {
+  async findSellerOrderById(
+    sellerId: string,
+    orderId: string,
+  ): Promise<any | null> {
     // 1. Check in memory list first
     const orders = await this.findSellerOrders(sellerId);
-    const inList = orders.find((o) => o.masterOrderId.toLowerCase() === orderId.toLowerCase());
+    const inList = orders.find(
+      (o) => o.masterOrderId.toLowerCase() === orderId.toLowerCase(),
+    );
     if (inList) return inList;
 
     // 2. If not found in list, query master order directly by orderId
     const db = getAdminDb();
     const { data: order } = await db
       .from("orders")
-      .select("*, order_items(*, product:products(name,slug,seller_id)), seller_order_fulfillments(*)")
+      .select(
+        "*, order_items(*, product:products(name,slug,seller_id)), seller_order_fulfillments(*)",
+      )
       .eq("id", orderId)
       .maybeSingle();
 
     if (!order) return null;
 
-    const profQuery = db.from("seller_profiles").select("id, user_id, business_name");
+    const profQuery = db
+      .from("seller_profiles")
+      .select("id, user_id, business_name");
     const { data: sellerProf } = await (typeof profQuery.or === "function"
       ? profQuery.or(`id.eq.${sellerId},user_id.eq.${sellerId}`).maybeSingle()
       : profQuery.eq("id", sellerId).maybeSingle());
@@ -652,13 +798,19 @@ export class SellerRepository {
 
     const items = order.order_items || [];
     const fuls = order.seller_order_fulfillments || [];
-    const fulMatch = fuls.find((f: any) => f.seller_id === targetSellerId || f.seller_id === targetUserId);
+    const fulMatch = fuls.find(
+      (f: any) =>
+        f.seller_id === targetSellerId || f.seller_id === targetUserId,
+    );
 
     const lineItems = items.map((it: any) => {
       const pricePaise = it.unit_price_paise_snapshot || 0;
-      const basePrice = it.base_price_paise_snapshot ?? it.unit_price_paise_snapshot ?? 0;
-      const commRate = it.commission_rate_snapshot ?? (order.commission_rate ?? 0);
-      const commPaise = it.commission_paise_snapshot ?? Math.round(basePrice * commRate);
+      const basePrice =
+        it.base_price_paise_snapshot ?? it.unit_price_paise_snapshot ?? 0;
+      const commRate =
+        it.commission_rate_snapshot ?? order.commission_rate ?? 0;
+      const commPaise =
+        it.commission_paise_snapshot ?? Math.round(basePrice * commRate);
       const sellerNetPaise = basePrice - commPaise;
 
       return {
@@ -675,8 +827,17 @@ export class SellerRepository {
       };
     });
 
-    const subtotalPaise = lineItems.reduce((sum: number, it: any) => sum + it.pricePaise * it.quantity, 0) || order.subtotal_paise || 0;
-    const sellerPayoutPaise = lineItems.reduce((sum: number, it: any) => sum + it.seller_net_paise * it.quantity, 0);
+    const subtotalPaise =
+      lineItems.reduce(
+        (sum: number, it: any) => sum + it.pricePaise * it.quantity,
+        0,
+      ) ||
+      order.subtotal_paise ||
+      0;
+    const sellerPayoutPaise = lineItems.reduce(
+      (sum: number, it: any) => sum + it.seller_net_paise * it.quantity,
+      0,
+    );
 
     return {
       masterOrderId: order.id,
@@ -686,28 +847,48 @@ export class SellerRepository {
       customer: {
         name: order.delivery_address_snapshot?.full_name || "Customer",
         phone: order.delivery_address_snapshot?.phone || "",
-        address: typeof order.delivery_address_snapshot === "string"
-          ? order.delivery_address_snapshot
-          : [order.delivery_address_snapshot?.line1, order.delivery_address_snapshot?.line2, order.delivery_address_snapshot?.city, order.delivery_address_snapshot?.state, order.delivery_address_snapshot?.pincode].filter(Boolean).join(", ") || "Raipur, Chhattisgarh",
+        address:
+          typeof order.delivery_address_snapshot === "string"
+            ? order.delivery_address_snapshot
+            : [
+                order.delivery_address_snapshot?.line1,
+                order.delivery_address_snapshot?.line2,
+                order.delivery_address_snapshot?.city,
+                order.delivery_address_snapshot?.state,
+                order.delivery_address_snapshot?.pincode,
+              ]
+                .filter(Boolean)
+                .join(", ") || "Raipur, Chhattisgarh",
         addressSnapshot: order.delivery_address_snapshot || {},
       },
       items: lineItems,
       subtotalPaise,
       discountPaise: 0,
       totalPaise: subtotalPaise,
-      status: fulMatch?.status || (order.status === "preparing" ? "Preparing" : "Order Placed"),
+      status:
+        fulMatch?.status ||
+        (order.status === "preparing" ? "Preparing" : "Order Placed"),
       masterStatus: order.status,
-      paymentMethod: order.notes?.includes("COD") ? "Cash on Delivery" : "Online Payment",
-      createdAt: new Date(order.created_at || Date.now()).toLocaleDateString("en-IN", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      }),
+      paymentMethod: order.notes?.includes("COD")
+        ? "Cash on Delivery"
+        : "Online Payment",
+      createdAt: new Date(order.created_at || Date.now()).toLocaleDateString(
+        "en-IN",
+        {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        },
+      ),
       createdAtTimestamp: new Date(order.created_at || Date.now()).getTime(),
     };
   }
 
-  async updateFulfillmentStatus(sellerId: string, masterOrderId: string, newStatus: string): Promise<any> {
+  async updateFulfillmentStatus(
+    sellerId: string,
+    masterOrderId: string,
+    newStatus: string,
+  ): Promise<any> {
     const db = getAdminDb();
     const orderView = await this.findSellerOrderById(sellerId, masterOrderId);
     if (!orderView) throw new Error("Order not found or access denied");
@@ -717,12 +898,14 @@ export class SellerRepository {
     const allowedTransitions: Record<string, string> = {
       "Order Placed": "Nursery Confirmed",
       "Nursery Confirmed": "Preparing",
-      "Preparing": "Ready for Pickup",
+      Preparing: "Ready for Pickup",
       "Ready for Pickup": "Picked Up",
     };
 
     if (allowedTransitions[currentStatus] !== newStatus) {
-      throw new Error(`Invalid status transition from '${currentStatus}' to '${newStatus}'`);
+      throw new Error(
+        `Invalid status transition from '${currentStatus}' to '${newStatus}'`,
+      );
     }
 
     const payload: Record<string, unknown> = {
@@ -732,25 +915,32 @@ export class SellerRepository {
       updated_at: new Date().toISOString(),
     };
 
-    if (newStatus === "Nursery Confirmed") payload["confirmed_at"] = new Date().toISOString();
-    if (newStatus === "Preparing") payload["preparing_at"] = new Date().toISOString();
-    if (newStatus === "Ready for Pickup") payload["ready_at"] = new Date().toISOString();
-    if (newStatus === "Picked Up") payload["picked_up_at"] = new Date().toISOString();
+    if (newStatus === "Nursery Confirmed")
+      payload["confirmed_at"] = new Date().toISOString();
+    if (newStatus === "Preparing")
+      payload["preparing_at"] = new Date().toISOString();
+    if (newStatus === "Ready for Pickup")
+      payload["ready_at"] = new Date().toISOString();
+    if (newStatus === "Picked Up")
+      payload["picked_up_at"] = new Date().toISOString();
 
-    const { error } = await db.from("seller_order_fulfillments").upsert(payload, {
-      onConflict: "order_id,seller_id",
-    });
+    const { error } = await db
+      .from("seller_order_fulfillments")
+      .upsert(payload, {
+        onConflict: "order_id,seller_id",
+      });
 
     if (error) throw error;
 
     const masterStatusMap: Record<string, string> = {
       "Nursery Confirmed": "nursery_confirmed",
-      "Preparing": "preparing",
+      Preparing: "preparing",
       "Ready for Pickup": "ready_for_pickup",
       "Picked Up": "picked_up",
-      "Delivered": "delivered",
+      Delivered: "delivered",
     };
-    const masterStatus = masterStatusMap[newStatus] || newStatus.toLowerCase().replace(/ /g, "_");
+    const masterStatus =
+      masterStatusMap[newStatus] || newStatus.toLowerCase().replace(/ /g, "_");
 
     await db
       .from("orders")
@@ -779,9 +969,14 @@ export class SellerRepository {
       if (p.status === "active") publishedProducts++;
       else if (p.status === "draft") draftProducts++;
 
-      const qty = p.inventory?.[0]?.stock_quantity ?? p.inventory?.stock_quantity ?? 0;
-      const thresh = p.inventory?.[0]?.low_stock_threshold ?? p.inventory?.low_stock_threshold ?? 5;
-      const pricePaise = p.inventory?.[0]?.price_paise ?? p.inventory?.price_paise ?? 0;
+      const qty =
+        p.inventory?.[0]?.stock_quantity ?? p.inventory?.stock_quantity ?? 0;
+      const thresh =
+        p.inventory?.[0]?.low_stock_threshold ??
+        p.inventory?.low_stock_threshold ??
+        5;
+      const pricePaise =
+        p.inventory?.[0]?.price_paise ?? p.inventory?.price_paise ?? 0;
 
       if (qty <= 0) {
         outOfStockProducts++;
@@ -816,15 +1011,29 @@ export class SellerRepository {
 
     orders.forEach((o: any) => {
       const s = o.status;
-      if (s === "Order Placed" || s === "order_placed" || s === "seller_pending" || s === "Order Placed") newOrders++;
-      else if (s === "Nursery Confirmed" || s === "Preparing" || s === "preparing") preparingOrders++;
-      else if (s === "Ready for Pickup" || s === "ready_for_pickup") readyForPickupOrders++;
-      else if (s === "Picked Up" || s === "Delivered" || s === "delivered") completedOrders++;
+      if (
+        s === "Order Placed" ||
+        s === "order_placed" ||
+        s === "seller_pending" ||
+        s === "Order Placed"
+      )
+        newOrders++;
+      else if (
+        s === "Nursery Confirmed" ||
+        s === "Preparing" ||
+        s === "preparing"
+      )
+        preparingOrders++;
+      else if (s === "Ready for Pickup" || s === "ready_for_pickup")
+        readyForPickupOrders++;
+      else if (s === "Picked Up" || s === "Delivered" || s === "delivered")
+        completedOrders++;
 
       if (s === "Picked Up" || s === "Delivered" || s === "delivered") {
         totalRevenuePaise += o.totalPaise || 0;
       }
-    }); const actionRequired: any[] = [];
+    });
+    const actionRequired: any[] = [];
     if (newOrders > 0) {
       actionRequired.push({
         id: "action-new-orders",
@@ -856,7 +1065,8 @@ export class SellerRepository {
     } else if (profile?.status === "suspended") {
       actionRequired.push({
         id: "action-suspended-app",
-        title: "Your seller account is suspended. Product creation and order fulfillment are restricted.",
+        title:
+          "Your seller account is suspended. Product creation and order fulfillment are restricted.",
         count: 1,
         type: "APPLICATION_SUSPENDED",
         href: "/seller/profile",
@@ -891,13 +1101,14 @@ export class SellerRepository {
       .select("*, order:orders(*)")
       .eq("seller_id_snapshot", sellerId);
 
-    if (error || !items) return {
-      totalGrossRevenuePaise: 0,
-      totalCommissionPaise: 0,
-      totalNetEarningsPaise: 0,
-      ordersCount: 0,
-      payouts: []
-    };
+    if (error || !items)
+      return {
+        totalGrossRevenuePaise: 0,
+        totalCommissionPaise: 0,
+        totalNetEarningsPaise: 0,
+        ordersCount: 0,
+        payouts: [],
+      };
 
     let totalGross = 0;
     let totalCommission = 0;
@@ -925,7 +1136,7 @@ export class SellerRepository {
       totalCommissionPaise: totalCommission,
       totalNetEarningsPaise: net,
       ordersCount: uniqueOrders.size,
-      payouts: []
+      payouts: [],
     };
   }
 
@@ -939,7 +1150,10 @@ export class SellerRepository {
 
     const { ledgerService } = await import("../../payments/ledger.service.js");
     const balances = await ledgerService.getSellerBalance(sellerId);
-    const ledgerEntries = await ledgerService.getSellerLedgerEntries(sellerId, 30);
+    const ledgerEntries = await ledgerService.getSellerLedgerEntries(
+      sellerId,
+      30,
+    );
 
     return {
       status: "active",
@@ -953,7 +1167,9 @@ export class SellerRepository {
     const db = getAdminDb();
     const { data: items, error } = await db
       .from("order_items")
-      .select("*, order:orders(*), product:products(name, category_id, category:categories(name))")
+      .select(
+        "*, order:orders(*), product:products(name, category_id, category:categories(name))",
+      )
       .eq("seller_id_snapshot", sellerId);
 
     if (error || !items) {
@@ -961,7 +1177,7 @@ export class SellerRepository {
         summary: { grossRevenuePaise: 0, ordersCount: 0, unitsSold: 0 },
         series: [],
         topProducts: [],
-        categories: []
+        categories: [],
       };
     }
 
@@ -976,15 +1192,24 @@ export class SellerRepository {
       const order = item.order;
       if (!order) return false;
       const orderTime = new Date(order.created_at).getTime();
-      return (now - orderTime) <= filterMs;
+      return now - orderTime <= filterMs;
     });
 
     let totalGross = 0;
     let unitsSold = 0;
     const uniqueOrders = new Set<string>();
-    const productStats = new Map<string, { name: string; quantity: number; revenuePaise: number }>();
-    const categoryStats = new Map<string, { name: string; quantity: number; revenuePaise: number }>();
-    const seriesStats = new Map<string, { grossRevenuePaise: number; ordersCount: number; unitsSold: number }>();
+    const productStats = new Map<
+      string,
+      { name: string; quantity: number; revenuePaise: number }
+    >();
+    const categoryStats = new Map<
+      string,
+      { name: string; quantity: number; revenuePaise: number }
+    >();
+    const seriesStats = new Map<
+      string,
+      { grossRevenuePaise: number; ordersCount: number; unitsSold: number }
+    >();
 
     filteredItems.forEach((item: any) => {
       const order = item.order;
@@ -996,9 +1221,14 @@ export class SellerRepository {
       unitsSold += item.quantity;
 
       const prodId = item.product_id;
-      const prodName = item.product_name_snapshot || item.product?.name || "Plant Product";
+      const prodName =
+        item.product_name_snapshot || item.product?.name || "Plant Product";
       if (!productStats.has(prodId)) {
-        productStats.set(prodId, { name: prodName, quantity: 0, revenuePaise: 0 });
+        productStats.set(prodId, {
+          name: prodName,
+          quantity: 0,
+          revenuePaise: 0,
+        });
       }
       const pStat = productStats.get(prodId)!;
       pStat.quantity += item.quantity;
@@ -1006,7 +1236,11 @@ export class SellerRepository {
 
       const catName = item.product?.category?.name || "Uncategorized";
       if (!categoryStats.has(catName)) {
-        categoryStats.set(catName, { name: catName, quantity: 0, revenuePaise: 0 });
+        categoryStats.set(catName, {
+          name: catName,
+          quantity: 0,
+          revenuePaise: 0,
+        });
       }
       const cStat = categoryStats.get(catName)!;
       cStat.quantity += item.quantity;
@@ -1014,7 +1248,11 @@ export class SellerRepository {
 
       const dateStr = new Date(order.created_at).toISOString().split("T")[0];
       if (!seriesStats.has(dateStr)) {
-        seriesStats.set(dateStr, { grossRevenuePaise: 0, ordersCount: 0, unitsSold: 0 });
+        seriesStats.set(dateStr, {
+          grossRevenuePaise: 0,
+          ordersCount: 0,
+          unitsSold: 0,
+        });
       }
       const sStat = seriesStats.get(dateStr)!;
       sStat.grossRevenuePaise += gross;
@@ -1041,8 +1279,9 @@ export class SellerRepository {
       .sort((a, b) => b.revenuePaise - a.revenuePaise)
       .slice(0, 5);
 
-    const categories = Array.from(categoryStats.values())
-      .sort((a, b) => b.revenuePaise - a.revenuePaise);
+    const categories = Array.from(categoryStats.values()).sort(
+      (a, b) => b.revenuePaise - a.revenuePaise,
+    );
 
     const series = Array.from(seriesStats.entries())
       .map(([date, val]) => ({ date, ...val }))
@@ -1052,11 +1291,11 @@ export class SellerRepository {
       summary: {
         grossRevenuePaise: totalGross,
         ordersCount: uniqueOrders.size,
-        unitsSold
+        unitsSold,
       },
       series,
       topProducts,
-      categories
+      categories,
     };
   }
 
@@ -1102,7 +1341,11 @@ export class SellerRepository {
     return data;
   }
 
-  async updateSellerDocumentStatus(docId: string, status: string, reviewNotes?: string) {
+  async updateSellerDocumentStatus(
+    docId: string,
+    status: string,
+    reviewNotes?: string,
+  ) {
     const db = getAdminDb();
     const { data, error } = await db
       .from("seller_documents")
@@ -1145,9 +1388,16 @@ export class SellerRepository {
 
     const payload = {
       seller_id: sellerId,
-      new_order_notifications: updates.new_order_notifications ?? existing.new_order_notifications ?? true,
-      low_stock_notifications: updates.low_stock_notifications ?? existing.low_stock_notifications ?? true,
-      email_notifications: updates.email_notifications ?? existing.email_notifications ?? true,
+      new_order_notifications:
+        updates.new_order_notifications ??
+        existing.new_order_notifications ??
+        true,
+      low_stock_notifications:
+        updates.low_stock_notifications ??
+        existing.low_stock_notifications ??
+        true,
+      email_notifications:
+        updates.email_notifications ?? existing.email_notifications ?? true,
       updated_at: new Date().toISOString(),
     };
 

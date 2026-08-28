@@ -6,7 +6,7 @@ export function buildPublicVariantPath(
   sellerId: string | null,
   uploadedByUserId: string,
   assetId: string,
-  variantName: string
+  variantName: string,
 ): string {
   const sellerPathSegment = sellerId || "system";
 

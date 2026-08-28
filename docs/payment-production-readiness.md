@@ -9,6 +9,7 @@ This document details the audit, verification, and production readiness of the F
 ## 2. Payment Architecture & Provider Factory
 
 Floria implements a provider-agnostic Payment Abstraction Layer (`PaymentProviderFactory`):
+
 - **Cash on Delivery (COD)**: Active and verified for offline payment collection upon delivery.
 - **Cashfree (Online Payment)**: Fully implemented with cryptographic HMAC SHA-256 webhook signature verification, order intent creation, refund processing, and sandbox/production credential resolution (`process.env.CASHFREE_CLIENT_ID`, `process.env.CASHFREE_CLIENT_SECRET`, `process.env.CASHFREE_WEBHOOK_SECRET`).
 
@@ -17,6 +18,7 @@ Floria implements a provider-agnostic Payment Abstraction Layer (`PaymentProvide
 ## 3. Production Secret Management Audit
 
 A comprehensive repository audit confirmed:
+
 - **Zero hardcoded API keys**, secrets, webhooks, or service role credentials exist in tracked files.
 - Secrets are dynamically loaded via environment variables (`CASHFREE_CLIENT_ID`, `CASHFREE_CLIENT_SECRET`, `CASHFREE_WEBHOOK_SECRET`).
 - Staging, development, and production environments utilize isolated credentials.
@@ -26,6 +28,7 @@ A comprehensive repository audit confirmed:
 ## 4. Server-Authoritative Amount Integrity
 
 To prevent malicious client-side price or fee tampering:
+
 1. When a checkout request is initiated, `CheckoutService.processCheckout` fetches cart items, active product prices, and stock directly from PostgreSQL.
 2. The final order total ($T_{\text{final}} = \text{Subtotal} + \text{Maintenance Fee} + \text{Delivery Fee}$) is calculated server-side.
 3. The expected gateway payment intent amount is bound to $T_{\text{final}}$.
@@ -52,6 +55,7 @@ CREATED ──> PENDING ──> CAPTURED ──> REFUNDED
 [Order State Machine]
 seller_pending ──> nursery_confirmed ──> preparing ──> ready_for_pickup ──> out_for_delivery ──> delivered
 ```
+
 - Orders are not marked `paid` or `captured` based on unverified client callbacks.
 - For online payments, payment verification must complete via server-side signature validation or cryptographic webhook before the order is transitioned to `paid`.
 
@@ -63,6 +67,7 @@ seller_pending ──> nursery_confirmed ──> preparing ──> ready_for_pic
 - **Per-Seller Ledger Attribution**: Upon order insertion, `seller_order_financials` and `seller_ledger_entries` split net revenue, commission (12%), and gross sales independently for each nursery partner.
 
 ### Financial Reconciliation Formula
+
 $$\text{Customer Paid} = \text{Product Subtotal} + \text{Maintenance Fee (₹10)} + \text{Customer Delivery Fee}$$
 $$\text{Platform Accounting} = \sum \text{Seller Net Payable} + \sum \text{Seller Commission} + \sum \text{Floria Profit} + \text{Delivery Recovery} + \text{Maintenance Fee}$$
 
@@ -70,28 +75,28 @@ $$\text{Platform Accounting} = \sum \text{Seller Net Payable} + \sum \text{Selle
 
 ## 8. Final Readiness Matrix
 
-| Area | Status | Notes |
-|---|---|---|
-| **Payment Architecture** | **PASS** | `PaymentProviderFactory` abstraction with COD & Cashfree providers |
-| **Payment Creation** | **PASS** | Server-side order binding and intent creation |
-| **Amount Integrity** | **PASS** | Server-calculated total ($T_{\text{final}}$) enforced; client prices ignored |
-| **Server Verification** | **PASS** | HMAC SHA-256 signature verification implemented |
-| **Webhook Security** | **PASS** | Raw body cryptographic verification enforced |
-| **Webhook Idempotency** | **PASS** | Dual-layer event deduplication prevents double processing |
-| **Payment State Machine** | **PASS** | Separate payment vs order state lifecycle tracking |
-| **Order Integration** | **PASS** | Orders update upon verified payment state transition |
-| **Inventory Safety** | **PASS** | Atomic PostgreSQL stock locks prevent overselling |
-| **Duplicate Protection** | **PASS** | Double-click and replayed callbacks handled safely |
-| **Refunds** | **PASS** | Manual & API refund handler abstractions implemented |
-| **Multi-Nursery Payment** | **PASS** | 1 customer payment splits into per-seller ledger credits |
-| **Financial Reconciliation** | **PASS** | 100% rupee accounting across customer paid and seller payable |
-| **Admin Visibility** | **PASS** | Full payment ID, provider, status, and ledger display |
-| **Customer UX** | **PASS** | Integrated with Floria Toast system and responsive feedback |
-| **Notifications** | **PASS** | Dispatches `ORDER_PLACED`, `PAYMENT_SUCCESS`, `REFUND` events |
-| **Audit Logging** | **PASS** | Append-only `audit_logs` entries for `PAYMENT_WEBHOOK_PROCESSED` |
-| **Sandbox Payment** | **PASS** | Verified sandbox flow with mock & test credentials |
-| **Production Credentials** | **PASS** | Environment variable secret resolution (`process.env.CASHFREE_*`) |
-| **Production Merchant Activation** | **PENDING** | Ready for live merchant production API keys |
+| Area                               | Status      | Notes                                                                        |
+| ---------------------------------- | ----------- | ---------------------------------------------------------------------------- |
+| **Payment Architecture**           | **PASS**    | `PaymentProviderFactory` abstraction with COD & Cashfree providers           |
+| **Payment Creation**               | **PASS**    | Server-side order binding and intent creation                                |
+| **Amount Integrity**               | **PASS**    | Server-calculated total ($T_{\text{final}}$) enforced; client prices ignored |
+| **Server Verification**            | **PASS**    | HMAC SHA-256 signature verification implemented                              |
+| **Webhook Security**               | **PASS**    | Raw body cryptographic verification enforced                                 |
+| **Webhook Idempotency**            | **PASS**    | Dual-layer event deduplication prevents double processing                    |
+| **Payment State Machine**          | **PASS**    | Separate payment vs order state lifecycle tracking                           |
+| **Order Integration**              | **PASS**    | Orders update upon verified payment state transition                         |
+| **Inventory Safety**               | **PASS**    | Atomic PostgreSQL stock locks prevent overselling                            |
+| **Duplicate Protection**           | **PASS**    | Double-click and replayed callbacks handled safely                           |
+| **Refunds**                        | **PASS**    | Manual & API refund handler abstractions implemented                         |
+| **Multi-Nursery Payment**          | **PASS**    | 1 customer payment splits into per-seller ledger credits                     |
+| **Financial Reconciliation**       | **PASS**    | 100% rupee accounting across customer paid and seller payable                |
+| **Admin Visibility**               | **PASS**    | Full payment ID, provider, status, and ledger display                        |
+| **Customer UX**                    | **PASS**    | Integrated with Floria Toast system and responsive feedback                  |
+| **Notifications**                  | **PASS**    | Dispatches `ORDER_PLACED`, `PAYMENT_SUCCESS`, `REFUND` events                |
+| **Audit Logging**                  | **PASS**    | Append-only `audit_logs` entries for `PAYMENT_WEBHOOK_PROCESSED`             |
+| **Sandbox Payment**                | **PASS**    | Verified sandbox flow with mock & test credentials                           |
+| **Production Credentials**         | **PASS**    | Environment variable secret resolution (`process.env.CASHFREE_*`)            |
+| **Production Merchant Activation** | **PENDING** | Ready for live merchant production API keys                                  |
 
 ---
 
@@ -100,6 +105,6 @@ $$\text{Platform Accounting} = \sum \text{Seller Net Payable} + \sum \text{Selle
 **FINAL VERDICT**: **APPROVED WITH EXTERNAL ACTIVATION PENDING**
 
 > **Justification**:
-> The Floria payment gateway architecture, server-authoritative amount integrity, HMAC SHA-256 webhook signature verification, dual-layer idempotency, multi-nursery ledger attribution, and administrative reconciliation are 100% complete, verified, and secure. 
-> 
+> The Floria payment gateway architecture, server-authoritative amount integrity, HMAC SHA-256 webhook signature verification, dual-layer idempotency, multi-nursery ledger attribution, and administrative reconciliation are 100% complete, verified, and secure.
+>
 > Production activation is **APPROVED WITH EXTERNAL ACTIVATION PENDING** client placement of production merchant API keys (`CASHFREE_CLIENT_ID`, `CASHFREE_CLIENT_SECRET`, `CASHFREE_WEBHOOK_SECRET`) in the hosting environment variables.

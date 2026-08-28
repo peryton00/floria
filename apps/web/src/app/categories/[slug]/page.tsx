@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { CustomerShell } from "@/components/layout/CustomerShell";
-import { getCategoryBySlug, getProductListingsByCategorySlug, getActiveCategories } from "@/lib/services/storefront";
+import {
+  getCategoryBySlug,
+  getProductListingsByCategorySlug,
+  getActiveCategories,
+} from "@/lib/services/storefront";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { FilterSidebar } from "@/components/ui/FilterSidebar";
 import { FilterAndSortControls } from "@/components/ui/FilterAndSortControls";
@@ -16,7 +20,13 @@ interface Props {
     minPrice?: string;
     maxPrice?: string;
     inStock?: string;
-    sort?: "featured" | "top-rated" | "most-reviewed" | "price-asc" | "price-desc" | "newest";
+    sort?:
+      | "featured"
+      | "top-rated"
+      | "most-reviewed"
+      | "price-asc"
+      | "price-desc"
+      | "newest";
     q?: string;
   }>;
 }
@@ -27,11 +37,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!category) return { title: "Category not found — Floria" };
   return {
     title: `${category.name} — Floria`,
-    description: category.description ?? `Shop ${category.name} from local nurseries on Floria.`,
+    description:
+      category.description ??
+      `Shop ${category.name} from local nurseries on Floria.`,
   };
 }
 
-export default async function CategorySlugPage({ params, searchParams }: Props) {
+export default async function CategorySlugPage({
+  params,
+  searchParams,
+}: Props) {
   const { slug } = await params;
   const sParams = await searchParams;
 
@@ -41,8 +56,12 @@ export default async function CategorySlugPage({ params, searchParams }: Props) 
   ]);
   if (!category) notFound();
 
-  const minPriceNum = sParams.minPrice ? parseFloat(sParams.minPrice) : undefined;
-  const maxPriceNum = sParams.maxPrice ? parseFloat(sParams.maxPrice) : undefined;
+  const minPriceNum = sParams.minPrice
+    ? parseFloat(sParams.minPrice)
+    : undefined;
+  const maxPriceNum = sParams.maxPrice
+    ? parseFloat(sParams.maxPrice)
+    : undefined;
 
   const productListings = await getProductListingsByCategorySlug(slug, {
     nurseryId: sParams.nursery,
@@ -56,11 +75,25 @@ export default async function CategorySlugPage({ params, searchParams }: Props) 
   return (
     <CustomerShell>
       {/* Breadcrumb */}
-      <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-ink-500 mb-6 font-ui flex-wrap">
-        <Link href="/" className="hover:text-forest-800 transition-colors">Home</Link>
-        <span aria-hidden="true" className="select-none text-ink-300">/</span>
-        <Link href="/categories" className="hover:text-forest-800 transition-colors">Categories</Link>
-        <span aria-hidden="true" className="select-none text-ink-300">/</span>
+      <nav
+        aria-label="Breadcrumb"
+        className="flex items-center gap-2 text-xs text-ink-500 mb-6 font-ui flex-wrap"
+      >
+        <Link href="/" className="hover:text-forest-800 transition-colors">
+          Home
+        </Link>
+        <span aria-hidden="true" className="select-none text-ink-300">
+          /
+        </span>
+        <Link
+          href="/categories"
+          className="hover:text-forest-800 transition-colors"
+        >
+          Categories
+        </Link>
+        <span aria-hidden="true" className="select-none text-ink-300">
+          /
+        </span>
         <span className="text-ink-900 font-semibold">{category.name}</span>
       </nav>
 
@@ -116,10 +149,13 @@ export default async function CategorySlugPage({ params, searchParams }: Props) 
                 label: "Explore All Categories",
                 href: "/categories",
               }}
-              suggestions={allCategories.filter((c) => c.slug !== slug).slice(0, 4).map((c) => ({
-                label: c.name,
-                href: `/categories/${c.slug}`,
-              }))}
+              suggestions={allCategories
+                .filter((c) => c.slug !== slug)
+                .slice(0, 4)
+                .map((c) => ({
+                  label: c.name,
+                  href: `/categories/${c.slug}`,
+                }))}
             />
           ) : (
             <div

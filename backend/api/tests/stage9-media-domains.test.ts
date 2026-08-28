@@ -52,7 +52,11 @@ describe("Stage 9 — Remaining Media Domains Security Test Matrix", () => {
               }),
               update: vi.fn().mockReturnThis(),
               single: vi.fn().mockResolvedValue({
-                data: { id: "seller-1", logo_asset_id: "asset-logo-1", logo_url: "https://example.com/logo.webp" },
+                data: {
+                  id: "seller-1",
+                  logo_asset_id: "asset-logo-1",
+                  logo_url: "https://example.com/logo.webp",
+                },
                 error: null,
               }),
             };
@@ -95,7 +99,10 @@ describe("Stage 9 — Remaining Media Domains Security Test Matrix", () => {
 
       (getAdminDb as any).mockReturnValue(mockDb);
 
-      const res = await DomainMediaService.updateSellerLogo(mockSellerUser, "asset-logo-1");
+      const res = await DomainMediaService.updateSellerLogo(
+        mockSellerUser,
+        "asset-logo-1",
+      );
       expect(res.logo_asset_id).toBe("asset-logo-1");
     });
 
@@ -137,7 +144,7 @@ describe("Stage 9 — Remaining Media Domains Security Test Matrix", () => {
       (getAdminDb as any).mockReturnValue(mockDb);
 
       await expect(
-        DomainMediaService.updateSellerLogo(mockSellerUser, "asset-logo-B")
+        DomainMediaService.updateSellerLogo(mockSellerUser, "asset-logo-B"),
       ).rejects.toThrow("Cross-seller media asset attachment is prohibited.");
     });
   });
@@ -181,7 +188,7 @@ describe("Stage 9 — Remaining Media Domains Security Test Matrix", () => {
       (getAdminDb as any).mockReturnValue(mockDb);
 
       await expect(
-        DomainMediaService.updateUserAvatar(mockCustomerUser, "asset-avatar-2")
+        DomainMediaService.updateUserAvatar(mockCustomerUser, "asset-avatar-2"),
       ).rejects.toThrow("Cross-user media asset attachment is prohibited.");
     });
   });
@@ -189,7 +196,11 @@ describe("Stage 9 — Remaining Media Domains Security Test Matrix", () => {
   describe("3. CATEGORY BANNER INTEGRATION", () => {
     it("rejects non-admin category banner update with 403 Forbidden", async () => {
       await expect(
-        DomainMediaService.updateCategoryBanner(mockSellerUser, "cat-1", "asset-cat-1")
+        DomainMediaService.updateCategoryBanner(
+          mockSellerUser,
+          "cat-1",
+          "asset-cat-1",
+        ),
       ).rejects.toThrow("Only administrators can update category banners.");
     });
 
@@ -208,7 +219,11 @@ describe("Stage 9 — Remaining Media Domains Security Test Matrix", () => {
               }),
               update: vi.fn().mockReturnThis(),
               single: vi.fn().mockResolvedValue({
-                data: { id: "cat-1", name: "Indoor Plants", banner_asset_id: "asset-cat-1" },
+                data: {
+                  id: "cat-1",
+                  name: "Indoor Plants",
+                  banner_asset_id: "asset-cat-1",
+                },
                 error: null,
               }),
             };
@@ -250,7 +265,11 @@ describe("Stage 9 — Remaining Media Domains Security Test Matrix", () => {
 
       (getAdminDb as any).mockReturnValue(mockDb);
 
-      const res = await DomainMediaService.updateCategoryBanner(mockAdminUser, "cat-1", "asset-cat-1");
+      const res = await DomainMediaService.updateCategoryBanner(
+        mockAdminUser,
+        "cat-1",
+        "asset-cat-1",
+      );
       expect(res.banner_asset_id).toBe("asset-cat-1");
     });
   });
@@ -284,8 +303,14 @@ describe("Stage 9 — Remaining Media Domains Security Test Matrix", () => {
       (getAdminDb as any).mockReturnValue(mockDb);
 
       await expect(
-        DomainMediaService.attachSellerDocument(mockSellerUser, "gst_cert", "asset-doc-public")
-      ).rejects.toThrow("Seller documents must be stored in 'private-documents' bucket.");
+        DomainMediaService.attachSellerDocument(
+          mockSellerUser,
+          "gst_cert",
+          "asset-doc-public",
+        ),
+      ).rejects.toThrow(
+        "Seller documents must be stored in 'private-documents' bucket.",
+      );
     });
   });
 });

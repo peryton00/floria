@@ -13,7 +13,10 @@ export function createSecurityMiddleware() {
       res.setHeader("X-Frame-Options", "DENY");
       res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
       if (process.env.NODE_ENV === "production") {
-        res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+        res.setHeader(
+          "Strict-Transport-Security",
+          "max-age=31536000; includeSubDomains",
+        );
       }
       next();
     },

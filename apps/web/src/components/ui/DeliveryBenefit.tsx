@@ -30,7 +30,9 @@ export function DeliveryBenefit({
     }
 
     return (
-      <div className={`flex items-center gap-1.5 text-xs text-forest-800 font-ui font-medium ${className}`}>
+      <div
+        className={`flex items-center gap-1.5 text-xs text-forest-800 font-ui font-medium ${className}`}
+      >
         <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white rounded bg-forest-800">
           FREE DELIVERY
         </span>
@@ -45,14 +47,18 @@ export function DeliveryBenefit({
 
   if (variant === "badge") {
     return (
-      <span className={`px-2 py-0.5 text-[10px] font-medium text-ink-700 bg-cream-200 rounded border border-ink-150 ${className}`}>
+      <span
+        className={`px-2 py-0.5 text-[10px] font-medium text-ink-700 bg-cream-200 rounded border border-ink-150 ${className}`}
+      >
         Delivery from {formatINR(baseDeliveryFeePaise)}
       </span>
     );
   }
 
   return (
-    <div className={`flex items-center gap-1.5 text-xs text-ink-600 font-ui ${className}`}>
+    <div
+      className={`flex items-center gap-1.5 text-xs text-ink-600 font-ui ${className}`}
+    >
       <span>Standard Delivery ({formatINR(baseDeliveryFeePaise)})</span>
     </div>
   );

@@ -48,11 +48,13 @@ Floria is a production-grade local plant and gardening commerce marketplace. The
 ## Detailed Phase-by-Phase Audit Findings
 
 ### Phase 1 & 2: Channel-Independence & Transport
+
 - **Authentication Header**: Uses standard `Authorization: Bearer <JWT>` verified server-side against Supabase Auth (`supabase.auth.getUser(token)`).
 - **Session Management**: Independent session token lifecycle. Web browser cookies or session storage are **NOT** required for backend controller access.
 - **Client Decoupling**: No references to `window`, `document`, `localStorage`, `NextResponse`, or browser redirects inside `backend/api/src`.
 
 ### Phase 3 & 4: API Contract & Versioning
+
 - **Namespace**: `/api/v1` namespace isolates API contracts.
 - **DTO Structure**: Uniform machine-readable response format:
   ```json
@@ -68,14 +70,17 @@ Floria is a production-grade local plant and gardening commerce marketplace. The
 - **Error Codes**: `AUTH_REQUIRED`, `FORBIDDEN`, `VALIDATION_ERROR`, `RESOURCE_NOT_FOUND`, `RATE_LIMITED`, `CONFLICT`, `INTERNAL_ERROR`.
 
 ### Phase 5 & 15: Universal API Client (`@floria/api-client`)
+
 - Built in pure TypeScript with `fetch` abstractions.
 - Pluggable `getAccessToken` and `baseUrl` configuration.
 - Fully compatible with Node.js, Web, React Native, Expo, and Flutter.
 
 ### Phase 6: Media Infrastructure (Stages 7.5–11)
+
 - Presigned upload sessions (`POST /api/v1/media/upload-session`), direct binary PUT upload, Sharp WebP processing, and `MediaResolverService` database binding work seamlessly for mobile devices without requiring service-role credentials.
 
 ### Phase 7 & 8: Notification & Deep-Linking Architecture
+
 - **Durable Storage**: PostgreSQL `notifications` table is the permanent source of truth.
 - **Operations**:
   - `GET /api/v1/notifications` (List with pagination)
@@ -93,11 +98,13 @@ Floria is a production-grade local plant and gardening commerce marketplace. The
   ```
 
 ### Phase 9 & 10: Pagination, Network Failure & Idempotency
+
 - Bounded list limits (`limit` max 50, `page`).
 - Deterministic ordering by `created_at DESC` or `id`.
 - Deduplication checks on upload sessions, payment intents, and notifications.
 
 ### Phase 11 & 12: Observability & Security
+
 - `requestCorrelationMiddleware` injects `X-Request-Id` UUIDv4 headers across all API logs.
 - Cross-seller and cross-user authorization guards (`requireAuth`, `requireApprovedSeller`, `requireAdmin`, `requirePermission`) filter all database operations by `req.user.id` or `req.user.sellerId`.
 

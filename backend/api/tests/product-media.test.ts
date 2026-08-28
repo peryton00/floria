@@ -52,7 +52,9 @@ describe("Stage 8 — Product Media Integration & Security Test Matrix", () => {
       (getAdminDb as any).mockReturnValue(mockDb);
 
       await expect(
-        ProductMediaService.attachMediaAssetToProduct("seller-A", "prod-1", { assetId: "asset-B" })
+        ProductMediaService.attachMediaAssetToProduct("seller-A", "prod-1", {
+          assetId: "asset-B",
+        }),
       ).rejects.toThrow("Cross-seller media asset attachment is prohibited.");
     });
 
@@ -94,7 +96,9 @@ describe("Stage 8 — Product Media Integration & Security Test Matrix", () => {
       (getAdminDb as any).mockReturnValue(mockDb);
 
       await expect(
-        ProductMediaService.attachMediaAssetToProduct("seller-A", "prod-1", { assetId: "asset-1" })
+        ProductMediaService.attachMediaAssetToProduct("seller-A", "prod-1", {
+          assetId: "asset-1",
+        }),
       ).rejects.toThrow("Media asset is not READY for product attachment.");
     });
 
@@ -136,7 +140,9 @@ describe("Stage 8 — Product Media Integration & Security Test Matrix", () => {
       (getAdminDb as any).mockReturnValue(mockDb);
 
       await expect(
-        ProductMediaService.attachMediaAssetToProduct("seller-A", "prod-1", { assetId: "doc-1" })
+        ProductMediaService.attachMediaAssetToProduct("seller-A", "prod-1", {
+          assetId: "doc-1",
+        }),
       ).rejects.toThrow("Only image assets can be attached to products.");
     });
   });
@@ -166,7 +172,12 @@ describe("Stage 8 — Product Media Integration & Security Test Matrix", () => {
               order: vi.fn().mockReturnThis(),
               limit: vi.fn().mockResolvedValue({ data: [], error: null }),
               maybeSingle: vi.fn().mockResolvedValue({
-                data: { id: "img-1", product_id: "prod-1", asset_id: "asset-1", is_primary: false },
+                data: {
+                  id: "img-1",
+                  product_id: "prod-1",
+                  asset_id: "asset-1",
+                  is_primary: false,
+                },
                 error: null,
               }),
               delete: () => ({
@@ -180,7 +191,11 @@ describe("Stage 8 — Product Media Integration & Security Test Matrix", () => {
 
       (getAdminDb as any).mockReturnValue(mockDb);
 
-      await ProductMediaService.removeProductImage("seller-A", "prod-1", "img-1");
+      await ProductMediaService.removeProductImage(
+        "seller-A",
+        "prod-1",
+        "img-1",
+      );
       expect(deleteMock).toHaveBeenCalledWith("id", "img-1");
     });
   });

@@ -33,28 +33,43 @@ export function validateMediaJobPayload(payload: any): MediaJobPayload {
     throw new Error("Invalid job payload: Payload must be a non-null object");
   }
 
-  const { assetId, sessionId, sellerId, uploadedByUserId, profile, stagingPath } = payload;
+  const {
+    assetId,
+    sessionId,
+    sellerId,
+    uploadedByUserId,
+    profile,
+    stagingPath,
+  } = payload;
 
   if (!assetId || typeof assetId !== "string") {
-    throw new Error("Invalid job payload: 'assetId' must be a valid UUID string");
+    throw new Error(
+      "Invalid job payload: 'assetId' must be a valid UUID string",
+    );
   }
 
   if (!sessionId || typeof sessionId !== "string") {
-    throw new Error("Invalid job payload: 'sessionId' must be a valid UUID string");
+    throw new Error(
+      "Invalid job payload: 'sessionId' must be a valid UUID string",
+    );
   }
 
   if (!uploadedByUserId || typeof uploadedByUserId !== "string") {
-    throw new Error("Invalid job payload: 'uploadedByUserId' must be a valid UUID string");
+    throw new Error(
+      "Invalid job payload: 'uploadedByUserId' must be a valid UUID string",
+    );
   }
 
   if (!profile || !VALID_PROFILES.has(profile as ImageProfileName)) {
     throw new Error(
-      `Invalid job payload: 'profile' must be one of [${Array.from(VALID_PROFILES).join(", ")}]`
+      `Invalid job payload: 'profile' must be one of [${Array.from(VALID_PROFILES).join(", ")}]`,
     );
   }
 
   if (!stagingPath || typeof stagingPath !== "string") {
-    throw new Error("Invalid job payload: 'stagingPath' must be a valid string");
+    throw new Error(
+      "Invalid job payload: 'stagingPath' must be a valid string",
+    );
   }
 
   // MANDATORY SECURITY RULE: Block binary data in Redis job payloads
@@ -66,7 +81,9 @@ export function validateMediaJobPayload(payload: any): MediaJobPayload {
     (payload as any).buffer !== undefined ||
     (payload as any).imageBinary !== undefined
   ) {
-    throw new Error("SECURITY VIOLATION: Binary image data must never be placed into Redis queues");
+    throw new Error(
+      "SECURITY VIOLATION: Binary image data must never be placed into Redis queues",
+    );
   }
 
   return {
@@ -112,7 +129,7 @@ export function getMediaQueue(): Queue<MediaJobPayload> {
  * Enqueues a lightweight media job into BullMQ.
  */
 export async function enqueueMediaJob(
-  payload: MediaJobPayload
+  payload: MediaJobPayload,
 ): Promise<Job<MediaJobPayload>> {
   const validPayload = validateMediaJobPayload(payload);
   const queue = getMediaQueue();

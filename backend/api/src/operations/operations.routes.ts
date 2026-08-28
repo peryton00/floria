@@ -6,7 +6,10 @@ import { requireRole } from "../middleware/authorization.js";
 
 const router = Router();
 
-router.use(authenticateToken, requireRole("operations", "admin", "super_admin"));
+router.use(
+  authenticateToken,
+  requireRole("operations", "admin", "super_admin"),
+);
 
 // Dashboard & Health
 router.get("/health", operationsController.getHealth);
@@ -30,6 +33,14 @@ router.get("/deliveries", operationsController.getDeliveries);
 router.get("/deliveries/:id", operationsController.getDeliveryById);
 router.post("/deliveries/:id/assign", operationsController.assignDelivery);
 router.post("/deliveries/:id/reassign", operationsController.reassignDelivery);
-router.post("/deliveries/:id/status", operationsController.updateDeliveryStatus);
+router.post(
+  "/deliveries/:id/status",
+  operationsController.updateDeliveryStatus,
+);
+router.post(
+  "/deliveries/:id/complete",
+  operationsController.completeDeliveryWithPod,
+);
+router.get("/deliveries/:id/pod", operationsController.getDeliveryPod);
 
 export default router;

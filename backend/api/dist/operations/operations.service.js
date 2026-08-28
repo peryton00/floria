@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.operationsService = exports.OperationsService = void 0;
 // Floria API — Operations Service
+const database_js_1 = require("../config/database.js");
 const order_repository_js_1 = require("../database/repositories/order.repository.js");
 const delivery_repository_js_1 = require("../database/repositories/delivery.repository.js");
 const audit_repository_js_1 = require("../database/repositories/audit.repository.js");
@@ -219,6 +220,136 @@ class OperationsService {
             metadata: { from: delivery.status, to: status },
         });
         return updated;
+    }
+    async completeDeliveryWithPod(user, deliveryId, podAssetId, recipientName, notes) {
+        const adminDb = (0, database_js_1.getAdminDb)();
+        // 1. Fetch delivery assignment
+        const delivery = await delivery_repository_js_1.deliveryRepository.findById(deliveryId);
+        if (!delivery)
+            throw errors_js_1.Errors.notFound("Delivery assignment");
+        // 2. Ownership / Role authorization
+        if (delivery.assigned_to !== user.id &&
+            user.role !== "admin" &&
+            user.role !== "super_admin") {
+            throw errors_js_1.Errors.forbidden("You are not assigned to complete this delivery.");
+        }
+        // 3. Idempotency Guard: If already delivered with the same POD asset, return existing delivery
+        if (delivery.status === "delivered" && delivery.pod_asset_id === podAssetId) {
+            return delivery;
+        }
+        // 4. Validate Delivery State Transition (must be out_for_delivery to complete drop-off)
+        if (delivery.status === "delivered") {
+            throw errors_js_1.Errors.invalidTransition("delivered", "delivered");
+        }
+        if (delivery.status === "failed") {
+            throw errors_js_1.Errors.invalidTransition("failed", "delivered");
+        }
+        if (delivery.status !== "out_for_delivery" &&
+            user.role !== "admin" &&
+            user.role !== "super_admin") {
+            throw errors_js_1.Errors.invalidTransition(delivery.status, "delivered");
+        }
+        // 5. Load and Validate POD Media Asset
+        if (!podAssetId) {
+            throw errors_js_1.Errors.validation("A valid podAssetId is required to complete delivery.");
+        }
+        const { data: asset, error: assetErr } = await adminDb
+            .from("media_assets")
+            .select("*")
+            .eq("id", podAssetId)
+            .maybeSingle();
+        if (assetErr || !asset) {
+            throw errors_js_1.Errors.notFound("Proof of delivery media asset");
+        }
+        // Asset media_category check
+        if (asset.media_category !== "DELIVERY_POD") {
+            throw errors_js_1.Errors.validation("Media asset is not a valid Proof of Delivery (DELIVERY_POD) category.");
+        }
+        // Asset ownership check
+        if (asset.uploaded_by_user_id !== user.id &&
+            user.role !== "admin" &&
+            user.role !== "super_admin") {
+            throw errors_js_1.Errors.forbidden("Cross-courier proof of delivery attachment is prohibited.");
+        }
+        // Asset readiness check
+        if (asset.status !== "READY") {
+            throw errors_js_1.Errors.validation("POD media asset has not finished processing (status is not READY).");
+        }
+        // Storage bucket check
+        if (asset.storage_bucket !== "private-documents") {
+            throw errors_js_1.Errors.validation("POD media asset must be stored in private-documents storage.");
+        }
+        // 6. Complete delivery in database
+        const updatedDelivery = await delivery_repository_js_1.deliveryRepository.completeWithPod(deliveryId, podAssetId, recipientName, notes);
+        // 7. Update order status if order exists
+        try {
+            if (delivery.order_id) {
+                await order_repository_js_1.orderRepository.updateOrderStatus(delivery.order_id, "delivered");
+            }
+        }
+        catch (orderErr) {
+            console.warn(`[OperationsService] Order status update notice for order '${delivery.order_id}':`, orderErr.message);
+        }
+        // 8. Write audit log
+        await audit_repository_js_1.auditRepository.log({
+            actor_user_id: user.id,
+            actor_role: user.role || "operations",
+            action: "DELIVERY_COMPLETED",
+            resource_type: "delivery_assignment",
+            resource_id: deliveryId,
+            metadata: {
+                orderId: delivery.order_id,
+                podAssetId,
+                recipientName: recipientName || null,
+                notes: notes || null,
+                from: delivery.status,
+                to: "delivered",
+            },
+        });
+        return updatedDelivery;
+    }
+    async getDeliveryPod(user, deliveryId) {
+        const adminDb = (0, database_js_1.getAdminDb)();
+        // 1. Fetch delivery assignment
+        const delivery = await delivery_repository_js_1.deliveryRepository.findById(deliveryId);
+        if (!delivery)
+            throw errors_js_1.Errors.notFound("Delivery assignment");
+        // 2. Authorization check
+        if (delivery.assigned_to !== user.id &&
+            user.role !== "admin" &&
+            user.role !== "super_admin" &&
+            user.role !== "operations") {
+            throw errors_js_1.Errors.forbidden("You do not have permission to view proof of delivery for this assignment.");
+        }
+        if (!delivery.pod_asset_id) {
+            throw errors_js_1.Errors.notFound("Proof of delivery has not been uploaded for this delivery.");
+        }
+        // 3. Fetch asset record
+        const { data: asset, error: assetErr } = await adminDb
+            .from("media_assets")
+            .select("*")
+            .eq("id", delivery.pod_asset_id)
+            .maybeSingle();
+        if (assetErr || !asset) {
+            throw errors_js_1.Errors.notFound("Proof of delivery media asset record");
+        }
+        // 4. Generate signed URL from private-documents (valid 1 hour / 3600 seconds)
+        const storagePath = asset.original_path || `pod/${asset.uploaded_by_user_id}/${asset.id}.webp`;
+        const { data: signed, error: signErr } = await adminDb.storage
+            .from("private-documents")
+            .createSignedUrl(storagePath, 3600);
+        if (signErr || !signed?.signedUrl) {
+            throw errors_js_1.Errors.database(`Failed to generate signed URL for POD: ${signErr?.message || "unknown"}`);
+        }
+        const expiresAt = new Date(Date.now() + 3600 * 1000).toISOString();
+        return {
+            signedUrl: signed.signedUrl,
+            expiresAt,
+            assetId: asset.id,
+            recipientName: delivery.recipient_name || null,
+            notes: delivery.pod_notes || null,
+            deliveredAt: delivery.delivered_at || null,
+        };
     }
 }
 exports.OperationsService = OperationsService;

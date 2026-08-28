@@ -29,6 +29,7 @@ This document defines the architecture, environment configuration, database migr
 ## 3. Environment Variables Matrix
 
 ### A. Next.js Web Frontend (`apps/web/.env.local`)
+
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://<your-supabase-project>.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-supabase-anon-key>
@@ -41,6 +42,7 @@ NODE_ENV=production
 ```
 
 ### B. Backend REST API (`backend/api/.env`)
+
 ```env
 PORT=4000
 NODE_ENV=production
@@ -75,12 +77,14 @@ All migrations must be executed sequentially in the Supabase SQL Editor:
 ## 5. Google OAuth Configuration
 
 In **Google Cloud Console → OAuth Consent Screen & Credentials**:
+
 - **App Name**: `Floria`
 - **Authorized Redirect URIs**:
   - `https://<your-supabase-project>.supabase.co/auth/v1/callback`
   - `https://<your-web-staging-domain>/auth/callback`
 
 In **Supabase Dashboard → Authentication → Providers → Google**:
+
 - Enable Google Provider.
 - Client ID: `<GOOGLE_CLIENT_ID>`
 - Client Secret: `<GOOGLE_CLIENT_SECRET>`
@@ -90,12 +94,14 @@ In **Supabase Dashboard → Authentication → Providers → Google**:
 ## 6. Deployment Commands & Service Setup
 
 ### Web Frontend (Vercel)
+
 - Framework Preset: Next.js
 - Root Directory: `apps/web`
 - Build Command: `pnpm run build`
 - Output Directory: `.next`
 
 ### Backend REST API (Render)
+
 - Environment: Node.js
 - Root Directory: `backend/api`
 - Build Command: `pnpm run build`

@@ -8,13 +8,17 @@ function TestComponent() {
 
   return (
     <div>
-      <button onClick={() => toast.success("Success Title", "Success Description")}>
+      <button
+        onClick={() => toast.success("Success Title", "Success Description")}
+      >
         Trigger Success
       </button>
       <button onClick={() => toast.error("Error Title", "Error Description")}>
         Trigger Error
       </button>
-      <button onClick={() => toast.warning("Warning Title", "Warning Description")}>
+      <button
+        onClick={() => toast.warning("Warning Title", "Warning Description")}
+      >
         Trigger Warning
       </button>
       <button onClick={() => toast.info("Info Title", "Info Description")}>
@@ -24,7 +28,10 @@ function TestComponent() {
         onClick={() => {
           const id = toast.loading("Loading Title");
           setTimeout(() => {
-            toast.update(id, { type: "success", title: "Updated Success Title" });
+            toast.update(id, {
+              type: "success",
+              title: "Updated Success Title",
+            });
           }, 100);
         }}
       >
@@ -61,7 +68,7 @@ describe("Toast System (Phase 3.18)", () => {
     render(
       <ToastProvider>
         <TestComponent />
-      </ToastProvider>
+      </ToastProvider>,
     );
 
     fireEvent.click(screen.getByText("Trigger Success"));
@@ -74,7 +81,7 @@ describe("Toast System (Phase 3.18)", () => {
     render(
       <ToastProvider>
         <TestComponent />
-      </ToastProvider>
+      </ToastProvider>,
     );
 
     fireEvent.click(screen.getByText("Trigger Error"));
@@ -91,7 +98,7 @@ describe("Toast System (Phase 3.18)", () => {
     render(
       <ToastProvider>
         <TestComponent />
-      </ToastProvider>
+      </ToastProvider>,
     );
 
     fireEvent.click(screen.getByText("Trigger Loading & Update"));
@@ -108,7 +115,7 @@ describe("Toast System (Phase 3.18)", () => {
     render(
       <ToastProvider>
         <TestComponent />
-      </ToastProvider>
+      </ToastProvider>,
     );
 
     fireEvent.click(screen.getByText("Trigger Duplicate"));
@@ -120,7 +127,7 @@ describe("Toast System (Phase 3.18)", () => {
     render(
       <ToastProvider>
         <TestComponent />
-      </ToastProvider>
+      </ToastProvider>,
     );
 
     fireEvent.click(screen.getByText("Trigger Multiple Queue"));
@@ -136,7 +143,7 @@ describe("Toast System (Phase 3.18)", () => {
     render(
       <ToastProvider>
         <TestComponent />
-      </ToastProvider>
+      </ToastProvider>,
     );
 
     fireEvent.click(screen.getByText("Trigger Success"));
@@ -152,7 +159,7 @@ describe("Toast System (Phase 3.18)", () => {
     render(
       <ToastProvider>
         <TestComponent />
-      </ToastProvider>
+      </ToastProvider>,
     );
 
     fireEvent.click(screen.getByText("Trigger Success"));

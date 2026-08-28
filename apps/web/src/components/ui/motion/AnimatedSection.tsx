@@ -38,7 +38,7 @@ export function AnimatedSection({
           if (ref.current) observer.unobserve(ref.current);
         }
       },
-      { threshold }
+      { threshold },
     );
 
     if (ref.current) {

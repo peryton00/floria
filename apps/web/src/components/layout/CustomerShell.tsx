@@ -14,7 +14,10 @@ interface CustomerShellProps {
  * CustomerShell — wraps all customer-facing pages.
  * Provides: sticky header, scrollable main, footer, mobile bottom nav.
  */
-export function CustomerShell({ children, fullWidth = false }: CustomerShellProps) {
+export function CustomerShell({
+  children,
+  fullWidth = false,
+}: CustomerShellProps) {
   return (
     <div className="min-h-dvh flex flex-col bg-floria-page text-floria-text-primary">
       <Header />
@@ -22,7 +25,9 @@ export function CustomerShell({ children, fullWidth = false }: CustomerShellProp
         id="main-content"
         className={[
           "flex-1 w-full",
-          fullWidth ? "" : "max-w-screen-xl mx-auto px-4 md:px-6 lg:px-8 py-4 md:py-6",
+          fullWidth
+            ? ""
+            : "max-w-screen-xl mx-auto px-4 md:px-6 lg:px-8 py-4 md:py-6",
         ].join(" ")}
         tabIndex={-1}
       >

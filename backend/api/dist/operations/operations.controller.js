@@ -140,6 +140,27 @@ class OperationsController {
             next(err);
         }
     }
+    async completeDeliveryWithPod(req, res, next) {
+        try {
+            const deliveryId = req.params.id;
+            const { podAssetId, recipientName, notes } = req.body;
+            const updated = await operations_service_js_1.operationsService.completeDeliveryWithPod(req.user, deliveryId, podAssetId, recipientName, notes);
+            res.json({ success: true, data: updated });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+    async getDeliveryPod(req, res, next) {
+        try {
+            const deliveryId = req.params.id;
+            const podDetails = await operations_service_js_1.operationsService.getDeliveryPod(req.user, deliveryId);
+            res.json({ success: true, data: podDetails });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
 }
 exports.OperationsController = OperationsController;
 exports.operationsController = new OperationsController();

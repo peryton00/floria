@@ -12,11 +12,11 @@ stateDiagram-v2
     QUEUED --> PROCESSING: Worker Dequeues Job
     PROCESSING --> STORING: Sharp Transformations Complete
     STORING --> READY: Variants Written to public-media
-    
+
     VALIDATING --> FAILED: Staging Binary Missing / Corrupt
     PROCESSING --> FAILED: Sharp Decode / Pixel Bomb Failure
     STORING --> FAILED: Storage Write Error
-    
+
     READY --> RETIRED: Asset Unlinked or Replaced
     RETIRED --> DELETING: 7-Day Grace Window Passed & Reference Check Passed
     DELETING --> DELETED: Storage & DB Records Hard Purged
@@ -24,7 +24,9 @@ stateDiagram-v2
 ```
 
 ### Failure Metadata Specifications (`media_assets`)
+
 When `status = FAILED`, the worker populates:
+
 - **`failure_stage`**: `VALIDATION`, `PROCESSING`, `STORAGE`
 - **`failure_code`**: `STAGING_BINARY_MISSING`, `INVALID_MAGIC_BYTES`, `PIXEL_BOMB_EXCEEDED`, `DECODE_ERROR`, `STORAGE_TIMEOUT`
 - **`failure_message`**: Descriptive error details for debugging.
@@ -35,14 +37,14 @@ When `status = FAILED`, the worker populates:
 
 Every variant profile explicitly defines target dimensions, crop/scaling behavior (`FIT`, `COVER`, `CONTAIN`), compression quality, and output format:
 
-| Profile | Variant Name | Width | Height | Max Dim | Crop Behavior | Fit Description | Format | Quality |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **PRODUCT** | `large` <br> `medium` <br> `thumbnail` | 1600 <br> 800 <br> 250 | 1600 <br> 800 <br> 250 | 1600px <br> 800px <br> 250px | **FIT** <br> **FIT** <br> **COVER** | Maintain aspect ratio without cropping <br> Maintain aspect ratio <br> Center crop to 1:1 square | WebP <br> WebP <br> WebP | 82 <br> 80 <br> 75 |
-| **NURSERY** | `cover` <br> `card` | 1920 <br> 640 | 1080 <br> 360 | 1920px <br> 640px | **COVER** <br> **COVER** | 16:9 Landscape center crop <br> 16:9 Landscape center crop | WebP <br> WebP | 82 <br> 80 |
-| **SELLER_LOGO**| `standard` | 400 | 400 | 400px | **CONTAIN** | Fit inside 1:1 box with transparent padding | WebP | 85 |
-| **USER_AVATAR**| `avatar` | 200 | 200 | 200px | **COVER** | 1:1 Square face/center crop | WebP | 80 |
-| **CATEGORY** | `banner` | 1200 | 400 | 1200px | **COVER** | 3:1 Wide landscape banner crop | WebP | 82 |
-| **REVIEW** | `display` | 1000 | 1000 | 1000px | **FIT** | Maintain customer photo aspect ratio | WebP | 78 |
+| Profile         | Variant Name                           | Width                  | Height                 | Max Dim                      | Crop Behavior                       | Fit Description                                                                                  | Format                   | Quality            |
+| :-------------- | :------------------------------------- | :--------------------- | :--------------------- | :--------------------------- | :---------------------------------- | :----------------------------------------------------------------------------------------------- | :----------------------- | :----------------- |
+| **PRODUCT**     | `large` <br> `medium` <br> `thumbnail` | 1600 <br> 800 <br> 250 | 1600 <br> 800 <br> 250 | 1600px <br> 800px <br> 250px | **FIT** <br> **FIT** <br> **COVER** | Maintain aspect ratio without cropping <br> Maintain aspect ratio <br> Center crop to 1:1 square | WebP <br> WebP <br> WebP | 82 <br> 80 <br> 75 |
+| **NURSERY**     | `cover` <br> `card`                    | 1920 <br> 640          | 1080 <br> 360          | 1920px <br> 640px            | **COVER** <br> **COVER**            | 16:9 Landscape center crop <br> 16:9 Landscape center crop                                       | WebP <br> WebP           | 82 <br> 80         |
+| **SELLER_LOGO** | `standard`                             | 400                    | 400                    | 400px                        | **CONTAIN**                         | Fit inside 1:1 box with transparent padding                                                      | WebP                     | 85                 |
+| **USER_AVATAR** | `avatar`                               | 200                    | 200                    | 200px                        | **COVER**                           | 1:1 Square face/center crop                                                                      | WebP                     | 80                 |
+| **CATEGORY**    | `banner`                               | 1200                   | 400                    | 1200px                       | **COVER**                           | 3:1 Wide landscape banner crop                                                                   | WebP                     | 82                 |
+| **REVIEW**      | `display`                              | 1000                   | 1000                   | 1000px                       | **FIT**                             | Maintain customer photo aspect ratio                                                             | WebP                     | 78                 |
 
 ---
 

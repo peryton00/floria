@@ -15,18 +15,18 @@
 
 ## 2. Baseline Metrics Matrix
 
-| Metric Category | Target / Standard | Cold Start (API Idle) | Warm State (API Active) | Bottleneck / Root Cause |
-|---|---|---|---|---|
-| **Cold API Request (`/health`)** | < 200 ms | **3,850 ms – 5,200 ms** | **45 ms – 78 ms** | Render Free Tier process spin-up & TLS handshake |
-| **Warm API Request (`/api/v1/catalog/products`)** | < 250 ms | **4,100 ms** | **95 ms – 140 ms** | Database query execution & payload serialization |
-| **API → Supabase Database Latency** | < 50 ms | **650 ms** | **18 ms – 32 ms** | Connection establishment & SSL handshake |
-| **Database Query Execution Latency** | < 30 ms | **120 ms** | **8 ms – 15 ms** | Index scanning on `products`, `inventory`, `ratings` |
-| **Next.js Document Response (TTFB)** | < 300 ms | **1,250 ms** | **180 ms – 240 ms** | Server-Side Rendering (SSR) & API dependency |
-| **First Contentful Paint (FCP)** | < 1.2 s | **1,850 ms** | **520 ms – 680 ms** | CSS & initial DOM rendering |
-| **Largest Contentful Paint (LCP)** | < 2.5 s | **4,200 ms** | **1,150 ms – 1,420 ms** | Hero image & dynamic product catalog loading |
-| **Cumulative Layout Shift (CLS)** | < 0.1 | **0.012** | **0.012** | Reserved dimensions on product cards & hero elements |
-| **Interaction to Next Paint (INP)** | < 200 ms | **85 ms** | **45 ms** | Lightweight event delegation & React 19 fiber tree |
-| **Total Blocking Time (TBT)** | < 150 ms | **210 ms** | **35 ms** | Initial hydration of large component trees |
+| Metric Category                                   | Target / Standard | Cold Start (API Idle)   | Warm State (API Active) | Bottleneck / Root Cause                              |
+| ------------------------------------------------- | ----------------- | ----------------------- | ----------------------- | ---------------------------------------------------- |
+| **Cold API Request (`/health`)**                  | < 200 ms          | **3,850 ms – 5,200 ms** | **45 ms – 78 ms**       | Render Free Tier process spin-up & TLS handshake     |
+| **Warm API Request (`/api/v1/catalog/products`)** | < 250 ms          | **4,100 ms**            | **95 ms – 140 ms**      | Database query execution & payload serialization     |
+| **API → Supabase Database Latency**               | < 50 ms           | **650 ms**              | **18 ms – 32 ms**       | Connection establishment & SSL handshake             |
+| **Database Query Execution Latency**              | < 30 ms           | **120 ms**              | **8 ms – 15 ms**        | Index scanning on `products`, `inventory`, `ratings` |
+| **Next.js Document Response (TTFB)**              | < 300 ms          | **1,250 ms**            | **180 ms – 240 ms**     | Server-Side Rendering (SSR) & API dependency         |
+| **First Contentful Paint (FCP)**                  | < 1.2 s           | **1,850 ms**            | **520 ms – 680 ms**     | CSS & initial DOM rendering                          |
+| **Largest Contentful Paint (LCP)**                | < 2.5 s           | **4,200 ms**            | **1,150 ms – 1,420 ms** | Hero image & dynamic product catalog loading         |
+| **Cumulative Layout Shift (CLS)**                 | < 0.1             | **0.012**               | **0.012**               | Reserved dimensions on product cards & hero elements |
+| **Interaction to Next Paint (INP)**               | < 200 ms          | **85 ms**               | **45 ms**               | Lightweight event delegation & React 19 fiber tree   |
+| **Total Blocking Time (TBT)**                     | < 150 ms          | **210 ms**              | **35 ms**               | Initial hydration of large component trees           |
 
 ---
 
@@ -44,7 +44,7 @@
 
 1. **Render Free Tier Cold-Start Lag**:
    When the Express REST backend enters sleep mode after 15 minutes of inactivity, initial requests take ~4 seconds to wake up Node.js and open Supabase database connections.
-   
+
 2. **Client-Side Page Blocking**:
    Certain pages previously waited for complete client-side API fetches before displaying visible UI skeletons or shell components.
 

@@ -14,7 +14,10 @@ export async function streamNotifications(req: Request, res: Response) {
   if (!userId) {
     res.status(401).json({
       success: false,
-      error: { code: "UNAUTHORIZED", message: "Authentication token required for SSE stream" },
+      error: {
+        code: "UNAUTHORIZED",
+        message: "Authentication token required for SSE stream",
+      },
     });
     return;
   }
@@ -49,10 +52,11 @@ export async function streamNotifications(req: Request, res: Response) {
     heartbeatTimer = setInterval(() => {
       res.write(`: ping\n\n`);
     }, 15000);
-
   } catch (err: any) {
     console.error("[SSE Stream] Redis subscription error:", err?.message);
-    res.write(`event: error\ndata: {"message": "Realtime transport degraded"}\n\n`);
+    res.write(
+      `event: error\ndata: {"message": "Realtime transport degraded"}\n\n`,
+    );
   }
 
   // Cleanup on client disconnect

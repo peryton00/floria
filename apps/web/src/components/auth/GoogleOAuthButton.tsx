@@ -8,7 +8,10 @@ interface GoogleOAuthButtonProps {
   redirectTo?: string;
 }
 
-export function GoogleOAuthButton({ label = "Continue with Google", redirectTo }: GoogleOAuthButtonProps) {
+export function GoogleOAuthButton({
+  label = "Continue with Google",
+  redirectTo,
+}: GoogleOAuthButtonProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,7 +21,8 @@ export function GoogleOAuthButton({ label = "Continue with Google", redirectTo }
       setError(null);
 
       const supabase = getSupabaseBrowserClient();
-      const origin = typeof window !== "undefined" ? window.location.origin : "";
+      const origin =
+        typeof window !== "undefined" ? window.location.origin : "";
       const callbackUrl = `${origin}/auth/callback${redirectTo ? `?next=${encodeURIComponent(redirectTo)}` : ""}`;
 
       const { error: oauthErr } = await supabase.auth.signInWithOAuth({
@@ -60,7 +64,12 @@ export function GoogleOAuthButton({ label = "Continue with Google", redirectTo }
         {loading ? (
           <div className="w-4 h-4 border-2 border-ink-600 border-t-transparent rounded-full animate-spin" />
         ) : (
-          <svg width="18" height="18" viewBox="0 0 24 24" className="flex-shrink-0">
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            className="flex-shrink-0"
+          >
             <path
               fill="#4285F4"
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"

@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import type { AddressItem } from "@/components/ui/AddressModal";
 import { api } from "@/lib/api";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
@@ -35,7 +41,9 @@ interface CustomerContextType {
   isLoading: boolean;
 }
 
-const CustomerContext = createContext<CustomerContextType | undefined>(undefined);
+const CustomerContext = createContext<CustomerContextType | undefined>(
+  undefined,
+);
 
 export function CustomerProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<UserProfile>(EMPTY_PROFILE);
@@ -47,7 +55,9 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
       const supabase = getSupabaseBrowserClient();
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
       if (session?.user) {
         setIsAuthenticated(true);
@@ -60,17 +70,19 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
             if (Array.isArray(parsed) && parsed.length > 0) {
               for (const addr of parsed) {
                 if (addr.full_name && addr.line1 && addr.pincode) {
-                  await api.createAddress({
-                    full_name: addr.full_name,
-                    phone: addr.phone,
-                    line1: addr.line1,
-                    line2: addr.line2,
-                    city: addr.city,
-                    state: addr.state,
-                    pincode: addr.pincode,
-                    label: addr.instructions || "Home",
-                    is_default: addr.is_default,
-                  }).catch(() => null);
+                  await api
+                    .createAddress({
+                      full_name: addr.full_name,
+                      phone: addr.phone,
+                      line1: addr.line1,
+                      line2: addr.line2,
+                      city: addr.city,
+                      state: addr.state,
+                      pincode: addr.pincode,
+                      label: addr.instructions || "Home",
+                      is_default: addr.is_default,
+                    })
+                    .catch(() => null);
                 }
               }
               localStorage.removeItem("floria_addresses");
@@ -89,7 +101,12 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
           const u = profRes.data.user || {};
           const p = profRes.data.profile || {};
           setProfile({
-            name: p.full_name || u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split("@")[0] || "Customer Account",
+            name:
+              p.full_name ||
+              u.user_metadata?.full_name ||
+              u.user_metadata?.name ||
+              u.email?.split("@")[0] ||
+              "Customer Account",
             email: u.email || "",
             phone: p.phone || "",
             role: p.role || u.user_metadata?.role || "customer",
@@ -97,7 +114,11 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
           });
         } else {
           setProfile({
-            name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email?.split("@")[0] || "Customer Account",
+            name:
+              session.user.user_metadata?.full_name ||
+              session.user.user_metadata?.name ||
+              session.user.email?.split("@")[0] ||
+              "Customer Account",
             email: session.user.email || "",
             phone: session.user.user_metadata?.phone || "",
             role: session.user.user_metadata?.role || "customer",
@@ -105,7 +126,9 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
         }
 
         if (addrRes.success && addrRes.data) {
-          const raw = Array.isArray(addrRes.data) ? addrRes.data : ((addrRes.data as any)?.addresses || []);
+          const raw = Array.isArray(addrRes.data)
+            ? addrRes.data
+            : (addrRes.data as any)?.addresses || [];
           const mapped: AddressItem[] = raw.map((a: any) => ({
             id: a.id,
             full_name: a.full_name,
@@ -153,8 +176,13 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
     refreshCustomerData();
 
     const supabase = getSupabaseBrowserClient();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session?.user) {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (
+        (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") &&
+        session?.user
+      ) {
         await refreshCustomerData();
       } else if (event === "SIGNED_OUT") {
         setIsAuthenticated(false);
@@ -211,7 +239,10 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
         await refreshCustomerData();
         return;
       } else {
-        console.error("[CustomerContext.saveAddress] API call failed:", res.error);
+        console.error(
+          "[CustomerContext.saveAddress] API call failed:",
+          res.error,
+        );
       }
     }
 

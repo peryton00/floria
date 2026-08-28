@@ -10,13 +10,13 @@ Floria maintains a unified, light-first botanical visual identity across all rou
 
 ## 2. Complete Surface Verification Matrix
 
-| Surface | Typography | Color Palette | Layout & Spacing | Responsive (320px – 1440px) | Loading Skeletons | Empty States | Error States | Accessibility (WCAG / Reduced Motion) | Light Mode Enforcement | Status |
-|---|---|---|---|---|---|---|---|---|---|---|
-| **Customer Storefront** | **PASS** | **PASS** | **PASS** | **PASS** | **PASS** | **PASS** | **PASS** | **PASS** | **PASS** | **UI/UX APPROVED** |
-| **Seller Portal** | **PASS** | **PASS** | **PASS** | **PASS** | **PASS** | **PASS** | **PASS** | **PASS** | **PASS** | **UI/UX APPROVED** |
-| **Admin Portal** | **PASS** | **PASS** | **PASS** | **PASS** | **PASS** | **PASS** | **PASS** | **PASS** | **PASS** | **UI/UX APPROVED** |
-| **Operations Logistics** | **PASS** | **PASS** | **PASS** | **PASS** | **PASS** | **PASS** | **PASS** | **PASS** | **PASS** | **UI/UX APPROVED** |
-| **Authentication & Auth Callback** | **PASS** | **PASS** | **PASS** | **PASS** | **PASS** | **PASS** | **PASS** | **PASS** | **PASS** | **UI/UX APPROVED** |
+| Surface                            | Typography | Color Palette | Layout & Spacing | Responsive (320px – 1440px) | Loading Skeletons | Empty States | Error States | Accessibility (WCAG / Reduced Motion) | Light Mode Enforcement | Status             |
+| ---------------------------------- | ---------- | ------------- | ---------------- | --------------------------- | ----------------- | ------------ | ------------ | ------------------------------------- | ---------------------- | ------------------ |
+| **Customer Storefront**            | **PASS**   | **PASS**      | **PASS**         | **PASS**                    | **PASS**          | **PASS**     | **PASS**     | **PASS**                              | **PASS**               | **UI/UX APPROVED** |
+| **Seller Portal**                  | **PASS**   | **PASS**      | **PASS**         | **PASS**                    | **PASS**          | **PASS**     | **PASS**     | **PASS**                              | **PASS**               | **UI/UX APPROVED** |
+| **Admin Portal**                   | **PASS**   | **PASS**      | **PASS**         | **PASS**                    | **PASS**          | **PASS**     | **PASS**     | **PASS**                              | **PASS**               | **UI/UX APPROVED** |
+| **Operations Logistics**           | **PASS**   | **PASS**      | **PASS**         | **PASS**                    | **PASS**          | **PASS**     | **PASS**     | **PASS**                              | **PASS**               | **UI/UX APPROVED** |
+| **Authentication & Auth Callback** | **PASS**   | **PASS**      | **PASS**         | **PASS**                    | **PASS**          | **PASS**     | **PASS**     | **PASS**                              | **PASS**               | **UI/UX APPROVED** |
 
 ---
 

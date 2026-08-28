@@ -34,39 +34,39 @@ This document records the results of the live staging environment verification c
 
 ## 4. Live REST API Verification Matrix
 
-| Test / Endpoint | Expected Result | Live Result | Status |
-|---|---|---|---|
-| `GET /health` | HTTP 200 `{ status: "healthy" }` | HTTP 200 | **VERIFIED** |
-| `GET /ready` | HTTP 200 `{ status: "ready", database: "connected" }` | HTTP 200 | **VERIFIED** |
-| `X-Request-ID` Header | Returned matching correlation ID | Header returned & correlated | **VERIFIED** |
-| **Security Headers** | `nosniff`, `DENY`, `HSTS` | Headers set correctly | **VERIFIED** |
-| **Direct REST Catalog** | `GET /api/v1/catalog/products` HTTP 200 | HTTP 200 | **VERIFIED** |
-| **RBAC Security Barriers** | `/api/v1/admin/*` HTTP 401/403 | HTTP 401 Unauthorized | **VERIFIED** |
-| **Error Sanitization** | No stack traces or SQL in 404/500 | Sanitized JSON error | **VERIFIED** |
-| **Rate Limiting** | Auth, Checkout, Catalog rate limits active | Express Rate Limit active | **VERIFIED** |
+| Test / Endpoint            | Expected Result                                       | Live Result                  | Status       |
+| -------------------------- | ----------------------------------------------------- | ---------------------------- | ------------ |
+| `GET /health`              | HTTP 200 `{ status: "healthy" }`                      | HTTP 200                     | **VERIFIED** |
+| `GET /ready`               | HTTP 200 `{ status: "ready", database: "connected" }` | HTTP 200                     | **VERIFIED** |
+| `X-Request-ID` Header      | Returned matching correlation ID                      | Header returned & correlated | **VERIFIED** |
+| **Security Headers**       | `nosniff`, `DENY`, `HSTS`                             | Headers set correctly        | **VERIFIED** |
+| **Direct REST Catalog**    | `GET /api/v1/catalog/products` HTTP 200               | HTTP 200                     | **VERIFIED** |
+| **RBAC Security Barriers** | `/api/v1/admin/*` HTTP 401/403                        | HTTP 401 Unauthorized        | **VERIFIED** |
+| **Error Sanitization**     | No stack traces or SQL in 404/500                     | Sanitized JSON error         | **VERIFIED** |
+| **Rate Limiting**          | Auth, Checkout, Catalog rate limits active            | Express Rate Limit active    | **VERIFIED** |
 
 ---
 
 ## 5. Production Readiness Matrix
 
-| Component | Status | Evidence |
-|---|---|---|
-| **GitHub** | **VERIFIED** | Remote tracked at `peryton00/floria.git` on `main` |
-| **CI/CD** | **VERIFIED** | Pipeline `.github/workflows/ci.yml` established |
-| **Web** | **VERIFIED** | `apps/web` builds cleanly with `tsc --noEmit` (**0 errors**) |
-| **Render API** | **VERIFIED** | `backend/api` builds cleanly (`render.yaml` configured) |
-| **Supabase** | **VERIFIED** | Database connected & migration 0017 applied |
-| **Storage** | **VERIFIED** | `product-images` (Public) vs `seller-documents` (Private) segregated |
-| **Auth** | **VERIFIED** | Supabase Auth & Bearer JWT validation active |
-| **Google OAuth** | **VERIFIED** | Callback redirect URI architecture configured |
-| **RBAC** | **VERIFIED** | Customer, Seller, Operations, Admin boundaries active |
-| **CORS** | **VERIFIED** | Restricts unlisted origins in non-development mode |
-| **Rate Limiting** | **VERIFIED** | Configured for Auth, Checkout, Catalog, Seller |
-| **Monitoring** | **PENDING** | Health endpoints active; Sentry cloud account configuration pending DNS |
-| **Backups** | **VERIFIED** | PITR & Daily snapshots documented in `docs/production-backup.md` |
-| **DNS** | **PENDING** | Local/Staging URL verified; final production custom domain point pending |
-| **HTTPS** | **VERIFIED** | TLS 1.3 enforced |
-| **Flutter API** | **VERIFIED** | REST API `/api/v1/*` contracts complete & tested |
+| Component         | Status       | Evidence                                                                 |
+| ----------------- | ------------ | ------------------------------------------------------------------------ |
+| **GitHub**        | **VERIFIED** | Remote tracked at `peryton00/floria.git` on `main`                       |
+| **CI/CD**         | **VERIFIED** | Pipeline `.github/workflows/ci.yml` established                          |
+| **Web**           | **VERIFIED** | `apps/web` builds cleanly with `tsc --noEmit` (**0 errors**)             |
+| **Render API**    | **VERIFIED** | `backend/api` builds cleanly (`render.yaml` configured)                  |
+| **Supabase**      | **VERIFIED** | Database connected & migration 0017 applied                              |
+| **Storage**       | **VERIFIED** | `product-images` (Public) vs `seller-documents` (Private) segregated     |
+| **Auth**          | **VERIFIED** | Supabase Auth & Bearer JWT validation active                             |
+| **Google OAuth**  | **VERIFIED** | Callback redirect URI architecture configured                            |
+| **RBAC**          | **VERIFIED** | Customer, Seller, Operations, Admin boundaries active                    |
+| **CORS**          | **VERIFIED** | Restricts unlisted origins in non-development mode                       |
+| **Rate Limiting** | **VERIFIED** | Configured for Auth, Checkout, Catalog, Seller                           |
+| **Monitoring**    | **PENDING**  | Health endpoints active; Sentry cloud account configuration pending DNS  |
+| **Backups**       | **VERIFIED** | PITR & Daily snapshots documented in `docs/production-backup.md`         |
+| **DNS**           | **PENDING**  | Local/Staging URL verified; final production custom domain point pending |
+| **HTTPS**         | **VERIFIED** | TLS 1.3 enforced                                                         |
+| **Flutter API**   | **VERIFIED** | REST API `/api/v1/*` contracts complete & tested                         |
 
 ---
 

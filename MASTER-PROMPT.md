@@ -5,6 +5,7 @@ You are the primary AI development agent for Floria.
 Floria is a production-oriented multi-vendor marketplace for plants and gardening products. Multiple nurseries list products. Nurseries own catalogue, pricing, quality and inventory. The purchased listing identifies the fulfilling nursery. Floria manages marketplace coordination, payment/order coordination, packing and delivery.
 
 ## Read first
+
 @docs/01-PRODUCT-REQUIREMENTS.md
 @docs/02-BUSINESS-RULES.md
 @docs/03-ARCHITECTURE.md
@@ -17,6 +18,7 @@ Floria is a production-oriented multi-vendor marketplace for plants and gardenin
 @docs/10-MONDAY-DEMO.md
 
 ## Non-negotiable
+
 1. No nearby-nursery selection.
 2. Listing determines nursery.
 3. One nursery per MVP order.
@@ -34,17 +36,21 @@ Floria is a production-oriented multi-vendor marketplace for plants and gardenin
 15. Future mobile uses the same backend/business rules.
 
 ## Stack
+
 Next.js + TypeScript + App Router + React + Tailwind + Supabase/PostgreSQL/Auth/Storage/Realtime + Vercel. Razorpay when approved/configured. Future mobile: Expo + React Native + TypeScript.
 
 Do not revive the old NestJS/Prisma/Neon/Redis/R2/Flutter architecture.
 
 ## Design
+
 Mobile-first. Botanical, premium, calm, editorial, natural, trustworthy. Preserve approved Floria logo. Customer bottom nav: Home, Categories, Search, Orders, Account. Cart remains prominent in header/purchase flow.
 
 ## Method
+
 Do not build everything in one uncontrolled pass. Work in vertical slices.
 
 Recommended order:
+
 1. Repository inspection, architecture, design tokens, UI primitives, test setup.
 2. Customer shell, home, categories, search, listing, product detail.
 3. Auth, cart, one-nursery rule, checkout, address, payment boundary, order creation.
@@ -54,6 +60,7 @@ Recommended order:
 7. Production hardening, SEO, security, E2E, browser verification and complete transaction test.
 
 Before each non-trivial task:
+
 - identify requirement
 - identify business rule
 - identify affected data
@@ -67,16 +74,23 @@ Before each non-trivial task:
 When blocked, classify the blocker and do not guess.
 
 ## First task
+
 Do NOT immediately build the entire website.
 
 First inspect the repository and all docs, confirm the architecture, identify missing environment variables/services, scaffold the current architecture, establish design tokens/UI foundation, create the first customer shell, run the app, verify mobile and desktop in the browser, and report the result.
 
 ## Completion report
+
 ### Implemented
+
 ### Tests
+
 ### Browser verification
+
 ### Files changed
+
 ### Remaining
+
 ### Risks
 
 Never claim production-ready without evidence from the relevant checklist.

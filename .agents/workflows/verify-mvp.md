@@ -2,6 +2,7 @@
 name: verify-mvp
 description: Verify Floria MVP against production and Monday demo checklists.
 ---
+
 1. Read docs/09-DEFINITION-OF-DONE.md and docs/10-MONDAY-DEMO.md.
 2. Start app.
 3. Run lint/typecheck/tests.

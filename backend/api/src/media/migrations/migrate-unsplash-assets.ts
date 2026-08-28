@@ -168,7 +168,9 @@ export async function downloadImageBuffer(url: string): Promise<Buffer> {
     const client = url.startsWith("https") ? https : http;
     const req = client.get(url, (res) => {
       if (res.statusCode !== 200) {
-        return reject(new Error(`HTTP ${res.statusCode} when downloading '${url}'`));
+        return reject(
+          new Error(`HTTP ${res.statusCode} when downloading '${url}'`),
+        );
       }
 
       const chunks: Buffer[] = [];
@@ -185,14 +187,20 @@ export async function downloadImageBuffer(url: string): Promise<Buffer> {
         const isWebp = buffer.subarray(8, 12).toString() === "WEBP";
 
         if (!isJpeg && !isPng && !isWebp) {
-          return reject(new Error(`Downloaded binary from '${url}' is not a valid JPEG/PNG/WebP image.`));
+          return reject(
+            new Error(
+              `Downloaded binary from '${url}' is not a valid JPEG/PNG/WebP image.`,
+            ),
+          );
         }
 
         resolve(buffer);
       });
     });
 
-    req.on("error", (err) => reject(new Error(`Network download error for '${url}': ${err.message}`)));
+    req.on("error", (err) =>
+      reject(new Error(`Network download error for '${url}': ${err.message}`)),
+    );
     req.setTimeout(15000, () => {
       req.destroy();
       reject(new Error(`Download timeout (15s) for '${url}'`));
@@ -204,7 +212,7 @@ export async function downloadImageBuffer(url: string): Promise<Buffer> {
  * Migration Executor for Unsplash Seed Media
  */
 export async function migrateUnsplashAssets(
-  overrideBuffers?: Record<string, Buffer>
+  overrideBuffers?: Record<string, Buffer>,
 ): Promise<MigratedUnsplashResult[]> {
   const adminDb = getAdminDb();
   const systemUserId = await resolveSystemUploaderUserId();
@@ -220,14 +228,19 @@ export async function migrateUnsplashAssets(
       try {
         fileBuffer = await downloadImageBuffer(assetDef.url);
       } catch (dlErr: any) {
-        console.error(`[UnsplashMigration] Failed to download '${assetDef.id}' (${assetDef.url}): ${dlErr.message}`);
+        console.error(
+          `[UnsplashMigration] Failed to download '${assetDef.id}' (${assetDef.url}): ${dlErr.message}`,
+        );
         continue;
       }
     }
 
     if (!fileBuffer) continue;
 
-    const sha256Hash = crypto.createHash("sha256").update(fileBuffer).digest("hex");
+    const sha256Hash = crypto
+      .createHash("sha256")
+      .update(fileBuffer)
+      .digest("hex");
 
     // 1. SHA-256 Deduplication Check (for system-seeded READY assets)
     const { data: existingAsset } = await adminDb
@@ -247,7 +260,8 @@ export async function migrateUnsplashAssets(
       const variantMap: Record<string, string> = {};
       if (variantRows) {
         for (const v of variantRows) {
-          variantMap[v.variant_name] = `${supabaseUrl}/storage/v1/object/public/${v.storage_bucket}/${v.storage_path}`;
+          variantMap[v.variant_name] =
+            `${supabaseUrl}/storage/v1/object/public/${v.storage_bucket}/${v.storage_path}`;
         }
       }
 
@@ -264,7 +278,10 @@ export async function migrateUnsplashAssets(
     }
 
     // 2. Process Binary through Stage 3 ImageEngine
-    const engineResult = await ImageEngine.process(fileBuffer, assetDef.profile);
+    const engineResult = await ImageEngine.process(
+      fileBuffer,
+      assetDef.profile,
+    );
 
     // 3. Generate Asset UUID & Upload WebP Variants to public-media
     const assetId = crypto.randomUUID();
@@ -294,7 +311,9 @@ export async function migrateUnsplashAssets(
           });
 
         if (uploadErr) {
-          throw new Error(`Failed to upload variant '${variant.variantName}' to '${storagePath}': ${uploadErr.message}`);
+          throw new Error(
+            `Failed to upload variant '${variant.variantName}' to '${storagePath}': ${uploadErr.message}`,
+          );
         }
 
         uploadedVariantPaths.push(storagePath);
@@ -309,7 +328,8 @@ export async function migrateUnsplashAssets(
           storage_path: storagePath,
         });
 
-        variantMap[variant.variantName] = `${supabaseUrl}/storage/v1/object/public/public-media/${storagePath}`;
+        variantMap[variant.variantName] =
+          `${supabaseUrl}/storage/v1/object/public/public-media/${storagePath}`;
       }
 
       // 4. Database Records Creation
@@ -328,12 +348,18 @@ export async function migrateUnsplashAssets(
       });
 
       if (assetErr) {
-        throw new Error(`Failed to insert media_assets record: ${assetErr.message}`);
+        throw new Error(
+          `Failed to insert media_assets record: ${assetErr.message}`,
+        );
       }
 
-      const { error: variantErr } = await adminDb.from("media_variants").insert(variantRecords);
+      const { error: variantErr } = await adminDb
+        .from("media_variants")
+        .insert(variantRecords);
       if (variantErr) {
-        throw new Error(`Failed to insert media_variants records: ${variantErr.message}`);
+        throw new Error(
+          `Failed to insert media_variants records: ${variantErr.message}`,
+        );
       }
 
       results.push({
@@ -349,9 +375,13 @@ export async function migrateUnsplashAssets(
       // Rollback cleanup on partial upload failure
       if (uploadedVariantPaths.length > 0) {
         try {
-          await adminDb.storage.from("public-media").remove(uploadedVariantPaths);
+          await adminDb.storage
+            .from("public-media")
+            .remove(uploadedVariantPaths);
         } catch (cleanupErr: any) {
-          console.error(`[UnsplashMigration] Rollback cleanup error for '${assetDef.id}': ${cleanupErr.message}`);
+          console.error(
+            `[UnsplashMigration] Rollback cleanup error for '${assetDef.id}': ${cleanupErr.message}`,
+          );
         }
       }
       throw err;

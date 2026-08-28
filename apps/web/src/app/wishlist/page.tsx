@@ -19,9 +19,12 @@ export default function WishlistPage() {
   const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
-    api.getCategories().then((res) => {
-      if (res.success && res.data) setCategories(res.data);
-    }).catch(() => {});
+    api
+      .getCategories()
+      .then((res) => {
+        if (res.success && res.data) setCategories(res.data);
+      })
+      .catch(() => {});
   }, []);
 
   const handleMoveToCart = (item: any) => {

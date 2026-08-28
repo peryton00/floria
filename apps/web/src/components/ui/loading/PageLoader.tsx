@@ -1,7 +1,11 @@
 import React from "react";
 import { Spinner } from "./Spinner";
 
-export function PageLoader({ label = "Loading page content..." }: { label?: string }) {
+export function PageLoader({
+  label = "Loading page content...",
+}: {
+  label?: string;
+}) {
   return (
     <div
       aria-busy="true"
@@ -9,7 +13,9 @@ export function PageLoader({ label = "Loading page content..." }: { label?: stri
       className="min-h-[60vh] flex flex-col items-center justify-center p-8 space-y-3 text-center"
     >
       <Spinner size="lg" ariaHidden />
-      <p className="text-xs font-semibold text-stone-500 uppercase tracking-wider">{label}</p>
+      <p className="text-xs font-semibold text-stone-500 uppercase tracking-wider">
+        {label}
+      </p>
     </div>
   );
 }

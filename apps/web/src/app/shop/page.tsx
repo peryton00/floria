@@ -1,17 +1,20 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CustomerShell } from "@/components/layout/CustomerShell";
-import { getProductListings, getActiveCategories } from "@/lib/services/storefront";
+import {
+  getProductListings,
+  getActiveCategories,
+} from "@/lib/services/storefront";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { FilterSidebar } from "@/components/ui/FilterSidebar";
 import { FilterAndSortControls } from "@/components/ui/FilterAndSortControls";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LeafIcon } from "@/components/ui/Icons";
 
-
 export const metadata: Metadata = {
   title: "Shop All Plants & Gardening — Floria",
-  description: "Browse plants, pots, seeds, fertilizers, and tools from verified local nurseries.",
+  description:
+    "Browse plants, pots, seeds, fertilizers, and tools from verified local nurseries.",
 };
 
 interface Props {
@@ -21,7 +24,13 @@ interface Props {
     minPrice?: string;
     maxPrice?: string;
     inStock?: string;
-    sort?: "featured" | "top-rated" | "most-reviewed" | "price-asc" | "price-desc" | "newest";
+    sort?:
+      | "featured"
+      | "top-rated"
+      | "most-reviewed"
+      | "price-asc"
+      | "price-desc"
+      | "newest";
     q?: string;
   }>;
 }
@@ -48,9 +57,16 @@ export default async function ShopPage({ searchParams }: Props) {
   return (
     <CustomerShell>
       {/* Breadcrumb */}
-      <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-ink-500 mb-6 font-ui flex-wrap">
-        <Link href="/" className="hover:text-forest-800 transition-colors">Home</Link>
-        <span aria-hidden="true" className="select-none text-ink-300">/</span>
+      <nav
+        aria-label="Breadcrumb"
+        className="flex items-center gap-2 text-xs text-ink-500 mb-6 font-ui flex-wrap"
+      >
+        <Link href="/" className="hover:text-forest-800 transition-colors">
+          Home
+        </Link>
+        <span aria-hidden="true" className="select-none text-ink-300">
+          /
+        </span>
         <span className="text-ink-900 font-semibold">Shop</span>
       </nav>
 
@@ -64,7 +80,8 @@ export default async function ShopPage({ searchParams }: Props) {
             Shop Marketplace
           </h1>
           <p className="text-xs md:text-sm text-ink-500 mt-1 max-w-xl leading-relaxed">
-            Discover handpicked botanical plants, artisan planters, and organic care essentials direct from local nursery partners.
+            Discover handpicked botanical plants, artisan planters, and organic
+            care essentials direct from local nursery partners.
           </p>
         </div>
         <Link

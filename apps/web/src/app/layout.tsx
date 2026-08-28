@@ -46,7 +46,11 @@ export default function RootLayout({
       <head>
         <meta name="color-scheme" content="light" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
         {/* Cashfree Checkout Web SDK */}
         <script src="https://sdk.cashfree.com/js/v3/cashfree.js" async />
       </head>

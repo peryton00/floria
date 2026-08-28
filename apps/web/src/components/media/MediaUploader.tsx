@@ -12,7 +12,14 @@ export interface MediaUploadResult {
 }
 
 interface MediaUploaderProps {
-  profile: "PRODUCT" | "NURSERY" | "SELLER_LOGO" | "USER_AVATAR" | "CATEGORY" | "REVIEW_IMAGE" | "DOCUMENT";
+  profile:
+    | "PRODUCT"
+    | "NURSERY"
+    | "SELLER_LOGO"
+    | "USER_AVATAR"
+    | "CATEGORY"
+    | "REVIEW_IMAGE"
+    | "DOCUMENT";
   onUploadSuccess: (result: MediaUploadResult) => void;
   label?: string;
   accept?: string;
@@ -34,7 +41,9 @@ export function MediaUploader({
   const [uploading, setUploading] = useState(false);
   const [statusText, setStatusText] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(currentUrl || null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(
+    currentUrl || null,
+  );
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -47,7 +56,9 @@ export function MediaUploader({
     try {
       // 1. Validate size
       if (file.size > maxSizeBytes) {
-        throw new Error(`File '${file.name}' exceeds maximum size of ${Math.round(maxSizeBytes / (1024 * 1024))}MB.`);
+        throw new Error(
+          `File '${file.name}' exceeds maximum size of ${Math.round(maxSizeBytes / (1024 * 1024))}MB.`,
+        );
       }
 
       // Local preview
@@ -63,7 +74,9 @@ export function MediaUploader({
       });
 
       if (!sessionRes.success || !sessionRes.data) {
-        throw new Error(sessionRes.error?.message || "Failed to create upload session");
+        throw new Error(
+          sessionRes.error?.message || "Failed to create upload session",
+        );
       }
 
       const { sessionId, stagingPath } = sessionRes.data;
@@ -76,7 +89,9 @@ export function MediaUploader({
       const token = uploadTarget?.token;
 
       if (!token) {
-        throw new Error("No signed upload token received from server. Cannot upload to staging.");
+        throw new Error(
+          "No signed upload token received from server. Cannot upload to staging.",
+        );
       }
 
       const { error: uploadErr } = await supabase.storage
@@ -94,7 +109,9 @@ export function MediaUploader({
       // 4. Complete session
       const compRes = await api.completeMediaUploadSession(sessionId);
       if (!compRes.success || !compRes.data) {
-        throw new Error(compRes.error?.message || "Failed to finalize upload session");
+        throw new Error(
+          compRes.error?.message || "Failed to finalize upload session",
+        );
       }
 
       const authoritativeAssetId = compRes.data.assetId;
@@ -108,20 +125,26 @@ export function MediaUploader({
         await new Promise((r) => setTimeout(r, 1000));
         const statusRes = await api.getMediaUploadSessionStatus(sessionId);
         if (statusRes.success && statusRes.data) {
-          if (statusRes.data.variants && Object.keys(statusRes.data.variants).length > 0) {
+          if (
+            statusRes.data.variants &&
+            Object.keys(statusRes.data.variants).length > 0
+          ) {
             finalVariants = statusRes.data.variants;
           }
           if (statusRes.data.assetStatus === "READY") {
             assetReady = true;
           } else if (statusRes.data.assetStatus === "FAILED") {
-            throw new Error(statusRes.data.failureReason || "Async image processing failed");
+            throw new Error(
+              statusRes.data.failureReason || "Async image processing failed",
+            );
           }
         }
         attempts++;
       }
 
       // 6. Resolve final variant URL
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://supabase.co";
+      const supabaseUrl =
+        process.env.NEXT_PUBLIC_SUPABASE_URL || "https://supabase.co";
       let resolvedUrl =
         finalVariants.medium ||
         finalVariants.avatar ||
@@ -178,7 +201,11 @@ export function MediaUploader({
         {previewUrl && (
           <div className="w-12 h-12 rounded-lg border border-stone-200 overflow-hidden bg-stone-100 flex-shrink-0 relative">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+            <img
+              src={previewUrl}
+              alt="Preview"
+              className="w-full h-full object-cover"
+            />
             {uploading && (
               <div className="absolute inset-0 bg-stone-900/60 backdrop-blur-xs flex items-center justify-center">
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

@@ -3,7 +3,11 @@ import { Request, Response, NextFunction } from "express";
 import { cartService } from "./cart.service.js";
 
 export class CartController {
-  async getCart(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async getCart(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const cart = await cartService.getCart(req.user!.id);
       res.json({ success: true, data: cart });
@@ -12,38 +16,65 @@ export class CartController {
     }
   }
 
-  async addItem(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async addItem(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const { productId, quantity } = req.body;
-      const cart = await cartService.addItem(req.user!.id, productId, quantity || 1);
+      const cart = await cartService.addItem(
+        req.user!.id,
+        productId,
+        quantity || 1,
+      );
       res.json({ success: true, data: cart });
     } catch (err) {
       next(err);
     }
   }
 
-  async updateQuantity(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async updateQuantity(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const { productId } = req.params;
       const { quantity } = req.body;
-      const cart = await cartService.updateQuantity(req.user!.id, String(productId), quantity);
+      const cart = await cartService.updateQuantity(
+        req.user!.id,
+        String(productId),
+        quantity,
+      );
       res.json({ success: true, data: cart });
     } catch (err) {
       next(err);
     }
   }
 
-  async removeItem(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async removeItem(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const { productId } = req.params;
-      const cart = await cartService.removeItem(req.user!.id, String(productId));
+      const cart = await cartService.removeItem(
+        req.user!.id,
+        String(productId),
+      );
       res.json({ success: true, data: cart });
     } catch (err) {
       next(err);
     }
   }
 
-  async clearCart(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async clearCart(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const cart = await cartService.clearCart(req.user!.id);
       res.json({ success: true, data: cart });
@@ -52,7 +83,11 @@ export class CartController {
     }
   }
 
-  async mergeCart(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async mergeCart(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const { items } = req.body;
       const cart = await cartService.mergeCart(req.user!.id, items || []);

@@ -28,6 +28,7 @@ exports.VALID_PROFILES = new Set([
     "CATEGORY",
     "REVIEW_IMAGE",
     "DOCUMENT",
+    "DELIVERY_POD",
 ]);
 exports.MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 exports.SESSION_EXPIRATION_MS = 15 * 60 * 1000; // 15 minutes
@@ -66,6 +67,11 @@ class MediaService {
         else if (input.profile === "CATEGORY") {
             if (user.role !== "admin" && user.role !== "super_admin") {
                 throw errors_js_1.Errors.forbidden("Admin role required to create category media upload sessions.");
+            }
+        }
+        else if (input.profile === "DELIVERY_POD") {
+            if (user.role !== "operations" && user.role !== "admin" && user.role !== "super_admin") {
+                throw errors_js_1.Errors.forbidden("Operations role required to create proof of delivery upload sessions.");
             }
         }
         // 4. Server-Generated Security Tokens & Paths
@@ -262,6 +268,41 @@ class MediaService {
                     status: "READY",
                     storage_bucket: "private-documents",
                     original_path: privatePath,
+                    updated_at: new Date().toISOString(),
+                })
+                    .eq("id", assetId);
+                finalAssetStatus = "READY";
+            }
+            else if (session.target_domain === "DELIVERY_POD") {
+                const engineResult = await image_engine_js_1.ImageEngine.process(buffer, "DELIVERY_POD");
+                const podVariant = engineResult.variants[0];
+                const privatePodPath = `pod/${session.uploaded_by_user_id}/${assetId}.webp`;
+                const { error: uploadErr } = await adminDb.storage
+                    .from("private-documents")
+                    .upload(privatePodPath, podVariant.buffer, {
+                    contentType: "image/webp",
+                    upsert: true,
+                });
+                if (uploadErr) {
+                    throw errors_js_1.Errors.database(`Failed to upload POD variant to storage: ${uploadErr.message}`);
+                }
+                await adminDb.from("media_variants").insert({
+                    asset_id: assetId,
+                    variant_name: "pod",
+                    format: "webp",
+                    width: podVariant.width,
+                    height: podVariant.height,
+                    size_bytes: podVariant.sizeBytes,
+                    storage_bucket: "private-documents",
+                    storage_path: privatePodPath,
+                });
+                await adminDb
+                    .from("media_assets")
+                    .update({
+                    status: "READY",
+                    storage_bucket: "private-documents",
+                    media_category: "DELIVERY_POD",
+                    original_path: privatePodPath,
                     updated_at: new Date().toISOString(),
                 })
                     .eq("id", assetId);

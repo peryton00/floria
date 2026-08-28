@@ -46,7 +46,10 @@ export function AddressModal({
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLocating, setIsLocating] = useState(false);
-  const [locationMessage, setLocationMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [locationMessage, setLocationMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   useEffect(() => {
     if (initialAddress) {
@@ -94,7 +97,10 @@ export function AddressModal({
 
   const handleDetectLocation = () => {
     if (!navigator.geolocation) {
-      setLocationMessage({ type: "error", text: "Geolocation is not supported by your browser." });
+      setLocationMessage({
+        type: "error",
+        text: "Geolocation is not supported by your browser.",
+      });
       return;
     }
 
@@ -107,17 +113,27 @@ export function AddressModal({
           try {
             const { latitude, longitude } = position.coords;
             const res = await fetch(
-              `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`
+              `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`,
             );
             const data = await res.json();
 
             if (data && data.address) {
               const addr = data.address;
-              const road = addr.road || addr.street || addr.neighbourhood || addr.suburb || "";
+              const road =
+                addr.road ||
+                addr.street ||
+                addr.neighbourhood ||
+                addr.suburb ||
+                "";
               const houseNumber = addr.house_number || addr.building || "";
-              const line1Val = [houseNumber, road].filter(Boolean).join(", ") || addr.display_name?.split(",")[0] || "";
-              const line2Val = addr.suburb || addr.neighbourhood || addr.residential || "";
-              const cityVal = addr.city || addr.town || addr.village || addr.county || "";
+              const line1Val =
+                [houseNumber, road].filter(Boolean).join(", ") ||
+                addr.display_name?.split(",")[0] ||
+                "";
+              const line2Val =
+                addr.suburb || addr.neighbourhood || addr.residential || "";
+              const cityVal =
+                addr.city || addr.town || addr.village || addr.county || "";
               const stateVal = addr.state || "";
               const pincodeVal = addr.postcode || "";
 
@@ -130,12 +146,21 @@ export function AddressModal({
                 pincode: pincodeVal || prev.pincode,
               }));
 
-              setLocationMessage({ type: "success", text: "Location detected and address fields filled!" });
+              setLocationMessage({
+                type: "success",
+                text: "Location detected and address fields filled!",
+              });
             } else {
-              setLocationMessage({ type: "error", text: "Unable to resolve street address for your coordinates." });
+              setLocationMessage({
+                type: "error",
+                text: "Unable to resolve street address for your coordinates.",
+              });
             }
           } catch {
-            setLocationMessage({ type: "error", text: "Failed to reverse geocode device location." });
+            setLocationMessage({
+              type: "error",
+              text: "Failed to reverse geocode device location.",
+            });
           } finally {
             setIsLocating(false);
           }
@@ -143,16 +168,25 @@ export function AddressModal({
         (err) => {
           setIsLocating(false);
           if (err.code === err.PERMISSION_DENIED) {
-            setLocationMessage({ type: "error", text: "Location permission denied. Please enable GPS or enter manually." });
+            setLocationMessage({
+              type: "error",
+              text: "Location permission denied. Please enable GPS or enter manually.",
+            });
           } else {
-            setLocationMessage({ type: "error", text: "Could not detect location. Please check device settings." });
+            setLocationMessage({
+              type: "error",
+              text: "Could not detect location. Please check device settings.",
+            });
           }
         },
-        { enableHighAccuracy: true, timeout: 10000 }
+        { enableHighAccuracy: true, timeout: 10000 },
       );
     } catch {
       setIsLocating(false);
-      setLocationMessage({ type: "error", text: "Geolocation is blocked by your browser's permissions policy." });
+      setLocationMessage({
+        type: "error",
+        text: "Geolocation is blocked by your browser's permissions policy.",
+      });
     }
   };
 
@@ -176,8 +210,13 @@ export function AddressModal({
     >
       <div className="bg-floria-linen rounded-2xl shadow-xl max-w-lg w-full p-6 border border-floria-border max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between pb-4 border-b border-floria-border mb-4">
-          <h2 id="address-modal-title" className="font-serif text-lg font-bold text-ink-900">
-            {initialAddress ? "Edit Delivery Address" : "Add New Delivery Address"}
+          <h2
+            id="address-modal-title"
+            className="font-serif text-lg font-bold text-ink-900"
+          >
+            {initialAddress
+              ? "Edit Delivery Address"
+              : "Add New Delivery Address"}
           </h2>
           <button
             type="button"
@@ -210,9 +249,13 @@ export function AddressModal({
         </button>
 
         {locationMessage && (
-          <div className={`mb-4 p-3 rounded-xl text-xs font-semibold flex items-center gap-2 ${
-            locationMessage.type === "success" ? "bg-success-50 text-success-800 border border-success-200" : "bg-error-50 text-error-800 border border-error-200"
-          }`}>
+          <div
+            className={`mb-4 p-3 rounded-xl text-xs font-semibold flex items-center gap-2 ${
+              locationMessage.type === "success"
+                ? "bg-success-50 text-success-800 border border-success-200"
+                : "bg-error-50 text-error-800 border border-error-200"
+            }`}
+          >
             {locationMessage.type === "success" ? (
               <CheckIcon size={16} className="flex-shrink-0 text-success-700" />
             ) : (
@@ -226,62 +269,90 @@ export function AddressModal({
           {/* Full Name & Phone (Auto-filled from user profile & editable) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="full_name" className="block text-xs font-bold text-ink-700 uppercase tracking-wider mb-1">
+              <label
+                htmlFor="full_name"
+                className="block text-xs font-bold text-ink-700 uppercase tracking-wider mb-1"
+              >
                 Full Name *
               </label>
               <input
                 id="full_name"
                 type="text"
                 value={formData.full_name}
-                onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, full_name: e.target.value })
+                }
                 placeholder="Enter full name"
                 className="w-full px-3 py-2 text-xs rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen text-ink-900 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-forest-800/20"
               />
-              {errors.full_name && <p className="text-[11px] text-red-600 mt-1">{errors.full_name}</p>}
+              {errors.full_name && (
+                <p className="text-[11px] text-red-600 mt-1">
+                  {errors.full_name}
+                </p>
+              )}
             </div>
 
             <div>
-              <label htmlFor="phone" className="block text-xs font-bold text-ink-700 uppercase tracking-wider mb-1">
+              <label
+                htmlFor="phone"
+                className="block text-xs font-bold text-ink-700 uppercase tracking-wider mb-1"
+              >
                 Phone Number *
               </label>
               <input
                 id="phone"
                 type="tel"
                 value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, phone: e.target.value })
+                }
                 placeholder="Enter phone number"
                 className="w-full px-3 py-2 text-xs rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen text-ink-900 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-forest-800/20"
               />
-              {errors.phone && <p className="text-[11px] text-red-600 mt-1">{errors.phone}</p>}
+              {errors.phone && (
+                <p className="text-[11px] text-red-600 mt-1">{errors.phone}</p>
+              )}
             </div>
           </div>
 
           {/* Address Line 1 */}
           <div>
-            <label htmlFor="line1" className="block text-xs font-bold text-ink-700 uppercase tracking-wider mb-1">
+            <label
+              htmlFor="line1"
+              className="block text-xs font-bold text-ink-700 uppercase tracking-wider mb-1"
+            >
               Flat / House No. / Building / Street *
             </label>
             <input
               id="line1"
               type="text"
               value={formData.line1}
-              onChange={(e) => setFormData({ ...formData, line1: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, line1: e.target.value })
+              }
               placeholder="e.g. House 42, Green Avenue"
               className="w-full px-3 py-2 text-xs rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen text-ink-900 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-forest-800/20"
             />
-            {errors.line1 && <p className="text-[11px] text-red-600 mt-1">{errors.line1}</p>}
+            {errors.line1 && (
+              <p className="text-[11px] text-red-600 mt-1">{errors.line1}</p>
+            )}
           </div>
 
           {/* Address Line 2 / Locality */}
           <div>
-            <label htmlFor="line2" className="block text-xs font-bold text-ink-700 uppercase tracking-wider mb-1">
+            <label
+              htmlFor="line2"
+              className="block text-xs font-bold text-ink-700 uppercase tracking-wider mb-1"
+            >
               Locality / Landmark (Optional)
             </label>
             <input
               id="line2"
               type="text"
               value={formData.line2}
-              onChange={(e) => setFormData({ ...formData, line2: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, line2: e.target.value })
+              }
               placeholder="e.g. Near Reshma Park"
               className="w-full px-3 py-2 text-xs rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen text-ink-900 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-forest-800/20"
             />
@@ -290,59 +361,87 @@ export function AddressModal({
           {/* City, State, PIN */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label htmlFor="city" className="block text-xs font-bold text-ink-700 uppercase tracking-wider mb-1">
+              <label
+                htmlFor="city"
+                className="block text-xs font-bold text-ink-700 uppercase tracking-wider mb-1"
+              >
                 City *
               </label>
               <input
                 id="city"
                 type="text"
                 value={formData.city}
-                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, city: e.target.value })
+                }
                 className="w-full px-3 py-2 text-xs rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen text-ink-900 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-forest-800/20"
               />
-              {errors.city && <p className="text-[11px] text-red-600 mt-1">{errors.city}</p>}
+              {errors.city && (
+                <p className="text-[11px] text-red-600 mt-1">{errors.city}</p>
+              )}
             </div>
 
             <div>
-              <label htmlFor="state" className="block text-xs font-bold text-ink-700 uppercase tracking-wider mb-1">
+              <label
+                htmlFor="state"
+                className="block text-xs font-bold text-ink-700 uppercase tracking-wider mb-1"
+              >
                 State *
               </label>
               <input
                 id="state"
                 type="text"
                 value={formData.state}
-                onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, state: e.target.value })
+                }
                 className="w-full px-3 py-2 text-xs rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen text-ink-900 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-forest-800/20"
               />
-              {errors.state && <p className="text-[11px] text-red-600 mt-1">{errors.state}</p>}
+              {errors.state && (
+                <p className="text-[11px] text-red-600 mt-1">{errors.state}</p>
+              )}
             </div>
 
             <div>
-              <label htmlFor="pincode" className="block text-xs font-bold text-ink-700 uppercase tracking-wider mb-1">
+              <label
+                htmlFor="pincode"
+                className="block text-xs font-bold text-ink-700 uppercase tracking-wider mb-1"
+              >
                 PIN Code *
               </label>
               <input
                 id="pincode"
                 type="text"
                 value={formData.pincode}
-                onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, pincode: e.target.value })
+                }
                 placeholder="492001"
                 className="w-full px-3 py-2 text-xs rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen text-ink-900 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-forest-800/20"
               />
-              {errors.pincode && <p className="text-[11px] text-red-600 mt-1">{errors.pincode}</p>}
+              {errors.pincode && (
+                <p className="text-[11px] text-red-600 mt-1">
+                  {errors.pincode}
+                </p>
+              )}
             </div>
           </div>
 
           {/* Delivery Instructions */}
           <div>
-            <label htmlFor="instructions" className="block text-xs font-bold text-ink-700 uppercase tracking-wider mb-1">
+            <label
+              htmlFor="instructions"
+              className="block text-xs font-bold text-ink-700 uppercase tracking-wider mb-1"
+            >
               Delivery Instructions (Optional)
             </label>
             <input
               id="instructions"
               type="text"
               value={formData.instructions}
-              onChange={(e) => setFormData({ ...formData, instructions: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, instructions: e.target.value })
+              }
               placeholder="e.g. Leave with security guard"
               className="w-full px-3 py-2 text-xs rounded-xl border border-floria-border bg-floria-sand/70 focus:bg-floria-linen text-ink-900 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-forest-800/20"
             />
@@ -354,10 +453,15 @@ export function AddressModal({
               id="is_default"
               type="checkbox"
               checked={formData.is_default}
-              onChange={(e) => setFormData({ ...formData, is_default: e.target.checked })}
+              onChange={(e) =>
+                setFormData({ ...formData, is_default: e.target.checked })
+              }
               className="w-4 h-4 text-forest-800 rounded border-floria-border focus:ring-forest-800 accent-forest-800"
             />
-            <label htmlFor="is_default" className="text-xs font-semibold text-ink-700 select-none">
+            <label
+              htmlFor="is_default"
+              className="text-xs font-semibold text-ink-700 select-none"
+            >
               Make this my default delivery address
             </label>
           </div>

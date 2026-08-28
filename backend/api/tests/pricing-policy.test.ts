@@ -38,8 +38,8 @@ describe("Versioned Pricing Policy Engine (Phase 3.23)", () => {
             freeDeliveryThresholdPaise: 59900,
             freeDeliveryRecoveryPaise: 2000,
           },
-          "admin-1"
-        )
+          "admin-1",
+        ),
       ).rejects.toThrow("Seller commission rate must be between 0% and 50%");
     });
 
@@ -53,8 +53,8 @@ describe("Versioned Pricing Policy Engine (Phase 3.23)", () => {
             freeDeliveryThresholdPaise: 59900,
             freeDeliveryRecoveryPaise: 2000,
           },
-          "admin-1"
-        )
+          "admin-1",
+        ),
       ).rejects.toThrow("Platform maintenance fee cannot be negative");
     });
 
@@ -65,7 +65,10 @@ describe("Versioned Pricing Policy Engine (Phase 3.23)", () => {
             select: () => ({
               order: () => ({
                 limit: () => ({
-                  maybeSingle: async () => ({ data: { version_number: 1 }, error: null }),
+                  maybeSingle: async () => ({
+                    data: { version_number: 1 },
+                    error: null,
+                  }),
                 }),
               }),
             }),
@@ -98,7 +101,7 @@ describe("Versioned Pricing Policy Engine (Phase 3.23)", () => {
           freeDeliveryRecoveryPaise: 2500,
           notes: "Q4 Seasonal Policy",
         },
-        "admin-1"
+        "admin-1",
       );
 
       expect(draft.versionNumber).toBe(2);
@@ -137,8 +140,16 @@ describe("Versioned Pricing Policy Engine (Phase 3.23)", () => {
             select: () => ({
               gt: async () => ({
                 data: [
-                  { product_id: "p1", price_paise: 51000, base_price_paise: 50000 },
-                  { product_id: "p2", price_paise: 63200, base_price_paise: 60000 },
+                  {
+                    product_id: "p1",
+                    price_paise: 51000,
+                    base_price_paise: 50000,
+                  },
+                  {
+                    product_id: "p2",
+                    price_paise: 63200,
+                    base_price_paise: 60000,
+                  },
                 ],
                 error: null,
               }),
@@ -182,7 +193,8 @@ describe("Versioned Pricing Policy Engine (Phase 3.23)", () => {
             update: (payload: any) => ({
               eq: (col: string, val: string) => {
                 if (payload.status === "archived") oldArchived = true;
-                if (payload.status === "active" && val === "pol-2") newActivated = true;
+                if (payload.status === "active" && val === "pol-2")
+                  newActivated = true;
                 return {
                   select: () => ({
                     single: async () => ({
@@ -228,8 +240,8 @@ describe("Versioned Pricing Policy Engine (Phase 3.23)", () => {
             customCustomerPricePaise: 45000,
             reason: "   ",
           },
-          "admin-1"
-        )
+          "admin-1",
+        ),
       ).rejects.toThrow("A reason is mandatory for setting a price override");
     });
   });

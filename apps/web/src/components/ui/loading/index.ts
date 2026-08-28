@@ -12,4 +12,3 @@ export * from "./UploadLoader";
 export * from "./CheckoutLoader";
 export * from "./PageLoader";
 export * from "./ProductPriceSkeleton";
-

@@ -8,7 +8,9 @@ export class WishlistService {
     const db = getAdminDb();
     const { data: wishlist } = await db
       .from("wishlists")
-      .select("*, wishlist_items(*, product:products(*, inventory(*), images:product_images(*)))")
+      .select(
+        "*, wishlist_items(*, product:products(*, inventory(*), images:product_images(*)))",
+      )
       .eq("user_id", userId)
       .maybeSingle();
 
@@ -31,7 +33,11 @@ export class WishlistService {
     if (wishlist.wishlist_items && Array.isArray(wishlist.wishlist_items)) {
       wishlist.wishlist_items = wishlist.wishlist_items.map((wi: any) => {
         if (wi.product) {
-          wi.product = productsService.enrichWithDbPricing(wi.product, settings, overrideMap);
+          wi.product = productsService.enrichWithDbPricing(
+            wi.product,
+            settings,
+            overrideMap,
+          );
         }
         return wi;
       });
@@ -61,7 +67,10 @@ export class WishlistService {
 
     const { error } = await db
       .from("wishlist_items")
-      .upsert({ wishlist_id: wishlist.id, product_id: productId }, { onConflict: "wishlist_id,product_id" });
+      .upsert(
+        { wishlist_id: wishlist.id, product_id: productId },
+        { onConflict: "wishlist_id,product_id" },
+      );
 
     if (error) throw Errors.database("Failed to add item to wishlist.");
 

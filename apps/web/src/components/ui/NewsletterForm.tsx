@@ -18,7 +18,9 @@ export function NewsletterForm() {
     return (
       <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-forest-800/80 border border-forest-600/40 text-emerald-200 text-xs font-ui">
         <span>🌱</span>
-        <span className="font-semibold">Welcome to the Floria plant club! Check your inbox soon.</span>
+        <span className="font-semibold">
+          Welcome to the Floria plant club! Check your inbox soon.
+        </span>
       </div>
     );
   }
@@ -29,7 +31,9 @@ export function NewsletterForm() {
       className="flex flex-col sm:flex-row gap-2 font-ui"
       aria-label="Newsletter signup"
     >
-      <label htmlFor="footer-email" className="sr-only">Email address</label>
+      <label htmlFor="footer-email" className="sr-only">
+        Email address
+      </label>
       <input
         id="footer-email"
         type="email"

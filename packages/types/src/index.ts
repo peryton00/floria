@@ -139,7 +139,6 @@ export interface SellerProfile {
   updated_at: Timestamp;
 }
 
-
 export interface SellerDocument {
   id: UUID;
   seller_id: UUID;
@@ -227,7 +226,11 @@ export interface ProductListing {
   product: Product;
   inventory: Inventory;
   primary_image: ProductImage | null;
-  seller: Pick<SellerProfile, "id" | "business_name"> & { is_verified?: boolean; rating?: number; review_count?: number };
+  seller: Pick<SellerProfile, "id" | "business_name"> & {
+    is_verified?: boolean;
+    rating?: number;
+    review_count?: number;
+  };
   category: Pick<Category, "id" | "name" | "slug"> | null;
   rating_summary?: {
     review_count: number;
@@ -508,7 +511,8 @@ export interface ProductPricingCalculation {
 // Versioned Pricing Policy & Recalculation Engine (Phase 3.23)
 // ------------------------------------------------------------------
 
-export type PricingPolicyStatus = "draft" | "preparing" | "ready" | "active" | "archived" | "failed";
+export type PricingPolicyStatus =
+  "draft" | "preparing" | "ready" | "active" | "archived" | "failed";
 
 export interface PricingPolicyVersion {
   id: string;
@@ -527,7 +531,8 @@ export interface PricingPolicyVersion {
   updatedAt: Timestamp;
 }
 
-export type RecalculationJobStatus = "queued" | "in_progress" | "completed" | "failed" | "cancelled";
+export type RecalculationJobStatus =
+  "queued" | "in_progress" | "completed" | "failed" | "cancelled";
 
 export interface PricingRecalculationJob {
   id: string;
@@ -615,4 +620,56 @@ export interface DeliveryCalculationResult {
   thresholdPaise: number;
   eligibleSubtotalPaise: number;
   baseDeliveryFeePaise: number;
+}
+
+// ------------------------------------------------------------------
+// Delivery Assignments & Logistics (Phase 5B.1)
+// ------------------------------------------------------------------
+
+export type DeliveryAssignmentStatus =
+  | "assigned"
+  | "picked_up"
+  | "out_for_delivery"
+  | "delivered"
+  | "reassigned"
+  | "failed";
+
+export interface DeliveryAssignment {
+  id: UUID;
+  order_id: string;
+  assigned_to: string;
+  status: DeliveryAssignmentStatus;
+  assigned_at: Timestamp;
+  picked_up_at?: Timestamp | null;
+  out_for_delivery_at?: Timestamp | null;
+  delivered_at?: Timestamp | null;
+  pod_asset_id?: UUID | null;
+  recipient_name?: string | null;
+  pod_notes?: string | null;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+}
+
+export interface DeliveryListParams {
+  status?: DeliveryAssignmentStatus | "all" | string;
+  search?: string;
+}
+
+export interface UpdateDeliveryStatusPayload {
+  status: DeliveryAssignmentStatus;
+}
+
+export interface CompleteDeliveryPayload {
+  podAssetId: UUID;
+  recipientName?: string;
+  notes?: string;
+}
+
+export interface DeliveryPodDetails {
+  signedUrl: string;
+  expiresAt: string;
+  assetId: UUID;
+  recipientName?: string | null;
+  notes?: string | null;
+  deliveredAt?: Timestamp | null;
 }

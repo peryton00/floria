@@ -46,10 +46,16 @@ export default function OperationsPickupsPage() {
         setSelectedPickup(null);
         setNotes("");
       } else {
-        toast.error("Update failed", res.error?.message || "Failed to update pickup status");
+        toast.error(
+          "Update failed",
+          res.error?.message || "Failed to update pickup status",
+        );
       }
     } catch (e: any) {
-      toast.error("Update failed", e.message || "Error processing pickup update");
+      toast.error(
+        "Update failed",
+        e.message || "Error processing pickup update",
+      );
     } finally {
       setActionLoading(false);
     }
@@ -59,8 +65,12 @@ export default function OperationsPickupsPage() {
     <OperationsShell>
       <div className="space-y-6">
         <div>
-          <h1 className="font-serif text-2xl font-bold text-ink-900 leading-tight">Nursery Pickup Queue</h1>
-          <p className="text-xs text-ink-400 mt-0.5">Collect prepared plant items from partner nurseries across the city.</p>
+          <h1 className="font-serif text-2xl font-bold text-ink-900 leading-tight">
+            Nursery Pickup Queue
+          </h1>
+          <p className="text-xs text-ink-400 mt-0.5">
+            Collect prepared plant items from partner nurseries across the city.
+          </p>
         </div>
 
         {error && (
@@ -75,7 +85,9 @@ export default function OperationsPickupsPage() {
         ) : (
           <div className="bg-white rounded-xl border border-ink-100 shadow-sm overflow-hidden">
             {pickups.length === 0 ? (
-              <div className="p-12 text-center text-xs text-ink-400">No pickups currently waiting in queue.</div>
+              <div className="p-12 text-center text-xs text-ink-400">
+                No pickups currently waiting in queue.
+              </div>
             ) : (
               <table className="w-full border-collapse text-left text-xs">
                 <thead>
@@ -91,15 +103,21 @@ export default function OperationsPickupsPage() {
                 <tbody className="divide-y divide-ink-100">
                   {pickups.map((p) => (
                     <tr key={p.orderId} className="hover:bg-cream-50/50">
-                      <td className="p-4 font-mono font-bold text-ink-900">{p.orderId}</td>
+                      <td className="p-4 font-mono font-bold text-ink-900">
+                        {p.orderId}
+                      </td>
                       <td className="p-4">
                         <div className="flex items-center gap-2">
                           <LeafIcon size={14} className="text-forest-700" />
-                          <span className="font-bold text-ink-800">{p.sellerName}</span>
+                          <span className="font-bold text-ink-800">
+                            {p.sellerName}
+                          </span>
                         </div>
                       </td>
                       <td className="p-4 text-ink-600">{p.pickupAddress}</td>
-                      <td className="p-4 font-bold text-ink-900">{p.itemsCount} units</td>
+                      <td className="p-4 font-bold text-ink-900">
+                        {p.itemsCount} units
+                      </td>
                       <td className="p-4">
                         <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-forest-50 text-forest-700 border border-forest-100">
                           {p.status}
@@ -128,10 +146,20 @@ export default function OperationsPickupsPage() {
             <div className="bg-white rounded-2xl border border-ink-100 p-6 max-w-md w-full shadow-2xl space-y-4">
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="font-serif text-lg font-bold text-ink-900">Pickup: {selectedPickup.orderId}</h3>
-                  <p className="text-xs text-ink-400 mt-0.5">Nursery: {selectedPickup.sellerName}</p>
+                  <h3 className="font-serif text-lg font-bold text-ink-900">
+                    Pickup: {selectedPickup.orderId}
+                  </h3>
+                  <p className="text-xs text-ink-400 mt-0.5">
+                    Nursery: {selectedPickup.sellerName}
+                  </p>
                 </div>
-                <button type="button" onClick={() => setSelectedPickup(null)} className="text-ink-400 hover:text-ink-900 font-bold text-sm">✕</button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedPickup(null)}
+                  className="text-ink-400 hover:text-ink-900 font-bold text-sm"
+                >
+                  ✕
+                </button>
               </div>
 
               <div>
@@ -151,7 +179,9 @@ export default function OperationsPickupsPage() {
                 <button
                   type="button"
                   disabled={actionLoading}
-                  onClick={() => handleUpdateStatus(selectedPickup.orderId, "Picked Up")}
+                  onClick={() =>
+                    handleUpdateStatus(selectedPickup.orderId, "Picked Up")
+                  }
                   className="flex-1 py-2.5 rounded-xl bg-forest-700 hover:bg-forest-800 text-white font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-50"
                 >
                   Mark Items Picked Up

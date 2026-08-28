@@ -1,9 +1,11 @@
 # Monday Nursery Demonstration
 
 ## Goal
+
 Prove the nursery gets online presence while retaining catalogue/quality/inventory control and Floria handles packing/delivery.
 
 ## Environment
+
 - [ ] Production-like URL
 - [ ] Mobile + desktop
 - [ ] Clean demo data
@@ -12,6 +14,7 @@ Prove the nursery gets online presence while retaining catalogue/quality/invento
 - [ ] Good images
 
 ## Customer
+
 - [ ] Browse/search
 - [ ] Product with nursery/price/stock
 - [ ] Cart
@@ -21,6 +24,7 @@ Prove the nursery gets online presence while retaining catalogue/quality/invento
 - [ ] Tracking
 
 ## Nursery
+
 - [ ] Login
 - [ ] Profile
 - [ ] Add/edit product
@@ -33,6 +37,7 @@ Prove the nursery gets online presence while retaining catalogue/quality/invento
 - [ ] Ready for pickup
 
 ## Floria
+
 - [ ] Operational order
 - [ ] Pickup
 - [ ] Packing
@@ -42,6 +47,7 @@ Prove the nursery gets online presence while retaining catalogue/quality/invento
 - [ ] Audit event
 
 ## Failure checks
+
 - [ ] Out-of-stock blocked
 - [ ] Seller isolation
 - [ ] Customer protected routes
@@ -49,4 +55,5 @@ Prove the nursery gets online presence while retaining catalogue/quality/invento
 - [ ] Seller rejection correct
 
 ## Questions
+
 Does the dashboard match actual work? Is stock updating easy? What information is needed before acceptance? What packaging concerns exist? What delivery area is reliable? What commission is acceptable? Record objections; do not promise features immediately.

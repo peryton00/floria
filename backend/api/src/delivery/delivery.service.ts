@@ -2,7 +2,10 @@
 import { getAdminDb } from "../config/database.js";
 import { auditRepository } from "../database/repositories/audit.repository.js";
 import { Errors } from "../utils/errors.js";
-import type { DeliverySettings, DeliveryCalculationResult } from "@floria/types";
+import type {
+  DeliverySettings,
+  DeliveryCalculationResult,
+} from "@floria/types";
 
 export class DeliveryService {
   async getDeliverySettings(): Promise<DeliverySettings> {
@@ -32,11 +35,15 @@ export class DeliveryService {
       ? Boolean(settingsMap.get("free_delivery_enabled"))
       : true;
 
-    const freeDeliveryThresholdPaise = settingsMap.has("free_delivery_threshold_paise")
+    const freeDeliveryThresholdPaise = settingsMap.has(
+      "free_delivery_threshold_paise",
+    )
       ? Number(settingsMap.get("free_delivery_threshold_paise"))
       : 99900; // Default ₹999.00
 
-    const masterOrderDeliveryMode = (settingsMap.get("master_order_delivery_mode") as any) || "master_order_single";
+    const masterOrderDeliveryMode =
+      (settingsMap.get("master_order_delivery_mode") as any) ||
+      "master_order_single";
 
     return {
       deliveryEnabled,
@@ -47,23 +54,41 @@ export class DeliveryService {
     };
   }
 
-  async updateDeliverySettings(updates: Partial<DeliverySettings>, adminUserId: string): Promise<DeliverySettings> {
+  async updateDeliverySettings(
+    updates: Partial<DeliverySettings>,
+    adminUserId: string,
+  ): Promise<DeliverySettings> {
     const db = getAdminDb();
     const previous = await this.getDeliverySettings();
 
     if (updates.baseDeliveryFeePaise !== undefined) {
-      if (typeof updates.baseDeliveryFeePaise !== "number" || updates.baseDeliveryFeePaise < 0) {
-        throw Errors.validation("Base delivery fee must be a non-negative integer in paise.");
+      if (
+        typeof updates.baseDeliveryFeePaise !== "number" ||
+        updates.baseDeliveryFeePaise < 0
+      ) {
+        throw Errors.validation(
+          "Base delivery fee must be a non-negative integer in paise.",
+        );
       }
     }
 
     if (updates.freeDeliveryThresholdPaise !== undefined) {
-      if (typeof updates.freeDeliveryThresholdPaise !== "number" || updates.freeDeliveryThresholdPaise < 0) {
-        throw Errors.validation("Free delivery threshold must be a non-negative integer in paise.");
+      if (
+        typeof updates.freeDeliveryThresholdPaise !== "number" ||
+        updates.freeDeliveryThresholdPaise < 0
+      ) {
+        throw Errors.validation(
+          "Free delivery threshold must be a non-negative integer in paise.",
+        );
       }
     }
 
-    const payloadUpdates: Array<{ key: string; value: any; value_type: string; description: string }> = [];
+    const payloadUpdates: Array<{
+      key: string;
+      value: any;
+      value_type: string;
+      description: string;
+    }> = [];
 
     if (updates.deliveryEnabled !== undefined) {
       payloadUpdates.push({
@@ -97,7 +122,8 @@ export class DeliveryService {
         key: "free_delivery_threshold_paise",
         value: updates.freeDeliveryThresholdPaise,
         value_type: "number",
-        description: "Free delivery minimum subtotal threshold in paise (e.g. 99900 = ₹999.00)",
+        description:
+          "Free delivery minimum subtotal threshold in paise (e.g. 99900 = ₹999.00)",
       });
     }
 
@@ -121,7 +147,7 @@ export class DeliveryService {
           updated_at: now,
           updated_by: adminUserId,
         },
-        { onConflict: "key" }
+        { onConflict: "key" },
       );
     }
 
@@ -138,7 +164,9 @@ export class DeliveryService {
     return this.getDeliverySettings();
   }
 
-  async calculateDeliveryFee(input: { eligibleSubtotalPaise: number }): Promise<DeliveryCalculationResult> {
+  async calculateDeliveryFee(input: {
+    eligibleSubtotalPaise: number;
+  }): Promise<DeliveryCalculationResult> {
     const settings = await this.getDeliverySettings();
 
     if (!settings.deliveryEnabled) {
@@ -152,7 +180,10 @@ export class DeliveryService {
       };
     }
 
-    if (settings.freeDeliveryEnabled && input.eligibleSubtotalPaise >= settings.freeDeliveryThresholdPaise) {
+    if (
+      settings.freeDeliveryEnabled &&
+      input.eligibleSubtotalPaise >= settings.freeDeliveryThresholdPaise
+    ) {
       return {
         deliveryFeePaise: 0,
         isFreeDelivery: true,

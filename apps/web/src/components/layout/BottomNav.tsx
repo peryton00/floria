@@ -83,7 +83,9 @@ export function BottomNav() {
                 <span
                   className={[
                     "text-[10px] leading-none font-ui tracking-tight transition-colors",
-                    active ? "font-bold text-forest-800" : "font-medium text-stone-500",
+                    active
+                      ? "font-bold text-forest-800"
+                      : "font-medium text-stone-500",
                   ].join(" ")}
                 >
                   {label}

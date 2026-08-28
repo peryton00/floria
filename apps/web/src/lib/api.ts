@@ -10,7 +10,9 @@ export const api = new FloriaApiClient({
   getAccessToken: async () => {
     try {
       const supabase = getSupabaseBrowserClient();
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       return session?.access_token || null;
     } catch {
       return null;
@@ -18,4 +20,15 @@ export const api = new FloriaApiClient({
   },
 });
 
-export type { SellerDashboardData, ApiResponse, NotificationItem, NotificationListResponse, SellerDocument, SellerNotificationSettings, ProductReview, ReviewSummary, ReviewListResponse, NurserySummary } from "@floria/api-client";
+export type {
+  SellerDashboardData,
+  ApiResponse,
+  NotificationItem,
+  NotificationListResponse,
+  SellerDocument,
+  SellerNotificationSettings,
+  ProductReview,
+  ReviewSummary,
+  ReviewListResponse,
+  NurserySummary,
+} from "@floria/api-client";

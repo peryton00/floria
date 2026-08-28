@@ -9,10 +9,18 @@ export type UserRole = "customer" | "seller" | "operations" | "admin";
  */
 export function resolveNotificationNavigation(
   item: NotificationItem,
-  userRole: UserRole = "customer"
+  userRole: UserRole = "customer",
 ): string {
   const data = item.data || {};
-  const nav = data.navigation || (data.entityType ? { entityType: data.entityType, entityId: data.entityId, action: data.action } : null);
+  const nav =
+    data.navigation ||
+    (data.entityType
+      ? {
+          entityType: data.entityType,
+          entityId: data.entityId,
+          action: data.action,
+        }
+      : null);
 
   if (nav) {
     switch (nav.entityType) {
@@ -66,8 +74,8 @@ export function resolveNotificationNavigation(
   return userRole === "seller"
     ? "/seller/dashboard"
     : userRole === "admin"
-    ? "/admin/dashboard"
-    : userRole === "operations"
-    ? "/operations"
-    : "/account";
+      ? "/admin/dashboard"
+      : userRole === "operations"
+        ? "/operations"
+        : "/account";
 }

@@ -49,9 +49,22 @@ export interface SellerOrderStats {
 export function isSellerSynonym(idA: string, idB: string): boolean {
   if (!idA || !idB) return false;
   if (idA === idB) return true;
-  const setGreen = new Set(["sel-demo-1", "sel-1", "seller_green_leaf", "00000000-0000-0000-0000-000000000101"]);
-  const setNisarga = new Set(["sel-2", "seller_nisarga", "00000000-0000-0000-0000-000000000102"]);
-  const setClay = new Set(["sel-3", "seller_clay_co", "00000000-0000-0000-0000-000000000103"]);
+  const setGreen = new Set([
+    "sel-demo-1",
+    "sel-1",
+    "seller_green_leaf",
+    "00000000-0000-0000-0000-000000000101",
+  ]);
+  const setNisarga = new Set([
+    "sel-2",
+    "seller_nisarga",
+    "00000000-0000-0000-0000-000000000102",
+  ]);
+  const setClay = new Set([
+    "sel-3",
+    "seller_clay_co",
+    "00000000-0000-0000-0000-000000000103",
+  ]);
 
   if (setGreen.has(idA) && setGreen.has(idB)) return true;
   if (setNisarga.has(idA) && setNisarga.has(idB)) return true;
@@ -60,21 +73,29 @@ export function isSellerSynonym(idA: string, idB: string): boolean {
   return false;
 }
 
-export function getSellerOrderViews(orders: OrderRecord[], sellerId: string): SellerOrderView[] {
+export function getSellerOrderViews(
+  orders: OrderRecord[],
+  sellerId: string,
+): SellerOrderView[] {
   const views: SellerOrderView[] = [];
 
   for (const masterOrder of orders) {
-    const matchingGroup = masterOrder.nurseryGroups.find((g) => isSellerSynonym(g.sellerId, sellerId));
+    const matchingGroup = masterOrder.nurseryGroups.find((g) =>
+      isSellerSynonym(g.sellerId, sellerId),
+    );
     if (!matchingGroup || matchingGroup.items.length === 0) {
       continue;
     }
 
     const subtotalPaise = matchingGroup.items.reduce(
       (sum, item) => sum + item.pricePaise * item.quantity,
-      0
+      0,
     );
 
-    const groupRatio = masterOrder.subtotalPaise > 0 ? subtotalPaise / masterOrder.subtotalPaise : 0;
+    const groupRatio =
+      masterOrder.subtotalPaise > 0
+        ? subtotalPaise / masterOrder.subtotalPaise
+        : 0;
     const discountPaise = Math.round(masterOrder.discountPaise * groupRatio);
     const totalPaise = Math.max(0, subtotalPaise - discountPaise);
 
@@ -91,7 +112,10 @@ export function getSellerOrderViews(orders: OrderRecord[], sellerId: string): Se
       subtotalPaise,
       discountPaise,
       totalPaise,
-      status: (matchingGroup.status as OrderStatus) || (masterOrder.status as OrderStatus) || "Order Placed",
+      status:
+        (matchingGroup.status as OrderStatus) ||
+        (masterOrder.status as OrderStatus) ||
+        "Order Placed",
       masterStatus: masterOrder.status,
       paymentMethod: masterOrder.paymentMethod,
       createdAt: masterOrder.createdAt,
@@ -105,27 +129,35 @@ export function getSellerOrderViews(orders: OrderRecord[], sellerId: string): Se
 export function getSellerOrderViewById(
   orders: OrderRecord[],
   masterOrderId: string,
-  sellerId: string
+  sellerId: string,
 ): SellerOrderView | null {
   const allViews = getSellerOrderViews(orders, sellerId);
   return (
-    allViews.find((v) => v.masterOrderId.toLowerCase() === masterOrderId.toLowerCase()) ?? null
+    allViews.find(
+      (v) => v.masterOrderId.toLowerCase() === masterOrderId.toLowerCase(),
+    ) ?? null
   );
 }
 
 export function validateSellerStatusTransition(
   currentStatus: OrderStatus,
-  nextStatus: OrderStatus
+  nextStatus: OrderStatus,
 ): boolean {
-  if (currentStatus === "Order Placed" && nextStatus === "Nursery Confirmed") return true;
-  if (currentStatus === "Nursery Confirmed" && nextStatus === "Preparing") return true;
-  if (currentStatus === "Preparing" && nextStatus === "Ready for Pickup") return true;
-  if (currentStatus === "Ready for Pickup" && nextStatus === "Picked Up") return true;
+  if (currentStatus === "Order Placed" && nextStatus === "Nursery Confirmed")
+    return true;
+  if (currentStatus === "Nursery Confirmed" && nextStatus === "Preparing")
+    return true;
+  if (currentStatus === "Preparing" && nextStatus === "Ready for Pickup")
+    return true;
+  if (currentStatus === "Ready for Pickup" && nextStatus === "Picked Up")
+    return true;
 
   return false;
 }
 
-export function getNextSellerStatus(currentStatus: OrderStatus): OrderStatus | null {
+export function getNextSellerStatus(
+  currentStatus: OrderStatus,
+): OrderStatus | null {
   switch (currentStatus) {
     case "Order Placed":
       return "Nursery Confirmed";
@@ -140,7 +172,9 @@ export function getNextSellerStatus(currentStatus: OrderStatus): OrderStatus | n
   }
 }
 
-export function getSellerActionLabel(currentStatus: OrderStatus): string | null {
+export function getSellerActionLabel(
+  currentStatus: OrderStatus,
+): string | null {
   switch (currentStatus) {
     case "Order Placed":
       return "Confirm Order";
@@ -181,18 +215,24 @@ export function computeSellerStats(views: SellerOrderView[]): SellerOrderStats {
 export async function updateSellerFulfillmentStatus(
   masterOrderId: string,
   sellerId: string,
-  newStatus: OrderStatus
+  newStatus: OrderStatus,
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const supabase = getSupabaseBrowserClient();
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
     if (session?.user) {
       const res = await api.updateFulfillmentStatus(masterOrderId, newStatus);
       if (res.success) {
         return { success: true };
       }
-      return { success: false, error: res.error?.message || "Failed to update seller fulfillment status" };
+      return {
+        success: false,
+        error:
+          res.error?.message || "Failed to update seller fulfillment status",
+      };
     }
   } catch (e: unknown) {
     console.warn("[sellerOrders] updateSellerFulfillmentStatus API note:", e);

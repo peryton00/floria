@@ -26,7 +26,9 @@ interface ProductDetailsInteractiveProps {
   listing: any; // ProductListing
 }
 
-export function ProductDetailsInteractive({ listing }: ProductDetailsInteractiveProps) {
+export function ProductDetailsInteractive({
+  listing,
+}: ProductDetailsInteractiveProps) {
   const { product, inventory, seller, category, images } = listing;
   const isOutOfStock = inventory.stock_quantity === 0;
 
@@ -41,7 +43,12 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
 
   // Sync selectedImage if images array updates dynamically
   useEffect(() => {
-    if (images && images.length > 0 && (!selectedImage || !images.some((img: any) => img.url === selectedImage.url))) {
+    if (
+      images &&
+      images.length > 0 &&
+      (!selectedImage ||
+        !images.some((img: any) => img.url === selectedImage.url))
+    ) {
       setSelectedImage(images[0]);
     }
   }, [images, selectedImage]);
@@ -58,7 +65,9 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
       if (Date.now() < pausedUntilRef.current) return;
 
       setSelectedImage((prev: any) => {
-        const currentIndex = images.findIndex((img: any) => img.url === (prev?.url || images[0]?.url));
+        const currentIndex = images.findIndex(
+          (img: any) => img.url === (prev?.url || images[0]?.url),
+        );
         const nextIndex = (currentIndex + 1) % images.length;
         return images[nextIndex];
       });
@@ -82,7 +91,7 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
 
     // Client-side condition check: verify if product is already in cart
     const existsInCart = cartItems.some(
-      (item) => item.listing?.product?.id === product.id
+      (item) => item.listing?.product?.id === product.id,
     );
 
     if (!existsInCart) {
@@ -106,13 +115,13 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
 
   const handleIncrement = () => {
     if (quantity < inventory.stock_quantity) {
-      setQuantity(q => q + 1);
+      setQuantity((q) => q + 1);
     }
   };
 
   const handleDecrement = () => {
     if (quantity > 1) {
-      setQuantity(q => q - 1);
+      setQuantity((q) => q - 1);
     }
   };
 
@@ -154,8 +163,14 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
         return (
           <div className="space-y-2 text-sm text-ink-500">
             <p className="font-semibold text-ink-900">{seller.business_name}</p>
-            <p>{seller.business_name} is a verified nursery specializing in premium indoor foliage and exotic plants located in Raipur, Chhattisgarh.</p>
-            <p className="text-xs text-forest-700 font-semibold">100% Organic Soils & Sustainable Farming practices.</p>
+            <p>
+              {seller.business_name} is a verified nursery specializing in
+              premium indoor foliage and exotic plants located in Raipur,
+              Chhattisgarh.
+            </p>
+            <p className="text-xs text-forest-700 font-semibold">
+              100% Organic Soils & Sustainable Farming practices.
+            </p>
           </div>
         );
       case "reviews":
@@ -194,7 +209,8 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
         >
           {images && images.length > 0 ? (
             images.map((img: any, idx: number) => {
-              const isSelected = selectedImage?.url === img.url || (idx === 0 && !selectedImage);
+              const isSelected =
+                selectedImage?.url === img.url || (idx === 0 && !selectedImage);
               return (
                 <Image
                   key={img.url || idx}
@@ -232,7 +248,11 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
           {/* Wishlist floating frosted heart */}
           <button
             type="button"
-            aria-label={wishlisted ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
+            aria-label={
+              wishlisted
+                ? `Remove ${product.name} from wishlist`
+                : `Add ${product.name} to wishlist`
+            }
             onClick={() => toggleWishlist(listing)}
             className={[
               "absolute bottom-4 right-4 w-12 h-12 flex items-center justify-center rounded-full transition-all shadow-md focus:outline-none focus:ring-2 focus:ring-forest-800 z-20",
@@ -241,7 +261,10 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
                 : "bg-white/90 hover:bg-white backdrop-blur-md text-ink-400 hover:text-red-600 border border-white/80 active:scale-95",
             ].join(" ")}
           >
-            <WishlistIcon size={20} className={wishlisted ? "fill-red-600" : ""} />
+            <WishlistIcon
+              size={20}
+              className={wishlisted ? "fill-red-600" : ""}
+            />
           </button>
         </div>
 
@@ -282,8 +305,12 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
               <TruckIcon size={18} />
             </div>
             <div>
-              <p className="text-xs font-bold text-ink-900 leading-tight">Fast &amp; Safe Delivery</p>
-              <p className="text-[10px] text-ink-500 mt-0.5">Secure green packaging</p>
+              <p className="text-xs font-bold text-ink-900 leading-tight">
+                Fast &amp; Safe Delivery
+              </p>
+              <p className="text-[10px] text-ink-500 mt-0.5">
+                Secure green packaging
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-3 p-3 rounded-2xl bg-floria-soft-sand/80 border border-floria-border">
@@ -291,8 +318,12 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
               <ShieldIcon size={18} />
             </div>
             <div>
-              <p className="text-xs font-bold text-ink-900 leading-tight">Secure Payments</p>
-              <p className="text-[10px] text-ink-500 mt-0.5">100% encrypted checkout</p>
+              <p className="text-xs font-bold text-ink-900 leading-tight">
+                Secure Payments
+              </p>
+              <p className="text-[10px] text-ink-500 mt-0.5">
+                100% encrypted checkout
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-3 p-3 rounded-2xl bg-floria-soft-sand/80 border border-floria-border">
@@ -300,8 +331,12 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
               <ReturnIcon size={18} />
             </div>
             <div>
-              <p className="text-xs font-bold text-ink-900 leading-tight">7 Days Easy Returns</p>
-              <p className="text-[10px] text-ink-500 mt-0.5">No questions asked</p>
+              <p className="text-xs font-bold text-ink-900 leading-tight">
+                7 Days Easy Returns
+              </p>
+              <p className="text-[10px] text-ink-500 mt-0.5">
+                No questions asked
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-3 p-3 rounded-2xl bg-floria-soft-sand/80 border border-floria-border">
@@ -309,8 +344,12 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
               <StarIcon size={18} className="fill-amber-400 text-amber-400" />
             </div>
             <div>
-              <p className="text-xs font-bold text-ink-900 leading-tight">Quality Assured</p>
-              <p className="text-[10px] text-ink-500 mt-0.5">Direct from nurseries</p>
+              <p className="text-xs font-bold text-ink-900 leading-tight">
+                Quality Assured
+              </p>
+              <p className="text-[10px] text-ink-500 mt-0.5">
+                Direct from nurseries
+              </p>
             </div>
           </div>
         </div>
@@ -336,7 +375,12 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
 
         {/* Seller Info */}
         <p className="text-xs text-ink-500 mb-3.5 leading-tight flex items-center gap-1.5">
-          <span>Sold by <strong className="text-ink-900 font-semibold">{seller.business_name}</strong></span>
+          <span>
+            Sold by{" "}
+            <strong className="text-ink-900 font-semibold">
+              {seller.business_name}
+            </strong>
+          </span>
           <span className="text-ink-300">•</span>
           <span>Raipur, Chhattisgarh</span>
         </p>
@@ -345,17 +389,23 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
         <div className="flex items-center gap-2 mb-4">
           <StarRating rating={displayRating} size="sm" />
           {displayRating > 0 && (
-            <span className="text-xs font-bold text-ink-900">{displayRating.toFixed(1)}</span>
+            <span className="text-xs font-bold text-ink-900">
+              {displayRating.toFixed(1)}
+            </span>
           )}
           <span className="text-xs text-ink-500">
-            {reviewCount > 0 ? `(${reviewCount} review${reviewCount !== 1 ? "s" : ""})` : "No reviews yet"}
+            {reviewCount > 0
+              ? `(${reviewCount} review${reviewCount !== 1 ? "s" : ""})`
+              : "No reviews yet"}
           </span>
         </div>
 
         {/* Pricing Block & Delivery Benefit */}
         <div className="mb-5 pb-5 border-b border-floria-border space-y-2.5">
           <ProductPriceBlock
-            sellingPricePaise={pricing?.sellingPricePaise ?? inventory.price_paise}
+            sellingPricePaise={
+              pricing?.sellingPricePaise ?? inventory.price_paise
+            }
             originalPricePaise={pricing?.originalPricePaise}
             discountPercentage={pricing?.discountPercentage}
             discountAmountPaise={pricing?.discountAmountPaise}
@@ -395,15 +445,23 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
         {/* Stock status & Qty Selector */}
         <div className="flex items-center justify-between mb-6 p-3.5 rounded-2xl bg-floria-soft-sand/80 border border-floria-border">
           <div className="flex flex-col">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-ink-400">Availability</span>
-            <span className={`text-xs font-bold ${isOutOfStock ? "text-error-600" : "text-forest-800"}`}>
-              {isOutOfStock ? "Out of Stock" : `In Stock (${inventory.stock_quantity} available)`}
+            <span className="text-[10px] font-bold uppercase tracking-wider text-ink-400">
+              Availability
+            </span>
+            <span
+              className={`text-xs font-bold ${isOutOfStock ? "text-error-600" : "text-forest-800"}`}
+            >
+              {isOutOfStock
+                ? "Out of Stock"
+                : `In Stock (${inventory.stock_quantity} available)`}
             </span>
           </div>
 
           {!isOutOfStock && (
             <div className="flex items-center gap-3">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-ink-400">Quantity</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-ink-400">
+                Quantity
+              </span>
               <div className="flex items-center border border-floria-border rounded-xl overflow-hidden bg-floria-sand/60 shadow-2xs">
                 <button
                   type="button"
@@ -413,7 +471,9 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
                 >
                   -
                 </button>
-                <span className="w-8 text-center text-xs font-bold text-ink-900 select-none">{quantity}</span>
+                <span className="w-8 text-center text-xs font-bold text-ink-900 select-none">
+                  {quantity}
+                </span>
                 <button
                   type="button"
                   onClick={handleIncrement}
@@ -477,7 +537,9 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
                   onClick={() => setActiveTab(tab.id)}
                   className={[
                     "pb-3.5 relative whitespace-nowrap transition-colors focus:outline-none",
-                    isActive ? "text-forest-800 font-bold" : "hover:text-ink-900",
+                    isActive
+                      ? "text-forest-800 font-bold"
+                      : "hover:text-ink-900",
                   ].join(" ")}
                 >
                   {tab.label}
@@ -490,9 +552,7 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
           </div>
 
           {/* Tab content area */}
-          <div className="py-5">
-            {renderTabContent()}
-          </div>
+          <div className="py-5">{renderTabContent()}</div>
         </div>
 
         {/* SVG Trust Badges (Mobile only - sits under product tabs) */}
@@ -502,8 +562,12 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
               <TruckIcon size={18} />
             </div>
             <div>
-              <p className="text-xs font-bold text-ink-900 leading-tight">Fast &amp; Safe Delivery</p>
-              <p className="text-[10px] text-ink-500 mt-0.5">Secure green packaging</p>
+              <p className="text-xs font-bold text-ink-900 leading-tight">
+                Fast &amp; Safe Delivery
+              </p>
+              <p className="text-[10px] text-ink-500 mt-0.5">
+                Secure green packaging
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-3 p-3 rounded-2xl bg-floria-soft-sand/80 border border-floria-border">
@@ -511,8 +575,12 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
               <ShieldIcon size={18} />
             </div>
             <div>
-              <p className="text-xs font-bold text-ink-900 leading-tight">Secure Payments</p>
-              <p className="text-[10px] text-ink-500 mt-0.5">100% encrypted checkout</p>
+              <p className="text-xs font-bold text-ink-900 leading-tight">
+                Secure Payments
+              </p>
+              <p className="text-[10px] text-ink-500 mt-0.5">
+                100% encrypted checkout
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-3 p-3 rounded-2xl bg-floria-soft-sand/80 border border-floria-border">
@@ -520,8 +588,12 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
               <ReturnIcon size={18} />
             </div>
             <div>
-              <p className="text-xs font-bold text-ink-900 leading-tight">7 Days Easy Returns</p>
-              <p className="text-[10px] text-ink-500 mt-0.5">No questions asked</p>
+              <p className="text-xs font-bold text-ink-900 leading-tight">
+                7 Days Easy Returns
+              </p>
+              <p className="text-[10px] text-ink-500 mt-0.5">
+                No questions asked
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-3 p-3 rounded-2xl bg-floria-soft-sand/80 border border-floria-border">
@@ -529,8 +601,12 @@ export function ProductDetailsInteractive({ listing }: ProductDetailsInteractive
               <StarIcon size={18} className="fill-amber-400 text-amber-400" />
             </div>
             <div>
-              <p className="text-xs font-bold text-ink-900 leading-tight">Quality Assured</p>
-              <p className="text-[10px] text-ink-500 mt-0.5">Direct from nurseries</p>
+              <p className="text-xs font-bold text-ink-900 leading-tight">
+                Quality Assured
+              </p>
+              <p className="text-[10px] text-ink-500 mt-0.5">
+                Direct from nurseries
+              </p>
             </div>
           </div>
         </div>

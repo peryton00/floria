@@ -17,20 +17,32 @@ export class AdminService {
       orderRepository.findAllMasterOrders(),
     ]);
 
-    const { settingsRepository } = await import("../database/repositories/settings.repository.js");
+    const { settingsRepository } =
+      await import("../database/repositories/settings.repository.js");
     const commissionRate = await settingsRepository.getCommissionRate();
 
-    const totalCustomers = users.filter((u: any) => u.role === "customer").length;
+    const totalCustomers = users.filter(
+      (u: any) => u.role === "customer",
+    ).length;
     const totalSellers = sellers.length;
-    const pendingSellerApplications = sellers.filter((s: any) => s.status === "pending").length;
-    const approvedSellers = sellers.filter((s: any) => s.status === "approved").length;
-    const suspendedSellers = sellers.filter((s: any) => s.status === "suspended").length;
+    const pendingSellerApplications = sellers.filter(
+      (s: any) => s.status === "pending",
+    ).length;
+    const approvedSellers = sellers.filter(
+      (s: any) => s.status === "approved",
+    ).length;
+    const suspendedSellers = sellers.filter(
+      (s: any) => s.status === "suspended",
+    ).length;
 
     const totalProducts = prods.length;
-    const activeProducts = prods.filter((p: any) => p.status === "active").length;
+    const activeProducts = prods.filter(
+      (p: any) => p.status === "active",
+    ).length;
     const draftProducts = prods.filter((p: any) => p.status === "draft").length;
     const outOfStockProducts = prods.filter((p: any) => {
-      const qty = p.inventory?.[0]?.stock_quantity ?? p.inventory?.stock_quantity ?? 0;
+      const qty =
+        p.inventory?.[0]?.stock_quantity ?? p.inventory?.stock_quantity ?? 0;
       return qty <= 0;
     }).length;
 
@@ -47,8 +59,10 @@ export class AdminService {
       const st = (o.status || "").toLowerCase();
       if (st === "order placed" || st === "nursery confirmed") pendingOrders++;
       else if (st === "preparing") preparingOrders++;
-      else if (st === "ready for pickup" || st === "picked up") readyForPickupOrders++;
-      else if (st === "packing" || st === "out for delivery") outForDeliveryOrders++;
+      else if (st === "ready for pickup" || st === "picked up")
+        readyForPickupOrders++;
+      else if (st === "packing" || st === "out for delivery")
+        outForDeliveryOrders++;
       else if (st === "delivered") deliveredOrders++;
       else if (st === "cancelled") cancelledOrders++;
 
@@ -58,7 +72,9 @@ export class AdminService {
       });
     });
 
-    const platformRevenue = Math.round(totalOrderValue * (commissionRate / 100));
+    const platformRevenue = Math.round(
+      totalOrderValue * (commissionRate / 100),
+    );
 
     return {
       users: {
@@ -102,11 +118,17 @@ export class AdminService {
     return user;
   }
 
-  async updateUserStatus(adminUserId: string, userId: string, status: "active" | "suspended", rationale?: string) {
+  async updateUserStatus(
+    adminUserId: string,
+    userId: string,
+    status: "active" | "suspended",
+    rationale?: string,
+  ) {
     const user = await userRepository.findById(userId);
     if (!user) throw Errors.notFound("User");
 
-    const action = status === "suspended" ? "CUSTOMER_SUSPENDED" : "CUSTOMER_REACTIVATED";
+    const action =
+      status === "suspended" ? "CUSTOMER_SUSPENDED" : "CUSTOMER_REACTIVATED";
     await auditRepository.log({
       actor_user_id: adminUserId,
       actor_role: "admin",
@@ -130,7 +152,11 @@ export class AdminService {
     return seller;
   }
 
-  async updateSellerStatus(adminUserId: string, sellerId: string, status: "approved" | "suspended" | "pending" | "rejected") {
+  async updateSellerStatus(
+    adminUserId: string,
+    sellerId: string,
+    status: "approved" | "suspended" | "pending" | "rejected",
+  ) {
     const seller = await sellerRepository.findById(sellerId);
     if (!seller) throw Errors.notFound("Seller profile");
 
@@ -140,16 +166,25 @@ export class AdminService {
     }
 
     if (currentStatus === "rejected" && status === "approved") {
-      throw Errors.validation("Cannot directly approve a rejected seller application without resubmission");
+      throw Errors.validation(
+        "Cannot directly approve a rejected seller application without resubmission",
+      );
     }
 
     let action = "SELLER_UPDATED";
     if (status === "approved") action = "SELLER_APPROVED";
     else if (status === "rejected") action = "SELLER_REJECTED";
     else if (status === "suspended") action = "SELLER_SUSPENDED";
-    else if (status === "pending" || (currentStatus === "suspended" && status === "approved")) action = "SELLER_REACTIVATED";
+    else if (
+      status === "pending" ||
+      (currentStatus === "suspended" && status === "approved")
+    )
+      action = "SELLER_REACTIVATED";
 
-    const success = await sellerRepository.updateStatus(sellerId, status as any);
+    const success = await sellerRepository.updateStatus(
+      sellerId,
+      status as any,
+    );
     if (!success) throw Errors.database("Failed to update seller status.");
 
     await auditRepository.log({
@@ -164,23 +199,32 @@ export class AdminService {
     // Trigger notification to seller user
     if (seller.user_id) {
       try {
-        const { notificationService } = await import("../notifications/notification.service.js");
+        const { notificationService } =
+          await import("../notifications/notification.service.js");
         await notificationService.createNotification({
           user_id: seller.user_id,
           role: "seller",
           type: `SELLER_${status.toUpperCase()}`,
           title: `Nursery Partner Status: ${status.toUpperCase()}`,
-          message: status === "approved"
-            ? "Congratulations! Your Floria nursery seller application has been approved."
-            : status === "rejected"
-            ? "Your Floria nursery seller application was not approved."
-            : "Your Floria nursery seller account has been suspended.",
+          message:
+            status === "approved"
+              ? "Congratulations! Your Floria nursery seller application has been approved."
+              : status === "rejected"
+                ? "Your Floria nursery seller application was not approved."
+                : "Your Floria nursery seller account has been suspended.",
           source_type: "seller_profile",
           source_id: `${sellerId}_${status}`,
-          navigation: { entityType: "SELLER", entityId: sellerId, action: "VIEW" },
+          navigation: {
+            entityType: "SELLER",
+            entityId: sellerId,
+            action: "VIEW",
+          },
         });
       } catch (notifErr) {
-        console.error("[AdminService] Seller status notification error:", notifErr);
+        console.error(
+          "[AdminService] Seller status notification error:",
+          notifErr,
+        );
       }
     }
 
@@ -194,14 +238,27 @@ export class AdminService {
     return {
       sellerId,
       documents: [
-        { type: "nursery_license", url: "/documents/sample_license.pdf", status: "verified" },
-        { type: "gst_certificate", url: "/documents/sample_gst.pdf", status: "verified" },
+        {
+          type: "nursery_license",
+          url: "/documents/sample_license.pdf",
+          status: "verified",
+        },
+        {
+          type: "gst_certificate",
+          url: "/documents/sample_gst.pdf",
+          status: "verified",
+        },
       ],
     };
   }
 
   // ── Product Moderation ────────────────────────────────────────────────────
-  async getProducts(filters?: { search?: string; status?: string; categoryId?: string; sellerId?: string }) {
+  async getProducts(filters?: {
+    search?: string;
+    status?: string;
+    categoryId?: string;
+    sellerId?: string;
+  }) {
     return productRepository.findAll(filters);
   }
 
@@ -211,14 +268,20 @@ export class AdminService {
     return prod;
   }
 
-  async updateProductStatus(adminUserId: string, productId: string, status: string) {
+  async updateProductStatus(
+    adminUserId: string,
+    productId: string,
+    status: string,
+  ) {
     const prod = await productRepository.findById(productId);
     if (!prod) throw Errors.notFound("Product");
 
     let action = "PRODUCT_MODERATED";
     if (status === "active") action = "PRODUCT_PUBLISHED";
-    else if (status === "inactive" || status === "draft") action = "PRODUCT_UNPUBLISHED";
-    else if (status === "deleted" || status === "archived") action = "PRODUCT_ARCHIVED";
+    else if (status === "inactive" || status === "draft")
+      action = "PRODUCT_UNPUBLISHED";
+    else if (status === "deleted" || status === "archived")
+      action = "PRODUCT_ARCHIVED";
 
     const success = await productRepository.updateStatus(productId, status);
     if (!success) throw Errors.database("Failed to update product status");
@@ -245,18 +308,22 @@ export class AdminService {
     return { categoryId, activeProductsCount: prods.length };
   }
 
-  async createCategory(adminUserId: string, payload: {
-    name: string;
-    slug: string;
-    description?: string;
-    display_order?: number;
-    image_url?: string;
-    banner_url?: string;
-    asset_id?: string;
-    banner_asset_id?: string;
-  }) {
+  async createCategory(
+    adminUserId: string,
+    payload: {
+      name: string;
+      slug: string;
+      description?: string;
+      display_order?: number;
+      image_url?: string;
+      banner_url?: string;
+      asset_id?: string;
+      banner_asset_id?: string;
+    },
+  ) {
     const existing = await categoryRepository.findBySlug(payload.slug);
-    if (existing) throw Errors.validation("A category with this slug already exists");
+    if (existing)
+      throw Errors.validation("A category with this slug already exists");
 
     const category = await categoryRepository.createCategory(payload);
     await auditRepository.log({
@@ -275,8 +342,12 @@ export class AdminService {
     const existing = await categoryRepository.findById(categoryId);
     if (!existing) throw Errors.notFound("Category");
 
-    const category = await categoryRepository.updateCategory(categoryId, updates);
-    const action = updates.is_active === false ? "CATEGORY_DISABLED" : "CATEGORY_UPDATED";
+    const category = await categoryRepository.updateCategory(
+      categoryId,
+      updates,
+    );
+    const action =
+      updates.is_active === false ? "CATEGORY_DISABLED" : "CATEGORY_UPDATED";
 
     await auditRepository.log({
       actor_user_id: adminUserId,
@@ -291,7 +362,10 @@ export class AdminService {
   }
 
   // ── Orders Oversight ──────────────────────────────────────────────────────
-  async getOrders(_adminUserId: string, filters?: { status?: string; search?: string }) {
+  async getOrders(
+    _adminUserId: string,
+    filters?: { status?: string; search?: string },
+  ) {
     return orderRepository.findAllMasterOrders(filters);
   }
 
@@ -302,7 +376,11 @@ export class AdminService {
   }
 
   // ── Audit Logs ────────────────────────────────────────────────────────────
-  async getAuditLogs(filters?: { actorId?: string; role?: string; action?: string }) {
+  async getAuditLogs(filters?: {
+    actorId?: string;
+    role?: string;
+    action?: string;
+  }) {
     const logs = await auditRepository.findAll();
     let results = logs;
     if (filters?.role) {
@@ -328,16 +406,25 @@ export class AdminService {
     else if (range === "12m") startDate.setFullYear(now.getFullYear() - 1);
     else startDate.setDate(now.getDate() - 30); // default 30d
 
-    const filtered = orders.filter((o: any) => new Date(o.created_at) >= startDate);
+    const filtered = orders.filter(
+      (o: any) => new Date(o.created_at) >= startDate,
+    );
 
-    const groups: Record<string, { gmv: number; orders: number; revenue: number }> = {};
-    const { settingsRepository } = await import("../database/repositories/settings.repository.js");
+    const groups: Record<
+      string,
+      { gmv: number; orders: number; revenue: number }
+    > = {};
+    const { settingsRepository } =
+      await import("../database/repositories/settings.repository.js");
     const commissionRate = await settingsRepository.getCommissionRate();
 
     if (range === "12m") {
       filtered.forEach((o: any) => {
         const d = new Date(o.created_at);
-        const key = d.toLocaleString("default", { month: "short", year: "numeric" });
+        const key = d.toLocaleString("default", {
+          month: "short",
+          year: "numeric",
+        });
         if (!groups[key]) groups[key] = { gmv: 0, orders: 0, revenue: 0 };
         const gmv = o.total_paise || o.subtotal_paise || 0;
         groups[key].gmv += gmv;
@@ -347,7 +434,10 @@ export class AdminService {
     } else {
       filtered.forEach((o: any) => {
         const d = new Date(o.created_at);
-        const key = d.toLocaleString("default", { day: "numeric", month: "short" });
+        const key = d.toLocaleString("default", {
+          day: "numeric",
+          month: "short",
+        });
         if (!groups[key]) groups[key] = { gmv: 0, orders: 0, revenue: 0 };
         const gmv = o.total_paise || o.subtotal_paise || 0;
         groups[key].gmv += gmv;
@@ -412,8 +502,10 @@ export class AdminService {
 
     const prodPayload: Record<string, any> = { updated_at: now };
     if (updates.name !== undefined) prodPayload.name = updates.name.trim();
-    if (updates.category_id !== undefined) prodPayload.category_id = updates.category_id;
-    if (updates.description !== undefined) prodPayload.description = updates.description?.trim() || null;
+    if (updates.category_id !== undefined)
+      prodPayload.category_id = updates.category_id;
+    if (updates.description !== undefined)
+      prodPayload.description = updates.description?.trim() || null;
     if (updates.status !== undefined) prodPayload.status = updates.status;
 
     const { data: updatedProd, error: prodErr } = await db
@@ -432,9 +524,12 @@ export class AdminService {
       updates.sku !== undefined
     ) {
       const invPayload: Record<string, any> = { updated_at: now };
-      if (updates.price_paise !== undefined) invPayload.price_paise = Math.max(0, updates.price_paise);
-      if (updates.stock_quantity !== undefined) invPayload.stock_quantity = Math.max(0, updates.stock_quantity);
-      if (updates.sku !== undefined) invPayload.sku = updates.sku?.trim() || null;
+      if (updates.price_paise !== undefined)
+        invPayload.price_paise = Math.max(0, updates.price_paise);
+      if (updates.stock_quantity !== undefined)
+        invPayload.stock_quantity = Math.max(0, updates.stock_quantity);
+      if (updates.sku !== undefined)
+        invPayload.sku = updates.sku?.trim() || null;
 
       await db.from("inventory").update(invPayload).eq("product_id", productId);
     }

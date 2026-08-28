@@ -58,12 +58,15 @@ export function NurseryConflictModal({
 
         <p className="text-sm text-ink-500 text-center mb-1">
           Your cart contains items from{" "}
-          <span className="font-semibold text-ink-800">{currentNurseryName}</span>.
+          <span className="font-semibold text-ink-800">
+            {currentNurseryName}
+          </span>
+          .
         </p>
         <p className="text-sm text-ink-500 text-center mb-6">
           Adding items from{" "}
-          <span className="font-semibold text-ink-800">{newNurseryName}</span> will
-          replace your current cart.
+          <span className="font-semibold text-ink-800">{newNurseryName}</span>{" "}
+          will replace your current cart.
         </p>
 
         <div className="flex flex-col gap-3">

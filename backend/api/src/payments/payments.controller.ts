@@ -7,7 +7,11 @@ export class PaymentsController {
    * POST /api/v1/payments/create-session
    * Authenticated user creates or retrieves Cashfree payment session for an order.
    */
-  async createPaymentSession(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async createPaymentSession(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const userId = req.user!.id;
       const { orderId } = req.body;
@@ -20,18 +24,25 @@ export class PaymentsController {
         return;
       }
 
-      const session = await paymentsService.createPaymentSession(userId, orderId);
+      const session = await paymentsService.createPaymentSession(
+        userId,
+        orderId,
+      );
       res.json({
         success: true,
         data: session,
       });
     } catch (err: any) {
-      console.warn("[PaymentsController] createPaymentSession notice:", err?.message || err);
+      console.warn(
+        "[PaymentsController] createPaymentSession notice:",
+        err?.message || err,
+      );
       res.status(400).json({
         success: false,
         error: {
           code: "PAYMENT_INITIATION_FAILED",
-          message: err?.message || "Failed to initialize payment gateway session.",
+          message:
+            err?.message || "Failed to initialize payment gateway session.",
         },
       });
     }
@@ -41,12 +52,21 @@ export class PaymentsController {
    * GET /api/v1/payments/:paymentId/status
    * Fetch authoritative status of a payment.
    */
-  async getPaymentStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async getPaymentStatus(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const userId = req.user!.id;
-      const paymentId = Array.isArray(req.params.paymentId) ? req.params.paymentId[0] : String(req.params.paymentId);
+      const paymentId = Array.isArray(req.params.paymentId)
+        ? req.params.paymentId[0]
+        : String(req.params.paymentId);
 
-      const payment = await paymentsService.verifyAndReconcilePayment(userId, paymentId);
+      const payment = await paymentsService.verifyAndReconcilePayment(
+        userId,
+        paymentId,
+      );
       res.json({
         success: true,
         data: payment,
@@ -59,11 +79,25 @@ export class PaymentsController {
   /**
    * GET /api/v1/payments/lookup-order?cf_order_id=...
    */
-  async lookupOrderByCfOrderId(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async lookupOrderByCfOrderId(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
-      const cfOrderId = String(req.query.cf_order_id || req.query.order_id || "");
+      const cfOrderId = String(
+        req.query.cf_order_id || req.query.order_id || "",
+      );
       if (!cfOrderId) {
-        res.status(422).json({ success: false, error: { code: "VALIDATION_ERROR", message: "cf_order_id is required" } });
+        res
+          .status(422)
+          .json({
+            success: false,
+            error: {
+              code: "VALIDATION_ERROR",
+              message: "cf_order_id is required",
+            },
+          });
         return;
       }
       const result = await paymentsService.lookupOrderByCfOrderId(cfOrderId);
@@ -77,13 +111,21 @@ export class PaymentsController {
    * POST /api/v1/payments/webhooks/cashfree
    * Production Cashfree webhook endpoint with signature verification & idempotency.
    */
-  async handleCashfreeWebhook(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async handleCashfreeWebhook(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
-      const rawSig = req.headers["x-webhook-signature"] || req.headers["x-cashfree-signature"] || "";
+      const rawSig =
+        req.headers["x-webhook-signature"] ||
+        req.headers["x-cashfree-signature"] ||
+        "";
       const rawTs = req.headers["x-webhook-timestamp"] || "";
       const signature = Array.isArray(rawSig) ? rawSig[0] : String(rawSig);
       const timestamp = Array.isArray(rawTs) ? rawTs[0] : String(rawTs);
-      const rawBody = typeof req.body === "string" ? req.body : JSON.stringify(req.body);
+      const rawBody =
+        typeof req.body === "string" ? req.body : JSON.stringify(req.body);
 
       const result = await paymentsService.processWebhookInput({
         signature,
@@ -102,13 +144,24 @@ export class PaymentsController {
    * POST /api/v1/payments/:paymentId/refund
    * Authorized admin/seller initiates refund.
    */
-  async processRefund(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async processRefund(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const userId = req.user!.id;
-      const paymentId = Array.isArray(req.params.paymentId) ? req.params.paymentId[0] : String(req.params.paymentId);
+      const paymentId = Array.isArray(req.params.paymentId)
+        ? req.params.paymentId[0]
+        : String(req.params.paymentId);
       const { amountPaise, reason } = req.body;
 
-      const refund = await paymentsService.processRefund(userId, paymentId, Number(amountPaise), reason);
+      const refund = await paymentsService.processRefund(
+        userId,
+        paymentId,
+        Number(amountPaise),
+        reason,
+      );
       res.json({
         success: true,
         data: refund,
@@ -122,13 +175,26 @@ export class PaymentsController {
    * GET /api/v1/payments/admin/all
    * Authorized admin query to fetch transaction logs across all marketplace orders.
    */
-  async getAdminTransactions(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async getAdminTransactions(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
-      const status = typeof req.query.status === "string" ? req.query.status : undefined;
-      const search = typeof req.query.search === "string" ? req.query.search : undefined;
-      const limit = typeof req.query.limit === "string" ? parseInt(req.query.limit, 10) : 100;
+      const status =
+        typeof req.query.status === "string" ? req.query.status : undefined;
+      const search =
+        typeof req.query.search === "string" ? req.query.search : undefined;
+      const limit =
+        typeof req.query.limit === "string"
+          ? parseInt(req.query.limit, 10)
+          : 100;
 
-      const transactions = await paymentsService.getAdminTransactions({ status, search, limit });
+      const transactions = await paymentsService.getAdminTransactions({
+        status,
+        search,
+        limit,
+      });
       res.json({
         success: true,
         data: transactions,

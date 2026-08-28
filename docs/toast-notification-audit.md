@@ -14,12 +14,12 @@ This document audits the global Toast Notification System implemented across the
 
 ## 2. Notification Types & Defaults
 
-| Type | Auto-Dismiss Duration | ARIA Role | Icon |
-|---|---|---|---|
-| **Success** | `4000ms` (4s) | `role="status"` | `CheckCircle2` (Emerald) |
-| **Error** | `6000ms` (6s) | `role="alert"` | `AlertCircle` (Red) |
-| **Warning** | `5000ms` (5s) | `role="alert"` | `AlertTriangle` (Amber) |
-| **Info** | `4000ms` (4s) | `role="status"` | `Info` (Sky) |
+| Type        | Auto-Dismiss Duration              | ARIA Role       | Icon                         |
+| ----------- | ---------------------------------- | --------------- | ---------------------------- |
+| **Success** | `4000ms` (4s)                      | `role="status"` | `CheckCircle2` (Emerald)     |
+| **Error**   | `6000ms` (6s)                      | `role="alert"`  | `AlertCircle` (Red)          |
+| **Warning** | `5000ms` (5s)                      | `role="alert"`  | `AlertTriangle` (Amber)      |
+| **Info**    | `4000ms` (4s)                      | `role="status"` | `Info` (Sky)                 |
 | **Loading** | Persistent until updated/dismissed | `role="status"` | `Loader2` (Forest, Animated) |
 
 ---
@@ -40,26 +40,26 @@ This document audits the global Toast Notification System implemented across the
 
 ## 4. Portal Migration Summary
 
-| Portal | Migrated Actions | Toast Type |
-|---|---|---|
-| **Customer** | Item added to Cart | `toast.success("Added to cart", ...)` |
-| **Customer** | Item removed from Cart | `toast.info("Removed from cart", ...)` |
-| **Customer** | Item added to Wishlist | `toast.success("Saved to wishlist", ...)` |
-| **Customer** | Item removed from Wishlist | `toast.info("Removed from wishlist", ...)` |
-| **Admin** | Pricing Policy saved | `toast.success("Pricing policy updated", ...)` |
-| **Admin** | Commission Rate updated | `toast.success("Commission rate updated", ...)` |
-| **Admin** | Product Status (Publish/Unpublish/Archive) | `toast.success("Product updated", ...)` |
-| **Admin** | Product & Inventory details saved | `toast.success("Product updated", ...)` |
-| **Admin** | Category Created / Updated / Deactivated | `toast.success("Category updated", ...)` |
-| **Admin** | Seller Status (Approve/Reject/Suspend) | `toast.success("Seller status updated", ...)` |
-| **Admin** | Customer User Status (Suspend/Reactivate) | `toast.success("User status updated", ...)` |
-| **Admin** | Master Order Status Overridden | `toast.success("Order status updated", ...)` |
-| **Seller** | Product Status Toggled (Active/Draft) | `toast.success("Status updated", ...)` |
-| **Seller** | Inventory Stock Saved | `toast.success("Stock updated", ...)` |
-| **Seller** | Product Listing Archived | `toast.success("Product archived", ...)` |
-| **Operations** | Delivery Assigned | `toast.success("Delivery assigned", ...)` |
-| **Operations** | Delivery Status Updated | `toast.success("Delivery status updated", ...)` |
-| **Operations** | Packing Task Status Updated | `toast.success("Packing status updated", ...)` |
+| Portal         | Migrated Actions                           | Toast Type                                      |
+| -------------- | ------------------------------------------ | ----------------------------------------------- |
+| **Customer**   | Item added to Cart                         | `toast.success("Added to cart", ...)`           |
+| **Customer**   | Item removed from Cart                     | `toast.info("Removed from cart", ...)`          |
+| **Customer**   | Item added to Wishlist                     | `toast.success("Saved to wishlist", ...)`       |
+| **Customer**   | Item removed from Wishlist                 | `toast.info("Removed from wishlist", ...)`      |
+| **Admin**      | Pricing Policy saved                       | `toast.success("Pricing policy updated", ...)`  |
+| **Admin**      | Commission Rate updated                    | `toast.success("Commission rate updated", ...)` |
+| **Admin**      | Product Status (Publish/Unpublish/Archive) | `toast.success("Product updated", ...)`         |
+| **Admin**      | Product & Inventory details saved          | `toast.success("Product updated", ...)`         |
+| **Admin**      | Category Created / Updated / Deactivated   | `toast.success("Category updated", ...)`        |
+| **Admin**      | Seller Status (Approve/Reject/Suspend)     | `toast.success("Seller status updated", ...)`   |
+| **Admin**      | Customer User Status (Suspend/Reactivate)  | `toast.success("User status updated", ...)`     |
+| **Admin**      | Master Order Status Overridden             | `toast.success("Order status updated", ...)`    |
+| **Seller**     | Product Status Toggled (Active/Draft)      | `toast.success("Status updated", ...)`          |
+| **Seller**     | Inventory Stock Saved                      | `toast.success("Stock updated", ...)`           |
+| **Seller**     | Product Listing Archived                   | `toast.success("Product archived", ...)`        |
+| **Operations** | Delivery Assigned                          | `toast.success("Delivery assigned", ...)`       |
+| **Operations** | Delivery Status Updated                    | `toast.success("Delivery status updated", ...)` |
+| **Operations** | Packing Task Status Updated                | `toast.success("Packing status updated", ...)`  |
 
 ---
 

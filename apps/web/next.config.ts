@@ -33,10 +33,20 @@ const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(self), payment=*" },
+  {
+    key: "Permissions-Policy",
+    value: "camera=(), microphone=(), geolocation=(self), payment=*",
+  },
   { key: "Content-Security-Policy", value: csp },
   // HSTS only in production — avoid breaking local dev with http://
-  ...(isDev ? [] : [{ key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" }]),
+  ...(isDev
+    ? []
+    : [
+        {
+          key: "Strict-Transport-Security",
+          value: "max-age=31536000; includeSubDomains",
+        },
+      ]),
 ];
 
 const nextConfig: NextConfig = {
@@ -71,6 +81,35 @@ const nextConfig: NextConfig = {
       {
         source: "/(.*)",
         headers: securityHeaders,
+      },
+    ];
+  },
+  // Redirects — forward legacy /seller and /admin routes to dedicated applications
+  async redirects() {
+    const sellerWebUrl =
+      process.env.NEXT_PUBLIC_SELLER_WEB_URL || "http://localhost:3001";
+    const adminWebUrl =
+      process.env.NEXT_PUBLIC_ADMIN_WEB_URL || "http://localhost:3002";
+    return [
+      {
+        source: "/seller",
+        destination: `${sellerWebUrl}/dashboard`,
+        permanent: false,
+      },
+      {
+        source: "/seller/:path*",
+        destination: `${sellerWebUrl}/:path*`,
+        permanent: false,
+      },
+      {
+        source: "/admin",
+        destination: `${adminWebUrl}/dashboard`,
+        permanent: false,
+      },
+      {
+        source: "/admin/:path*",
+        destination: `${adminWebUrl}/:path*`,
+        permanent: false,
       },
     ];
   },

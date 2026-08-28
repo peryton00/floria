@@ -31,7 +31,11 @@ export function UploadLoader({
     >
       <div className="flex items-center gap-3">
         {previewUrl ? (
-          <img src={previewUrl} alt={fileName} className="w-10 h-10 object-cover rounded-lg border border-stone-200" />
+          <img
+            src={previewUrl}
+            alt={fileName}
+            className="w-10 h-10 object-cover rounded-lg border border-stone-200"
+          />
         ) : (
           <div className="w-10 h-10 rounded-lg bg-stone-100 flex items-center justify-center text-stone-500">
             <UploadCloud className="w-5 h-5" />
@@ -39,7 +43,9 @@ export function UploadLoader({
         )}
 
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-bold text-stone-900 truncate">{fileName}</p>
+          <p className="text-xs font-bold text-stone-900 truncate">
+            {fileName}
+          </p>
           <p className="text-[11px] text-stone-500">{fileSize}</p>
         </div>
 

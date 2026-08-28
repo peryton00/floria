@@ -36,7 +36,9 @@ export class CategoryRepository {
       .maybeSingle();
 
     if (error || !data) return null;
-    const [enriched] = await MediaResolverService.enrichCategories([data as Category]);
+    const [enriched] = await MediaResolverService.enrichCategories([
+      data as Category,
+    ]);
     return enriched;
   }
 
@@ -49,7 +51,9 @@ export class CategoryRepository {
       .maybeSingle();
 
     if (error || !data) return null;
-    const [enriched] = await MediaResolverService.enrichCategories([data as Category]);
+    const [enriched] = await MediaResolverService.enrichCategories([
+      data as Category,
+    ]);
     return enriched;
   }
 
@@ -83,19 +87,28 @@ export class CategoryRepository {
       .single();
 
     if (error || !data) throw error || new Error("Failed to create category");
-    const [enriched] = await MediaResolverService.enrichCategories([data as Category]);
+    const [enriched] = await MediaResolverService.enrichCategories([
+      data as Category,
+    ]);
     return enriched;
   }
 
-  async updateCategory(id: string, updates: Record<string, any>): Promise<Category | null> {
+  async updateCategory(
+    id: string,
+    updates: Record<string, any>,
+  ): Promise<Category | null> {
     const db = getAdminDb();
     const dbPayload: Record<string, any> = {};
 
     if (updates.name !== undefined) dbPayload.name = updates.name.trim();
-    if (updates.slug !== undefined) dbPayload.slug = updates.slug.trim().toLowerCase();
-    if (updates.description !== undefined) dbPayload.description = updates.description?.trim() || null;
-    if (updates.display_order !== undefined) dbPayload.display_order = updates.display_order;
-    if (updates.is_active !== undefined) dbPayload.is_active = updates.is_active;
+    if (updates.slug !== undefined)
+      dbPayload.slug = updates.slug.trim().toLowerCase();
+    if (updates.description !== undefined)
+      dbPayload.description = updates.description?.trim() || null;
+    if (updates.display_order !== undefined)
+      dbPayload.display_order = updates.display_order;
+    if (updates.is_active !== undefined)
+      dbPayload.is_active = updates.is_active;
 
     const imgUrl = updates.image_url || updates.banner_url;
     if (imgUrl !== undefined) dbPayload.image_url = imgUrl || null;
@@ -113,7 +126,9 @@ export class CategoryRepository {
       .maybeSingle();
 
     if (error || !data) return null;
-    const [enriched] = await MediaResolverService.enrichCategories([data as Category]);
+    const [enriched] = await MediaResolverService.enrichCategories([
+      data as Category,
+    ]);
     return enriched;
   }
 }

@@ -15,16 +15,22 @@ export default function AboutPage() {
             About Floria
           </h1>
           <p className="text-xs text-ink-500 max-w-md mx-auto leading-relaxed">
-            Connecting plant lovers directly with India&apos;s finest local nursery growers and garden artisans.
+            Connecting plant lovers directly with India&apos;s finest local
+            nursery growers and garden artisans.
           </p>
         </div>
 
         <div className="bg-white rounded-2xl border border-ink-100 p-8 space-y-6 text-xs text-ink-700 leading-relaxed">
           <p>
-            Founded with a passion for sustainable green living, Floria is a multi-nursery e-commerce platform designed to bring healthy, locally nurtured plants straight from growers to urban homes.
+            Founded with a passion for sustainable green living, Floria is a
+            multi-nursery e-commerce platform designed to bring healthy, locally
+            nurtured plants straight from growers to urban homes.
           </p>
           <p>
-            By partnering directly with family-owned plant nurseries, local terracotta potters, and organic soil producers, Floria ensures fairer prices for growers and healthier, fresher plants for customers.
+            By partnering directly with family-owned plant nurseries, local
+            terracotta potters, and organic soil producers, Floria ensures
+            fairer prices for growers and healthier, fresher plants for
+            customers.
           </p>
 
           <div className="pt-4 border-t border-ink-100 flex gap-4">

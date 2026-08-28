@@ -6,7 +6,11 @@ import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 
-type CookieEntry = { name: string; value: string; options?: Record<string, unknown> };
+type CookieEntry = {
+  name: string;
+  value: string;
+  options?: Record<string, unknown>;
+};
 
 // Protected Route Patterns
 const CUSTOMER_ROUTES = ["/account", "/orders", "/checkout"];
@@ -35,10 +39,16 @@ export async function proxy(request: NextRequest) {
         return request.cookies.getAll();
       },
       setAll(cookiesToSet: CookieEntry[]) {
-        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+        cookiesToSet.forEach(({ name, value }) =>
+          request.cookies.set(name, value),
+        );
         supabaseResponse = NextResponse.next({ request });
         cookiesToSet.forEach(({ name, value, options }) =>
-          supabaseResponse.cookies.set(name, value, options as Parameters<typeof supabaseResponse.cookies.set>[2])
+          supabaseResponse.cookies.set(
+            name,
+            value,
+            options as Parameters<typeof supabaseResponse.cookies.set>[2],
+          ),
         );
       },
     },
@@ -74,7 +84,10 @@ export async function proxy(request: NextRequest) {
 
   // Helper for JSON API error response
   const jsonError = (code: string, message: string, status: number) => {
-    return NextResponse.json({ success: false, error: { code, message } }, { status });
+    return NextResponse.json(
+      { success: false, error: { code, message } },
+      { status },
+    );
   };
 
   // Helper for web redirect
@@ -110,7 +123,9 @@ export async function proxy(request: NextRequest) {
   }
 
   // 2. Check Customer Protected Routes
-  const isCustomerRoute = CUSTOMER_ROUTES.some((route) => pathname.startsWith(route));
+  const isCustomerRoute = CUSTOMER_ROUTES.some((route) =>
+    pathname.startsWith(route),
+  );
   if (isCustomerRoute && !user) {
     if (pathname.startsWith("/api/")) {
       return jsonError("AUTH_REQUIRED", "Authentication required.", 401);
@@ -119,23 +134,30 @@ export async function proxy(request: NextRequest) {
   }
 
   // 3. Check Seller Routes
-  const isSellerOperational = SELLER_OPERATIONAL_ROUTES.some((route) => pathname.startsWith(route));
+  const isSellerOperational = SELLER_OPERATIONAL_ROUTES.some((route) =>
+    pathname.startsWith(route),
+  );
   const isSellerProfile = pathname.startsWith(SELLER_PROFILE_ROUTE);
   const isSellerApi = pathname.startsWith("/api/seller/");
 
   if (isSellerOperational || isSellerProfile || isSellerApi) {
     if (!user) {
-      if (isSellerApi) return jsonError("AUTH_REQUIRED", "Authentication required.", 401);
+      if (isSellerApi)
+        return jsonError("AUTH_REQUIRED", "Authentication required.", 401);
       return redirectToLogin(pathname);
     }
 
     if (role !== "seller" && role !== "admin" && role !== "super_admin") {
-      if (isSellerApi) return jsonError("FORBIDDEN", "Seller role required.", 403);
+      if (isSellerApi)
+        return jsonError("FORBIDDEN", "Seller role required.", 403);
       return redirectToHome();
     }
 
     // Check seller status for operational routes
-    if (isSellerOperational || (isSellerApi && !pathname.includes("/seller/profile"))) {
+    if (
+      isSellerOperational ||
+      (isSellerApi && !pathname.includes("/seller/profile"))
+    ) {
       const { data: sp } = await supabase
         .from("seller_profiles")
         .select("status")
@@ -144,14 +166,18 @@ export async function proxy(request: NextRequest) {
 
       const sellerStatus = sp?.status || "pending";
 
-      if (sellerStatus !== "approved" && role !== "admin" && role !== "super_admin") {
+      if (
+        sellerStatus !== "approved" &&
+        role !== "admin" &&
+        role !== "super_admin"
+      ) {
         if (isSellerApi) {
           return jsonError(
             "FORBIDDEN",
             sellerStatus === "suspended"
               ? "Seller account is suspended."
               : "Seller account pending approval.",
-            403
+            403,
           );
         }
         // Redirect pending/suspended sellers to their profile / onboarding page
@@ -161,17 +187,25 @@ export async function proxy(request: NextRequest) {
   }
 
   // 4. Check Operations Routes
-  const isOperationsRoute = OPERATIONS_ROUTES.some((route) => pathname.startsWith(route));
+  const isOperationsRoute = OPERATIONS_ROUTES.some((route) =>
+    pathname.startsWith(route),
+  );
   const isOperationsApi = pathname.startsWith("/api/operations/");
 
   if (isOperationsRoute || isOperationsApi) {
     if (!user) {
-      if (isOperationsApi) return jsonError("AUTH_REQUIRED", "Authentication required.", 401);
+      if (isOperationsApi)
+        return jsonError("AUTH_REQUIRED", "Authentication required.", 401);
       return redirectToLogin(pathname);
     }
 
     if (role !== "operations" && role !== "admin" && role !== "super_admin") {
-      if (isOperationsApi) return jsonError("FORBIDDEN", "Operations or Admin role required.", 403);
+      if (isOperationsApi)
+        return jsonError(
+          "FORBIDDEN",
+          "Operations or Admin role required.",
+          403,
+        );
       return redirectToHome();
     }
   }
@@ -182,12 +216,14 @@ export async function proxy(request: NextRequest) {
 
   if (isAdminRoute || isAdminApi) {
     if (!user) {
-      if (isAdminApi) return jsonError("AUTH_REQUIRED", "Authentication required.", 401);
+      if (isAdminApi)
+        return jsonError("AUTH_REQUIRED", "Authentication required.", 401);
       return redirectToLogin(pathname);
     }
 
     if (role !== "admin" && role !== "super_admin") {
-      if (isAdminApi) return jsonError("FORBIDDEN", "Admin role required.", 403);
+      if (isAdminApi)
+        return jsonError("FORBIDDEN", "Admin role required.", 403);
       return redirectToHome();
     }
   }

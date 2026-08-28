@@ -24,7 +24,8 @@ export function ProductCard({
   discountPercent,
   originalPricePaise,
 }: ProductCardProps) {
-  const { product, inventory, primary_image, seller, rating_summary, pricing } = listing;
+  const { product, inventory, primary_image, seller, rating_summary, pricing } =
+    listing;
   const isOutOfStock = inventory.stock_quantity === 0;
 
   const { isWishlisted, toggleWishlist } = useWishlist();
@@ -42,26 +43,53 @@ export function ProductCard({
   const badges: Array<{ key: string; label: string; className: string }> = [];
 
   if (isOutOfStock) {
-    badges.push({ key: "stock", label: "OUT OF STOCK", className: "bg-ink-900/80 text-white" });
+    badges.push({
+      key: "stock",
+      label: "OUT OF STOCK",
+      className: "bg-ink-900/80 text-white",
+    });
   }
 
-  if (discountPercent && discountPercent > 0 && originalPricePaise && originalPricePaise > sellingPricePaise) {
-    badges.push({ key: "discount", label: `${discountPercent}% OFF`, className: "bg-terracotta-700 text-white font-bold" });
+  if (
+    discountPercent &&
+    discountPercent > 0 &&
+    originalPricePaise &&
+    originalPricePaise > sellingPricePaise
+  ) {
+    badges.push({
+      key: "discount",
+      label: `${discountPercent}% OFF`,
+      className: "bg-terracotta-700 text-white font-bold",
+    });
   }
 
   if (isFreeDelivery && badges.length < 2) {
-    badges.push({ key: "free-del", label: "FREE DELIVERY", className: "bg-forest-800 text-white font-bold" });
+    badges.push({
+      key: "free-del",
+      label: "FREE DELIVERY",
+      className: "bg-forest-800 text-white font-bold",
+    });
   }
 
   if (showBestSeller && badges.length < 2) {
-    badges.push({ key: "bestseller", label: "BEST SELLER", className: "bg-terracotta-700 text-white font-bold" });
+    badges.push({
+      key: "bestseller",
+      label: "BEST SELLER",
+      className: "bg-terracotta-700 text-white font-bold",
+    });
   }
 
   return (
     <div className="group relative flex flex-col bg-white rounded-xl overflow-hidden border border-floria-border/80 shadow-2xs hover:shadow-md hover:-translate-y-0.5 hover:border-forest-500/50 transition-all duration-300 ease-out focus-within:ring-2 focus-within:ring-forest-800">
       {/* Image Container */}
-      <Link href={`/products/${product.slug}`} className="focus-visible:outline-none">
-        <div className="relative overflow-hidden bg-stone-50/50" style={{ paddingBottom: "100%" }}>
+      <Link
+        href={`/products/${product.slug}`}
+        className="focus-visible:outline-none"
+      >
+        <div
+          className="relative overflow-hidden bg-stone-50/50"
+          style={{ paddingBottom: "100%" }}
+        >
           <Image
             src={primary_image?.url || "/floria-logo.png"}
             alt={primary_image?.alt_text || product.name}
@@ -97,7 +125,10 @@ export function ProductCard({
       </Link>
 
       {/* Card Info Content */}
-      <Link href={`/products/${product.slug}`} className="p-3 flex flex-col flex-1 focus-visible:outline-none">
+      <Link
+        href={`/products/${product.slug}`}
+        className="p-3 flex flex-col flex-1 focus-visible:outline-none"
+      >
         {/* Brand / Seller Subtitle */}
         <p className="text-[11px] font-medium text-stone-500 mb-0.5 font-ui flex items-center gap-1 truncate">
           <span className="truncate">{seller.business_name}</span>
@@ -124,10 +155,14 @@ export function ProductCard({
                 <span>{avgRating ? avgRating.toFixed(1) : "4.5"}</span>
                 <span className="text-[9px]">★</span>
               </div>
-              <span className="text-[11px] text-stone-400 font-medium font-ui">({reviewCount})</span>
+              <span className="text-[11px] text-stone-400 font-medium font-ui">
+                ({reviewCount})
+              </span>
             </div>
           ) : (
-            <span className="text-[10.5px] text-stone-400 font-ui font-medium">New arrival</span>
+            <span className="text-[10.5px] text-stone-400 font-ui font-medium">
+              New arrival
+            </span>
           )}
         </div>
 
@@ -151,7 +186,11 @@ export function ProductCard({
           {/* Quick Add to Cart button */}
           <button
             type="button"
-            aria-label={isOutOfStock ? `${product.name} is out of stock` : `Add ${product.name} to cart`}
+            aria-label={
+              isOutOfStock
+                ? `${product.name} is out of stock`
+                : `Add ${product.name} to cart`
+            }
             disabled={isOutOfStock}
             onClick={(e) => {
               e.preventDefault();

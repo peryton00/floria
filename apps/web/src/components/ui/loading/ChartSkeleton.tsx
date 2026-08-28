@@ -36,9 +36,15 @@ export function ChartSkeleton({ height = "280px" }: { height?: string }) {
       </div>
 
       {/* Visual Chart Bars / Lines Placeholder */}
-      <div className="flex items-end justify-between gap-3 pt-4 border-b border-stone-200" style={{ height }}>
+      <div
+        className="flex items-end justify-between gap-3 pt-4 border-b border-stone-200"
+        style={{ height }}
+      >
         {[40, 65, 30, 85, 55, 75, 90, 45, 60, 80, 50, 70].map((h, i) => (
-          <div key={i} className="flex-1 flex flex-col items-center gap-2 h-full justify-end">
+          <div
+            key={i}
+            className="flex-1 flex flex-col items-center gap-2 h-full justify-end"
+          >
             <Skeleton
               variant="rectangle"
               className="w-full rounded-t-md"

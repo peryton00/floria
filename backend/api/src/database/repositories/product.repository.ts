@@ -28,11 +28,15 @@ export class ProductRepository {
       const [{ data: assetsData }, { data: variantsData }] = await Promise.all([
         db
           .from("media_assets")
-          .select("id, original_filename, mime_type, file_size_bytes, sha256_hash, status, is_system_seeded, created_at, width, height, storage_bucket")
+          .select(
+            "id, original_filename, mime_type, file_size_bytes, sha256_hash, status, is_system_seeded, created_at, width, height, storage_bucket",
+          )
           .in("id", assetIds),
         db
           .from("media_variants")
-          .select("asset_id, variant_name, format, width, height, file_size_bytes, storage_bucket, storage_path")
+          .select(
+            "asset_id, variant_name, format, width, height, file_size_bytes, storage_bucket, storage_path",
+          )
           .in("asset_id", assetIds),
       ]);
 
@@ -77,7 +81,8 @@ export class ProductRepository {
               const vars = variantMap.get(img.asset_id) || {};
               const variantDetails = variantDetailsMap.get(img.asset_id) || [];
               const assetMeta = assetMap.get(img.asset_id) || null;
-              const preferredUrl = vars.medium || vars.large || vars.thumbnail || img.url;
+              const preferredUrl =
+                vars.medium || vars.large || vars.thumbnail || img.url;
 
               return {
                 ...img,
@@ -92,15 +97,24 @@ export class ProductRepository {
         }
       }
     } catch (e: any) {
-      console.warn("[ProductRepository] Failed to enrich media_variants:", e?.message);
+      console.warn(
+        "[ProductRepository] Failed to enrich media_variants:",
+        e?.message,
+      );
     }
 
     return products;
   }
 
-  async findActiveCatalog(categoryId?: string, search?: string): Promise<any[]> {
+  async findActiveCatalog(
+    categoryId?: string,
+    search?: string,
+  ): Promise<any[]> {
     const db = getAdminDb();
-    let q = db.from("products").select(PRODUCT_LISTING_SELECT).eq("status", "active");
+    let q = db
+      .from("products")
+      .select(PRODUCT_LISTING_SELECT)
+      .eq("status", "active");
 
     if (categoryId) {
       q = q.eq("category_id", categoryId);
@@ -115,9 +129,17 @@ export class ProductRepository {
     return this.enrichProductImages(data);
   }
 
-  async findAll(filters?: { search?: string; status?: string; categoryId?: string; sellerId?: string }): Promise<any[]> {
+  async findAll(filters?: {
+    search?: string;
+    status?: string;
+    categoryId?: string;
+    sellerId?: string;
+  }): Promise<any[]> {
     const db = getAdminDb();
-    let q = db.from("products").select(PRODUCT_LISTING_SELECT).neq("status", "deleted");
+    let q = db
+      .from("products")
+      .select(PRODUCT_LISTING_SELECT)
+      .neq("status", "deleted");
 
     if (filters?.status && filters.status !== "all") {
       q = q.eq("status", filters.status);
@@ -132,7 +154,9 @@ export class ProductRepository {
     }
 
     if (filters?.search) {
-      q = q.or(`name.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
+      q = q.or(
+        `name.ilike.%${filters.search}%,description.ilike.%${filters.search}%`,
+      );
     }
 
     const { data, error } = await q.order("created_at", { ascending: false });
@@ -231,7 +255,11 @@ export class ProductRepository {
   }
 
   // Related: same category, exclude current product, limit 6
-  async findRelated(productId: string, categoryId: string | null, limit = 6): Promise<any[]> {
+  async findRelated(
+    productId: string,
+    categoryId: string | null,
+    limit = 6,
+  ): Promise<any[]> {
     const db = getAdminDb();
     let q = db
       .from("products")
@@ -271,7 +299,9 @@ export class ProductRepository {
       return (data ?? []).map((r: any) => r.product).filter(Boolean);
     }
 
-    const productIds = trendingIds.map((r: any) => r.product_id).filter(Boolean);
+    const productIds = trendingIds
+      .map((r: any) => r.product_id)
+      .filter(Boolean);
     const { data } = await db
       .from("products")
       .select(PRODUCT_LISTING_SELECT)

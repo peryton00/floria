@@ -1,62 +1,103 @@
-# Floria — Multi-vendor Plant Marketplace
+# Floria — Multi-Vendor Plant Marketplace
 
-Production-ready, mobile-first multi-vendor marketplace for plants and gardening products.
+Production-grade, mobile-first multi-vendor marketplace for plants and gardening products.
 
-## Stack
+## Technology Stack
 
-- **Web**: Next.js 15 + TypeScript + App Router
-- **UI**: React + Tailwind CSS
-- **Backend/Data**: Supabase (PostgreSQL + Auth + Storage + Realtime)
-- **Payments**: Razorpay (pending eligibility/compliance)
-- **Hosting**: Vercel
-- **Future mobile**: Expo + React Native + TypeScript
+- **Customer Web**: Next.js 16 + React 19 + TypeScript + Tailwind CSS (Hosted on Vercel)
+- **Seller & Admin Web**: Next.js 16 + React 19 + TypeScript + Tailwind CSS
+- **Mobile Applications**: React Native 0.86.3 + Expo SDK 57 + TypeScript + Expo Router
+- **Backend API**: Node.js + Express (`@floria/api`) (Hosted on Render)
+- **Database & Auth**: PostgreSQL via Supabase + Supabase Auth + Supabase Storage
+- **Payments**: Cashfree Payment Gateway (Integration active & webhook verified)
+- **Unified SDK**: `@floria/api-client` (Universal typed API client for web & mobile)
 
-## Monorepo structure
+## Current Deployment Status
 
+```text
+                  FLORIA PLATFORM
+
+          CURRENTLY HOSTED PRODUCTION
+          ────────────────────────────
+Customer Web ──► Vercel (https://floriaa-web.vercel.app)
+                      │
+                      ▼
+Backend API  ──► Render (https://floria-api.onrender.com)
+                      │
+             ┌────────┼────────┐
+             ▼        ▼        ▼
+          Supabase Cashfree  Storage
+
+          LOCAL / PENDING DEPLOYMENT
+          ──────────────────────────
+• Seller Web      (@floria/seller-web)      — Next.js 16 App
+• Admin Web       (@floria/admin-web)       — Next.js 16 App
+• Customer Mobile (@floria/customer-mobile) — Expo SDK 57 App
+• Seller Mobile   (@floria/seller-mobile)   — Expo SDK 57 App
+• Admin Mobile    (@floria/admin-mobile)    — Expo SDK 57 App
+• Delivery Mobile (@floria/delivery-mobile) — Expo SDK 57 App
 ```
+
+## Monorepo Structure
+
+```text
 floria/
 ├── apps/
-│   └── web/          # Next.js customer + seller + admin web app
+│   ├── web/               # @floria/web             — Customer Web (Vercel production)
+│   ├── seller-web/        # @floria/seller-web      — Dedicated Seller Portal
+│   ├── admin-web/         # @floria/admin-web       — Dedicated Admin Control Center
+│   ├── customer-mobile/   # @floria/customer-mobile — Customer iOS & Android App
+│   ├── seller-mobile/     # @floria/seller-mobile   — Seller Partner Cockpit App
+│   ├── admin-mobile/      # @floria/admin-mobile    — Admin Operational Triage App
+│   └── delivery-mobile/   # @floria/delivery-mobile — Delivery Partner POD App
 ├── packages/
-│   ├── types/        # Shared TypeScript types
-│   ├── validation/   # Shared Zod validation schemas
-│   ├── ui/           # Shared UI primitives (future)
-│   └── api/          # Shared API helpers (future)
+│   ├── api-client/        # @floria/api-client      — Universal typed API client
+│   ├── types/             # @floria/types           — Shared TypeScript domain types
+│   └── validation/        # @floria/validation      — Shared Zod validation schemas
+├── backend/
+│   └── api/               # @floria/api             — Express REST API (Render production)
 ├── supabase/
-│   ├── migrations/   # PostgreSQL migration files
-│   └── seed/         # Development seed data
-└── docs/             # Project documentation
+│   ├── migrations/        # PostgreSQL migrations (0001-0028)
+│   └── seed/              # Development seed data
+└── docs/                  # Architectural and operational documentation
 ```
 
-## Quick start
+## Quick Start (Local Development)
 
 ```bash
-cp .env.example .env.local   # fill in required values
+# 1. Setup environment templates
+cp .env.example .env.local
+cp backend/api/.env.example backend/api/.env
+
+# 2. Install dependencies
 pnpm install
-pnpm dev                     # http://localhost:3000
+
+# 3. Start development servers
+pnpm dev:backend               # Express API: http://localhost:4000
+pnpm dev                       # Customer Web: http://localhost:3000
+pnpm dev:seller-web            # Seller Web: http://localhost:3001
+pnpm dev:admin-web             # Admin Web: http://localhost:3002
 ```
 
-## Documentation
+## Key Scripts
 
-| Doc | Description |
-|-----|-------------|
-| [Product Requirements](docs/01-PRODUCT-REQUIREMENTS.md) | Features and MVP scope |
-| [Business Rules](docs/02-BUSINESS-RULES.md) | Domain rules |
-| [Architecture](docs/03-ARCHITECTURE.md) | Technical decisions |
-| [Design System](docs/04-DESIGN-SYSTEM.md) | Visual language |
-| [Order Lifecycle](docs/05-ORDER-LIFECYCLE.md) | State machine |
-| [Page Map](docs/06-PAGE-MAP.md) | Route structure |
-| [Security](docs/07-SECURITY.md) | Auth and data isolation |
-| [Testing](docs/08-TESTING.md) | Test strategy |
-| [Definition of Done](docs/09-DEFINITION-OF-DONE.md) | Acceptance criteria |
-| [Monday Demo](docs/10-MONDAY-DEMO.md) | Demo checklist |
+| Script                     | Description                                              |
+| -------------------------- | -------------------------------------------------------- |
+| `pnpm dev`                 | Start Customer Web (`apps/web`)                          |
+| `pnpm dev:backend`         | Start Express API (`backend/api`)                        |
+| `pnpm dev:seller-web`      | Start Seller Web (`apps/seller-web`)                     |
+| `pnpm dev:admin-web`       | Start Admin Web (`apps/admin-web`)                       |
+| `pnpm dev:customer-mobile` | Start Expo for Customer Mobile                           |
+| `pnpm dev:seller-mobile`   | Start Expo for Seller Mobile                             |
+| `pnpm dev:admin-mobile`    | Start Expo for Admin Mobile                              |
+| `pnpm dev:delivery-mobile` | Start Expo for Delivery Mobile                           |
+| `pnpm test`                | Run complete automated test suite (317 tests passing)    |
+| `pnpm typecheck`           | Run complete TypeScript validation across all workspaces |
+| `pnpm build`               | Build production artifacts (`api-client`, `web`, `api`)  |
 
-## Key business rules
+## Core Invariants
 
-- No nearby-nursery selection — the purchased listing determines the fulfilling nursery.
-- One nursery per MVP order.
-- Never trust client-side price, stock, seller ID or payment success.
-- Authorization is server-side.
-- Webhook verification is idempotent.
-- Orders are immutable snapshots.
-- Commission is configurable (rate not finalized).
+- **Never Trust Client Inputs**: Prices, inventory counts, seller authorizations, and payment statuses are validated server-side on `@floria/api`.
+- **Single Canonical Backend**: All client surfaces communicate strictly with `@floria/api`. No direct database access from client applications.
+- **Idempotent Webhooks**: Payment gateways and asynchronous webhook events enforce cryptographic HMAC signature checks and deduplication.
+- **Zero Committed Secrets**: All secrets reside in deployment provider vaults (Render / Vercel environment variables).

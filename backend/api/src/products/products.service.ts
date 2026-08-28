@@ -5,7 +5,11 @@ import { getAdminDb } from "../config/database.js";
 import { Errors } from "../utils/errors.js";
 
 export class ProductsService {
-  public enrichWithDbPricing(product: any, settings: any, overrideMap?: Map<string, any>) {
+  public enrichWithDbPricing(
+    product: any,
+    settings: any,
+    overrideMap?: Map<string, any>,
+  ) {
     if (!product) return product;
 
     const rawInventory = product.inventory;
@@ -15,12 +19,21 @@ export class ProductsService {
 
     const enrichSingle = (inv: any) => {
       const basePrice = inv.base_price_paise ?? inv.price_paise ?? 0;
-      const calc = pricingService.calculateProductPricingSync(basePrice, settings);
+      const calc = pricingService.calculateProductPricingSync(
+        basePrice,
+        settings,
+      );
 
-      const customerPrice = override?.custom_customer_price_paise ?? calc.customerProductPricePaise;
-      const originalPrice = inv.original_price_paise && inv.original_price_paise > customerPrice ? inv.original_price_paise : null;
+      const customerPrice =
+        override?.custom_customer_price_paise ?? calc.customerProductPricePaise;
+      const originalPrice =
+        inv.original_price_paise && inv.original_price_paise > customerPrice
+          ? inv.original_price_paise
+          : null;
       const discountAmount = originalPrice ? originalPrice - customerPrice : 0;
-      const discountPercent = originalPrice ? Math.round((discountAmount / originalPrice) * 100) : 0;
+      const discountPercent = originalPrice
+        ? Math.round((discountAmount / originalPrice) * 100)
+        : 0;
 
       return {
         ...inv,
@@ -58,11 +71,16 @@ export class ProductsService {
 
   async getProducts(categoryId?: string, search?: string) {
     const settings = await pricingService.getFinancialSettings();
-    const products = await productRepository.findActiveCatalog(categoryId, search);
-    
+    const products = await productRepository.findActiveCatalog(
+      categoryId,
+      search,
+    );
+
     // Check for active overrides in parallel
     const overrideMap = await this.getActiveOverridesMap();
-    return products.map((p) => this.enrichWithDbPricing(p, settings, overrideMap));
+    return products.map((p) =>
+      this.enrichWithDbPricing(p, settings, overrideMap),
+    );
   }
 
   async getProductBySlug(slug: string) {
@@ -76,16 +94,24 @@ export class ProductsService {
 
   async getRelated(productId: string, categoryId: string | null, limit = 6) {
     const settings = await pricingService.getFinancialSettings();
-    const products = await productRepository.findRelated(productId, categoryId, limit);
+    const products = await productRepository.findRelated(
+      productId,
+      categoryId,
+      limit,
+    );
     const overrideMap = await this.getActiveOverridesMap();
-    return products.map((p) => this.enrichWithDbPricing(p, settings, overrideMap));
+    return products.map((p) =>
+      this.enrichWithDbPricing(p, settings, overrideMap),
+    );
   }
 
   async getTrending(limit = 12) {
     const settings = await pricingService.getFinancialSettings();
     const products = await productRepository.findTrending(limit);
     const overrideMap = await this.getActiveOverridesMap();
-    return products.map((p) => this.enrichWithDbPricing(p, settings, overrideMap));
+    return products.map((p) =>
+      this.enrichWithDbPricing(p, settings, overrideMap),
+    );
   }
 
   private async getActiveOverridesMap(): Promise<Map<string, any>> {

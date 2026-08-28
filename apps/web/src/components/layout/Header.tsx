@@ -8,7 +8,13 @@ import Link from "next/link";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import Image from "next/image";
 import { CountBadge } from "@/components/ui/Badge";
-import { SearchIcon, UserIcon, BagIcon, BellIcon, WishlistIcon } from "@/components/ui/Icons";
+import {
+  SearchIcon,
+  UserIcon,
+  BagIcon,
+  BellIcon,
+  WishlistIcon,
+} from "@/components/ui/Icons";
 import { useCart } from "@/lib/contexts/CartContext";
 import { useWishlist } from "@/lib/contexts/WishlistContext";
 
@@ -81,7 +87,9 @@ export function Header() {
 
   const navLinkClass = [
     "font-medium text-ink-500 hover:text-ink-900 whitespace-nowrap transition-all duration-300 rounded-md hover:bg-floria-soft-sand flex items-center gap-1",
-    isHome && !isScrolled ? "text-[14px] px-3.5 py-2.5" : "text-[13px] px-3 py-2",
+    isHome && !isScrolled
+      ? "text-[14px] px-3.5 py-2.5"
+      : "text-[13px] px-3 py-2",
   ].join(" ");
 
   const iconLinkClass = [
@@ -106,9 +114,7 @@ export function Header() {
             priority
             className={logoImageSizeClass}
           />
-          <span className={logoTextClass}>
-            FLORIA
-          </span>
+          <span className={logoTextClass}>FLORIA</span>
         </Link>
 
         <nav
@@ -117,14 +123,21 @@ export function Header() {
         >
           {navItems.map(({ label, href, hasChevron }) => {
             return (
-              <Link
-                key={href}
-                href={href}
-                className={navLinkClass}
-              >
+              <Link key={href} href={href} className={navLinkClass}>
                 <span>{label}</span>
                 {hasChevron && (
-                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="opacity-70 mt-0.5">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="10"
+                    height="10"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="opacity-70 mt-0.5"
+                  >
                     <polyline points="6 9 12 15 18 9" />
                   </svg>
                 )}
@@ -136,11 +149,7 @@ export function Header() {
         {/* Right icons */}
         <div className="flex items-center gap-1 ml-auto md:ml-0 flex-shrink-0">
           {/* Search */}
-          <Link
-            href="/search"
-            aria-label="Search"
-            className={iconLinkClass}
-          >
+          <Link href="/search" aria-label="Search" className={iconLinkClass}>
             <SearchIcon />
           </Link>
 
@@ -170,7 +179,9 @@ export function Header() {
           <Link
             href="/cart"
             aria-label={`Cart${cartCount > 0 ? ` — ${cartCount} item${cartCount === 1 ? "" : "s"}` : ""}`}
-            className={["relative hidden md:inline-flex", iconLinkClass].join(" ")}
+            className={["relative hidden md:inline-flex", iconLinkClass].join(
+              " ",
+            )}
           >
             <BagIcon />
             <CountBadge count={cartCount} />

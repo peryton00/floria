@@ -87,7 +87,11 @@ export function FilterAndSortControls({
 
         <button
           type="button"
-          onClick={() => handleSortChange(activeSort === "price-asc" ? "featured" : "price-asc")}
+          onClick={() =>
+            handleSortChange(
+              activeSort === "price-asc" ? "featured" : "price-asc",
+            )
+          }
           className={[
             "px-3 py-1.5 text-xs font-semibold rounded-full border transition-all flex-shrink-0 whitespace-nowrap",
             activeSort === "price-asc"
@@ -100,7 +104,11 @@ export function FilterAndSortControls({
 
         <button
           type="button"
-          onClick={() => handleSortChange(activeSort === "top-rated" ? "featured" : "top-rated")}
+          onClick={() =>
+            handleSortChange(
+              activeSort === "top-rated" ? "featured" : "top-rated",
+            )
+          }
           className={[
             "px-3 py-1.5 text-xs font-semibold rounded-full border transition-all flex-shrink-0 whitespace-nowrap",
             activeSort === "top-rated"
@@ -115,7 +123,9 @@ export function FilterAndSortControls({
       {/* Main Status & Sort Controls Bar */}
       <div className="flex items-center justify-between pb-3 border-b border-stone-200/80 text-xs text-stone-500 font-medium font-ui">
         <span>
-          Showing <strong className="text-stone-900 font-bold">{totalCount}</strong> {totalCount === 1 ? "product" : "products"}
+          Showing{" "}
+          <strong className="text-stone-900 font-bold">{totalCount}</strong>{" "}
+          {totalCount === 1 ? "product" : "products"}
         </span>
 
         <div className="flex items-center gap-3">
@@ -130,7 +140,10 @@ export function FilterAndSortControls({
 
           {/* Sort Dropdown */}
           <div className="flex items-center gap-2">
-            <label htmlFor="sort-select" className="text-stone-500 font-semibold hidden sm:inline text-xs">
+            <label
+              htmlFor="sort-select"
+              className="text-stone-500 font-semibold hidden sm:inline text-xs"
+            >
               Sort by:
             </label>
             <select
@@ -151,21 +164,39 @@ export function FilterAndSortControls({
       </div>
 
       {/* Active Filter Badges */}
-      {(nurseryName || activeMinPrice || activeMaxPrice || activeInStock || activeQuery) && (
+      {(nurseryName ||
+        activeMinPrice ||
+        activeMaxPrice ||
+        activeInStock ||
+        activeQuery) && (
         <div className="flex flex-wrap items-center gap-1.5 pt-1 font-ui">
-          <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider">Active Filters:</span>
+          <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider">
+            Active Filters:
+          </span>
 
           {activeQuery && (
             <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-forest-800 bg-forest-50 px-2.5 py-0.5 rounded-full border border-forest-200/80 shadow-2xs">
               &quot;{activeQuery}&quot;
-              <button type="button" onClick={() => removeFilter("q")} className="hover:text-red-700 font-bold ml-0.5">✕</button>
+              <button
+                type="button"
+                onClick={() => removeFilter("q")}
+                className="hover:text-red-700 font-bold ml-0.5"
+              >
+                ✕
+              </button>
             </span>
           )}
 
           {nurseryName && (
             <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-forest-800 bg-forest-50 px-2.5 py-0.5 rounded-full border border-forest-200/80 shadow-2xs">
               Nursery: {nurseryName}
-              <button type="button" onClick={() => removeFilter("nursery")} className="hover:text-red-700 font-bold ml-0.5">✕</button>
+              <button
+                type="button"
+                onClick={() => removeFilter("nursery")}
+                className="hover:text-red-700 font-bold ml-0.5"
+              >
+                ✕
+              </button>
             </span>
           )}
 
@@ -188,7 +219,13 @@ export function FilterAndSortControls({
           {activeInStock && (
             <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-forest-800 bg-forest-50 px-2.5 py-0.5 rounded-full border border-forest-200/80 shadow-2xs">
               In Stock Only
-              <button type="button" onClick={() => removeFilter("inStock")} className="hover:text-red-700 font-bold ml-0.5">✕</button>
+              <button
+                type="button"
+                onClick={() => removeFilter("inStock")}
+                className="hover:text-red-700 font-bold ml-0.5"
+              >
+                ✕
+              </button>
             </span>
           )}
         </div>
@@ -203,7 +240,9 @@ export function FilterAndSortControls({
 
             <div>
               <div className="flex items-center justify-between pb-3 border-b border-stone-100 mb-4">
-                <h3 className="font-serif text-base font-bold text-stone-900">Filters &amp; Sort</h3>
+                <h3 className="font-serif text-base font-bold text-stone-900">
+                  Filters &amp; Sort
+                </h3>
                 <button
                   type="button"
                   onClick={() => setIsMobileDrawerOpen(false)}

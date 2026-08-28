@@ -10,14 +10,18 @@ interface NotificationBellProps {
   userRole?: "customer" | "seller" | "operations" | "admin";
 }
 
-export function NotificationBell({ userRole = "customer" }: NotificationBellProps) {
+export function NotificationBell({
+  userRole = "customer",
+}: NotificationBellProps) {
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [isOpen, setIsOpen] = useState(false);
 
   const fetchUnreadCount = useCallback(async () => {
     try {
       const supabase = getSupabaseBrowserClient();
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session?.access_token) {
         setUnreadCount(0);
         return;
@@ -41,7 +45,10 @@ export function NotificationBell({ userRole = "customer" }: NotificationBellProp
       if (typeof window !== "undefined" && "BroadcastChannel" in window) {
         channel = new BroadcastChannel("floria_notifications");
         channel.onmessage = (event) => {
-          if (event.data?.type === "REFRESH_NOTIFICATIONS" || event.data?.type === "NEW_NOTIFICATION") {
+          if (
+            event.data?.type === "REFRESH_NOTIFICATIONS" ||
+            event.data?.type === "NEW_NOTIFICATION"
+          ) {
             fetchUnreadCount();
           }
         };
@@ -52,7 +59,9 @@ export function NotificationBell({ userRole = "customer" }: NotificationBellProp
 
     try {
       const supabase = getSupabaseBrowserClient();
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange((_event, session) => {
         if (session?.access_token) {
           fetchUnreadCount();
         } else {

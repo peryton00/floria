@@ -85,10 +85,10 @@ export function EmptyState({
       {/* Explicit action or dual CTA buttons */}
       {action ? (
         <div className="mb-6">{action}</div>
-      ) : (primaryAction || secondaryAction) ? (
+      ) : primaryAction || secondaryAction ? (
         <div className="flex flex-wrap items-center justify-center gap-3 w-full max-w-sm mb-6">
-          {primaryAction && (
-            primaryAction.href ? (
+          {primaryAction &&
+            (primaryAction.href ? (
               <Link
                 href={primaryAction.href}
                 style={{ color: "#FFFFFF" }}
@@ -105,11 +105,10 @@ export function EmptyState({
               >
                 {primaryAction.label}
               </button>
-            )
-          )}
+            ))}
 
-          {secondaryAction && (
-            secondaryAction.href ? (
+          {secondaryAction &&
+            (secondaryAction.href ? (
               <Link
                 href={secondaryAction.href}
                 className="flex-1 min-w-[140px] py-2.5 px-5 bg-floria-sand hover:bg-floria-sand/80 text-ink-800 border border-floria-border font-semibold text-xs rounded-xl transition-all text-center focus:outline-none focus:ring-2 focus:ring-forest-800"
@@ -124,8 +123,7 @@ export function EmptyState({
               >
                 {secondaryAction.label}
               </button>
-            )
-          )}
+            ))}
         </div>
       ) : null}
 

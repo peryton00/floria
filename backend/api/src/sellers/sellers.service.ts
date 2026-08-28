@@ -30,12 +30,17 @@ export class SellersService {
           business_description: "Registered seller account.",
         });
       } catch (e) {
-        console.error("[SellersService] Auto-provision seller profile error:", e);
+        console.error(
+          "[SellersService] Auto-provision seller profile error:",
+          e,
+        );
       }
     }
 
     if (!profile) {
-      throw Errors.notFound("Seller profile not found. Please complete partner application.");
+      throw Errors.notFound(
+        "Seller profile not found. Please complete partner application.",
+      );
     }
 
     return profile;
@@ -84,38 +89,77 @@ export class SellersService {
     }
   }
 
-  async updateProfile(userId: string, updates: Partial<SellerProfile>): Promise<SellerProfile> {
+  async updateProfile(
+    userId: string,
+    updates: Partial<SellerProfile>,
+  ): Promise<SellerProfile> {
     const profile = await this.getProfile(userId);
 
     // Server-side validation
-    if (updates.business_name !== undefined && updates.business_name !== null && !updates.business_name.trim()) {
+    if (
+      updates.business_name !== undefined &&
+      updates.business_name !== null &&
+      !updates.business_name.trim()
+    ) {
       throw Errors.validation("Business name is required");
     }
-    if (updates.contact_phone !== undefined && updates.contact_phone !== null && updates.contact_phone.trim()) {
-      const cleanPhone = updates.contact_phone.replace(/[\s\-+()\u00a0]/g, "").replace(/^91/, "");
+    if (
+      updates.contact_phone !== undefined &&
+      updates.contact_phone !== null &&
+      updates.contact_phone.trim()
+    ) {
+      const cleanPhone = updates.contact_phone
+        .replace(/[\s\-+()\u00a0]/g, "")
+        .replace(/^91/, "");
       if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
-        throw Errors.validation("Invalid phone number format (must be 10 digits)");
+        throw Errors.validation(
+          "Invalid phone number format (must be 10 digits)",
+        );
       }
     }
 
-    if (updates.whatsapp_number !== undefined && updates.whatsapp_number !== null && updates.whatsapp_number.trim()) {
-      const cleanWhatsapp = updates.whatsapp_number.replace(/[\s\-+()\u00a0]/g, "").replace(/^91/, "");
+    if (
+      updates.whatsapp_number !== undefined &&
+      updates.whatsapp_number !== null &&
+      updates.whatsapp_number.trim()
+    ) {
+      const cleanWhatsapp = updates.whatsapp_number
+        .replace(/[\s\-+()\u00a0]/g, "")
+        .replace(/^91/, "");
       if (!/^[6-9]\d{9}$/.test(cleanWhatsapp)) {
-        throw Errors.validation("Invalid WhatsApp number format (must be 10 digits)");
+        throw Errors.validation(
+          "Invalid WhatsApp number format (must be 10 digits)",
+        );
       }
     }
-    if (updates.alternate_phone !== undefined && updates.alternate_phone !== null && updates.alternate_phone.trim()) {
-      const cleanAlt = updates.alternate_phone.replace(/[\s\-+()\u00a0]/g, "").replace(/^91/, "");
+    if (
+      updates.alternate_phone !== undefined &&
+      updates.alternate_phone !== null &&
+      updates.alternate_phone.trim()
+    ) {
+      const cleanAlt = updates.alternate_phone
+        .replace(/[\s\-+()\u00a0]/g, "")
+        .replace(/^91/, "");
       if (!/^[6-9]\d{9}$/.test(cleanAlt)) {
-        throw Errors.validation("Invalid alternate phone number format (must be 10 digits)");
+        throw Errors.validation(
+          "Invalid alternate phone number format (must be 10 digits)",
+        );
       }
     }
-    if (updates.contact_email !== undefined && updates.contact_email !== null && updates.contact_email.trim()) {
+    if (
+      updates.contact_email !== undefined &&
+      updates.contact_email !== null &&
+      updates.contact_email.trim()
+    ) {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(updates.contact_email.trim())) {
         throw Errors.validation("Invalid email address format");
       }
     }
-    if (updates.pincode !== undefined && updates.pincode !== null && updates.pincode.trim()) {
+    if (
+      updates.pincode !== undefined &&
+      updates.pincode !== null &&
+      updates.pincode.trim()
+    ) {
       if (!/^\d{6}$/.test(updates.pincode.trim())) {
         throw Errors.validation("Invalid Indian PIN code (must be 6 digits)");
       }
@@ -136,8 +180,10 @@ export class SellersService {
     return updated;
   }
 
-
-  async submitApplication(userId: string, appData: any): Promise<SellerProfile> {
+  async submitApplication(
+    userId: string,
+    appData: any,
+  ): Promise<SellerProfile> {
     const name = appData.business_name?.trim();
     if (!name || name === "Nursery Partner" || name === "New Nursery") {
       throw Errors.validation("Nursery / Business name is required.");
@@ -152,7 +198,9 @@ export class SellersService {
     if (!phoneRaw) {
       throw Errors.validation("Contact phone number is required.");
     }
-    const cleanPhone = phoneRaw.replace(/[\s\-+()\u00a0]/g, "").replace(/^91/, "");
+    const cleanPhone = phoneRaw
+      .replace(/[\s\-+()\u00a0]/g, "")
+      .replace(/^91/, "");
     if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
       throw Errors.validation("Invalid 10-digit Indian phone number format.");
     }
@@ -182,15 +230,26 @@ export class SellersService {
     return profile;
   }
 
-  async getProducts(sellerId: string, filters?: { search?: string; status?: string; stock?: string }) {
-    const products = await sellerRepository.findSellerProducts(sellerId, filters);
+  async getProducts(
+    sellerId: string,
+    filters?: { search?: string; status?: string; stock?: string },
+  ) {
+    const products = await sellerRepository.findSellerProducts(
+      sellerId,
+      filters,
+    );
     const { productsService } = await import("../products/products.service.js");
     const settings = await pricingService.getFinancialSettings();
-    return products.map((p) => productsService.enrichWithDbPricing(p, settings));
+    return products.map((p) =>
+      productsService.enrichWithDbPricing(p, settings),
+    );
   }
 
   async getProductById(sellerId: string, productId: string) {
-    const prod = await sellerRepository.findSellerProductById(sellerId, productId);
+    const prod = await sellerRepository.findSellerProductById(
+      sellerId,
+      productId,
+    );
     if (!prod) throw Errors.notFound("Product");
     const { productsService } = await import("../products/products.service.js");
     const settings = await pricingService.getFinancialSettings();
@@ -199,9 +258,14 @@ export class SellersService {
 
   async createProduct(sellerProfile: SellerProfile, productData: any) {
     if (sellerProfile.status !== "approved") {
-      throw Errors.forbidden("Pending or suspended sellers cannot create products");
+      throw Errors.forbidden(
+        "Pending or suspended sellers cannot create products",
+      );
     }
-    const created = await sellerRepository.createProduct(sellerProfile.id, productData);
+    const created = await sellerRepository.createProduct(
+      sellerProfile.id,
+      productData,
+    );
     await auditRepository.log({
       actor_user_id: sellerProfile.user_id,
       actor_role: "seller",
@@ -212,11 +276,21 @@ export class SellersService {
     return created;
   }
 
-  async updateProduct(sellerProfile: SellerProfile, productId: string, updates: any) {
+  async updateProduct(
+    sellerProfile: SellerProfile,
+    productId: string,
+    updates: any,
+  ) {
     if (sellerProfile.status !== "approved") {
-      throw Errors.forbidden("Pending or suspended sellers cannot edit products");
+      throw Errors.forbidden(
+        "Pending or suspended sellers cannot edit products",
+      );
     }
-    const updated = await sellerRepository.updateProduct(sellerProfile.id, productId, updates);
+    const updated = await sellerRepository.updateProduct(
+      sellerProfile.id,
+      productId,
+      updates,
+    );
     if (!updated) throw Errors.notFound("Product");
 
     await auditRepository.log({
@@ -230,11 +304,21 @@ export class SellersService {
     return updated;
   }
 
-  async updateProductStatus(sellerProfile: SellerProfile, productId: string, status: "active" | "draft" | "inactive") {
+  async updateProductStatus(
+    sellerProfile: SellerProfile,
+    productId: string,
+    status: "active" | "draft" | "inactive",
+  ) {
     if (sellerProfile.status !== "approved") {
-      throw Errors.forbidden("Pending or suspended sellers cannot change product status");
+      throw Errors.forbidden(
+        "Pending or suspended sellers cannot change product status",
+      );
     }
-    const updated = await sellerRepository.updateProductStatus(sellerProfile.id, productId, status);
+    const updated = await sellerRepository.updateProductStatus(
+      sellerProfile.id,
+      productId,
+      status,
+    );
     if (!updated) throw Errors.notFound("Product");
 
     await auditRepository.log({
@@ -250,9 +334,14 @@ export class SellersService {
 
   async deleteProduct(sellerProfile: SellerProfile, productId: string) {
     if (sellerProfile.status !== "approved") {
-      throw Errors.forbidden("Pending or suspended sellers cannot delete products");
+      throw Errors.forbidden(
+        "Pending or suspended sellers cannot delete products",
+      );
     }
-    const success = await sellerRepository.deleteProduct(sellerProfile.id, productId);
+    const success = await sellerRepository.deleteProduct(
+      sellerProfile.id,
+      productId,
+    );
     if (!success) throw Errors.notFound("Product");
 
     await auditRepository.log({
@@ -266,60 +355,137 @@ export class SellersService {
     return { success: true };
   }
 
-  async attachProductImage(sellerProfile: SellerProfile, productId: string, payload: { assetId: string; altText?: string; displayOrder?: number; isPrimary?: boolean }) {
+  async attachProductImage(
+    sellerProfile: SellerProfile,
+    productId: string,
+    payload: {
+      assetId: string;
+      altText?: string;
+      displayOrder?: number;
+      isPrimary?: boolean;
+    },
+  ) {
     if (sellerProfile.status !== "approved") {
-      throw Errors.forbidden("Pending or suspended sellers cannot attach media assets to products");
+      throw Errors.forbidden(
+        "Pending or suspended sellers cannot attach media assets to products",
+      );
     }
-    const { ProductMediaService } = await import("../products/product-media.service.js");
-    return ProductMediaService.attachMediaAssetToProduct(sellerProfile.id, productId, payload);
+    const { ProductMediaService } =
+      await import("../products/product-media.service.js");
+    return ProductMediaService.attachMediaAssetToProduct(
+      sellerProfile.id,
+      productId,
+      payload,
+    );
   }
 
-  async removeProductImage(sellerProfile: SellerProfile, productId: string, imageId: string) {
+  async removeProductImage(
+    sellerProfile: SellerProfile,
+    productId: string,
+    imageId: string,
+  ) {
     if (sellerProfile.status !== "approved") {
-      throw Errors.forbidden("Pending or suspended sellers cannot remove product images");
+      throw Errors.forbidden(
+        "Pending or suspended sellers cannot remove product images",
+      );
     }
-    const { ProductMediaService } = await import("../products/product-media.service.js");
-    return ProductMediaService.removeProductImage(sellerProfile.id, productId, imageId);
+    const { ProductMediaService } =
+      await import("../products/product-media.service.js");
+    return ProductMediaService.removeProductImage(
+      sellerProfile.id,
+      productId,
+      imageId,
+    );
   }
 
-  async reorderProductImages(sellerProfile: SellerProfile, productId: string, imageOrders: Array<{ imageId: string; displayOrder: number }>) {
+  async reorderProductImages(
+    sellerProfile: SellerProfile,
+    productId: string,
+    imageOrders: Array<{ imageId: string; displayOrder: number }>,
+  ) {
     if (sellerProfile.status !== "approved") {
-      throw Errors.forbidden("Pending or suspended sellers cannot reorder product images");
+      throw Errors.forbidden(
+        "Pending or suspended sellers cannot reorder product images",
+      );
     }
-    const { ProductMediaService } = await import("../products/product-media.service.js");
-    return ProductMediaService.reorderProductImages(sellerProfile.id, productId, imageOrders);
+    const { ProductMediaService } =
+      await import("../products/product-media.service.js");
+    return ProductMediaService.reorderProductImages(
+      sellerProfile.id,
+      productId,
+      imageOrders,
+    );
   }
 
-  async setPrimaryProductImage(sellerProfile: SellerProfile, productId: string, imageId: string) {
+  async setPrimaryProductImage(
+    sellerProfile: SellerProfile,
+    productId: string,
+    imageId: string,
+  ) {
     if (sellerProfile.status !== "approved") {
-      throw Errors.forbidden("Pending or suspended sellers cannot change primary product image");
+      throw Errors.forbidden(
+        "Pending or suspended sellers cannot change primary product image",
+      );
     }
-    const { ProductMediaService } = await import("../products/product-media.service.js");
-    return ProductMediaService.setPrimaryProductImage(sellerProfile.id, productId, imageId);
+    const { ProductMediaService } =
+      await import("../products/product-media.service.js");
+    return ProductMediaService.setPrimaryProductImage(
+      sellerProfile.id,
+      productId,
+      imageId,
+    );
   }
 
-  async replaceProductImage(sellerProfile: SellerProfile, productId: string, imageId: string, payload: { assetId: string; altText?: string }) {
+  async replaceProductImage(
+    sellerProfile: SellerProfile,
+    productId: string,
+    imageId: string,
+    payload: { assetId: string; altText?: string },
+  ) {
     if (sellerProfile.status !== "approved") {
-      throw Errors.forbidden("Pending or suspended sellers cannot replace product images");
+      throw Errors.forbidden(
+        "Pending or suspended sellers cannot replace product images",
+      );
     }
-    const { ProductMediaService } = await import("../products/product-media.service.js");
-    return ProductMediaService.replaceProductImage(sellerProfile.id, productId, imageId, payload.assetId, payload);
+    const { ProductMediaService } =
+      await import("../products/product-media.service.js");
+    return ProductMediaService.replaceProductImage(
+      sellerProfile.id,
+      productId,
+      imageId,
+      payload.assetId,
+      payload,
+    );
   }
 
   async getInventory(sellerId: string) {
     return sellerRepository.findSellerInventory(sellerId);
   }
 
-  async updateInventory(sellerProfile: SellerProfile, productId: string, updates: any) {
+  async updateInventory(
+    sellerProfile: SellerProfile,
+    productId: string,
+    updates: any,
+  ) {
     if (sellerProfile.status !== "approved") {
-      throw Errors.forbidden("Pending or suspended sellers cannot update inventory");
+      throw Errors.forbidden(
+        "Pending or suspended sellers cannot update inventory",
+      );
     }
 
-    if (updates.stock_quantity !== undefined && typeof updates.stock_quantity === "number" && updates.stock_quantity < 0) {
+    if (
+      updates.stock_quantity !== undefined &&
+      typeof updates.stock_quantity === "number" &&
+      updates.stock_quantity < 0
+    ) {
       throw Errors.validation("Stock quantity cannot be negative");
     }
 
-    const updated = await sellerRepository.updateProduct(sellerProfile.id, productId, updates);
+    const updated = await sellerRepository.updateProduct(
+      sellerProfile.id,
+      productId,
+      updates,
+    );
     if (!updated) throw Errors.notFound("Product inventory");
 
     await auditRepository.log({
@@ -340,28 +506,32 @@ export class SellersService {
           const calc = pricingService.calculateProductPricingSync(newBase, {
             sellerCommissionRate: activePolicy.sellerCommissionRate,
             floriaProfitRate: activePolicy.floriaProfitRate,
-            platformMaintenanceFeePaise: activePolicy.platformMaintenanceFeePaise,
+            platformMaintenanceFeePaise:
+              activePolicy.platformMaintenanceFeePaise,
             freeDeliveryThresholdPaise: activePolicy.freeDeliveryThresholdPaise,
             freeDeliveryRecoveryPaise: activePolicy.freeDeliveryRecoveryPaise,
           });
 
           const db = getAdminDb();
-          await db.from("product_pricing").upsert({
-            product_id: productId,
-            seller_id: sellerProfile.id,
-            policy_version_id: activePolicy.id,
-            seller_base_price_paise: calc.sellerBasePricePaise,
-            floria_profit_rate: calc.floriaProfitRate,
-            floria_profit_paise: calc.floriaProfitPaise,
-            delivery_recovery_paise: calc.deliveryRecoveryPaise,
-            customer_product_price_paise: calc.customerProductPricePaise,
-            is_free_delivery_eligible: calc.isFreeDeliveryEligible,
-            seller_commission_rate: calc.sellerCommissionRate,
-            seller_commission_paise: calc.sellerCommissionPaise,
-            seller_net_paise: calc.sellerNetPaise,
-            is_override: false,
-            updated_at: new Date().toISOString(),
-          }, { onConflict: "policy_version_id,product_id" });
+          await db.from("product_pricing").upsert(
+            {
+              product_id: productId,
+              seller_id: sellerProfile.id,
+              policy_version_id: activePolicy.id,
+              seller_base_price_paise: calc.sellerBasePricePaise,
+              floria_profit_rate: calc.floriaProfitRate,
+              floria_profit_paise: calc.floriaProfitPaise,
+              delivery_recovery_paise: calc.deliveryRecoveryPaise,
+              customer_product_price_paise: calc.customerProductPricePaise,
+              is_free_delivery_eligible: calc.isFreeDeliveryEligible,
+              seller_commission_rate: calc.sellerCommissionRate,
+              seller_commission_paise: calc.sellerCommissionPaise,
+              seller_net_paise: calc.sellerNetPaise,
+              is_override: false,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "policy_version_id,product_id" },
+          );
         }
       }
     } catch (e: any) {
@@ -370,9 +540,13 @@ export class SellersService {
 
     // Notification check for low / out of stock
     try {
-      if (updates.stock_quantity !== undefined && typeof updates.stock_quantity === "number") {
+      if (
+        updates.stock_quantity !== undefined &&
+        typeof updates.stock_quantity === "number"
+      ) {
         const threshold = updated.low_stock_threshold ?? 5;
-        const { notificationService } = await import("../notifications/notification.service.js");
+        const { notificationService } =
+          await import("../notifications/notification.service.js");
 
         if (updates.stock_quantity <= 0) {
           await notificationService.createNotification({
@@ -384,7 +558,11 @@ export class SellersService {
             data: { productId, stockQuantity: 0 },
             source_type: "inventory",
             source_id: `${productId}_out_of_stock`,
-            navigation: { entityType: "PRODUCT", entityId: productId, action: "VIEW" },
+            navigation: {
+              entityType: "PRODUCT",
+              entityId: productId,
+              action: "VIEW",
+            },
           });
         } else if (updates.stock_quantity <= threshold) {
           await notificationService.createNotification({
@@ -396,7 +574,11 @@ export class SellersService {
             data: { productId, stockQuantity: updates.stock_quantity },
             source_type: "inventory",
             source_id: `${productId}_low_stock`,
-            navigation: { entityType: "PRODUCT", entityId: productId, action: "VIEW" },
+            navigation: {
+              entityType: "PRODUCT",
+              entityId: productId,
+              action: "VIEW",
+            },
           });
         }
       }
@@ -407,22 +589,38 @@ export class SellersService {
     return updated;
   }
 
-  async getOrders(sellerId: string, filters?: { status?: string; search?: string }) {
+  async getOrders(
+    sellerId: string,
+    filters?: { status?: string; search?: string },
+  ) {
     return sellerRepository.findSellerOrders(sellerId, filters);
   }
 
   async getOrderById(sellerId: string, orderId: string) {
-    const orderView = await sellerRepository.findSellerOrderById(sellerId, orderId);
+    const orderView = await sellerRepository.findSellerOrderById(
+      sellerId,
+      orderId,
+    );
     if (!orderView) throw Errors.notFound("Order");
     return orderView;
   }
 
-  async updateFulfillment(sellerProfile: SellerProfile, masterOrderId: string, newStatus: string) {
+  async updateFulfillment(
+    sellerProfile: SellerProfile,
+    masterOrderId: string,
+    newStatus: string,
+  ) {
     if (sellerProfile.status !== "approved") {
-      throw Errors.forbidden("Pending or suspended sellers cannot fulfill orders");
+      throw Errors.forbidden(
+        "Pending or suspended sellers cannot fulfill orders",
+      );
     }
     try {
-      const result = await sellerRepository.updateFulfillmentStatus(sellerProfile.id, masterOrderId, newStatus);
+      const result = await sellerRepository.updateFulfillmentStatus(
+        sellerProfile.id,
+        masterOrderId,
+        newStatus,
+      );
       await auditRepository.log({
         actor_user_id: sellerProfile.user_id,
         actor_role: "seller",
@@ -434,10 +632,15 @@ export class SellersService {
 
       // Notification trigger for order fulfillment update
       try {
-        const { notificationService } = await import("../notifications/notification.service.js");
+        const { notificationService } =
+          await import("../notifications/notification.service.js");
         const { getAdminDb } = await import("../config/database.js");
         const db = getAdminDb();
-        const { data: order } = await db.from("orders").select("customer_id").eq("id", masterOrderId).maybeSingle();
+        const { data: order } = await db
+          .from("orders")
+          .select("customer_id")
+          .eq("id", masterOrderId)
+          .maybeSingle();
 
         if (order?.customer_id) {
           await notificationService.createNotification({
@@ -449,11 +652,18 @@ export class SellersService {
             data: { orderId: masterOrderId, status: newStatus },
             source_type: "fulfillment",
             source_id: `${masterOrderId}_${newStatus}`,
-            navigation: { entityType: "ORDER", entityId: masterOrderId, action: "VIEW" },
+            navigation: {
+              entityType: "ORDER",
+              entityId: masterOrderId,
+              action: "VIEW",
+            },
           });
         }
       } catch (notifErr) {
-        console.error("[SellersService] Fulfillment notification error:", notifErr);
+        console.error(
+          "[SellersService] Fulfillment notification error:",
+          notifErr,
+        );
       }
 
       return result;
@@ -483,21 +693,34 @@ export class SellersService {
     return sellerRepository.findSellerDocuments(sellerId);
   }
 
-  async uploadDocument(sellerId: string, payload: {
-    documentType?: string;
-    fileName?: string;
-    fileUrl?: string;
-    fileSize?: number;
-    mimeType?: string;
-  }) {
+  async uploadDocument(
+    sellerId: string,
+    payload: {
+      documentType?: string;
+      fileName?: string;
+      fileUrl?: string;
+      fileSize?: number;
+      mimeType?: string;
+    },
+  ) {
     if (!payload.documentType || !payload.fileName || !payload.fileUrl) {
-      throw Errors.validation("documentType, fileName, and fileUrl are required");
+      throw Errors.validation(
+        "documentType, fileName, and fileUrl are required",
+      );
     }
 
-    const ALLOWED_MIME_TYPES = ["application/pdf", "image/jpeg", "image/jpg", "image/png", "image/webp"];
+    const ALLOWED_MIME_TYPES = [
+      "application/pdf",
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/webp",
+    ];
     const mime = (payload.mimeType || "").toLowerCase();
     if (mime && !ALLOWED_MIME_TYPES.includes(mime)) {
-      throw Errors.validation("Invalid document file type. Allowed: PDF, JPG, PNG, WebP.");
+      throw Errors.validation(
+        "Invalid document file type. Allowed: PDF, JPG, PNG, WebP.",
+      );
     }
 
     const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
@@ -520,7 +743,10 @@ export class SellersService {
       action: "SELLER_DOCUMENT_UPLOADED",
       resource_type: "seller_document",
       resource_id: doc.id,
-      metadata: { documentType: payload.documentType, fileName: payload.fileName },
+      metadata: {
+        documentType: payload.documentType,
+        fileName: payload.fileName,
+      },
     });
 
     return doc;
@@ -532,7 +758,10 @@ export class SellersService {
   }
 
   async updateNotificationSettings(sellerId: string, updates: any) {
-    const updated = await sellerRepository.updateSellerSettings(sellerId, updates);
+    const updated = await sellerRepository.updateSellerSettings(
+      sellerId,
+      updates,
+    );
     await auditRepository.log({
       actor_user_id: sellerId,
       actor_role: "seller",

@@ -14,7 +14,10 @@ vi.mock("../src/media/queue/media.queue.js", async (importOriginal) => {
 });
 
 // Helper creating chainable mock query builder
-function createMockQueryBuilder(resolvedData: any = null, resolvedError: any = null) {
+function createMockQueryBuilder(
+  resolvedData: any = null,
+  resolvedError: any = null,
+) {
   const builder: any = {
     select: vi.fn(() => builder),
     eq: vi.fn(() => builder),
@@ -22,9 +25,14 @@ function createMockQueryBuilder(resolvedData: any = null, resolvedError: any = n
     is: vi.fn(() => builder),
     update: vi.fn(() => builder),
     insert: vi.fn(() => builder),
-    maybeSingle: vi.fn().mockResolvedValue({ data: resolvedData, error: resolvedError }),
-    single: vi.fn().mockResolvedValue({ data: resolvedData, error: resolvedError }),
-    then: (resolve: any) => resolve({ data: resolvedData, error: resolvedError }),
+    maybeSingle: vi
+      .fn()
+      .mockResolvedValue({ data: resolvedData, error: resolvedError }),
+    single: vi
+      .fn()
+      .mockResolvedValue({ data: resolvedData, error: resolvedError }),
+    then: (resolve: any) =>
+      resolve({ data: resolvedData, error: resolvedError }),
   };
   return builder;
 }
@@ -36,13 +44,26 @@ vi.mock("../src/config/database.js", () => {
       auth: {
         getUser: vi.fn(async (token: string) => {
           if (token === "token-seller") {
-            return { data: { user: { id: "user-seller-1", email: "seller@floria.test" } }, error: null };
+            return {
+              data: {
+                user: { id: "user-seller-1", email: "seller@floria.test" },
+              },
+              error: null,
+            };
           }
           if (token === "token-customer") {
-            return { data: { user: { id: "user-cust-1", email: "cust@floria.test" } }, error: null };
+            return {
+              data: { user: { id: "user-cust-1", email: "cust@floria.test" } },
+              error: null,
+            };
           }
           if (token === "token-admin") {
-            return { data: { user: { id: "user-admin-1", email: "admin@floria.test" } }, error: null };
+            return {
+              data: {
+                user: { id: "user-admin-1", email: "admin@floria.test" },
+              },
+              error: null,
+            };
           }
           return { data: { user: null }, error: new Error("Invalid token") };
         }),
@@ -68,7 +89,10 @@ vi.mock("../src/config/database.js", () => {
             const builder = createMockQueryBuilder();
             builder.eq = vi.fn((col: string, val: string) => {
               if (val === "user-seller-1") {
-                return createMockQueryBuilder({ id: "seller-1", status: "approved" });
+                return createMockQueryBuilder({
+                  id: "seller-1",
+                  status: "approved",
+                });
               }
               return createMockQueryBuilder(null);
             });
@@ -137,8 +161,16 @@ vi.mock("../src/config/database.js", () => {
 
           if (table === "media_variants") {
             return createMockQueryBuilder([
-              { variant_name: "thumbnail", storage_bucket: "public-media", storage_path: "products/seller-1/a1/thumbnail.webp" },
-              { variant_name: "medium", storage_bucket: "public-media", storage_path: "products/seller-1/a1/medium.webp" },
+              {
+                variant_name: "thumbnail",
+                storage_bucket: "public-media",
+                storage_path: "products/seller-1/a1/thumbnail.webp",
+              },
+              {
+                variant_name: "medium",
+                storage_bucket: "public-media",
+                storage_path: "products/seller-1/a1/medium.webp",
+              },
             ]);
           }
 
@@ -188,14 +220,12 @@ describe("Stage 5 — Media API Test Matrix", () => {
     });
 
     it("2. unauthenticated user rejected with 401", async () => {
-      const res = await request(app)
-        .post("/api/v1/media/upload-session")
-        .send({
-          profile: "PRODUCT",
-          filename: "test.jpg",
-          mimeType: "image/jpeg",
-          sizeBytes: 1024,
-        });
+      const res = await request(app).post("/api/v1/media/upload-session").send({
+        profile: "PRODUCT",
+        filename: "test.jpg",
+        mimeType: "image/jpeg",
+        sizeBytes: 1024,
+      });
 
       expect(res.status).toBe(401);
     });
@@ -323,8 +353,18 @@ describe("Stage 5 — Media API Test Matrix", () => {
         .post("/api/v1/media/upload-session")
         .set("Authorization", "Bearer token-seller")
         .send([
-          { profile: "PRODUCT", filename: "img1.jpg", mimeType: "image/jpeg", sizeBytes: 1024 },
-          { profile: "PRODUCT", filename: "img2.jpg", mimeType: "image/jpeg", sizeBytes: 2048 },
+          {
+            profile: "PRODUCT",
+            filename: "img1.jpg",
+            mimeType: "image/jpeg",
+            sizeBytes: 1024,
+          },
+          {
+            profile: "PRODUCT",
+            filename: "img2.jpg",
+            mimeType: "image/jpeg",
+            sizeBytes: 2048,
+          },
         ]);
 
       expect(res.status).toBe(201);

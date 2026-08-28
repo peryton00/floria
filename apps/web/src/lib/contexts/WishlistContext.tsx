@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import type { ProductListing } from "@floria/types";
 import { api } from "@/lib/api";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
@@ -15,7 +21,9 @@ interface WishlistContextType {
   refreshWishlist: () => Promise<void>;
 }
 
-const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
+const WishlistContext = createContext<WishlistContextType | undefined>(
+  undefined,
+);
 
 export function WishlistProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
@@ -26,11 +34,17 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   const mapDbWishlistItems = useCallback((items: any[]): ProductListing[] => {
     return items.map((wi: any) => {
       const p = wi.product || {};
-      const inv = Array.isArray(p.inventory) ? p.inventory[0] : p.inventory || { price_paise: 0, stock_quantity: 0 };
+      const inv = Array.isArray(p.inventory)
+        ? p.inventory[0]
+        : p.inventory || { price_paise: 0, stock_quantity: 0 };
       const imgs = p.images || [];
       const primary = imgs.find((i: any) => i.is_primary) || imgs[0] || null;
-      const seller = Array.isArray(p.seller) ? p.seller[0] : p.seller || { id: p.seller_id, business_name: "Nursery" };
-      const cat = Array.isArray(p.category) ? p.category[0] : p.category || null;
+      const seller = Array.isArray(p.seller)
+        ? p.seller[0]
+        : p.seller || { id: p.seller_id, business_name: "Nursery" };
+      const cat = Array.isArray(p.category)
+        ? p.category[0]
+        : p.category || null;
 
       const pricing = p.pricing || (inv as any)?.pricing;
 
@@ -48,7 +62,9 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   const refreshWishlist = useCallback(async () => {
     try {
       const supabase = getSupabaseBrowserClient();
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
       if (session?.user) {
         setIsAuthenticated(true);
@@ -60,7 +76,10 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
             const parsed = JSON.parse(stored);
             if (Array.isArray(parsed) && parsed.length > 0) {
               const productIds = parsed
-                .map((item: any) => item?.product?.id || item?.productId || item?.id)
+                .map(
+                  (item: any) =>
+                    item?.product?.id || item?.productId || item?.id,
+                )
                 .filter((id: any) => typeof id === "string" && id.length > 0);
 
               if (productIds.length > 0) {
@@ -83,7 +102,14 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
           const mapped = mapDbWishlistItems(rawItems);
           setWishlistItems(mapped);
           // Keep user resilient cache in sync
-          try { localStorage.setItem("floria_wishlist_cache", JSON.stringify(mapped)); } catch { /* ignore */ }
+          try {
+            localStorage.setItem(
+              "floria_wishlist_cache",
+              JSON.stringify(mapped),
+            );
+          } catch {
+            /* ignore */
+          }
           return;
         }
       } else {
@@ -96,14 +122,20 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     // Fallback: restore from localStorage (guest wishlist or user cache)
     try {
       const supabase = getSupabaseBrowserClient();
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       const key = session?.user ? "floria_wishlist_cache" : "floria_wishlist";
       const stored = localStorage.getItem(key);
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed)) {
           const validItems = parsed.filter(
-            (item: any) => item && typeof item === "object" && item.product && item.inventory
+            (item: any) =>
+              item &&
+              typeof item === "object" &&
+              item.product &&
+              item.inventory,
           );
           setWishlistItems(validItems);
         }
@@ -117,8 +149,13 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     refreshWishlist().then(() => setIsHydrated(true));
 
     const supabase = getSupabaseBrowserClient();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session?.user) {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (
+        (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") &&
+        session?.user
+      ) {
         setIsAuthenticated(true);
         await refreshWishlist();
       } else if (event === "SIGNED_OUT") {
@@ -143,7 +180,10 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     if (!isHydrated) return;
     try {
       if (isAuthenticated) {
-        localStorage.setItem("floria_wishlist_cache", JSON.stringify(wishlistItems));
+        localStorage.setItem(
+          "floria_wishlist_cache",
+          JSON.stringify(wishlistItems),
+        );
       } else {
         localStorage.setItem("floria_wishlist", JSON.stringify(wishlistItems));
       }
@@ -157,7 +197,10 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addToWishlist = async (listing: ProductListing) => {
-    toast.success("Saved to wishlist", `${listing.product.name} was added to your wishlist.`);
+    toast.success(
+      "Saved to wishlist",
+      `${listing.product.name} was added to your wishlist.`,
+    );
 
     if (isAuthenticated) {
       const res = await api.addToWishlist(listing.product.id);
@@ -165,7 +208,11 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         const rawItems = res.data.wishlist_items || res.data.items || [];
         const mapped = mapDbWishlistItems(rawItems);
         setWishlistItems(mapped);
-        try { localStorage.setItem("floria_wishlist_cache", JSON.stringify(mapped)); } catch { /* ignore */ }
+        try {
+          localStorage.setItem("floria_wishlist_cache", JSON.stringify(mapped));
+        } catch {
+          /* ignore */
+        }
         return;
       }
     }
@@ -190,7 +237,9 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    setWishlistItems((prev) => prev.filter((item) => item.product.id !== productId));
+    setWishlistItems((prev) =>
+      prev.filter((item) => item.product.id !== productId),
+    );
   };
 
   const toggleWishlist = async (listing: ProductListing) => {

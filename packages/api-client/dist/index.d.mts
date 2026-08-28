@@ -1,4 +1,5 @@
 import * as _floria_types from '@floria/types';
+export { CompleteDeliveryPayload, DeliveryAssignment, DeliveryAssignmentStatus, DeliveryListParams, DeliveryPodDetails, UpdateDeliveryStatusPayload } from '@floria/types';
 
 interface ApiClientConfig {
     baseUrl: string;
@@ -344,7 +345,13 @@ declare class FloriaApiClient {
         commissionRate: number;
     }>>;
     getOperationsHealth(): Promise<ApiResponse<any>>;
-    getOperationsDashboard(): Promise<ApiResponse<any>>;
+    getOperationsDashboard(): Promise<ApiResponse<{
+        pendingPickup: number;
+        packing: number;
+        outForDelivery: number;
+        delivered: number;
+        totalActiveDeliveries: number;
+    }>>;
     getOperationsOrders(params?: QueryParams): Promise<ApiResponse<any[]>>;
     getOperationsOrderById(id: string): Promise<ApiResponse<any>>;
     updateOperationsOrderStatus(id: string, status: string): Promise<ApiResponse<any>>;
@@ -352,15 +359,36 @@ declare class FloriaApiClient {
     updatePickupStatus(id: string, status: string, notes?: string): Promise<ApiResponse<any>>;
     getPackingTasks(params?: QueryParams): Promise<ApiResponse<any[]>>;
     updatePackingTask(id: string, status: string, verifiedItemsCount?: number): Promise<ApiResponse<any>>;
-    getDeliveries(params?: QueryParams): Promise<ApiResponse<any[]>>;
-    getDeliveryById(id: string): Promise<ApiResponse<any>>;
+    getDeliveries(params?: QueryParams): Promise<ApiResponse<_floria_types.DeliveryAssignment[]>>;
+    getDeliveryById(id: string): Promise<ApiResponse<_floria_types.DeliveryAssignment>>;
     assignDelivery(id: string, data: {
         assignedTo: string;
-    }): Promise<ApiResponse<any>>;
+    }): Promise<ApiResponse<_floria_types.DeliveryAssignment>>;
     reassignDelivery(id: string, data: {
         assignedTo: string;
-    }): Promise<ApiResponse<any>>;
-    updateDeliveryStatus(id: string, status: string): Promise<ApiResponse<any>>;
+    }): Promise<ApiResponse<_floria_types.DeliveryAssignment>>;
+    updateDeliveryStatus(id: string, status: _floria_types.DeliveryAssignmentStatus | string): Promise<ApiResponse<_floria_types.DeliveryAssignment>>;
+    completeDeliveryWithPod(id: string, data: _floria_types.CompleteDeliveryPayload): Promise<ApiResponse<_floria_types.DeliveryAssignment>>;
+    getDeliveryPod(id: string): Promise<ApiResponse<_floria_types.DeliveryPodDetails>>;
+    createUploadSession(data: {
+        profile: string;
+        filename: string;
+        mimeType: string;
+        sizeBytes: number;
+    }): Promise<ApiResponse<{
+        sessionId: string;
+        assetId: string;
+        stagingPath: string;
+        signedUploadUrl?: string;
+        expiresAt: string;
+    }>>;
+    completeUploadSession(sessionId: string): Promise<ApiResponse<{
+        sessionId: string;
+        assetId: string;
+        sessionStatus: string;
+        assetStatus: string;
+        deduplicated: boolean;
+    }>>;
     getProductReviews(productId: string, params?: {
         page?: number;
         pageSize?: number;

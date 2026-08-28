@@ -21,7 +21,7 @@ router.post(
   authenticateToken,
   checkoutRateLimiter,
   validateRequest(checkoutSchema),
-  checkoutController.processCheckout
+  checkoutController.processCheckout,
 );
 
 export default router;

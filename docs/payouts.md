@@ -25,6 +25,7 @@ Update Payout Status ('paid' or 'failed') & Append 'payout_debit' Ledger Entry
 ## 2. Payout Eligibility Rules
 
 A seller is eligible for a payout if:
+
 1. Seller status is `approved`.
 2. Available ledger balance (`available_earnings_paise`) is `>= ₹500` (50000 paise).
 3. No active administrative or fraud holds exist on the seller profile.

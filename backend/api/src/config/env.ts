@@ -4,7 +4,9 @@ import path from "path";
 
 dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 dotenv.config({ path: path.resolve(process.cwd(), "../../.env.local") });
-dotenv.config({ path: path.resolve(process.cwd(), "../../apps/web/.env.local") });
+dotenv.config({
+  path: path.resolve(process.cwd(), "../../apps/web/.env.local"),
+});
 
 export interface AppEnv {
   SUPABASE_URL: string;
@@ -18,14 +20,21 @@ export interface AppEnv {
 
 function validateEnv(): AppEnv {
   const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anonKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  const anonKey =
+    process.env.SUPABASE_ANON_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   const missing: string[] = [];
   if (!url) missing.push("SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL)");
-  if (!anonKey) missing.push("SUPABASE_ANON_KEY (or NEXT_PUBLIC_SUPABASE_ANON_KEY)");
+  if (!anonKey)
+    missing.push("SUPABASE_ANON_KEY (or NEXT_PUBLIC_SUPABASE_ANON_KEY)");
   if (!serviceRoleKey) missing.push("SUPABASE_SERVICE_ROLE_KEY");
-  if ((process.env.NODE_ENV || "development") === "production" && !process.env.REDIS_URL) {
+  if (
+    (process.env.NODE_ENV || "development") === "production" &&
+    !process.env.REDIS_URL
+  ) {
     missing.push("REDIS_URL (required in production environment)");
   }
 
@@ -35,7 +44,10 @@ function validateEnv(): AppEnv {
     throw new Error(errorMsg);
   }
 
-  const corsOrigins = (process.env.CORS_ALLOWED_ORIGINS || "http://localhost:3000,http://localhost:3001")
+  const corsOrigins = (
+    process.env.CORS_ALLOWED_ORIGINS ||
+    "http://localhost:3000,http://localhost:3001"
+  )
     .split(",")
     .map((o) => o.trim());
 

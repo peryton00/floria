@@ -1,6 +1,7 @@
 # Floria Core Rules
 
 ## Product
+
 - Multi-vendor marketplace.
 - Nurseries manage catalogue, pricing, quality and inventory.
 - Purchased listing identifies fulfilling nursery.
@@ -10,6 +11,7 @@
 - Commission is agreed in principle; exact rate remains configurable until finalized.
 
 ## Architecture
+
 - One backend/database is the source of truth.
 - Web is Phase 1 client.
 - Future mobile consumes same backend, data, validation and business rules.
@@ -21,6 +23,7 @@
 - Do not revive the superseded NestJS + Prisma + Neon + Redis + R2 + Flutter architecture.
 
 ## Security
+
 - Server-side authorization is mandatory.
 - Revalidate price and stock at checkout.
 - Prevent concurrent overselling.
@@ -33,6 +36,7 @@
 - Never expose service-role keys or secrets.
 
 ## UI
+
 - Mobile-first.
 - Customer bottom navigation: Home, Categories, Search, Orders, Account.
 - Cart is prominent in header/purchase flow, not a permanent bottom tab.
@@ -42,6 +46,7 @@
 - Do not replace the approved visual direction with generic SaaS/e-commerce templates.
 
 ## Agent behavior
+
 - Inspect before editing.
 - Plan non-trivial tasks.
 - Make small reviewable changes.

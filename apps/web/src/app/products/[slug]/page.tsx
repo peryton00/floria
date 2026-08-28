@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { CustomerShell } from "@/components/layout/CustomerShell";
-import { getProductListingBySlug, getRelatedListings } from "@/lib/services/storefront";
+import {
+  getProductListingBySlug,
+  getRelatedListings,
+} from "@/lib/services/storefront";
 import { ProductDetailsInteractive } from "@/components/ui/ProductDetailsInteractive";
 import { ProductCard } from "@/components/ui/ProductCard";
 
@@ -16,7 +19,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!listing) return { title: "Product not found — Floria" };
   return {
     title: `${listing.product.name} — Floria`,
-    description: listing.product.description ?? `Buy ${listing.product.name} from ${listing.seller.business_name} on Floria.`,
+    description:
+      listing.product.description ??
+      `Buy ${listing.product.name} from ${listing.seller.business_name} on Floria.`,
   };
 }
 
@@ -32,18 +37,32 @@ export default async function ProductSlugPage({ params }: Props) {
   return (
     <CustomerShell>
       {/* Breadcrumb */}
-      <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-ink-500 mb-6 flex-wrap font-ui">
-        <Link href="/" className="hover:text-forest-800 transition-colors">Home</Link>
-        <span aria-hidden="true" className="select-none text-ink-300">/</span>
+      <nav
+        aria-label="Breadcrumb"
+        className="flex items-center gap-2 text-xs text-ink-500 mb-6 flex-wrap font-ui"
+      >
+        <Link href="/" className="hover:text-forest-800 transition-colors">
+          Home
+        </Link>
+        <span aria-hidden="true" className="select-none text-ink-300">
+          /
+        </span>
         {category && (
           <>
-            <Link href={`/categories/${category.slug}`} className="hover:text-forest-800 transition-colors">
+            <Link
+              href={`/categories/${category.slug}`}
+              className="hover:text-forest-800 transition-colors"
+            >
               {category.name}
             </Link>
-            <span aria-hidden="true" className="select-none text-ink-300">/</span>
+            <span aria-hidden="true" className="select-none text-ink-300">
+              /
+            </span>
           </>
         )}
-        <span className="text-ink-900 font-semibold line-clamp-1">{product.name}</span>
+        <span className="text-ink-900 font-semibold line-clamp-1">
+          {product.name}
+        </span>
       </nav>
 
       {/* Main interactive panel */}
@@ -51,13 +70,19 @@ export default async function ProductSlugPage({ params }: Props) {
 
       {/* Similar Products */}
       {relatedListings.length > 0 && (
-        <section aria-labelledby="related-heading" className="mt-16 pt-12 border-t border-ink-150">
+        <section
+          aria-labelledby="related-heading"
+          className="mt-16 pt-12 border-t border-ink-150"
+        >
           <div className="flex items-end justify-between mb-8">
             <div>
               <span className="text-[11px] font-bold uppercase tracking-widest text-forest-800 font-ui mb-1 block">
                 Curated Recommendations
               </span>
-              <h2 id="related-heading" className="font-serif text-2xl sm:text-3xl font-bold text-ink-900">
+              <h2
+                id="related-heading"
+                className="font-serif text-2xl sm:text-3xl font-bold text-ink-900"
+              >
                 Similar Botanical Selections
               </h2>
               <p className="text-xs text-ink-500 mt-1">

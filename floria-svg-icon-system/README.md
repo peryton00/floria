@@ -3,6 +3,7 @@
 Designed for the Floria plant and gardening marketplace.
 
 ## Visual language
+
 - 24×24 viewBox
 - `currentColor` for automatic theme/color inheritance
 - 1.8px stroke
@@ -12,6 +13,7 @@ Designed for the Floria plant and gardening marketplace.
 - restrained geometry for a premium, calm interface
 
 ## Families
+
 - `navigation/` — customer navigation and primary UI
 - `botanical/` — plants, gardening and care
 - `commerce/` — marketplace, delivery and payment
@@ -19,7 +21,9 @@ Designed for the Floria plant and gardening marketplace.
 - `actions/` — utility actions and controls
 
 ## Recommended usage
+
 Use one icon family consistently within a component group.
+
 - Customer navigation: navigation
 - Plant/gardening content: botanical
 - Marketplace/order surfaces: commerce

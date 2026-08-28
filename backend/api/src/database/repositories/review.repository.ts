@@ -24,7 +24,7 @@ export class ReviewRepository {
         `id, rating, title, body, is_verified_purchase, helpful_count,
          created_at,
          customer:user_profiles(full_name)`,
-        { count: "exact" }
+        { count: "exact" },
       )
       .eq("product_id", productId)
       .eq("status", "approved")
@@ -47,7 +47,7 @@ export class ReviewRepository {
       .select(
         `id, product_id, rating, title, body, status, helpful_count, created_at, updated_at,
          product:products(id, name, slug)`,
-        { count: "exact" }
+        { count: "exact" },
       )
       .eq("customer_id", customerId)
       .order("created_at", { ascending: false })
@@ -62,7 +62,7 @@ export class ReviewRepository {
   // Server derives this — client never supplies it.
   async findEligibleOrderItem(
     customerId: string,
-    productId: string
+    productId: string,
   ): Promise<{ order_item_id: string } | null> {
     const db = getAdminDb();
 
@@ -107,7 +107,10 @@ export class ReviewRepository {
     const { data: fulfillments } = await db
       .from("seller_order_fulfillments")
       .select("order_id, status")
-      .in("order_id", orders.map((o) => o.id));
+      .in(
+        "order_id",
+        orders.map((o) => o.id),
+      );
 
     if (fulfillments) {
       for (const f of fulfillments) {
@@ -161,22 +164,26 @@ export class ReviewRepository {
   async updateCustomerReview(
     reviewId: string,
     customerId: string,
-    payload: { rating?: number; title?: string; body?: string }
+    payload: { rating?: number; title?: string; body?: string },
   ) {
     const db = getAdminDb();
     const updateData: Record<string, any> = {
       updated_at: new Date().toISOString(),
     };
     if (typeof payload.rating === "number") updateData.rating = payload.rating;
-    if (typeof payload.title === "string") updateData.title = payload.title.trim() || null;
-    if (typeof payload.body === "string") updateData.body = payload.body.trim() || null;
+    if (typeof payload.title === "string")
+      updateData.title = payload.title.trim() || null;
+    if (typeof payload.body === "string")
+      updateData.body = payload.body.trim() || null;
 
     const { data, error } = await db
       .from("product_reviews")
       .update(updateData)
       .eq("id", reviewId)
       .eq("customer_id", customerId)
-      .select("id, product_id, rating, title, body, status, created_at, updated_at, product:products(seller_id)")
+      .select(
+        "id, product_id, rating, title, body, status, created_at, updated_at, product:products(seller_id)",
+      )
       .maybeSingle();
 
     if (error || !data) return null;
@@ -222,7 +229,10 @@ export class ReviewRepository {
   }
 
   // ── TOGGLE HELPFUL ────────────────────────────────────────────────────────
-  async toggleHelpful(reviewId: string, customerId: string): Promise<"added" | "removed"> {
+  async toggleHelpful(
+    reviewId: string,
+    customerId: string,
+  ): Promise<"added" | "removed"> {
     const db = getAdminDb();
 
     // Check if vote exists
@@ -235,17 +245,20 @@ export class ReviewRepository {
 
     if (existing) {
       // Remove vote + decrement
-      await db.from("review_helpful_votes")
+      await db
+        .from("review_helpful_votes")
         .delete()
         .eq("review_id", reviewId)
         .eq("customer_id", customerId);
       // Decrement via rpc if it exists, otherwise clamp at 0 via update
-      const { data: rev } = await db.from("product_reviews")
+      const { data: rev } = await db
+        .from("product_reviews")
         .select("helpful_count")
         .eq("id", reviewId)
         .maybeSingle();
       if (rev) {
-        await db.from("product_reviews")
+        await db
+          .from("product_reviews")
           .update({ helpful_count: Math.max(0, (rev.helpful_count ?? 1) - 1) })
           .eq("id", reviewId);
       }
@@ -253,15 +266,18 @@ export class ReviewRepository {
     }
 
     // Insert vote + increment
-    await db.from("review_helpful_votes")
+    await db
+      .from("review_helpful_votes")
       .insert({ review_id: reviewId, customer_id: customerId });
 
-    const { data: rev } = await db.from("product_reviews")
+    const { data: rev } = await db
+      .from("product_reviews")
       .select("helpful_count")
       .eq("id", reviewId)
       .maybeSingle();
     if (rev) {
-      await db.from("product_reviews")
+      await db
+        .from("product_reviews")
         .update({ helpful_count: (rev.helpful_count ?? 0) + 1 })
         .eq("id", reviewId);
     }
@@ -293,12 +309,14 @@ export class ReviewRepository {
 
     if (!error) {
       // Increment reported_count
-      const { data: rev } = await db.from("product_reviews")
+      const { data: rev } = await db
+        .from("product_reviews")
         .select("reported_count")
         .eq("id", reviewId)
         .maybeSingle();
       if (rev) {
-        await db.from("product_reviews")
+        await db
+          .from("product_reviews")
           .update({ reported_count: (rev.reported_count ?? 0) + 1 })
           .eq("id", reviewId);
       }
@@ -329,7 +347,7 @@ export class ReviewRepository {
         `id, rating, title, body, status, helpful_count, seller_reply, created_at,
          customer:user_profiles(full_name),
          product:products(id, name, slug)`,
-        { count: "exact" }
+        { count: "exact" },
       )
       .in("product_id", productIds)
       .in("status", ["approved", "flagged"])
@@ -348,15 +366,13 @@ export class ReviewRepository {
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
 
-    let q = db
-      .from("product_reviews")
-      .select(
-        `id, rating, title, body, status, helpful_count, reported_count,
+    let q = db.from("product_reviews").select(
+      `id, rating, title, body, status, helpful_count, reported_count,
          moderation_note, created_at, updated_at,
          customer:user_profiles(id, full_name),
          product:products(id, name, slug, seller_id)`,
-        { count: "exact" }
-      );
+      { count: "exact" },
+    );
 
     if (filters.status) q = q.eq("status", filters.status);
     if (filters.productId) q = q.eq("product_id", filters.productId);
@@ -374,7 +390,7 @@ export class ReviewRepository {
   async moderate(
     reviewId: string,
     action: "approve" | "reject" | "hide",
-    note?: string
+    note?: string,
   ): Promise<{ productId: string; sellerId: string } | null> {
     const db = getAdminDb();
     const newStatus = action === "approve" ? "approved" : "rejected";

@@ -18,7 +18,7 @@ describe("Phase 3.18.3 Customer Value & Pricing Presentation System", () => {
           sellingPricePaise={54100}
           originalPricePaise={64100}
           discountPercentage={15}
-        />
+        />,
       );
       expect(screen.getByText("₹541")).toBeInTheDocument();
       expect(screen.getByText("₹641")).toBeInTheDocument();
@@ -41,8 +41,12 @@ describe("Phase 3.18.3 Customer Value & Pricing Presentation System", () => {
     });
 
     it("renders standard delivery fee when product does not qualify for free delivery", () => {
-      render(<DeliveryBenefit isFreeDelivery={false} baseDeliveryFeePaise={4000} />);
-      expect(screen.getByText(/Standard Delivery \(₹40\)/i)).toBeInTheDocument();
+      render(
+        <DeliveryBenefit isFreeDelivery={false} baseDeliveryFeePaise={4000} />,
+      );
+      expect(
+        screen.getByText(/Standard Delivery \(₹40\)/i),
+      ).toBeInTheDocument();
     });
   });
 
@@ -55,10 +59,14 @@ describe("Phase 3.18.3 Customer Value & Pricing Presentation System", () => {
           sellerName="Green Leaf Nursery"
           rating={4.7}
           reviewCount={128}
-        />
+        />,
       );
-      expect(screen.getByText(/4.7★ rating from 128 customers/i)).toBeInTheDocument();
-      expect(screen.getByText(/Verified nursery \(Green Leaf Nursery\)/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/4.7★ rating from 128 customers/i),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(/Verified nursery \(Green Leaf Nursery\)/i),
+      ).toBeInTheDocument();
     });
 
     it("renders fresh quality guarantee when zero reviews exist", () => {
@@ -68,9 +76,11 @@ describe("Phase 3.18.3 Customer Value & Pricing Presentation System", () => {
           isVerifiedSeller={false}
           rating={0}
           reviewCount={0}
-        />
+        />,
       );
-      expect(screen.getByText(/Fresh quality plant guarantee/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Fresh quality plant guarantee/i),
+      ).toBeInTheDocument();
       expect(screen.queryByText(/5.0★/i)).not.toBeInTheDocument();
     });
   });

@@ -2,7 +2,10 @@
 import { getAdminDb } from "../config/database.js";
 import { auditRepository } from "../database/repositories/audit.repository.js";
 import { Errors } from "../utils/errors.js";
-import type { FinancialSettings, ProductPricingCalculation } from "@floria/types";
+import type {
+  FinancialSettings,
+  ProductPricingCalculation,
+} from "@floria/types";
 
 export class PricingService {
   /**
@@ -26,9 +29,15 @@ export class PricingService {
         return {
           sellerCommissionRate: Number(activeVersion.seller_commission_rate),
           floriaProfitRate: Number(activeVersion.floria_profit_rate),
-          platformMaintenanceFeePaise: Number(activeVersion.platform_maintenance_fee_paise),
-          freeDeliveryThresholdPaise: Number(activeVersion.free_delivery_threshold_paise),
-          freeDeliveryRecoveryPaise: Number(activeVersion.free_delivery_recovery_paise),
+          platformMaintenanceFeePaise: Number(
+            activeVersion.platform_maintenance_fee_paise,
+          ),
+          freeDeliveryThresholdPaise: Number(
+            activeVersion.free_delivery_threshold_paise,
+          ),
+          freeDeliveryRecoveryPaise: Number(
+            activeVersion.free_delivery_recovery_paise,
+          ),
         };
       }
     } catch {
@@ -66,7 +75,9 @@ export class PricingService {
       ? Number(map.get("floria_profit_rate"))
       : 0;
 
-    const platformMaintenanceFeePaise = map.has("platform_maintenance_fee_paise")
+    const platformMaintenanceFeePaise = map.has(
+      "platform_maintenance_fee_paise",
+    )
       ? Number(map.get("platform_maintenance_fee_paise"))
       : 0;
 
@@ -92,49 +103,83 @@ export class PricingService {
    */
   async updateFinancialSettings(
     updates: Partial<FinancialSettings>,
-    adminUserId: string
+    adminUserId: string,
   ): Promise<FinancialSettings> {
     const db = getAdminDb();
     const previous = await this.getFinancialSettings();
 
     if (updates.sellerCommissionRate !== undefined) {
-      if (typeof updates.sellerCommissionRate !== "number" || updates.sellerCommissionRate < 0 || updates.sellerCommissionRate > 50) {
-        throw Errors.validation("Seller commission rate must be a valid number between 0% and 50%.");
+      if (
+        typeof updates.sellerCommissionRate !== "number" ||
+        updates.sellerCommissionRate < 0 ||
+        updates.sellerCommissionRate > 50
+      ) {
+        throw Errors.validation(
+          "Seller commission rate must be a valid number between 0% and 50%.",
+        );
       }
     }
 
     if (updates.floriaProfitRate !== undefined) {
-      if (typeof updates.floriaProfitRate !== "number" || updates.floriaProfitRate < 0 || updates.floriaProfitRate > 50) {
-        throw Errors.validation("Floria profit rate must be a valid number between 0% and 50%.");
+      if (
+        typeof updates.floriaProfitRate !== "number" ||
+        updates.floriaProfitRate < 0 ||
+        updates.floriaProfitRate > 50
+      ) {
+        throw Errors.validation(
+          "Floria profit rate must be a valid number between 0% and 50%.",
+        );
       }
     }
 
     if (updates.platformMaintenanceFeePaise !== undefined) {
-      if (typeof updates.platformMaintenanceFeePaise !== "number" || updates.platformMaintenanceFeePaise < 0) {
-        throw Errors.validation("Platform maintenance fee must be a non-negative integer in paise.");
+      if (
+        typeof updates.platformMaintenanceFeePaise !== "number" ||
+        updates.platformMaintenanceFeePaise < 0
+      ) {
+        throw Errors.validation(
+          "Platform maintenance fee must be a non-negative integer in paise.",
+        );
       }
     }
 
     if (updates.freeDeliveryThresholdPaise !== undefined) {
-      if (typeof updates.freeDeliveryThresholdPaise !== "number" || updates.freeDeliveryThresholdPaise < 0) {
-        throw Errors.validation("Free delivery threshold must be a non-negative integer in paise.");
+      if (
+        typeof updates.freeDeliveryThresholdPaise !== "number" ||
+        updates.freeDeliveryThresholdPaise < 0
+      ) {
+        throw Errors.validation(
+          "Free delivery threshold must be a non-negative integer in paise.",
+        );
       }
     }
 
     if (updates.freeDeliveryRecoveryPaise !== undefined) {
-      if (typeof updates.freeDeliveryRecoveryPaise !== "number" || updates.freeDeliveryRecoveryPaise < 0) {
-        throw Errors.validation("Free delivery recovery must be a non-negative integer in paise.");
+      if (
+        typeof updates.freeDeliveryRecoveryPaise !== "number" ||
+        updates.freeDeliveryRecoveryPaise < 0
+      ) {
+        throw Errors.validation(
+          "Free delivery recovery must be a non-negative integer in paise.",
+        );
       }
     }
 
-    const payload: Array<{ key: string; value: any; value_type: string; description: string; action: string }> = [];
+    const payload: Array<{
+      key: string;
+      value: any;
+      value_type: string;
+      description: string;
+      action: string;
+    }> = [];
 
     if (updates.sellerCommissionRate !== undefined) {
       payload.push({
         key: "seller_commission_rate",
         value: updates.sellerCommissionRate,
         value_type: "number",
-        description: "Seller commission percentage rate cut from seller base price",
+        description:
+          "Seller commission percentage rate cut from seller base price",
         action: "SELLER_COMMISSION_UPDATED",
       });
     }
@@ -144,7 +189,8 @@ export class PricingService {
         key: "floria_profit_rate",
         value: updates.floriaProfitRate,
         value_type: "number",
-        description: "Floria internal profit margin rate added to product price",
+        description:
+          "Floria internal profit margin rate added to product price",
         action: "FLORIA_PROFIT_RATE_UPDATED",
       });
     }
@@ -154,7 +200,8 @@ export class PricingService {
         key: "platform_maintenance_fee_paise",
         value: updates.platformMaintenanceFeePaise,
         value_type: "number",
-        description: "Platform maintenance fee charged once per checkout in paise",
+        description:
+          "Platform maintenance fee charged once per checkout in paise",
         action: "PLATFORM_MAINTENANCE_FEE_UPDATED",
       });
     }
@@ -190,7 +237,7 @@ export class PricingService {
           updated_at: now,
           updated_by: adminUserId,
         },
-        { onConflict: "key" }
+        { onConflict: "key" },
       );
 
       await auditRepository.log({
@@ -211,29 +258,43 @@ export class PricingService {
    */
   async calculateProductPricing(
     sellerBasePricePaise: number,
-    customSettings?: FinancialSettings
+    customSettings?: FinancialSettings,
   ): Promise<ProductPricingCalculation> {
-    if (typeof sellerBasePricePaise !== "number" || sellerBasePricePaise < 0 || isNaN(sellerBasePricePaise)) {
-      throw Errors.validation("Seller base price must be a non-negative integer in paise.");
+    if (
+      typeof sellerBasePricePaise !== "number" ||
+      sellerBasePricePaise < 0 ||
+      isNaN(sellerBasePricePaise)
+    ) {
+      throw Errors.validation(
+        "Seller base price must be a non-negative integer in paise.",
+      );
     }
 
     const settings = customSettings || (await this.getFinancialSettings());
 
     // 1. Seller Commission (deducted from seller base price)
-    const sellerCommissionPaise = Math.round(sellerBasePricePaise * (settings.sellerCommissionRate / 100.0));
+    const sellerCommissionPaise = Math.round(
+      sellerBasePricePaise * (settings.sellerCommissionRate / 100.0),
+    );
     const sellerNetPaise = sellerBasePricePaise - sellerCommissionPaise;
 
     // 2. Floria Profit Margin (added to seller base price)
-    const floriaProfitPaise = Math.round(sellerBasePricePaise * (settings.floriaProfitRate / 100.0));
+    const floriaProfitPaise = Math.round(
+      sellerBasePricePaise * (settings.floriaProfitRate / 100.0),
+    );
     const preRecoveryPricePaise = sellerBasePricePaise + floriaProfitPaise;
 
     // 3. Product-Level Free Delivery Eligibility & Recovery
     // A product qualifies if its pre-recovery customer price >= dynamic threshold from active policy
-    const isFreeDeliveryEligible = preRecoveryPricePaise >= settings.freeDeliveryThresholdPaise;
-    const deliveryRecoveryPaise = isFreeDeliveryEligible ? settings.freeDeliveryRecoveryPaise : 0;
+    const isFreeDeliveryEligible =
+      preRecoveryPricePaise >= settings.freeDeliveryThresholdPaise;
+    const deliveryRecoveryPaise = isFreeDeliveryEligible
+      ? settings.freeDeliveryRecoveryPaise
+      : 0;
 
     // 4. Customer Product Price
-    const customerProductPricePaise = preRecoveryPricePaise + deliveryRecoveryPaise;
+    const customerProductPricePaise =
+      preRecoveryPricePaise + deliveryRecoveryPaise;
 
     return {
       sellerBasePricePaise,
@@ -254,20 +315,31 @@ export class PricingService {
    */
   calculateProductPricingSync(
     sellerBasePricePaise: number,
-    settings: FinancialSettings
+    settings: FinancialSettings,
   ): ProductPricingCalculation {
-    const validBasePrice = typeof sellerBasePricePaise === "number" && sellerBasePricePaise > 0 ? sellerBasePricePaise : 0;
+    const validBasePrice =
+      typeof sellerBasePricePaise === "number" && sellerBasePricePaise > 0
+        ? sellerBasePricePaise
+        : 0;
 
-    const sellerCommissionPaise = Math.round(validBasePrice * (settings.sellerCommissionRate / 100.0));
+    const sellerCommissionPaise = Math.round(
+      validBasePrice * (settings.sellerCommissionRate / 100.0),
+    );
     const sellerNetPaise = validBasePrice - sellerCommissionPaise;
 
-    const floriaProfitPaise = Math.round(validBasePrice * (settings.floriaProfitRate / 100.0));
+    const floriaProfitPaise = Math.round(
+      validBasePrice * (settings.floriaProfitRate / 100.0),
+    );
     const preRecoveryPricePaise = validBasePrice + floriaProfitPaise;
 
-    const isFreeDeliveryEligible = preRecoveryPricePaise >= settings.freeDeliveryThresholdPaise;
-    const deliveryRecoveryPaise = isFreeDeliveryEligible ? settings.freeDeliveryRecoveryPaise : 0;
+    const isFreeDeliveryEligible =
+      preRecoveryPricePaise >= settings.freeDeliveryThresholdPaise;
+    const deliveryRecoveryPaise = isFreeDeliveryEligible
+      ? settings.freeDeliveryRecoveryPaise
+      : 0;
 
-    const customerProductPricePaise = preRecoveryPricePaise + deliveryRecoveryPaise;
+    const customerProductPricePaise =
+      preRecoveryPricePaise + deliveryRecoveryPaise;
 
     return {
       sellerBasePricePaise: validBasePrice,

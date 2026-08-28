@@ -26,4 +26,6 @@ router.get("/deliveries/:id", operations_controller_js_1.operationsController.ge
 router.post("/deliveries/:id/assign", operations_controller_js_1.operationsController.assignDelivery);
 router.post("/deliveries/:id/reassign", operations_controller_js_1.operationsController.reassignDelivery);
 router.post("/deliveries/:id/status", operations_controller_js_1.operationsController.updateDeliveryStatus);
+router.post("/deliveries/:id/complete", operations_controller_js_1.operationsController.completeDeliveryWithPod);
+router.get("/deliveries/:id/pod", operations_controller_js_1.operationsController.getDeliveryPod);
 exports.default = router;

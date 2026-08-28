@@ -8,12 +8,12 @@ This document defines Floria's server-authoritative product pricing pipeline, se
 
 Floria's financial model is built on four distinct parameters managed by Administrators:
 
-| Parameter | Default | Calculation / Application Scope | Visibility |
-|---|---|---|---|
-| **Seller Commission** | `12%` | Deducted from the seller's entered base price: `seller_commission = base_price * 12%`. | Admin, Seller |
-| **Floria Profit Margin** | `2%` | Added during product listing: `profit = base_price * 2%`. | Admin ONLY (Hidden from Customer & Seller) |
-| **Platform Maintenance Fee** | `₹10.00` | Charged once at checkout per master order. | Customer (at Checkout), Admin |
-| **Free-Delivery Recovery** | `₹20.00` | Added into product price if product is eligible for free delivery. | Admin ONLY (Hidden from Customer & Seller) |
+| Parameter                    | Default  | Calculation / Application Scope                                                        | Visibility                                 |
+| ---------------------------- | -------- | -------------------------------------------------------------------------------------- | ------------------------------------------ |
+| **Seller Commission**        | `12%`    | Deducted from the seller's entered base price: `seller_commission = base_price * 12%`. | Admin, Seller                              |
+| **Floria Profit Margin**     | `2%`     | Added during product listing: `profit = base_price * 2%`.                              | Admin ONLY (Hidden from Customer & Seller) |
+| **Platform Maintenance Fee** | `₹10.00` | Charged once at checkout per master order.                                             | Customer (at Checkout), Admin              |
+| **Free-Delivery Recovery**   | `₹20.00` | Added into product price if product is eligible for free delivery.                     | Admin ONLY (Hidden from Customer & Seller) |
 
 ---
 
@@ -37,6 +37,7 @@ Seller enters: **`seller_base_price`** (e.g. ₹500.00 = 50000 paise).
 ```
 
 ### Worked Example B (Free Delivery Eligible Item):
+
 Seller enters: **`seller_base_price`** = **₹600.00** (60000 paise).
 
 ```
@@ -78,6 +79,7 @@ Seller enters: **`seller_base_price`** = **₹600.00** (60000 paise).
 ## 5. Seller Earnings & Net Settlement
 
 Seller revenue is strictly computed on their entered base price:
+
 - `seller_commission = seller_base_price * seller_commission_rate` (e.g. ₹500 * 12% = ₹60)
 - `seller_net_payout = seller_base_price - seller_commission` (e.g. ₹500 - ₹60 = ₹440)
 
@@ -88,6 +90,7 @@ Floria profit margin, delivery recovery, and maintenance fees belong to platform
 ## 6. Immutable Historical Order Snapshots
 
 All pricing parameters and item financial breakdowns are snapshotted on `orders` and `order_items`:
+
 - `base_price_paise_snapshot`
 - `floria_profit_rate_snapshot`
 - `floria_profit_paise_snapshot`

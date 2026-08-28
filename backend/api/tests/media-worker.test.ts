@@ -40,7 +40,7 @@ describe("Stage 4 — BullMQ Queue & Job Payload Security Validation", () => {
     };
 
     expect(() => validateMediaJobPayload(invalidPayload)).toThrow(
-      "Invalid job payload: 'profile' must be one of"
+      "Invalid job payload: 'profile' must be one of",
     );
   });
 
@@ -56,7 +56,7 @@ describe("Stage 4 — BullMQ Queue & Job Payload Security Validation", () => {
     };
 
     expect(() => validateMediaJobPayload(payloadWithBuffer)).toThrow(
-      "SECURITY VIOLATION: Binary image data must never be placed into Redis queues"
+      "SECURITY VIOLATION: Binary image data must never be placed into Redis queues",
     );
 
     const payloadWithBase64 = {
@@ -65,39 +65,40 @@ describe("Stage 4 — BullMQ Queue & Job Payload Security Validation", () => {
       sellerId: "seller-99",
       uploadedByUserId: "user-42",
       profile: "PRODUCT",
-      stagingPath: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+      stagingPath:
+        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
     };
 
     expect(() => validateMediaJobPayload(payloadWithBase64)).toThrow(
-      "SECURITY VIOLATION: Binary image data must never be placed into Redis queues"
+      "SECURITY VIOLATION: Binary image data must never be placed into Redis queues",
     );
   });
 });
 
 describe("Stage 4 — Immutable Public Path Builder", () => {
   it("builds correct immutable paths for all 6 media profile domains", () => {
-    expect(
-      buildPublicVariantPath("PRODUCT", "s1", "u1", "a1", "medium")
-    ).toBe("products/s1/a1/medium.webp");
+    expect(buildPublicVariantPath("PRODUCT", "s1", "u1", "a1", "medium")).toBe(
+      "products/s1/a1/medium.webp",
+    );
+
+    expect(buildPublicVariantPath("NURSERY", "s1", "u1", "a1", "card")).toBe(
+      "nurseries/s1/a1/card.webp",
+    );
 
     expect(
-      buildPublicVariantPath("NURSERY", "s1", "u1", "a1", "card")
-    ).toBe("nurseries/s1/a1/card.webp");
-
-    expect(
-      buildPublicVariantPath("SELLER_LOGO", "s1", "u1", "a1", "standard")
+      buildPublicVariantPath("SELLER_LOGO", "s1", "u1", "a1", "standard"),
     ).toBe("sellers/s1/a1/standard.webp");
 
-    expect(
-      buildPublicVariantPath("CATEGORY", null, "u1", "a1", "banner")
-    ).toBe("categories/a1/banner.webp");
+    expect(buildPublicVariantPath("CATEGORY", null, "u1", "a1", "banner")).toBe(
+      "categories/a1/banner.webp",
+    );
 
     expect(
-      buildPublicVariantPath("USER_AVATAR", null, "u1", "a1", "avatar")
+      buildPublicVariantPath("USER_AVATAR", null, "u1", "a1", "avatar"),
     ).toBe("avatars/u1/a1/avatar.webp");
 
     expect(
-      buildPublicVariantPath("REVIEW_IMAGE", null, "u1", "a1", "display")
+      buildPublicVariantPath("REVIEW_IMAGE", null, "u1", "a1", "display"),
     ).toBe("reviews/u1/a1/display.webp");
   });
 });
@@ -105,7 +106,12 @@ describe("Stage 4 — Immutable Public Path Builder", () => {
 describe("Stage 4 — CORRECTION 4: Full Worker Pipeline Orchestration Test", () => {
   it("executes complete pipeline: QUEUED -> PROCESSING -> ImageEngine -> public-media -> READY -> Delete Staging", async () => {
     const validJpeg = await sharp({
-      create: { width: 800, height: 600, channels: 3, background: { r: 50, g: 150, b: 50 } },
+      create: {
+        width: 800,
+        height: 600,
+        channels: 3,
+        background: { r: 50, g: 150, b: 50 },
+      },
     })
       .jpeg()
       .toBuffer();
@@ -118,7 +124,13 @@ describe("Stage 4 — CORRECTION 4: Full Worker Pipeline Orchestration Test", ()
             eq: vi.fn().mockReturnThis(),
             in: vi.fn().mockReturnThis(),
             maybeSingle: vi.fn().mockResolvedValue({
-              data: { id: "a-100", status: "QUEUED", seller_id: "s-1", uploaded_by_user_id: "u-1", storage_bucket: "public-media" },
+              data: {
+                id: "a-100",
+                status: "QUEUED",
+                seller_id: "s-1",
+                uploaded_by_user_id: "u-1",
+                storage_bucket: "public-media",
+              },
               error: null,
             }),
             update: vi.fn().mockReturnThis(),
@@ -176,7 +188,10 @@ describe("Stage 4 — CORRECTION 4: Full Worker Pipeline Orchestration Test", ()
     };
 
     // Mock getAdminDb import dynamically
-    vi.spyOn(await import("../src/config/database.js"), "getAdminDb").mockReturnValue(mockAdminDb as any);
+    vi.spyOn(
+      await import("../src/config/database.js"),
+      "getAdminDb",
+    ).mockReturnValue(mockAdminDb as any);
 
     await expect(worker.processJob(mockJob)).resolves.not.toThrow();
   });
@@ -185,7 +200,12 @@ describe("Stage 4 — CORRECTION 4: Full Worker Pipeline Orchestration Test", ()
 describe("Stage 4 — CORRECTION 5: Partial Storage Failure Rollback Test", () => {
   it("deletes partially uploaded variants from public-media if a subsequent variant upload fails", async () => {
     const validJpeg = await sharp({
-      create: { width: 800, height: 600, channels: 3, background: { r: 100, g: 100, b: 100 } },
+      create: {
+        width: 800,
+        height: 600,
+        channels: 3,
+        background: { r: 100, g: 100, b: 100 },
+      },
     })
       .jpeg()
       .toBuffer();
@@ -199,7 +219,13 @@ describe("Stage 4 — CORRECTION 5: Partial Storage Failure Rollback Test", () =
         eq: vi.fn().mockReturnThis(),
         in: vi.fn().mockReturnThis(),
         maybeSingle: vi.fn().mockResolvedValue({
-          data: { id: "a-fail", status: "QUEUED", seller_id: "s-1", uploaded_by_user_id: "u-1", storage_bucket: "public-media" },
+          data: {
+            id: "a-fail",
+            status: "QUEUED",
+            seller_id: "s-1",
+            uploaded_by_user_id: "u-1",
+            storage_bucket: "public-media",
+          },
           error: null,
         }),
         update: vi.fn().mockReturnThis(),
@@ -220,7 +246,10 @@ describe("Stage 4 — CORRECTION 5: Partial Storage Failure Rollback Test", () =
                 uploadCount++;
                 if (uploadCount === 2) {
                   // Second variant fails!
-                  return { data: null, error: new Error("Storage upload timeout") };
+                  return {
+                    data: null,
+                    error: new Error("Storage upload timeout"),
+                  };
                 }
                 return { data: {}, error: null };
               }),
@@ -235,7 +264,10 @@ describe("Stage 4 — CORRECTION 5: Partial Storage Failure Rollback Test", () =
       },
     };
 
-    vi.spyOn(await import("../src/config/database.js"), "getAdminDb").mockReturnValue(mockAdminDb as any);
+    vi.spyOn(
+      await import("../src/config/database.js"),
+      "getAdminDb",
+    ).mockReturnValue(mockAdminDb as any);
 
     const worker = new MediaWorker();
     const mockJob: any = {
@@ -252,7 +284,9 @@ describe("Stage 4 — CORRECTION 5: Partial Storage Failure Rollback Test", () =
       attemptsMade: 1, // Transient error on attempt 1 -> re-throws
     };
 
-    await expect(worker.processJob(mockJob)).rejects.toThrow("Failed to upload variant");
+    await expect(worker.processJob(mockJob)).rejects.toThrow(
+      "Failed to upload variant",
+    );
     expect(removedPaths.length).toBeGreaterThan(0); // Partially uploaded thumbnail was rolled back!
   });
 });
@@ -260,7 +294,12 @@ describe("Stage 4 — CORRECTION 5: Partial Storage Failure Rollback Test", () =
 describe("Stage 4 — CORRECTION 6 & 9: Retry Classification & Staging Cleanup Tests", () => {
   it("retains retryable state on transient failure during attempt 1 of 3", async () => {
     const validJpeg = await sharp({
-      create: { width: 400, height: 400, channels: 3, background: { r: 50, g: 50, b: 50 } },
+      create: {
+        width: 400,
+        height: 400,
+        channels: 3,
+        background: { r: 50, g: 50, b: 50 },
+      },
     })
       .jpeg()
       .toBuffer();
@@ -273,7 +312,13 @@ describe("Stage 4 — CORRECTION 6 & 9: Retry Classification & Staging Cleanup T
         eq: vi.fn().mockReturnThis(),
         in: vi.fn().mockReturnThis(),
         maybeSingle: vi.fn().mockResolvedValue({
-          data: { id: "a-retry", status: assetStatusInDb, seller_id: "s-1", uploaded_by_user_id: "u-1", storage_bucket: "public-media" },
+          data: {
+            id: "a-retry",
+            status: assetStatusInDb,
+            seller_id: "s-1",
+            uploaded_by_user_id: "u-1",
+            storage_bucket: "public-media",
+          },
           error: null,
         }),
         update: vi.fn().mockImplementation((payload: any) => {
@@ -282,18 +327,28 @@ describe("Stage 4 — CORRECTION 6 & 9: Retry Classification & Staging Cleanup T
             eq: vi.fn().mockReturnThis(),
             in: vi.fn().mockReturnThis(),
             select: vi.fn().mockReturnThis(),
-            maybeSingle: vi.fn().mockResolvedValue({ data: { id: "a-retry" }, error: null }),
+            maybeSingle: vi
+              .fn()
+              .mockResolvedValue({ data: { id: "a-retry" }, error: null }),
           };
         }),
       })),
       storage: {
         from: vi.fn((bucket: string) => ({
-          download: vi.fn().mockResolvedValue({ data: null, error: new Error("Network timeout") }),
+          download: vi
+            .fn()
+            .mockResolvedValue({
+              data: null,
+              error: new Error("Network timeout"),
+            }),
         })),
       },
     };
 
-    vi.spyOn(await import("../src/config/database.js"), "getAdminDb").mockReturnValue(mockAdminDb as any);
+    vi.spyOn(
+      await import("../src/config/database.js"),
+      "getAdminDb",
+    ).mockReturnValue(mockAdminDb as any);
 
     const worker = new MediaWorker();
     const mockJobAttempt1: any = {
@@ -310,7 +365,9 @@ describe("Stage 4 — CORRECTION 6 & 9: Retry Classification & Staging Cleanup T
       attemptsMade: 1, // Attempt 1 of 3 -> transient error re-thrown, status NOT marked FAILED yet
     };
 
-    await expect(worker.processJob(mockJobAttempt1)).rejects.toThrow("Failed to download staging binary");
+    await expect(worker.processJob(mockJobAttempt1)).rejects.toThrow(
+      "Failed to download staging binary",
+    );
     expect(assetStatusInDb).not.toBe("FAILED"); // Asset remains retryable for BullMQ!
   });
 
@@ -323,7 +380,13 @@ describe("Stage 4 — CORRECTION 6 & 9: Retry Classification & Staging Cleanup T
         eq: vi.fn().mockReturnThis(),
         in: vi.fn().mockReturnThis(),
         maybeSingle: vi.fn().mockResolvedValue({
-          data: { id: "a-exhausted", status: assetStatusInDb, seller_id: "s-1", uploaded_by_user_id: "u-1", storage_bucket: "public-media" },
+          data: {
+            id: "a-exhausted",
+            status: assetStatusInDb,
+            seller_id: "s-1",
+            uploaded_by_user_id: "u-1",
+            storage_bucket: "public-media",
+          },
           error: null,
         }),
         update: vi.fn().mockImplementation((payload: any) => {
@@ -332,18 +395,28 @@ describe("Stage 4 — CORRECTION 6 & 9: Retry Classification & Staging Cleanup T
             eq: vi.fn().mockReturnThis(),
             in: vi.fn().mockReturnThis(),
             select: vi.fn().mockReturnThis(),
-            maybeSingle: vi.fn().mockResolvedValue({ data: { id: "a-exhausted" }, error: null }),
+            maybeSingle: vi
+              .fn()
+              .mockResolvedValue({ data: { id: "a-exhausted" }, error: null }),
           };
         }),
       })),
       storage: {
         from: vi.fn((bucket: string) => ({
-          download: vi.fn().mockResolvedValue({ data: null, error: new Error("Network timeout") }),
+          download: vi
+            .fn()
+            .mockResolvedValue({
+              data: null,
+              error: new Error("Network timeout"),
+            }),
         })),
       },
     };
 
-    vi.spyOn(await import("../src/config/database.js"), "getAdminDb").mockReturnValue(mockAdminDb as any);
+    vi.spyOn(
+      await import("../src/config/database.js"),
+      "getAdminDb",
+    ).mockReturnValue(mockAdminDb as any);
 
     const worker = new MediaWorker();
     const mockJobAttempt3: any = {
@@ -360,7 +433,9 @@ describe("Stage 4 — CORRECTION 6 & 9: Retry Classification & Staging Cleanup T
       attemptsMade: 3, // Final attempt -> marks asset FAILED
     };
 
-    await expect(worker.processJob(mockJobAttempt3)).rejects.toThrow("Failed to download staging binary");
+    await expect(worker.processJob(mockJobAttempt3)).rejects.toThrow(
+      "Failed to download staging binary",
+    );
     expect(assetStatusInDb).toBe("FAILED");
   });
 });
@@ -376,7 +451,7 @@ describe("Stage 4 — CORRECTION 7: Idempotency & Terminal State Safeguards", ()
         Promise.resolve({
           data: { id: "a-ready", status: "READY" },
           error: null,
-        })
+        }),
       ),
     };
 
@@ -404,7 +479,10 @@ describe("Stage 4 — CORRECTION 7: Idempotency & Terminal State Safeguards", ()
       storage: { from: vi.fn() },
     };
 
-    vi.spyOn(await import("../src/config/database.js"), "getAdminDb").mockReturnValue(mockAdminDb as any);
+    vi.spyOn(
+      await import("../src/config/database.js"),
+      "getAdminDb",
+    ).mockReturnValue(mockAdminDb as any);
 
     const worker = new MediaWorker();
     const mockJob: any = {
@@ -444,7 +522,10 @@ describe("Stage 4 — CORRECTION 7: Idempotency & Terminal State Safeguards", ()
       storage: { from: vi.fn() },
     };
 
-    vi.spyOn(await import("../src/config/database.js"), "getAdminDb").mockReturnValue(mockAdminDb as any);
+    vi.spyOn(
+      await import("../src/config/database.js"),
+      "getAdminDb",
+    ).mockReturnValue(mockAdminDb as any);
 
     const worker = new MediaWorker();
     const mockJob: any = {
@@ -468,7 +549,12 @@ describe("Stage 4 — CORRECTION 7: Idempotency & Terminal State Safeguards", ()
 describe("Stage 4 — CORRECTION 10: Multi-Job Concurrency Isolation Test", () => {
   it("processes multiple media jobs independently without cross-tenant path leakage", async () => {
     const validJpeg = await sharp({
-      create: { width: 400, height: 400, channels: 3, background: { r: 10, g: 10, b: 10 } },
+      create: {
+        width: 400,
+        height: 400,
+        channels: 3,
+        background: { r: 10, g: 10, b: 10 },
+      },
     })
       .jpeg()
       .toBuffer();
@@ -489,15 +575,25 @@ describe("Stage 4 — CORRECTION 10: Multi-Job Concurrency Isolation Test", () =
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         in: vi.fn().mockReturnThis(),
-        maybeSingle: vi.fn().mockImplementation(() => Promise.resolve({
-          data: { id: "asset-id", status: "QUEUED", seller_id: "s", uploaded_by_user_id: "u", storage_bucket: "public-media" },
-          error: null,
-        })),
+        maybeSingle: vi.fn().mockImplementation(() =>
+          Promise.resolve({
+            data: {
+              id: "asset-id",
+              status: "QUEUED",
+              seller_id: "s",
+              uploaded_by_user_id: "u",
+              storage_bucket: "public-media",
+            },
+            error: null,
+          }),
+        ),
         update: vi.fn().mockImplementation(() => ({
           eq: vi.fn().mockReturnThis(),
           in: vi.fn().mockReturnThis(),
           select: vi.fn().mockReturnThis(),
-          maybeSingle: vi.fn().mockResolvedValue({ data: { id: "asset-id" }, error: null }),
+          maybeSingle: vi
+            .fn()
+            .mockResolvedValue({ data: { id: "asset-id" }, error: null }),
         })),
         insert: vi.fn().mockResolvedValue({ data: [], error: null }),
       })),
@@ -516,7 +612,8 @@ describe("Stage 4 — CORRECTION 10: Multi-Job Concurrency Isolation Test", () =
             return {
               upload: vi.fn().mockImplementation(async (path: string) => {
                 const sellerKey = path.split("/")[1];
-                if (!uploadedPathsPerSeller[sellerKey]) uploadedPathsPerSeller[sellerKey] = [];
+                if (!uploadedPathsPerSeller[sellerKey])
+                  uploadedPathsPerSeller[sellerKey] = [];
                 uploadedPathsPerSeller[sellerKey].push(path);
                 return { data: {}, error: null };
               }),
@@ -527,7 +624,10 @@ describe("Stage 4 — CORRECTION 10: Multi-Job Concurrency Isolation Test", () =
       },
     };
 
-    vi.spyOn(await import("../src/config/database.js"), "getAdminDb").mockReturnValue(mockAdminDb as any);
+    vi.spyOn(
+      await import("../src/config/database.js"),
+      "getAdminDb",
+    ).mockReturnValue(mockAdminDb as any);
 
     const worker = new MediaWorker();
     const processPromises = jobs.map((jobData, idx) =>
@@ -536,12 +636,14 @@ describe("Stage 4 — CORRECTION 10: Multi-Job Concurrency Isolation Test", () =
         data: jobData,
         opts: { attempts: 3 },
         attemptsMade: 1,
-      } as any)
+      } as any),
     );
 
     await expect(Promise.all(processPromises)).resolves.not.toThrow();
 
     // Verify 3 sellers received their respective isolated paths without leakage
-    expect(Object.keys(uploadedPathsPerSeller)).toEqual(expect.arrayContaining(["seller-0", "seller-1", "seller-2"]));
+    expect(Object.keys(uploadedPathsPerSeller)).toEqual(
+      expect.arrayContaining(["seller-0", "seller-1", "seller-2"]),
+    );
   });
 });

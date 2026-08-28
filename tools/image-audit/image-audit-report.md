@@ -8,14 +8,14 @@
 
 ## 1. Executive Summary
 
-| Audit Metric | Count | Details |
-| :--- | :--- | :--- |
-| **Total Repository Image Files** | **65** | 48 SVG system icons, 16 `public/` web assets, 1 favicon |
-| **Total Code Base References** | **98** | Direct imports, `<Image>` tags, `<img>` tags, and CSS paths |
-| **Unsplash External References** | **88** | Found in SQL seed data, API seeds, mock data, and catalog views |
-| **Database Image Columns** | **6** | Across `product_images`, `seller_profiles`, `seller_documents`, `user_profiles`, `categories`, `reviews` |
-| **Oversized Repository Assets (>500KB)** | **12** | Totaling **10.48 MB** stored in Git (`apps/web/public/`) |
-| **Supabase Storage Buckets** | **0 active in repo** | Production upload pipeline not yet wired to Supabase Storage |
+| Audit Metric                             | Count                | Details                                                                                                  |
+| :--------------------------------------- | :------------------- | :------------------------------------------------------------------------------------------------------- |
+| **Total Repository Image Files**         | **65**               | 48 SVG system icons, 16 `public/` web assets, 1 favicon                                                  |
+| **Total Code Base References**           | **98**               | Direct imports, `<Image>` tags, `<img>` tags, and CSS paths                                              |
+| **Unsplash External References**         | **88**               | Found in SQL seed data, API seeds, mock data, and catalog views                                          |
+| **Database Image Columns**               | **6**                | Across `product_images`, `seller_profiles`, `seller_documents`, `user_profiles`, `categories`, `reviews` |
+| **Oversized Repository Assets (>500KB)** | **12**               | Totaling **10.48 MB** stored in Git (`apps/web/public/`)                                                 |
+| **Supabase Storage Buckets**             | **0 active in repo** | Production upload pipeline not yet wired to Supabase Storage                                             |
 
 ---
 
@@ -58,14 +58,14 @@ The current application relies on a **hybrid static & external URL model** rathe
 
 Below is the summary of all **65** media files discovered in the repository:
 
-| Classification | Count | Total Disk Size | Typical Path | Recommended Action |
-| :--- | :--- | :--- | :--- | :--- |
-| **ICON** | 48 | ~17.5 KB | `floria-svg-icon-system/*` | `KEEP_IN_REPOSITORY` |
-| **NURSERY_IMAGE** | 4 | 5.09 MB | `apps/web/public/nursery-*.png` | `MIGRATE_TO_SUPABASE_STORAGE` |
-| **CATEGORY_IMAGE** | 6 | 3.61 MB | `apps/web/public/cat-*.png` | `MIGRATE_TO_SUPABASE_STORAGE` |
-| **BANNER** | 1 | 666 KB | `apps/web/public/hero-plants.png` | `MIGRATE_TO_SUPABASE_STORAGE` |
-| **LOGO** | 1 | 647 KB | `apps/web/public/floria-logo.png` | `KEEP_IN_REPOSITORY` (Optimize format) |
-| **APPLICATION_ASSET** | 5 | 29.2 KB | `apps/web/public/*.svg`, `favicon.ico` | `KEEP_IN_REPOSITORY` |
+| Classification        | Count | Total Disk Size | Typical Path                           | Recommended Action                     |
+| :-------------------- | :---- | :-------------- | :------------------------------------- | :------------------------------------- |
+| **ICON**              | 48    | ~17.5 KB        | `floria-svg-icon-system/*`             | `KEEP_IN_REPOSITORY`                   |
+| **NURSERY_IMAGE**     | 4     | 5.09 MB         | `apps/web/public/nursery-*.png`        | `MIGRATE_TO_SUPABASE_STORAGE`          |
+| **CATEGORY_IMAGE**    | 6     | 3.61 MB         | `apps/web/public/cat-*.png`            | `MIGRATE_TO_SUPABASE_STORAGE`          |
+| **BANNER**            | 1     | 666 KB          | `apps/web/public/hero-plants.png`      | `MIGRATE_TO_SUPABASE_STORAGE`          |
+| **LOGO**              | 1     | 647 KB          | `apps/web/public/floria-logo.png`      | `KEEP_IN_REPOSITORY` (Optimize format) |
+| **APPLICATION_ASSET** | 5     | 29.2 KB         | `apps/web/public/*.svg`, `favicon.ico` | `KEEP_IN_REPOSITORY`                   |
 
 ---
 
@@ -73,14 +73,14 @@ Below is the summary of all **65** media files discovered in the repository:
 
 Inspection of Supabase SQL migrations (`0001_initial_schema.sql` through `0022_nursery_onboarding_profile.sql`) reveals **6 core database image attributes**:
 
-| Table | Column | Data Type | Purpose | RLS Policy Status | Foreign Key / Target |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| `product_images` | `url` | `TEXT NOT NULL` | Product photo URL | Active read: Public. Seller write: Own. | FK to `products.id` |
-| `seller_profiles` | `logo_url` | `TEXT` | Nursery storefront photo / logo | Public read approved. Seller write: Own. | FK to `user_profiles.id` |
-| `seller_documents`| `document_url` / `file_url`| `TEXT NOT NULL` | Verification PDFs/images | Seller read/write own. Admin read all. | FK to `seller_profiles.id` |
-| `user_profiles` | `avatar_url` | `TEXT` | Customer / seller profile avatar | Owner read/update. | References `auth.users.id` |
-| `categories` | `image_url` | `TEXT` | Category header / card image | Public read active. Admin write. | Self-referencing parent hierarchy |
-| `reviews` | `image_url` | `TEXT` | User review photo attachment | Public read approved. | FK to `products.id` & `user_profiles.id` |
+| Table              | Column                      | Data Type       | Purpose                          | RLS Policy Status                        | Foreign Key / Target                     |
+| :----------------- | :-------------------------- | :-------------- | :------------------------------- | :--------------------------------------- | :--------------------------------------- |
+| `product_images`   | `url`                       | `TEXT NOT NULL` | Product photo URL                | Active read: Public. Seller write: Own.  | FK to `products.id`                      |
+| `seller_profiles`  | `logo_url`                  | `TEXT`          | Nursery storefront photo / logo  | Public read approved. Seller write: Own. | FK to `user_profiles.id`                 |
+| `seller_documents` | `document_url` / `file_url` | `TEXT NOT NULL` | Verification PDFs/images         | Seller read/write own. Admin read all.   | FK to `seller_profiles.id`               |
+| `user_profiles`    | `avatar_url`                | `TEXT`          | Customer / seller profile avatar | Owner read/update.                       | References `auth.users.id`               |
+| `categories`       | `image_url`                 | `TEXT`          | Category header / card image     | Public read active. Admin write.         | Self-referencing parent hierarchy        |
+| `reviews`          | `image_url`                 | `TEXT`          | User review photo attachment     | Public read approved.                    | FK to `products.id` & `user_profiles.id` |
 
 ---
 
@@ -116,19 +116,19 @@ Inspection of Supabase SQL migrations (`0001_initial_schema.sql` through `0022_n
 
 The repository currently commits **10.48 MB** of uncompressed PNG files directly inside `apps/web/public/`:
 
-| File Path | File Size | Dimensions | Recommended Action |
-| :--- | :--- | :--- | :--- |
-| `apps/web/public/nursery-2.png` | **1.25 MB** | N/A | MIGRATE_TO_SUPABASE_STORAGE |
-| `apps/web/public/nursery-4.png` | **1.22 MB** | N/A | MIGRATE_TO_SUPABASE_STORAGE |
-| `apps/web/public/nursery-1.png` | **1.19 MB** | N/A | MIGRATE_TO_SUPABASE_STORAGE |
-| `apps/web/public/nursery-3.png` | **1.18 MB** | N/A | MIGRATE_TO_SUPABASE_STORAGE |
-| `apps/web/public/cat-fertilizers.png` | **669.17 KB** | N/A | MIGRATE_TO_SUPABASE_STORAGE |
-| `apps/web/public/hero-plants.png` | **650.41 KB** | N/A | MIGRATE_TO_SUPABASE_STORAGE |
-| `apps/web/public/cat-plants.png` | **644.79 KB** | N/A | MIGRATE_TO_SUPABASE_STORAGE |
-| `apps/web/public/floria-logo.png` | **631.71 KB** | 2000x2000 | KEEP_IN_REPOSITORY |
-| `apps/web/public/cat-tools.png` | **607.43 KB** | N/A | MIGRATE_TO_SUPABASE_STORAGE |
-| `apps/web/public/cat-seeds.png` | **585.2 KB** | N/A | MIGRATE_TO_SUPABASE_STORAGE |
-| `apps/web/public/cat-pots.png` | **542.27 KB** | N/A | MIGRATE_TO_SUPABASE_STORAGE |
+| File Path                             | File Size     | Dimensions | Recommended Action          |
+| :------------------------------------ | :------------ | :--------- | :-------------------------- |
+| `apps/web/public/nursery-2.png`       | **1.25 MB**   | N/A        | MIGRATE_TO_SUPABASE_STORAGE |
+| `apps/web/public/nursery-4.png`       | **1.22 MB**   | N/A        | MIGRATE_TO_SUPABASE_STORAGE |
+| `apps/web/public/nursery-1.png`       | **1.19 MB**   | N/A        | MIGRATE_TO_SUPABASE_STORAGE |
+| `apps/web/public/nursery-3.png`       | **1.18 MB**   | N/A        | MIGRATE_TO_SUPABASE_STORAGE |
+| `apps/web/public/cat-fertilizers.png` | **669.17 KB** | N/A        | MIGRATE_TO_SUPABASE_STORAGE |
+| `apps/web/public/hero-plants.png`     | **650.41 KB** | N/A        | MIGRATE_TO_SUPABASE_STORAGE |
+| `apps/web/public/cat-plants.png`      | **644.79 KB** | N/A        | MIGRATE_TO_SUPABASE_STORAGE |
+| `apps/web/public/floria-logo.png`     | **631.71 KB** | 2000x2000  | KEEP_IN_REPOSITORY          |
+| `apps/web/public/cat-tools.png`       | **607.43 KB** | N/A        | MIGRATE_TO_SUPABASE_STORAGE |
+| `apps/web/public/cat-seeds.png`       | **585.2 KB**  | N/A        | MIGRATE_TO_SUPABASE_STORAGE |
+| `apps/web/public/cat-pots.png`        | **542.27 KB** | N/A        | MIGRATE_TO_SUPABASE_STORAGE |
 
 ---
 

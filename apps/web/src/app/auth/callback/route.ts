@@ -3,7 +3,10 @@
 // Handles authorization code exchange, server-side user_profiles resolution, role enforcement, and audit logging.
 
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseServerClient, getSupabaseServiceClient } from "@/lib/supabase/server";
+import {
+  getSupabaseServerClient,
+  getSupabaseServiceClient,
+} from "@/lib/supabase/server";
 import { auditLog } from "@/lib/server/audit";
 
 export async function GET(req: NextRequest) {
@@ -17,11 +20,17 @@ export async function GET(req: NextRequest) {
 
   try {
     const supabase = await getSupabaseServerClient();
-    const { data: sessionData, error: sessionError } = await supabase.auth.exchangeCodeForSession(code);
+    const { data: sessionData, error: sessionError } =
+      await supabase.auth.exchangeCodeForSession(code);
 
     if (sessionError || !sessionData.user) {
-      console.error("[oauth/callback] Exchange code error:", sessionError?.message);
-      return NextResponse.redirect(new URL("/login?error=oauth_exchange_failed", req.url));
+      console.error(
+        "[oauth/callback] Exchange code error:",
+        sessionError?.message,
+      );
+      return NextResponse.redirect(
+        new URL("/login?error=oauth_exchange_failed", req.url),
+      );
     }
 
     const user = sessionData.user;
@@ -41,17 +50,25 @@ export async function GET(req: NextRequest) {
       role = existingProfile.role;
     } else {
       // First-time Google Sign-In: create customer profile (server-assigned default)
-      const fullName = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0] || "Floria Customer";
-      
+      const fullName =
+        user.user_metadata?.full_name ||
+        user.user_metadata?.name ||
+        user.email?.split("@")[0] ||
+        "Floria Customer";
+
       const { error: insertError } = await db.from("user_profiles").insert({
         id: user.id,
         full_name: fullName,
         role: "customer",
-        avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
+        avatar_url:
+          user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
       });
 
       if (insertError) {
-        console.error("[oauth/callback] Profile creation error:", insertError.message);
+        console.error(
+          "[oauth/callback] Profile creation error:",
+          insertError.message,
+        );
       }
     }
 
@@ -72,9 +89,17 @@ export async function GET(req: NextRequest) {
     let redirectPath = next;
 
     // Security check: Non-admin users attempting to access /admin routes are redirected safely
-    if (redirectPath.startsWith("/admin") && role !== "admin" && role !== "super_admin") {
-      console.warn(`[oauth/callback] User ${user.email} (role: ${role}) attempted unauthorized access to admin path: ${redirectPath}`);
-      return NextResponse.redirect(new URL("/admin/login?error=admin_role_required", req.url));
+    if (
+      redirectPath.startsWith("/admin") &&
+      role !== "admin" &&
+      role !== "super_admin"
+    ) {
+      console.warn(
+        `[oauth/callback] User ${user.email} (role: ${role}) attempted unauthorized access to admin path: ${redirectPath}`,
+      );
+      return NextResponse.redirect(
+        new URL("/admin/login?error=admin_role_required", req.url),
+      );
     }
 
     if (redirectPath === "/" || !redirectPath.startsWith("/")) {
@@ -92,6 +117,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL(redirectPath, req.url));
   } catch (err: any) {
     console.error("[oauth/callback] Unexpected error:", err);
-    return NextResponse.redirect(new URL("/login?error=oauth_callback_error", req.url));
+    return NextResponse.redirect(
+      new URL("/login?error=oauth_callback_error", req.url),
+    );
   }
 }

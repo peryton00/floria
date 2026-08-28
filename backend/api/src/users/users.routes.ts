@@ -33,22 +33,26 @@ router.patch("/me", async (req: Request, res: Response, next: NextFunction) => {
   }
 });
 
-router.delete("/me", async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { auditRepository } = await import("../database/repositories/audit.repository.js");
-    await userRepository.deleteAccount(req.user!.id);
-    await auditRepository.log({
-      actor_user_id: req.user!.id,
-      actor_role: req.user!.role as any,
-      action: "USER_DELETED" as any,
-      resource_type: "user_profile",
-      resource_id: req.user!.id,
-    });
-    res.json({ success: true, message: "Account deleted successfully" });
-  } catch (err) {
-    next(err);
-  }
-});
+router.delete(
+  "/me",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { auditRepository } =
+        await import("../database/repositories/audit.repository.js");
+      await userRepository.deleteAccount(req.user!.id);
+      await auditRepository.log({
+        actor_user_id: req.user!.id,
+        actor_role: req.user!.role as any,
+        action: "USER_DELETED" as any,
+        resource_type: "user_profile",
+        resource_id: req.user!.id,
+      });
+      res.json({ success: true, message: "Account deleted successfully" });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // Addresses
 const createAddressSchema = {
@@ -65,49 +69,79 @@ const createAddressSchema = {
   }),
 };
 
-router.get("/addresses", async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const addresses = await addressService.getAddresses(req.user!.id);
-    res.json({ success: true, data: addresses });
-  } catch (err) {
-    next(err);
-  }
-});
+router.get(
+  "/addresses",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const addresses = await addressService.getAddresses(req.user!.id);
+      res.json({ success: true, data: addresses });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
-router.post("/addresses", validateRequest(createAddressSchema), async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const address = await addressService.createAddress(req.user!.id, req.body);
-    res.json({ success: true, data: address });
-  } catch (err) {
-    next(err);
-  }
-});
+router.post(
+  "/addresses",
+  validateRequest(createAddressSchema),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const address = await addressService.createAddress(
+        req.user!.id,
+        req.body,
+      );
+      res.json({ success: true, data: address });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
-router.patch("/addresses/:id", validateRequest(createAddressSchema), async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const address = await addressService.updateAddress(req.user!.id, String(req.params.id), req.body);
-    res.json({ success: true, data: address });
-  } catch (err) {
-    next(err);
-  }
-});
+router.patch(
+  "/addresses/:id",
+  validateRequest(createAddressSchema),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const address = await addressService.updateAddress(
+        req.user!.id,
+        String(req.params.id),
+        req.body,
+      );
+      res.json({ success: true, data: address });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
-router.patch("/addresses/:id/default", async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const addresses = await addressService.setDefaultAddress(req.user!.id, String(req.params.id));
-    res.json({ success: true, data: addresses });
-  } catch (err) {
-    next(err);
-  }
-});
+router.patch(
+  "/addresses/:id/default",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const addresses = await addressService.setDefaultAddress(
+        req.user!.id,
+        String(req.params.id),
+      );
+      res.json({ success: true, data: addresses });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
-router.delete("/addresses/:id", async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const addresses = await addressService.deleteAddress(req.user!.id, String(req.params.id));
-    res.json({ success: true, data: addresses });
-  } catch (err) {
-    next(err);
-  }
-});
+router.delete(
+  "/addresses/:id",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const addresses = await addressService.deleteAddress(
+        req.user!.id,
+        String(req.params.id),
+      );
+      res.json({ success: true, data: addresses });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 export default router;

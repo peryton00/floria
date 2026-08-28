@@ -14,7 +14,14 @@ describe("Badge", () => {
   });
 
   it("renders all variants without crashing", () => {
-    const variants = ["default", "forest", "success", "warning", "error", "info"] as const;
+    const variants = [
+      "default",
+      "forest",
+      "success",
+      "warning",
+      "error",
+      "info",
+    ] as const;
     for (const variant of variants) {
       const { unmount } = render(<Badge variant={variant}>{variant}</Badge>);
       unmount();
@@ -42,10 +49,15 @@ describe("CountBadge", () => {
 describe("EmptyState", () => {
   it("renders title and description", () => {
     render(
-      <EmptyState title="No plants yet" description="Browse categories to add plants." />
+      <EmptyState
+        title="No plants yet"
+        description="Browse categories to add plants."
+      />,
     );
     expect(screen.getByText("No plants yet")).toBeInTheDocument();
-    expect(screen.getByText("Browse categories to add plants.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Browse categories to add plants."),
+    ).toBeInTheDocument();
   });
 });
 

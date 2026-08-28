@@ -37,7 +37,10 @@ export class AuditRepository {
       });
 
       if (error) {
-        console.error("[AuditRepository] Failed to write audit log:", error.message);
+        console.error(
+          "[AuditRepository] Failed to write audit log:",
+          error.message,
+        );
       }
     } catch (e) {
       console.error("[AuditRepository] Exception during audit logging:", e);

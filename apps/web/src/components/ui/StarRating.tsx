@@ -1,8 +1,8 @@
 // Floria — StarRating component
 // Renders 5 yellow stars with partial fill based on rating value
 interface StarRatingProps {
-  rating: number;        // 0-5
-  count?: number;        // review count
+  rating: number; // 0-5
+  count?: number; // review count
   size?: "sm" | "md";
 }
 
@@ -23,13 +23,21 @@ export function StarRating({ rating, count, size = "sm" }: StarRatingProps) {
             width={iconSize}
             height={iconSize}
             viewBox="0 0 16 16"
-            className={s.filled || s.partial ? "text-amber-400" : "text-ink-100"}
+            className={
+              s.filled || s.partial ? "text-amber-400" : "text-ink-100"
+            }
           >
             <defs>
               {s.partial && (
                 <linearGradient id={`star-partial-${i}`}>
-                  <stop offset={`${(rating - Math.floor(rating)) * 100}%`} stopColor="currentColor" />
-                  <stop offset={`${(rating - Math.floor(rating)) * 100}%`} stopColor="var(--color-ink-100)" />
+                  <stop
+                    offset={`${(rating - Math.floor(rating)) * 100}%`}
+                    stopColor="currentColor"
+                  />
+                  <stop
+                    offset={`${(rating - Math.floor(rating)) * 100}%`}
+                    stopColor="var(--color-ink-100)"
+                  />
                 </linearGradient>
               )}
             </defs>

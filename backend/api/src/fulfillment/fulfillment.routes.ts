@@ -20,7 +20,7 @@ router.get(
   "/",
   authenticateToken,
   requireApprovedSeller,
-  fulfillmentController.getMyFulfillments
+  fulfillmentController.getMyFulfillments,
 );
 
 router.post(
@@ -29,7 +29,7 @@ router.post(
   requireApprovedSeller,
   sellerFulfillmentRateLimiter,
   validateRequest(fulfillmentSchema),
-  fulfillmentController.updateStatus
+  fulfillmentController.updateStatus,
 );
 
 export default router;

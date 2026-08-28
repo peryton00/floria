@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "Floria Delivery",
+    "slug": "floria-delivery",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "floria-delivery",
+    "userInterfaceStyle": "automatic",
+    "platforms": ["ios", "android"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.floria.delivery",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Floria Delivery needs your location to navigate to pickup and delivery addresses.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Floria Delivery needs your location in the background to track active deliveries.",
+        "NSCameraUsageDescription": "Floria Delivery uses the camera to capture proof of delivery photos."
+      }
+    },
+    "android": {
+      "package": "com.floria.delivery",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "CAMERA"
+      ]
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

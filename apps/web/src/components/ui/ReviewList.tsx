@@ -18,17 +18,32 @@ interface ReviewListProps {
 
 const PAGE_SIZE = 10;
 
-export function ReviewList({ reviews, total, summary, productId, page, onPageChange }: ReviewListProps) {
+export function ReviewList({
+  reviews,
+  total,
+  summary,
+  productId,
+  page,
+  onPageChange,
+}: ReviewListProps) {
   const { toast } = useToast();
   const [helpfulVotes, setHelpfulVotes] = useState<Record<string, boolean>>({});
 
-  const handleHelpful = useCallback(async (reviewId: string) => {
-    try {
-      await api.markReviewHelpful(productId, reviewId);
-      setHelpfulVotes((v) => ({ ...v, [reviewId]: !v[reviewId] }));
-      toast.info("Feedback recorded", "Thank you for marking this review as helpful.");
-    } catch { /* silent */ }
-  }, [productId, toast]);
+  const handleHelpful = useCallback(
+    async (reviewId: string) => {
+      try {
+        await api.markReviewHelpful(productId, reviewId);
+        setHelpfulVotes((v) => ({ ...v, [reviewId]: !v[reviewId] }));
+        toast.info(
+          "Feedback recorded",
+          "Thank you for marking this review as helpful.",
+        );
+      } catch {
+        /* silent */
+      }
+    },
+    [productId, toast],
+  );
 
   if (!reviews.length && !summary?.review_count) {
     return (
@@ -58,22 +73,33 @@ export function ReviewList({ reviews, total, summary, productId, page, onPageCha
               {summary.avg_rating.toFixed(1)}
             </p>
             <StarRating rating={summary.avg_rating} size="sm" />
-            <p className="text-[10px] text-ink-400 mt-0.5">{summary.review_count} reviews</p>
+            <p className="text-[10px] text-ink-400 mt-0.5">
+              {summary.review_count} reviews
+            </p>
           </div>
           <div className="flex-1 space-y-1">
             {[5, 4, 3, 2, 1].map((star) => {
-              const count = summary[`star_${star}_count` as keyof ReviewSummary] as number;
-              const pct = summary.review_count > 0 ? (count / summary.review_count) * 100 : 0;
+              const count = summary[
+                `star_${star}_count` as keyof ReviewSummary
+              ] as number;
+              const pct =
+                summary.review_count > 0
+                  ? (count / summary.review_count) * 100
+                  : 0;
               return (
                 <div key={star} className="flex items-center gap-2">
-                  <span className="text-[10px] text-ink-500 w-2 shrink-0">{star}</span>
+                  <span className="text-[10px] text-ink-500 w-2 shrink-0">
+                    {star}
+                  </span>
                   <div className="flex-1 h-1.5 bg-floria-sand rounded-full overflow-hidden">
                     <div
                       className="h-full bg-amber-400 rounded-full transition-all duration-500"
                       style={{ width: `${pct}%` }}
                     />
                   </div>
-                  <span className="text-[10px] text-ink-400 w-4 text-right">{count}</span>
+                  <span className="text-[10px] text-ink-400 w-4 text-right">
+                    {count}
+                  </span>
                 </div>
               );
             })}
@@ -101,7 +127,11 @@ export function ReviewList({ reviews, total, summary, productId, page, onPageCha
                 <StarRating rating={rev.rating} size="sm" />
               </div>
               <span className="text-[10px] text-ink-300 shrink-0">
-                {new Date(rev.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                {new Date(rev.created_at).toLocaleDateString("en-IN", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })}
               </span>
             </div>
 
@@ -116,10 +146,17 @@ export function ReviewList({ reviews, total, summary, productId, page, onPageCha
             {rev.images && rev.images.length > 0 && (
               <div className="flex flex-wrap gap-2 pt-1">
                 {rev.images.map((img: any, idx: number) => (
-                  <div key={img.id || idx} className="w-16 h-16 rounded-lg overflow-hidden border border-floria-border bg-floria-sand shadow-2xs relative">
+                  <div
+                    key={img.id || idx}
+                    className="w-16 h-16 rounded-lg overflow-hidden border border-floria-border bg-floria-sand shadow-2xs relative"
+                  >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={img.variants?.medium || img.variants?.thumbnail || img.url}
+                      src={
+                        img.variants?.medium ||
+                        img.variants?.thumbnail ||
+                        img.url
+                      }
                       alt={`Review photo ${idx + 1}`}
                       className="w-full h-full object-cover hover:scale-105 transition-transform"
                     />
@@ -131,7 +168,9 @@ export function ReviewList({ reviews, total, summary, productId, page, onPageCha
             {/* Seller reply */}
             {rev.seller_reply && (
               <div className="mt-2 pl-3 border-l-2 border-forest-200 bg-forest-50/50 rounded-r-lg p-2 space-y-0.5">
-                <p className="text-[10px] font-bold text-forest-700 uppercase tracking-wide">Nursery Reply</p>
+                <p className="text-[10px] font-bold text-forest-700 uppercase tracking-wide">
+                  Nursery Reply
+                </p>
                 <p className="text-xs text-ink-600">{rev.seller_reply}</p>
               </div>
             )}
@@ -142,7 +181,10 @@ export function ReviewList({ reviews, total, summary, productId, page, onPageCha
               className="inline-flex items-center gap-1.5 text-[10px] text-ink-400 hover:text-forest-700 transition-colors"
               aria-label="Mark review as helpful"
             >
-              <ThumbsUp size={11} className={helpfulVotes[rev.id] ? "text-forest-700" : ""} />
+              <ThumbsUp
+                size={11}
+                className={helpfulVotes[rev.id] ? "text-forest-700" : ""}
+              />
               Helpful ({rev.helpful_count + (helpfulVotes[rev.id] ? 1 : 0)})
             </button>
           </div>
@@ -159,7 +201,9 @@ export function ReviewList({ reviews, total, summary, productId, page, onPageCha
           >
             ‹ Prev
           </button>
-          <span className="text-xs text-ink-500">Page {page} of {totalPages}</span>
+          <span className="text-xs text-ink-500">
+            Page {page} of {totalPages}
+          </span>
           <button
             onClick={() => onPageChange(page + 1)}
             disabled={page === totalPages}

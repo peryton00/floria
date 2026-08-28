@@ -69,6 +69,27 @@ class DeliveryRepository {
             return null;
         return data;
     }
+    async completeWithPod(id, podAssetId, recipientName, notes) {
+        const db = (0, database_js_1.getAdminDb)();
+        const now = new Date().toISOString();
+        const payload = {
+            status: "delivered",
+            delivered_at: now,
+            pod_asset_id: podAssetId,
+            recipient_name: recipientName || null,
+            pod_notes: notes || null,
+            updated_at: now,
+        };
+        const { data, error } = await db
+            .from("delivery_assignments")
+            .update(payload)
+            .eq("id", id)
+            .select()
+            .maybeSingle();
+        if (error || !data)
+            return null;
+        return data;
+    }
 }
 exports.DeliveryRepository = DeliveryRepository;
 exports.deliveryRepository = new DeliveryRepository();

@@ -1,7 +1,7 @@
 // Floria API — Centralized Notification Service
 import {
   notificationRepository,
-  CreateNotificationDto
+  CreateNotificationDto,
 } from "../database/repositories/notification.repository.js";
 import { Errors } from "../utils/errors.js";
 
@@ -31,7 +31,10 @@ export class NotificationService {
       await redis.publish(channel, payload);
     } catch (redisErr: any) {
       // Redis publishing failure MUST NOT break PostgreSQL notification persistence
-      console.warn("[NotificationService] Redis publish event failed:", redisErr?.message);
+      console.warn(
+        "[NotificationService] Redis publish event failed:",
+        redisErr?.message,
+      );
     }
 
     return created;
@@ -39,7 +42,7 @@ export class NotificationService {
 
   async getUserNotifications(
     userId: string,
-    params: { limit?: number; page?: number; unreadOnly?: boolean } = {}
+    params: { limit?: number; page?: number; unreadOnly?: boolean } = {},
   ) {
     return notificationRepository.findByUserId(userId, params);
   }
@@ -49,7 +52,10 @@ export class NotificationService {
   }
 
   async markAsRead(userId: string, notificationId: string) {
-    const notification = await notificationRepository.markAsRead(userId, notificationId);
+    const notification = await notificationRepository.markAsRead(
+      userId,
+      notificationId,
+    );
     if (!notification) {
       throw Errors.notFound("Notification");
     }

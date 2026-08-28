@@ -41,7 +41,8 @@ const VALUE_PROPS = [
   {
     icon: VerifiedIcon,
     title: "100% Verified Nurseries",
-    description: "Sourced directly from certified regional nursery growers across India",
+    description:
+      "Sourced directly from certified regional nursery growers across India",
   },
   {
     icon: TruckIcon,
@@ -51,7 +52,8 @@ const VALUE_PROPS = [
   {
     icon: LeafIcon,
     title: "Freshness Guarantee",
-    description: "Healthy plant arrival promise with expert care guides & support",
+    description:
+      "Healthy plant arrival promise with expert care guides & support",
   },
   {
     icon: ShieldIcon,
@@ -166,7 +168,8 @@ export function Footer() {
                 style={{ color: "rgba(255,255,255,0.75)" }}
               >
                 India&apos;s verified botanical marketplace connecting plant
-                enthusiasts directly with certified regional nurseries, artisan pottery, and organic plant care.
+                enthusiasts directly with certified regional nurseries, artisan
+                pottery, and organic plant care.
               </p>
 
               <div>
@@ -183,7 +186,11 @@ export function Footer() {
             {/* Column 2: Collections */}
             <FooterColumn
               title="COLLECTIONS"
-              links={shopLinks.length > 0 ? shopLinks : [{ label: "Browse All Shop Products", href: "/shop" }]}
+              links={
+                shopLinks.length > 0
+                  ? shopLinks
+                  : [{ label: "Browse All Shop Products", href: "/shop" }]
+              }
             />
 
             {/* Column 3: Company */}
@@ -203,20 +210,38 @@ export function Footer() {
           style={{ borderColor: "rgba(255,255,255,0.08)" }}
         >
           <div className="max-w-screen-xl mx-auto px-4 md:px-6 py-6 flex flex-col md:flex-row items-center justify-between gap-4 font-ui">
-            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-[11px]" style={{ color: "rgba(255,255,255,0.60)" }}>
-              <span>&copy; {new Date().getFullYear()} Floria Technologies Pvt. Ltd. All rights reserved.</span>
+            <div
+              className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-[11px]"
+              style={{ color: "rgba(255,255,255,0.60)" }}
+            >
+              <span>
+                &copy; {new Date().getFullYear()} Floria Technologies Pvt. Ltd.
+                All rights reserved.
+              </span>
               <span className="hidden sm:inline">|</span>
               <span>Direct Regional Nursery Marketplace</span>
             </div>
 
             {/* Flipkart-style Payment Method Badges */}
             <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-white/50">
-              <span className="px-2 py-0.5 rounded bg-white/10 border border-white/10">UPI</span>
-              <span className="px-2 py-0.5 rounded bg-white/10 border border-white/10">RuPay</span>
-              <span className="px-2 py-0.5 rounded bg-white/10 border border-white/10">Visa</span>
-              <span className="px-2 py-0.5 rounded bg-white/10 border border-white/10">Mastercard</span>
-              <span className="px-2 py-0.5 rounded bg-white/10 border border-white/10">Net Banking</span>
-              <span className="px-2 py-0.5 rounded bg-white/10 border border-white/10">COD</span>
+              <span className="px-2 py-0.5 rounded bg-white/10 border border-white/10">
+                UPI
+              </span>
+              <span className="px-2 py-0.5 rounded bg-white/10 border border-white/10">
+                RuPay
+              </span>
+              <span className="px-2 py-0.5 rounded bg-white/10 border border-white/10">
+                Visa
+              </span>
+              <span className="px-2 py-0.5 rounded bg-white/10 border border-white/10">
+                Mastercard
+              </span>
+              <span className="px-2 py-0.5 rounded bg-white/10 border border-white/10">
+                Net Banking
+              </span>
+              <span className="px-2 py-0.5 rounded bg-white/10 border border-white/10">
+                COD
+              </span>
             </div>
           </div>
         </div>

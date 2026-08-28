@@ -1,4 +1,3 @@
-
 // Floria Media Infrastructure — Media API Service
 import crypto from "crypto";
 import { getAdminDb } from "../config/database.js";
@@ -33,6 +32,7 @@ export const VALID_PROFILES: Set<ImageProfileName> = new Set([
   "CATEGORY",
   "REVIEW_IMAGE",
   "DOCUMENT",
+  "DELIVERY_POD",
 ]);
 
 export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
@@ -44,14 +44,14 @@ export class MediaService {
    */
   public static async createUploadSession(
     user: AuthenticatedUser,
-    input: CreateSessionInput
+    input: CreateSessionInput,
   ): Promise<UploadSessionDto> {
     const adminDb = getAdminDb();
 
     // 1. Profile Validation
     if (!input.profile || !VALID_PROFILES.has(input.profile)) {
       throw Errors.validation(
-        `Invalid profile '${input.profile}'. Must be one of [${Array.from(VALID_PROFILES).join(", ")}].`
+        `Invalid profile '${input.profile}'. Must be one of [${Array.from(VALID_PROFILES).join(", ")}].`,
       );
     }
 
@@ -59,7 +59,7 @@ export class MediaService {
     const mime = (input.mimeType || "").toLowerCase().trim();
     if (!mime || !ALLOWED_MIME_TYPES.has(mime)) {
       throw Errors.validation(
-        `Unsupported MIME type '${input.mimeType}'. Allowed types: JPEG, PNG, WebP, HEIC/HEIF.`
+        `Unsupported MIME type '${input.mimeType}'. Allowed types: JPEG, PNG, WebP, HEIC/HEIF.`,
       );
     }
 
@@ -68,23 +68,49 @@ export class MediaService {
     }
 
     if (input.sizeBytes > MAX_FILE_SIZE_BYTES) {
-      throw Errors.validation("File size exceeds maximum allowed ceiling of 10 MB.");
+      throw Errors.validation(
+        "File size exceeds maximum allowed ceiling of 10 MB.",
+      );
     }
 
     // 3. Profile Authorization Rules
     let sellerId: string | null = null;
 
-    if (input.profile === "PRODUCT" || input.profile === "NURSERY" || input.profile === "SELLER_LOGO") {
-      if (user.role !== "seller" && user.role !== "admin" && user.role !== "super_admin") {
-        throw Errors.forbidden("Seller role required to create seller-owned media upload sessions.");
+    if (
+      input.profile === "PRODUCT" ||
+      input.profile === "NURSERY" ||
+      input.profile === "SELLER_LOGO"
+    ) {
+      if (
+        user.role !== "seller" &&
+        user.role !== "admin" &&
+        user.role !== "super_admin"
+      ) {
+        throw Errors.forbidden(
+          "Seller role required to create seller-owned media upload sessions.",
+        );
       }
       if (!user.sellerId && user.role === "seller") {
-        throw Errors.forbidden("No seller profile associated with user account.");
+        throw Errors.forbidden(
+          "No seller profile associated with user account.",
+        );
       }
       sellerId = user.sellerId || null;
     } else if (input.profile === "CATEGORY") {
       if (user.role !== "admin" && user.role !== "super_admin") {
-        throw Errors.forbidden("Admin role required to create category media upload sessions.");
+        throw Errors.forbidden(
+          "Admin role required to create category media upload sessions.",
+        );
+      }
+    } else if (input.profile === "DELIVERY_POD") {
+      if (
+        user.role !== "operations" &&
+        user.role !== "admin" &&
+        user.role !== "super_admin"
+      ) {
+        throw Errors.forbidden(
+          "Operations role required to create proof of delivery upload sessions.",
+        );
       }
     }
 
@@ -97,25 +123,31 @@ export class MediaService {
 
     const ownerPathSegment = sellerId || user.id;
     const stagingPath = `staging/${ownerPathSegment}/${sessionId}/${assetId}.tmp`;
-    const expiresAt = new Date(Date.now() + SESSION_EXPIRATION_MS).toISOString();
+    const expiresAt = new Date(
+      Date.now() + SESSION_EXPIRATION_MS,
+    ).toISOString();
 
     // 5. Insert Record into media_upload_sessions
-    const { error: insertErr } = await adminDb.from("media_upload_sessions").insert({
-      id: sessionId,
-      seller_id: sellerId,
-      uploaded_by_user_id: user.id,
-      target_domain: input.profile,
-      media_category: "IMAGE",
-      original_filename: sanitizedFilename,
-      expected_mime_type: mime,
-      expected_size_bytes: input.sizeBytes,
-      staging_path: stagingPath,
-      status: "CREATED",
-      expires_at: expiresAt,
-    });
+    const { error: insertErr } = await adminDb
+      .from("media_upload_sessions")
+      .insert({
+        id: sessionId,
+        seller_id: sellerId,
+        uploaded_by_user_id: user.id,
+        target_domain: input.profile,
+        media_category: "IMAGE",
+        original_filename: sanitizedFilename,
+        expected_mime_type: mime,
+        expected_size_bytes: input.sizeBytes,
+        staging_path: stagingPath,
+        status: "CREATED",
+        expires_at: expiresAt,
+      });
 
     if (insertErr) {
-      throw Errors.database(`Failed to create upload session: ${insertErr.message}`);
+      throw Errors.database(
+        `Failed to create upload session: ${insertErr.message}`,
+      );
     }
 
     // Construct Presigned Staging Upload URL or Staging Path
@@ -123,7 +155,8 @@ export class MediaService {
       .from("media-staging")
       .createSignedUploadUrl(stagingPath);
 
-    const uploadUrl = urlData?.signedUrl || `/api/v1/media/staging/${stagingPath}`;
+    const uploadUrl =
+      urlData?.signedUrl || `/api/v1/media/staging/${stagingPath}`;
 
     return {
       sessionId,
@@ -146,14 +179,16 @@ export class MediaService {
    */
   public static async createBatchUploadSessions(
     user: AuthenticatedUser,
-    inputs: CreateSessionInput[]
+    inputs: CreateSessionInput[],
   ): Promise<UploadSessionDto[]> {
     if (!Array.isArray(inputs) || inputs.length === 0) {
       throw Errors.validation("Batch upload input must be a non-empty array.");
     }
 
     if (inputs.length > 10) {
-      throw Errors.validation("Maximum batch size is 10 upload sessions per request.");
+      throw Errors.validation(
+        "Maximum batch size is 10 upload sessions per request.",
+      );
     }
 
     const sessions: UploadSessionDto[] = [];
@@ -170,7 +205,7 @@ export class MediaService {
    */
   public static async completeUploadSession(
     user: AuthenticatedUser,
-    sessionId: string
+    sessionId: string,
   ): Promise<CompleteSessionDto> {
     const adminDb = getAdminDb();
 
@@ -186,8 +221,14 @@ export class MediaService {
     }
 
     // Ownership Verification
-    if (session.uploaded_by_user_id !== user.id && user.role !== "admin" && user.role !== "super_admin") {
-      throw Errors.forbidden("You do not have permission to finalize this upload session.");
+    if (
+      session.uploaded_by_user_id !== user.id &&
+      user.role !== "admin" &&
+      user.role !== "super_admin"
+    ) {
+      throw Errors.forbidden(
+        "You do not have permission to finalize this upload session.",
+      );
     }
 
     // Idempotency: If already COMPLETED, return current state
@@ -211,7 +252,9 @@ export class MediaService {
         .from("media_upload_sessions")
         .update({ status: "EXPIRED", updated_at: new Date().toISOString() })
         .eq("id", sessionId);
-      throw Errors.validation("Upload session has expired. Please create a new upload session.");
+      throw Errors.validation(
+        "Upload session has expired. Please create a new upload session.",
+      );
     }
 
     // 2. Storage Binary Inspection in media-staging
@@ -220,7 +263,9 @@ export class MediaService {
       .download(session.staging_path);
 
     if (downloadErr || !fileData) {
-      throw Errors.validation("Uploaded binary not found in staging storage. Upload may have failed.");
+      throw Errors.validation(
+        "Uploaded binary not found in staging storage. Upload may have failed.",
+      );
     }
 
     const arrayBuffer = await fileData.arrayBuffer();
@@ -272,7 +317,9 @@ export class MediaService {
         })
         .eq("id", sessionId);
 
-      await adminDb.storage.from("media-staging").remove([session.staging_path]);
+      await adminDb.storage
+        .from("media-staging")
+        .remove([session.staging_path]);
 
       return {
         sessionId,
@@ -285,23 +332,27 @@ export class MediaService {
 
     // 5. Create media_assets Record in PostgreSQL
     const assetId = crypto.randomUUID();
-    const { error: assetInsertErr } = await adminDb.from("media_assets").insert({
-      id: assetId,
-      seller_id: session.seller_id,
-      uploaded_by_user_id: session.uploaded_by_user_id,
-      session_id: sessionId,
-      media_category: "IMAGE",
-      original_filename: session.original_filename,
-      mime_type: session.expected_mime_type,
-      file_size_bytes: buffer.length,
-      sha256_hash: sha256Hash,
-      storage_bucket: "media-staging",
-      status: "QUEUED",
-      is_system_seeded: false,
-    });
+    const { error: assetInsertErr } = await adminDb
+      .from("media_assets")
+      .insert({
+        id: assetId,
+        seller_id: session.seller_id,
+        uploaded_by_user_id: session.uploaded_by_user_id,
+        session_id: sessionId,
+        media_category: "IMAGE",
+        original_filename: session.original_filename,
+        mime_type: session.expected_mime_type,
+        file_size_bytes: buffer.length,
+        sha256_hash: sha256Hash,
+        storage_bucket: "media-staging",
+        status: "QUEUED",
+        is_system_seeded: false,
+      });
 
     if (assetInsertErr) {
-      throw Errors.database(`Failed to create media_assets record: ${assetInsertErr.message}`);
+      throw Errors.database(
+        `Failed to create media_assets record: ${assetInsertErr.message}`,
+      );
     }
 
     // 6. Direct Inline WebP Processing & Upload to public-media bucket
@@ -309,10 +360,12 @@ export class MediaService {
     try {
       if (session.target_domain === "DOCUMENT") {
         const privatePath = `private/seller_${session.seller_id || "admin"}/${assetId}/document.pdf`;
-        await adminDb.storage.from("private-documents").upload(privatePath, buffer, {
-          contentType: "application/pdf",
-          upsert: true,
-        });
+        await adminDb.storage
+          .from("private-documents")
+          .upload(privatePath, buffer, {
+            contentType: "application/pdf",
+            upsert: true,
+          });
 
         await adminDb
           .from("media_assets")
@@ -325,8 +378,52 @@ export class MediaService {
           .eq("id", assetId);
 
         finalAssetStatus = "READY";
+      } else if (session.target_domain === "DELIVERY_POD") {
+        const engineResult = await ImageEngine.process(buffer, "DELIVERY_POD");
+        const podVariant = engineResult.variants[0];
+        const privatePodPath = `pod/${session.uploaded_by_user_id}/${assetId}.webp`;
+
+        const { error: uploadErr } = await adminDb.storage
+          .from("private-documents")
+          .upload(privatePodPath, podVariant.buffer, {
+            contentType: "image/webp",
+            upsert: true,
+          });
+
+        if (uploadErr) {
+          throw Errors.database(
+            `Failed to upload POD variant to storage: ${uploadErr.message}`,
+          );
+        }
+
+        await adminDb.from("media_variants").insert({
+          asset_id: assetId,
+          variant_name: "pod",
+          format: "webp",
+          width: podVariant.width,
+          height: podVariant.height,
+          size_bytes: podVariant.sizeBytes,
+          storage_bucket: "private-documents",
+          storage_path: privatePodPath,
+        });
+
+        await adminDb
+          .from("media_assets")
+          .update({
+            status: "READY",
+            storage_bucket: "private-documents",
+            media_category: "DELIVERY_POD",
+            original_path: privatePodPath,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", assetId);
+
+        finalAssetStatus = "READY";
       } else {
-        const engineResult = await ImageEngine.process(buffer, session.target_domain);
+        const engineResult = await ImageEngine.process(
+          buffer,
+          session.target_domain,
+        );
         const variantRecords: any[] = [];
 
         for (const variant of engineResult.variants) {
@@ -335,7 +432,7 @@ export class MediaService {
             session.seller_id,
             session.uploaded_by_user_id,
             assetId,
-            variant.variantName
+            variant.variantName,
           );
 
           const { error: uploadErr } = await adminDb.storage
@@ -376,9 +473,14 @@ export class MediaService {
       }
 
       // Cleanup staging file
-      await adminDb.storage.from("media-staging").remove([session.staging_path]);
+      await adminDb.storage
+        .from("media-staging")
+        .remove([session.staging_path]);
     } catch (procErr: any) {
-      console.warn(`[MediaService] Inline processing warning for session '${sessionId}':`, procErr.message);
+      console.warn(
+        `[MediaService] Inline processing warning for session '${sessionId}':`,
+        procErr.message,
+      );
       // Fallback: Enqueue BullMQ Media Job if inline processing failed
       try {
         await enqueueMediaJob({
@@ -419,7 +521,7 @@ export class MediaService {
    */
   public static async getUploadSessionStatus(
     user: AuthenticatedUser,
-    sessionId: string
+    sessionId: string,
   ): Promise<UploadSessionStatusDto> {
     const adminDb = getAdminDb();
 
@@ -435,8 +537,14 @@ export class MediaService {
     }
 
     // Authorization: Owner or Admin only
-    if (session.uploaded_by_user_id !== user.id && user.role !== "admin" && user.role !== "super_admin") {
-      throw Errors.forbidden("You do not have permission to view this upload session.");
+    if (
+      session.uploaded_by_user_id !== user.id &&
+      user.role !== "admin" &&
+      user.role !== "super_admin"
+    ) {
+      throw Errors.forbidden(
+        "You do not have permission to view this upload session.",
+      );
     }
 
     let assetStatus = "NOT_CREATED";

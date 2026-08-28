@@ -36,13 +36,21 @@ export class UserRepository {
     return !error;
   }
 
-  async updateProfile(userId: string, updates: { full_name?: string; phone?: string }): Promise<UserProfile | null> {
+  async updateProfile(
+    userId: string,
+    updates: { full_name?: string; phone?: string },
+  ): Promise<UserProfile | null> {
     return this.updateUser(userId, updates);
   }
 
-  async updateUser(userId: string, updates: { full_name?: string; phone?: string; role?: UserRole }): Promise<UserProfile | null> {
+  async updateUser(
+    userId: string,
+    updates: { full_name?: string; phone?: string; role?: UserRole },
+  ): Promise<UserProfile | null> {
     const db = getAdminDb();
-    const payload: Record<string, any> = { updated_at: new Date().toISOString() };
+    const payload: Record<string, any> = {
+      updated_at: new Date().toISOString(),
+    };
     if (updates.full_name !== undefined) payload.full_name = updates.full_name;
     if (updates.phone !== undefined) payload.phone = updates.phone;
     if (updates.role !== undefined) payload.role = updates.role;

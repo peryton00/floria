@@ -74,7 +74,8 @@ export type AuditAction =
   | "RATE_LIMITED"
   | "FORBIDDEN_ACCESS";
 
-export type ActorRole = "customer" | "seller" | "operations" | "admin" | "system";
+export type ActorRole =
+  "customer" | "seller" | "operations" | "admin" | "system";
 
 export interface AuditEntry {
   actor_user_id?: string;
@@ -118,7 +119,12 @@ export async function auditLog(entry: AuditEntry): Promise<void> {
     });
 
     if (error) {
-      console.error("[audit] Failed to write audit log:", error.message, "entry:", entry.action);
+      console.error(
+        "[audit] Failed to write audit log:",
+        error.message,
+        "entry:",
+        entry.action,
+      );
     }
   } catch (e) {
     console.error("[audit] Unexpected error:", e);

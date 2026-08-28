@@ -2,6 +2,7 @@
 name: build-feature
 description: Implement a Floria feature using product, architecture, design and testing rules.
 ---
+
 1. Read relevant docs.
 2. Inspect existing implementation and reuse components.
 3. State goal, affected data, authorization, UI states and acceptance criteria.

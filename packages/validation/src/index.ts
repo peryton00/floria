@@ -58,7 +58,10 @@ export const productSchema = z.object({
   name: z.string().min(1).max(200),
   slug: z
     .string()
-    .regex(/^[a-z0-9-]+$/, "Slug must be lowercase letters, numbers and hyphens")
+    .regex(
+      /^[a-z0-9-]+$/,
+      "Slug must be lowercase letters, numbers and hyphens",
+    )
     .min(1)
     .max(200),
   description: z.string().max(5000).optional(),
@@ -110,7 +113,9 @@ export const createPaymentSessionSchema = z.object({
   orderId: z.string().uuid("Invalid order ID"),
 });
 
-export type CreatePaymentSessionInput = z.infer<typeof createPaymentSessionSchema>;
+export type CreatePaymentSessionInput = z.infer<
+  typeof createPaymentSessionSchema
+>;
 
 export const cashfreeWebhookBodySchema = z.object({
   type: z.string().optional(),

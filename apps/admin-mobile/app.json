@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "Floria Admin",
+    "slug": "floria-admin",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "floria-admin",
+    "userInterfaceStyle": "automatic",
+    "platforms": ["ios", "android"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.floria.admin"
+    },
+    "android": {
+      "package": "com.floria.admin",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

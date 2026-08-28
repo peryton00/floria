@@ -12,10 +12,15 @@ test.describe("Customer shell", () => {
 
   test("hero section is visible", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { level: 1 })).toContainText(/nature/i);
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(
+      /nature/i,
+    );
   });
 
-  test("no horizontal overflow at mobile widths", async ({ page, viewport }) => {
+  test("no horizontal overflow at mobile widths", async ({
+    page,
+    viewport,
+  }) => {
     await page.goto("/");
     const bodyWidth = await page.evaluate(() => document.body.scrollWidth);
     const viewportWidth = viewport?.width ?? 375;
@@ -37,11 +42,15 @@ test.describe("Customer shell", () => {
 
   test("categories page loads", async ({ page }) => {
     await page.goto("/categories");
-    await expect(page.getByRole("heading", { level: 1 })).toContainText(/categories/i);
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(
+      /categories/i,
+    );
   });
 
   test("orders page loads", async ({ page }) => {
     await page.goto("/orders");
-    await expect(page.getByRole("heading", { level: 1 })).toContainText(/orders/i);
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(
+      /orders/i,
+    );
   });
 });

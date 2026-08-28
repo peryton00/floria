@@ -8,25 +8,25 @@ This document details the mandatory procedure for reviewing, testing, applying, 
 
 All schema changes must be stored as sequential SQL files in `supabase/migrations/`:
 
-| Migration File | Description | Idempotent |
-|---|---|---|
-| `0001_initial_schema.sql` | Base tables, user profiles, products, orders | Yes |
-| `0002_wishlists.sql` | Wishlist schema and item tracking | Yes |
-| `0003_multi_nursery_cart.sql` | Multi-nursery sub-cart grouping | Yes |
-| `0004_seed_data.sql` | Base nursery catalog seed | Yes |
-| `0005_seed_permissions.sql` | Base RBAC system roles | Yes |
-| `0006_seller_order_fulfillments.sql` | Sub-order fulfillment & item states | Yes |
-| `0007_audit_logs.sql` | Administrative security audit trail | Yes |
-| `0008_db_constraints.sql` | Integrity foreign keys & checks | Yes |
-| `0009_rbac_enforcement.sql` | Strict Row Level Security (RLS) policies | Yes |
-| `0010_delivery_assignments.sql` | Operations delivery agent table | Yes |
-| `0011_platform_settings.sql` | Platform commission & global settings | Yes |
-| `0012_auto_user_profile_trigger.sql` | Trigger for automatic profile creation | Yes |
-| `0013_seller_documents.sql` | Seller KYC document storage table | Yes |
-| `0014_seller_notification_settings.sql` | Seller preference toggles | Yes |
-| `0015_notifications.sql` | In-app notifications table | Yes |
-| `0016_product_reviews.sql` | Reviews & moderation table | Yes |
-| `0017_reviews_and_recommendations.sql` | Rating summaries & Wilson score RPCs | Yes |
+| Migration File                          | Description                                  | Idempotent |
+| --------------------------------------- | -------------------------------------------- | ---------- |
+| `0001_initial_schema.sql`               | Base tables, user profiles, products, orders | Yes        |
+| `0002_wishlists.sql`                    | Wishlist schema and item tracking            | Yes        |
+| `0003_multi_nursery_cart.sql`           | Multi-nursery sub-cart grouping              | Yes        |
+| `0004_seed_data.sql`                    | Base nursery catalog seed                    | Yes        |
+| `0005_seed_permissions.sql`             | Base RBAC system roles                       | Yes        |
+| `0006_seller_order_fulfillments.sql`    | Sub-order fulfillment & item states          | Yes        |
+| `0007_audit_logs.sql`                   | Administrative security audit trail          | Yes        |
+| `0008_db_constraints.sql`               | Integrity foreign keys & checks              | Yes        |
+| `0009_rbac_enforcement.sql`             | Strict Row Level Security (RLS) policies     | Yes        |
+| `0010_delivery_assignments.sql`         | Operations delivery agent table              | Yes        |
+| `0011_platform_settings.sql`            | Platform commission & global settings        | Yes        |
+| `0012_auto_user_profile_trigger.sql`    | Trigger for automatic profile creation       | Yes        |
+| `0013_seller_documents.sql`             | Seller KYC document storage table            | Yes        |
+| `0014_seller_notification_settings.sql` | Seller preference toggles                    | Yes        |
+| `0015_notifications.sql`                | In-app notifications table                   | Yes        |
+| `0016_product_reviews.sql`              | Reviews & moderation table                   | Yes        |
+| `0017_reviews_and_recommendations.sql`  | Rating summaries & Wilson score RPCs         | Yes        |
 
 ---
 

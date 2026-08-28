@@ -8,6 +8,7 @@ Cancellation can occur according to policy.
 Clients may request transitions but cannot arbitrarily set order state. Backend validates current state, actor role, ownership, allowed transition and required conditions. Important transitions create audit events.
 
 Owners:
+
 - payment/confirmation: system
 - seller_pending/accepted/preparing/ready: seller
 - pickup/packing: Floria operations

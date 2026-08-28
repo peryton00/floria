@@ -7,11 +7,13 @@ This document is the operational manual for engineers managing Floria in product
 ## 1. Deployment Procedures
 
 ### Web Frontend (Next.js)
+
 1. Push approved code to `main` branch.
 2. Vercel automatically builds and deploys `apps/web`.
 3. Verify build status on host dashboard.
 
 ### Backend API (Render)
+
 1. Push approved code to `main` branch.
 2. Render automatically triggers `buildCommand` (`pnpm install && pnpm --filter @floria/api build`) and starts `startCommand` (`pnpm --filter @floria/api start`).
 3. Render waits for `GET /health` to return `200 OK` before switching traffic.
@@ -21,16 +23,18 @@ This document is the operational manual for engineers managing Floria in product
 ## 2. Health Check & Diagnostics
 
 - **Liveness Check**:
+
   ```bash
   curl -i https://api.floria.in/health
   ```
-  *Expected Output*: `200 OK`, `{"status":"healthy","service":"floria-api"}`
+
+  _Expected Output_: `200 OK`, `{"status":"healthy","service":"floria-api"}`
 
 - **Database Readiness Check**:
   ```bash
   curl -i https://api.floria.in/ready
   ```
-  *Expected Output*: `200 OK`, `{"status":"ready","database":"connected"}`
+  _Expected Output_: `200 OK`, `{"status":"ready","database":"connected"}`
 
 ---
 
@@ -73,5 +77,6 @@ If a secret key (e.g. `SUPABASE_SERVICE_ROLE_KEY`, `JWT_SECRET`, or `CASHFREE_CL
 ---
 
 ## 6. Disabling Problematic Features
+
 - To disable review submissions during spam attack: Set rate limit to 0 or toggle feature flag in platform settings.
 - To disable checkout during payment gateway outage: Set `paymentMethod` check to COD only or update status banner.

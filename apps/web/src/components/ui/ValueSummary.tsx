@@ -26,11 +26,22 @@ export function ValueSummary({
   }
 
   if (isVerifiedSeller) {
-    items.push(sellerName ? `Verified nursery (${sellerName})` : "Verified nursery partner");
+    items.push(
+      sellerName
+        ? `Verified nursery (${sellerName})`
+        : "Verified nursery partner",
+    );
   }
 
-  if (typeof rating === "number" && rating > 0 && typeof reviewCount === "number" && reviewCount > 0) {
-    items.push(`${rating.toFixed(1)}★ rating from ${reviewCount} customer${reviewCount > 1 ? "s" : ""}`);
+  if (
+    typeof rating === "number" &&
+    rating > 0 &&
+    typeof reviewCount === "number" &&
+    reviewCount > 0
+  ) {
+    items.push(
+      `${rating.toFixed(1)}★ rating from ${reviewCount} customer${reviewCount > 1 ? "s" : ""}`,
+    );
   } else {
     items.push("Fresh quality plant guarantee");
   }
@@ -39,7 +50,9 @@ export function ValueSummary({
   const displayedItems = items.slice(0, 3);
 
   return (
-    <div className={`rounded-2xl bg-floria-soft-sand border border-floria-border p-4 space-y-2.5 text-xs text-ink-700 font-ui shadow-2xs ${className}`}>
+    <div
+      className={`rounded-2xl bg-floria-soft-sand border border-floria-border p-4 space-y-2.5 text-xs text-ink-700 font-ui shadow-2xs ${className}`}
+    >
       <div className="flex items-center gap-2">
         <span className="w-1.5 h-1.5 rounded-full bg-forest-800" />
         <p className="font-bold text-forest-800 uppercase tracking-widest text-[10px]">

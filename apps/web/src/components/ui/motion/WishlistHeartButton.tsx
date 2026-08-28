@@ -3,7 +3,10 @@
 import React, { useState } from "react";
 import { WishlistIcon } from "@/components/ui/Icons";
 
-interface WishlistHeartButtonProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "onToggle"> {
+interface WishlistHeartButtonProps extends Omit<
+  React.ButtonHTMLAttributes<HTMLButtonElement>,
+  "onToggle"
+> {
   active?: boolean;
   onToggle?: (active: boolean) => void;
   size?: number;
@@ -37,11 +40,16 @@ export function WishlistHeartButton({
       aria-pressed={isActive}
       onClick={handleClick}
       className={`p-2 rounded-full transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-forest-600 ${
-        isActive ? "text-red-600 hover:text-red-700 bg-red-50/70" : "text-stone-400 hover:text-red-600 bg-white/80"
+        isActive
+          ? "text-red-600 hover:text-red-700 bg-red-50/70"
+          : "text-stone-400 hover:text-red-600 bg-white/80"
       } ${animating ? "animate-heart-pop" : ""} ${className}`}
       {...props}
     >
-      <WishlistIcon size={size} className={isActive ? "fill-red-600 text-red-600" : "text-current"} />
+      <WishlistIcon
+        size={size}
+        className={isActive ? "fill-red-600 text-red-600" : "text-current"}
+      />
     </button>
   );
 }
