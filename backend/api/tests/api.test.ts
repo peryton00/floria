@@ -521,7 +521,7 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
       const resA = await checkoutService.processCheckout({
         userId: "cust-1",
         addressId: "addr-1",
-        paymentMethod: "online",
+        paymentMethod: "cod",
       });
       expect(resA.orderId).toBe("FLR-NEW-1");
 
@@ -530,7 +530,7 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
         checkoutService.processCheckout({
           userId: "cust-2",
           addressId: "addr-1",
-          paymentMethod: "online",
+          paymentMethod: "cod",
         }),
       ).rejects.toThrow("out of stock");
     });
