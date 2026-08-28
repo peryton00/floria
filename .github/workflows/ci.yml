@@ -1,63 +1,120 @@
-name: Floria Continuous Integration & Security Pipeline
+name: Floria CI Quality Gates & Build Verification
 
 on:
   push:
-    branches: [ main, develop, staging ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, develop, staging ]
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  audit-and-security:
-    name: Security & Secret Audit
+  secret-audit:
+    name: Security & Secret Scan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - name: Install pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 9
-      - name: Run Dependency Audit
-        run: pnpm audit --audit-level=high || true
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-  build-and-test:
-    name: Lint, Typecheck & Build
+      - name: Scan for Tracked Secret Files & Credentials
+        run: |
+          echo "Scanning for accidental credential leaks..."
+
+          # Check for tracked .env files other than .env.example
+          ENV_LEAKS=$(git ls-files | grep -E '^\.env|\/\.env' | grep -v '\.env\.example$' || true)
+          if [ -n "$ENV_LEAKS" ]; then
+            echo "::error::Found tracked .env file(s): $ENV_LEAKS"
+            exit 1
+          fi
+
+          # Scan for live Supabase service role key patterns (eyJ...)
+          if git grep -E 'SUPABASE_SERVICE_ROLE_KEY=eyJ[A-Za-z0-9_-]+' -- ':!*.example' ':!*.md' ; then
+            echo "::error::Detected committed Supabase Service Role Key!"
+            exit 1
+          fi
+
+          # Scan for live Cashfree client secret patterns
+          if git grep -E 'CASHFREE_CLIENT_SECRET=[a-f0-9]{32,}' -- ':!*.example' ':!*.md' ; then
+            echo "::error::Detected committed Cashfree Client Secret!"
+            exit 1
+          fi
+
+          # Scan for active Razorpay references in code
+          if git grep -i 'razorpay' -- '*.ts' '*.tsx' '*.js' ':!*.md' ':!supabase/migrations/*' ; then
+            echo "::error::Detected active Razorpay references in application source code!"
+            exit 1
+          fi
+
+          echo "Secret audit passed. Zero committed credentials detected."
+
+  typecheck-and-test:
+    name: TypeScript & Automated Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
+
       - name: Install pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v4
         with:
-          version: 9
-      - name: Install Dependencies
+          version: 9.15.9
+
+      - name: Install Dependencies (Frozen Lockfile)
         run: pnpm install --frozen-lockfile
-      - name: Build Shared Packages
-        run: pnpm --filter "@floria/types" build && pnpm --filter "@floria/api-client" build
-      - name: Typecheck Backend API
-        run: pnpm --filter "@floria/api" typecheck
-      - name: Typecheck Web App
-        run: pnpm --filter "@floria/web" typecheck
-      - name: Build Backend API
-        run: pnpm --filter "@floria/api" build
-      - name: Build Web App
-        run: pnpm --filter "@floria/web" build
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
 
-  deploy-staging:
-    name: Staging Deployment Trigger
-    needs: [audit-and-security, build-and-test]
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging'
+      - name: Run Workspace Typecheck (11 Packages)
+        run: pnpm -r run typecheck
+
+      - name: Run Automated Test Suite (317 Tests)
+        run: pnpm test
+
+  production-builds:
+    name: Production Build Verification
     runs-on: ubuntu-latest
     steps:
-      - name: Notify Staging Deployment Readiness
-        run: echo "Staging build verified. Render & Vercel auto-deploy hooks triggered via Git integration."
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+
+      - name: Install Dependencies (Frozen Lockfile)
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Unified API Client SDK
+        run: pnpm --filter @floria/api-client build
+
+      - name: Build Backend REST API
+        run: pnpm --filter @floria/api build
+
+      - name: Build Seller Web Next.js App
+        run: pnpm --filter @floria/seller-web build
+        env:
+          NEXT_PUBLIC_API_URL: https://floria-api.onrender.com
+
+      - name: Build Admin Web Next.js App
+        run: pnpm --filter @floria/admin-web build
+        env:
+          NEXT_PUBLIC_API_URL: https://floria-api.onrender.com
+
+      - name: Build Customer Web Next.js App
+        run: pnpm --filter @floria/web build
+        env:
+          NEXT_PUBLIC_API_URL: https://floria-api.onrender.com

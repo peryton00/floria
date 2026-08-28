@@ -1,13 +1,32 @@
-﻿services:
+# ==================================================
+# Floria — Render Deployment Blueprint
+# Canonical Backend REST API (@floria/api)
+# ==================================================
+services:
   - type: web
     name: floria-api
     runtime: node
-    rootDir: backend/api
-    buildCommand: pnpm install --frozen-lockfile && pnpm build
-    startCommand: node dist/index.js
+    plan: starter
+    region: singapore
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter @floria/api-client build && pnpm --filter @floria/api build
+    startCommand: pnpm --filter @floria/api start
+    healthCheckPath: /health
     autoDeploy: true
     envVars:
       - key: NODE_ENV
         value: production
-      # All other secrets (DATABASE_URL, SUPABASE_*, JWT_SECRET, etc.)
-      # should be set in the Render dashboard Environment tab -- never committed here.
+      - key: PORT
+        value: "4000"
+      - key: CASHFREE_ENVIRONMENT
+        value: PRODUCTION
+      - key: CASHFREE_API_VERSION
+        value: "2023-08-01"
+      # Secure Server-Only Credentials (Configured in Render Dashboard — Never Committed)
+      # - key: DATABASE_URL (sync: false)
+      # - key: SUPABASE_URL (sync: false)
+      # - key: SUPABASE_ANON_KEY (sync: false)
+      # - key: SUPABASE_SERVICE_ROLE_KEY (sync: false)
+      # - key: CASHFREE_CLIENT_ID (sync: false)
+      # - key: CASHFREE_CLIENT_SECRET (sync: false)
+      # - key: CASHFREE_WEBHOOK_SECRET (sync: false)
+      # - key: REDIS_URL (sync: false)
