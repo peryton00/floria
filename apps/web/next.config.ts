@@ -86,10 +86,13 @@ const nextConfig: NextConfig = {
   },
   // Redirects — forward legacy /seller and /admin routes to dedicated applications
   async redirects() {
+    const isDev = process.env.NODE_ENV === "development";
     const sellerWebUrl =
-      process.env.NEXT_PUBLIC_SELLER_WEB_URL || "http://localhost:3001";
+      process.env.NEXT_PUBLIC_SELLER_WEB_URL ||
+      (isDev ? "http://localhost:3001" : "https://floria-seller-web.vercel.app");
     const adminWebUrl =
-      process.env.NEXT_PUBLIC_ADMIN_WEB_URL || "http://localhost:3002";
+      process.env.NEXT_PUBLIC_ADMIN_WEB_URL ||
+      (isDev ? "http://localhost:3002" : "https://floria-admin-web.vercel.app");
     return [
       {
         source: "/seller",

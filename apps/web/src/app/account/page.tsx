@@ -439,12 +439,12 @@ export default function AccountPage() {
                       Manage your nursery inventory, products &amp; orders
                     </p>
                   </div>
-                  <Link
+                  <a
                     href="/seller/dashboard"
                     className="inline-flex items-center justify-center px-4 py-2 bg-white text-forest-900 font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-cream-100 transition-colors shadow-xs shrink-0"
                   >
                     Open Seller Dashboard &rarr;
-                  </Link>
+                  </a>
                 </div>
               </div>
             )}
@@ -461,12 +461,12 @@ export default function AccountPage() {
                       logs
                     </p>
                   </div>
-                  <Link
+                  <a
                     href="/admin/dashboard"
                     className="inline-flex items-center justify-center px-4 py-2 bg-forest-600 hover:bg-forest-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-colors shadow-xs shrink-0"
                   >
                     Open Admin Dashboard &rarr;
-                  </Link>
+                  </a>
                 </div>
               </div>
             )}

@@ -266,17 +266,34 @@ function FooterColumn({
         {title}
       </p>
       <ul className="space-y-2 font-ui">
-        {links.map(({ label, href }) => (
-          <li key={href}>
-            <Link
-              href={href}
-              className="text-xs leading-snug transition-all duration-200 hover:text-white hover:translate-x-0.5 inline-block"
-              style={{ color: "rgba(255,255,255,0.72)" }}
-            >
-              {label}
-            </Link>
-          </li>
-        ))}
+        {links.map(({ label, href }) => {
+          const isCrossDomain =
+            href.startsWith("/seller") || href.startsWith("/admin");
+          if (isCrossDomain) {
+            return (
+              <li key={href}>
+                <a
+                  href={href}
+                  className="text-xs leading-snug transition-all duration-200 hover:text-white hover:translate-x-0.5 inline-block"
+                  style={{ color: "rgba(255,255,255,0.72)" }}
+                >
+                  {label}
+                </a>
+              </li>
+            );
+          }
+          return (
+            <li key={href}>
+              <Link
+                href={href}
+                className="text-xs leading-snug transition-all duration-200 hover:text-white hover:translate-x-0.5 inline-block"
+                style={{ color: "rgba(255,255,255,0.72)" }}
+              >
+                {label}
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
