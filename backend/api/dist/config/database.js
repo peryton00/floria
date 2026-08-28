@@ -8,6 +8,7 @@ exports.getUserDb = getUserDb;
 exports.getAnonDb = getAnonDb;
 // Floria API — Server-Only Supabase Database Connection
 const supabase_js_1 = require("@supabase/supabase-js");
+// @ts-ignore
 const ws_1 = __importDefault(require("ws"));
 const env_js_1 = require("./env.js");
 // Ensure native WebSocket polyfill is available for @supabase/supabase-js in Node < 22
