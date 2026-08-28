@@ -31,7 +31,8 @@ class DeliveryService {
         const freeDeliveryThresholdPaise = settingsMap.has("free_delivery_threshold_paise")
             ? Number(settingsMap.get("free_delivery_threshold_paise"))
             : 99900; // Default ₹999.00
-        const masterOrderDeliveryMode = settingsMap.get("master_order_delivery_mode") || "master_order_single";
+        const masterOrderDeliveryMode = settingsMap.get("master_order_delivery_mode") ||
+            "master_order_single";
         return {
             deliveryEnabled,
             baseDeliveryFeePaise,
@@ -44,12 +45,14 @@ class DeliveryService {
         const db = (0, database_js_1.getAdminDb)();
         const previous = await this.getDeliverySettings();
         if (updates.baseDeliveryFeePaise !== undefined) {
-            if (typeof updates.baseDeliveryFeePaise !== "number" || updates.baseDeliveryFeePaise < 0) {
+            if (typeof updates.baseDeliveryFeePaise !== "number" ||
+                updates.baseDeliveryFeePaise < 0) {
                 throw errors_js_1.Errors.validation("Base delivery fee must be a non-negative integer in paise.");
             }
         }
         if (updates.freeDeliveryThresholdPaise !== undefined) {
-            if (typeof updates.freeDeliveryThresholdPaise !== "number" || updates.freeDeliveryThresholdPaise < 0) {
+            if (typeof updates.freeDeliveryThresholdPaise !== "number" ||
+                updates.freeDeliveryThresholdPaise < 0) {
                 throw errors_js_1.Errors.validation("Free delivery threshold must be a non-negative integer in paise.");
             }
         }
@@ -128,7 +131,8 @@ class DeliveryService {
                 baseDeliveryFeePaise: settings.baseDeliveryFeePaise,
             };
         }
-        if (settings.freeDeliveryEnabled && input.eligibleSubtotalPaise >= settings.freeDeliveryThresholdPaise) {
+        if (settings.freeDeliveryEnabled &&
+            input.eligibleSubtotalPaise >= settings.freeDeliveryThresholdPaise) {
             return {
                 deliveryFeePaise: 0,
                 isFreeDelivery: true,

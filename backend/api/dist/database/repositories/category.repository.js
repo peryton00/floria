@@ -35,7 +35,9 @@ class CategoryRepository {
             .maybeSingle();
         if (error || !data)
             return null;
-        const [enriched] = await media_resolver_service_js_1.MediaResolverService.enrichCategories([data]);
+        const [enriched] = await media_resolver_service_js_1.MediaResolverService.enrichCategories([
+            data,
+        ]);
         return enriched;
     }
     async findById(id) {
@@ -47,7 +49,9 @@ class CategoryRepository {
             .maybeSingle();
         if (error || !data)
             return null;
-        const [enriched] = await media_resolver_service_js_1.MediaResolverService.enrichCategories([data]);
+        const [enriched] = await media_resolver_service_js_1.MediaResolverService.enrichCategories([
+            data,
+        ]);
         return enriched;
     }
     async createCategory(payload) {
@@ -69,7 +73,9 @@ class CategoryRepository {
             .single();
         if (error || !data)
             throw error || new Error("Failed to create category");
-        const [enriched] = await media_resolver_service_js_1.MediaResolverService.enrichCategories([data]);
+        const [enriched] = await media_resolver_service_js_1.MediaResolverService.enrichCategories([
+            data,
+        ]);
         return enriched;
     }
     async updateCategory(id, updates) {
@@ -100,7 +106,9 @@ class CategoryRepository {
             .maybeSingle();
         if (error || !data)
             return null;
-        const [enriched] = await media_resolver_service_js_1.MediaResolverService.enrichCategories([data]);
+        const [enriched] = await media_resolver_service_js_1.MediaResolverService.enrichCategories([
+            data,
+        ]);
         return enriched;
     }
 }

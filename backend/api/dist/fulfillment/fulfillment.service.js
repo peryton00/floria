@@ -14,7 +14,7 @@ const SELLER_STAGES = [
 ];
 const TIMESTAMP_COLS = {
     "Nursery Confirmed": "confirmed_at",
-    "Preparing": "preparing_at",
+    Preparing: "preparing_at",
     "Ready for Pickup": "ready_at",
     "Picked Up": "picked_up_at",
 };
@@ -31,7 +31,11 @@ class FulfillmentService {
             // Check if order exists in orders table to support legacy/demo/seed orders
             const { getAdminDb } = await import("../config/database.js");
             const db = getAdminDb();
-            const { data: order } = await db.from("orders").select("id, status").eq("id", masterOrderId).maybeSingle();
+            const { data: order } = await db
+                .from("orders")
+                .select("id, status")
+                .eq("id", masterOrderId)
+                .maybeSingle();
             if (!order) {
                 // IDOR protection: throw 404 if order does not exist at all
                 throw errors_js_1.Errors.notFound("Fulfillment record");
@@ -69,7 +73,12 @@ class FulfillmentService {
             action: "SELLER_FULFILLMENT_CHANGED",
             resource_type: "seller_order_fulfillment",
             resource_id: record.id,
-            metadata: { order_id: masterOrderId, seller_id: sellerId, from: currentStatus, to: newStatus },
+            metadata: {
+                order_id: masterOrderId,
+                seller_id: sellerId,
+                from: currentStatus,
+                to: newStatus,
+            },
         });
         return { status: newStatus, orderId: masterOrderId };
     }

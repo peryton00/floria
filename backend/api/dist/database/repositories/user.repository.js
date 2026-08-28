@@ -38,7 +38,9 @@ class UserRepository {
     }
     async updateUser(userId, updates) {
         const db = (0, database_js_1.getAdminDb)();
-        const payload = { updated_at: new Date().toISOString() };
+        const payload = {
+            updated_at: new Date().toISOString(),
+        };
         if (updates.full_name !== undefined)
             payload.full_name = updates.full_name;
         if (updates.phone !== undefined)

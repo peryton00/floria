@@ -6,7 +6,10 @@ const database_js_1 = require("../../config/database.js");
 class DeliveryRepository {
     async findAll(status) {
         const db = (0, database_js_1.getAdminDb)();
-        let q = db.from("delivery_assignments").select("*").order("created_at", { ascending: false });
+        let q = db
+            .from("delivery_assignments")
+            .select("*")
+            .order("created_at", { ascending: false });
         if (status && status !== "all") {
             q = q.eq("status", status);
         }

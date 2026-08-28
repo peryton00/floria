@@ -203,7 +203,10 @@ async function migrateUnsplashAssets(overrideBuffers) {
         }
         if (!fileBuffer)
             continue;
-        const sha256Hash = crypto_1.default.createHash("sha256").update(fileBuffer).digest("hex");
+        const sha256Hash = crypto_1.default
+            .createHash("sha256")
+            .update(fileBuffer)
+            .digest("hex");
         // 1. SHA-256 Deduplication Check (for system-seeded READY assets)
         const { data: existingAsset } = await adminDb
             .from("media_assets")
@@ -220,7 +223,8 @@ async function migrateUnsplashAssets(overrideBuffers) {
             const variantMap = {};
             if (variantRows) {
                 for (const v of variantRows) {
-                    variantMap[v.variant_name] = `${supabaseUrl}/storage/v1/object/public/${v.storage_bucket}/${v.storage_path}`;
+                    variantMap[v.variant_name] =
+                        `${supabaseUrl}/storage/v1/object/public/${v.storage_bucket}/${v.storage_path}`;
                 }
             }
             results.push({
@@ -265,7 +269,8 @@ async function migrateUnsplashAssets(overrideBuffers) {
                     storage_bucket: "public-media",
                     storage_path: storagePath,
                 });
-                variantMap[variant.variantName] = `${supabaseUrl}/storage/v1/object/public/public-media/${storagePath}`;
+                variantMap[variant.variantName] =
+                    `${supabaseUrl}/storage/v1/object/public/public-media/${storagePath}`;
             }
             // 4. Database Records Creation
             const { error: assetErr } = await adminDb.from("media_assets").insert({
@@ -284,7 +289,9 @@ async function migrateUnsplashAssets(overrideBuffers) {
             if (assetErr) {
                 throw new Error(`Failed to insert media_assets record: ${assetErr.message}`);
             }
-            const { error: variantErr } = await adminDb.from("media_variants").insert(variantRecords);
+            const { error: variantErr } = await adminDb
+                .from("media_variants")
+                .insert(variantRecords);
             if (variantErr) {
                 throw new Error(`Failed to insert media_variants records: ${variantErr.message}`);
             }
@@ -302,7 +309,9 @@ async function migrateUnsplashAssets(overrideBuffers) {
             // Rollback cleanup on partial upload failure
             if (uploadedVariantPaths.length > 0) {
                 try {
-                    await adminDb.storage.from("public-media").remove(uploadedVariantPaths);
+                    await adminDb.storage
+                        .from("public-media")
+                        .remove(uploadedVariantPaths);
                 }
                 catch (cleanupErr) {
                     console.error(`[UnsplashMigration] Rollback cleanup error for '${assetDef.id}': ${cleanupErr.message}`);

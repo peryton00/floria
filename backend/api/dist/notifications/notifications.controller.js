@@ -6,7 +6,9 @@ class NotificationsController {
     async getNotifications(req, res, next) {
         try {
             const userId = req.user.id;
-            const limit = req.query.limit ? parseInt(req.query.limit, 10) : 20;
+            const limit = req.query.limit
+                ? parseInt(req.query.limit, 10)
+                : 20;
             const page = req.query.page ? parseInt(req.query.page, 10) : 1;
             const unreadOnly = req.query.unreadOnly === "true";
             const data = await notification_service_js_1.notificationService.getUserNotifications(userId, {
@@ -45,7 +47,10 @@ class NotificationsController {
         try {
             const userId = req.user.id;
             await notification_service_js_1.notificationService.markAllAsRead(userId);
-            res.json({ success: true, data: { message: "All notifications marked as read" } });
+            res.json({
+                success: true,
+                data: { message: "All notifications marked as read" },
+            });
         }
         catch (err) {
             next(err);

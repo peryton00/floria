@@ -38,9 +38,17 @@ exports.reviewsService = {
             const { getAdminDb } = await import("../config/database.js");
             const { notificationService } = await import("../notifications/notification.service.js");
             const db = getAdminDb();
-            const { data: prod } = await db.from("products").select("seller_id, name").eq("id", productId).maybeSingle();
+            const { data: prod } = await db
+                .from("products")
+                .select("seller_id, name")
+                .eq("id", productId)
+                .maybeSingle();
             if (prod?.seller_id) {
-                const { data: sellerProf } = await db.from("seller_profiles").select("user_id").or(`id.eq.${prod.seller_id},user_id.eq.${prod.seller_id}`).maybeSingle();
+                const { data: sellerProf } = await db
+                    .from("seller_profiles")
+                    .select("user_id")
+                    .or(`id.eq.${prod.seller_id},user_id.eq.${prod.seller_id}`)
+                    .maybeSingle();
                 if (sellerProf?.user_id) {
                     await notificationService.createNotification({
                         user_id: sellerProf.user_id,
@@ -51,7 +59,11 @@ exports.reviewsService = {
                         data: { productId, rating: payload.rating, reviewId: review.id },
                         source_type: "review",
                         source_id: review.id,
-                        navigation: { entityType: "REVIEW", entityId: productId, action: "VIEW" },
+                        navigation: {
+                            entityType: "REVIEW",
+                            entityId: productId,
+                            action: "VIEW",
+                        },
                     });
                 }
             }

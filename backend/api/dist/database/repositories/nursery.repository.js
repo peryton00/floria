@@ -19,8 +19,12 @@ class NurseryRepository {
             return [];
         // Sort by ranking_score DESC (sellers with no reviews sort last)
         return data.sort((a, b) => {
-            const aScore = Array.isArray(a.rating_summary) ? (a.rating_summary[0]?.ranking_score ?? 0) : (a.rating_summary?.ranking_score ?? 0);
-            const bScore = Array.isArray(b.rating_summary) ? (b.rating_summary[0]?.ranking_score ?? 0) : (b.rating_summary?.ranking_score ?? 0);
+            const aScore = Array.isArray(a.rating_summary)
+                ? (a.rating_summary[0]?.ranking_score ?? 0)
+                : (a.rating_summary?.ranking_score ?? 0);
+            const bScore = Array.isArray(b.rating_summary)
+                ? (b.rating_summary[0]?.ranking_score ?? 0)
+                : (b.rating_summary?.ranking_score ?? 0);
             return bScore - aScore;
         });
     }

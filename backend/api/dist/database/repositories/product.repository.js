@@ -93,7 +93,10 @@ class ProductRepository {
     }
     async findActiveCatalog(categoryId, search) {
         const db = (0, database_js_1.getAdminDb)();
-        let q = db.from("products").select(PRODUCT_LISTING_SELECT).eq("status", "active");
+        let q = db
+            .from("products")
+            .select(PRODUCT_LISTING_SELECT)
+            .eq("status", "active");
         if (categoryId) {
             q = q.eq("category_id", categoryId);
         }
@@ -107,7 +110,10 @@ class ProductRepository {
     }
     async findAll(filters) {
         const db = (0, database_js_1.getAdminDb)();
-        let q = db.from("products").select(PRODUCT_LISTING_SELECT).neq("status", "deleted");
+        let q = db
+            .from("products")
+            .select(PRODUCT_LISTING_SELECT)
+            .neq("status", "deleted");
         if (filters?.status && filters.status !== "all") {
             q = q.eq("status", filters.status);
         }
@@ -238,7 +244,9 @@ class ProductRepository {
                 .limit(limit);
             return (data ?? []).map((r) => r.product).filter(Boolean);
         }
-        const productIds = trendingIds.map((r) => r.product_id).filter(Boolean);
+        const productIds = trendingIds
+            .map((r) => r.product_id)
+            .filter(Boolean);
         const { data } = await db
             .from("products")
             .select(PRODUCT_LISTING_SELECT)

@@ -42,7 +42,9 @@ class PaymentsController {
     async getPaymentStatus(req, res, next) {
         try {
             const userId = req.user.id;
-            const paymentId = Array.isArray(req.params.paymentId) ? req.params.paymentId[0] : String(req.params.paymentId);
+            const paymentId = Array.isArray(req.params.paymentId)
+                ? req.params.paymentId[0]
+                : String(req.params.paymentId);
             const payment = await payments_service_js_1.paymentsService.verifyAndReconcilePayment(userId, paymentId);
             res.json({
                 success: true,
@@ -60,7 +62,15 @@ class PaymentsController {
         try {
             const cfOrderId = String(req.query.cf_order_id || req.query.order_id || "");
             if (!cfOrderId) {
-                res.status(422).json({ success: false, error: { code: "VALIDATION_ERROR", message: "cf_order_id is required" } });
+                res
+                    .status(422)
+                    .json({
+                    success: false,
+                    error: {
+                        code: "VALIDATION_ERROR",
+                        message: "cf_order_id is required",
+                    },
+                });
                 return;
             }
             const result = await payments_service_js_1.paymentsService.lookupOrderByCfOrderId(cfOrderId);
@@ -76,7 +86,9 @@ class PaymentsController {
      */
     async handleCashfreeWebhook(req, res, next) {
         try {
-            const rawSig = req.headers["x-webhook-signature"] || req.headers["x-cashfree-signature"] || "";
+            const rawSig = req.headers["x-webhook-signature"] ||
+                req.headers["x-cashfree-signature"] ||
+                "";
             const rawTs = req.headers["x-webhook-timestamp"] || "";
             const signature = Array.isArray(rawSig) ? rawSig[0] : String(rawSig);
             const timestamp = Array.isArray(rawTs) ? rawTs[0] : String(rawTs);
@@ -100,7 +112,9 @@ class PaymentsController {
     async processRefund(req, res, next) {
         try {
             const userId = req.user.id;
-            const paymentId = Array.isArray(req.params.paymentId) ? req.params.paymentId[0] : String(req.params.paymentId);
+            const paymentId = Array.isArray(req.params.paymentId)
+                ? req.params.paymentId[0]
+                : String(req.params.paymentId);
             const { amountPaise, reason } = req.body;
             const refund = await payments_service_js_1.paymentsService.processRefund(userId, paymentId, Number(amountPaise), reason);
             res.json({
@@ -120,8 +134,14 @@ class PaymentsController {
         try {
             const status = typeof req.query.status === "string" ? req.query.status : undefined;
             const search = typeof req.query.search === "string" ? req.query.search : undefined;
-            const limit = typeof req.query.limit === "string" ? parseInt(req.query.limit, 10) : 100;
-            const transactions = await payments_service_js_1.paymentsService.getAdminTransactions({ status, search, limit });
+            const limit = typeof req.query.limit === "string"
+                ? parseInt(req.query.limit, 10)
+                : 100;
+            const transactions = await payments_service_js_1.paymentsService.getAdminTransactions({
+                status,
+                search,
+                limit,
+            });
             res.json({
                 success: true,
                 data: transactions,

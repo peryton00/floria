@@ -21,20 +21,32 @@ class ReviewsController {
         try {
             const customerId = req.user?.id;
             if (!customerId) {
-                res.json({ success: true, data: { canReview: false, reason: "NOT_LOGGED_IN" } });
+                res.json({
+                    success: true,
+                    data: { canReview: false, reason: "NOT_LOGGED_IN" },
+                });
                 return;
             }
             const eligible = await review_repository_js_1.reviewRepository.findEligibleOrderItem(customerId, String(req.params.id));
             if (eligible) {
-                res.json({ success: true, data: { canReview: true, orderItemId: eligible.order_item_id } });
+                res.json({
+                    success: true,
+                    data: { canReview: true, orderItemId: eligible.order_item_id },
+                });
             }
             else {
                 const userReview = await review_repository_js_1.reviewRepository.findUserReviewForProduct(customerId, String(req.params.id));
                 if (userReview) {
-                    res.json({ success: true, data: { canReview: false, reason: "ALREADY_REVIEWED", userReview } });
+                    res.json({
+                        success: true,
+                        data: { canReview: false, reason: "ALREADY_REVIEWED", userReview },
+                    });
                 }
                 else {
-                    res.json({ success: true, data: { canReview: false, reason: "NOT_ELIGIBLE" } });
+                    res.json({
+                        success: true,
+                        data: { canReview: false, reason: "NOT_ELIGIBLE" },
+                    });
                 }
             }
         }
@@ -48,7 +60,15 @@ class ReviewsController {
             const { rating, title, body } = req.body;
             const updated = await review_repository_js_1.reviewRepository.updateCustomerReview(String(req.params.id), req.user.id, { rating: rating ? Number(rating) : undefined, title, body });
             if (!updated) {
-                res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Review not found or not owned by user." } });
+                res
+                    .status(404)
+                    .json({
+                    success: false,
+                    error: {
+                        code: "NOT_FOUND",
+                        message: "Review not found or not owned by user.",
+                    },
+                });
                 return;
             }
             res.json({ success: true, data: updated });
@@ -66,11 +86,24 @@ class ReviewsController {
         }
         catch (err) {
             if (err.code === "ALREADY_REVIEWED") {
-                res.status(409).json({ success: false, error: { code: "ALREADY_REVIEWED", message: "You have already reviewed this item." } });
+                res
+                    .status(409)
+                    .json({
+                    success: false,
+                    error: {
+                        code: "ALREADY_REVIEWED",
+                        message: "You have already reviewed this item.",
+                    },
+                });
                 return;
             }
             if (err.code === "NOT_ELIGIBLE") {
-                res.status(403).json({ success: false, error: { code: "NOT_ELIGIBLE", message: err.message } });
+                res
+                    .status(403)
+                    .json({
+                    success: false,
+                    error: { code: "NOT_ELIGIBLE", message: err.message },
+                });
                 return;
             }
             next(err);
@@ -102,7 +135,12 @@ class ReviewsController {
         try {
             const { sellerId } = req.user;
             if (!sellerId) {
-                res.status(403).json({ success: false, error: { code: "NOT_SELLER", message: "Seller profile not found." } });
+                res
+                    .status(403)
+                    .json({
+                    success: false,
+                    error: { code: "NOT_SELLER", message: "Seller profile not found." },
+                });
                 return;
             }
             const page = Math.max(1, Number(req.query.page) || 1);
@@ -118,12 +156,25 @@ class ReviewsController {
         try {
             const { sellerId } = req.user;
             if (!sellerId) {
-                res.status(403).json({ success: false, error: { code: "NOT_SELLER", message: "Seller profile not found." } });
+                res
+                    .status(403)
+                    .json({
+                    success: false,
+                    error: { code: "NOT_SELLER", message: "Seller profile not found." },
+                });
                 return;
             }
             const ok = await review_repository_js_1.reviewRepository.flagReview(String(req.params.id), sellerId);
             if (!ok) {
-                res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Review not found or not eligible to flag." } });
+                res
+                    .status(404)
+                    .json({
+                    success: false,
+                    error: {
+                        code: "NOT_FOUND",
+                        message: "Review not found or not eligible to flag.",
+                    },
+                });
                 return;
             }
             res.json({ success: true, data: { flagged: true } });
@@ -152,12 +203,25 @@ class ReviewsController {
         try {
             const { action, note } = req.body;
             if (!["approve", "reject", "hide"].includes(action)) {
-                res.status(422).json({ success: false, error: { code: "INVALID_ACTION", message: "action must be approve, reject, or hide." } });
+                res
+                    .status(422)
+                    .json({
+                    success: false,
+                    error: {
+                        code: "INVALID_ACTION",
+                        message: "action must be approve, reject, or hide.",
+                    },
+                });
                 return;
             }
             const result = await reviews_service_js_1.reviewsService.moderateReview(String(req.params.id), action, note);
             if (!result) {
-                res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Review not found." } });
+                res
+                    .status(404)
+                    .json({
+                    success: false,
+                    error: { code: "NOT_FOUND", message: "Review not found." },
+                });
                 return;
             }
             res.json({ success: true, data: { moderated: true } });

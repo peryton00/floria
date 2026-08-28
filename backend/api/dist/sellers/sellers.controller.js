@@ -45,7 +45,11 @@ class SellersController {
             const search = typeof req.query.search === "string" ? req.query.search : undefined;
             const status = typeof req.query.status === "string" ? req.query.status : undefined;
             const stock = typeof req.query.stock === "string" ? req.query.stock : undefined;
-            const products = await sellers_service_js_1.sellersService.getProducts(profile.id, { search, status, stock });
+            const products = await sellers_service_js_1.sellersService.getProducts(profile.id, {
+                search,
+                status,
+                stock,
+            });
             res.json({ success: true, data: products });
         }
         catch (err) {
@@ -177,7 +181,10 @@ class SellersController {
             const profile = await sellers_service_js_1.sellersService.getProfile(req.user.id);
             const search = typeof req.query.search === "string" ? req.query.search : undefined;
             const status = typeof req.query.status === "string" ? req.query.status : undefined;
-            const orders = await sellers_service_js_1.sellersService.getOrders(profile.id, { search, status });
+            const orders = await sellers_service_js_1.sellersService.getOrders(profile.id, {
+                search,
+                status,
+            });
             res.json({ success: true, data: orders });
         }
         catch (err) {

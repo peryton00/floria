@@ -23,7 +23,9 @@ class DomainMediaService {
             .maybeSingle();
         if (sErr || !seller)
             throw errors_js_1.Errors.notFound("Seller profile");
-        if (seller.user_id !== user.id && user.role !== "admin" && user.role !== "super_admin") {
+        if (seller.user_id !== user.id &&
+            user.role !== "admin" &&
+            user.role !== "super_admin") {
             throw errors_js_1.Errors.forbidden("You do not own this seller profile.");
         }
         // 2. Verify media asset eligibility
@@ -47,7 +49,9 @@ class DomainMediaService {
             throw errors_js_1.Errors.validation("Only public-media assets can be used as seller logo.");
         }
         // 3. Resolve logo WebP URL
-        const variantMap = await media_resolver_service_js_1.MediaResolverService.resolveAssetVariants([assetId]);
+        const variantMap = await media_resolver_service_js_1.MediaResolverService.resolveAssetVariants([
+            assetId,
+        ]);
         const vars = variantMap.get(assetId) || {};
         const logoUrl = vars.standard || vars.medium || vars.thumbnail || "";
         // 4. Update seller profile
@@ -64,7 +68,9 @@ class DomainMediaService {
         if (uErr || !updated) {
             throw errors_js_1.Errors.database(`Failed to update seller logo: ${uErr?.message}`);
         }
-        const [enriched] = await media_resolver_service_js_1.MediaResolverService.enrichSellerProfiles([updated]);
+        const [enriched] = await media_resolver_service_js_1.MediaResolverService.enrichSellerProfiles([
+            updated,
+        ]);
         return enriched;
     }
     /**
@@ -88,7 +94,9 @@ class DomainMediaService {
             .maybeSingle();
         if (aErr || !asset)
             throw errors_js_1.Errors.notFound("Media asset");
-        if (asset.uploaded_by_user_id !== user.id && user.role !== "admin" && user.role !== "super_admin") {
+        if (asset.uploaded_by_user_id !== user.id &&
+            user.role !== "admin" &&
+            user.role !== "super_admin") {
             throw errors_js_1.Errors.forbidden("Cross-user media asset attachment is prohibited.");
         }
         if (asset.status !== "READY") {
@@ -101,7 +109,9 @@ class DomainMediaService {
             throw errors_js_1.Errors.validation("Only public-media assets can be used as avatar.");
         }
         // 3. Resolve avatar WebP URL
-        const variantMap = await media_resolver_service_js_1.MediaResolverService.resolveAssetVariants([assetId]);
+        const variantMap = await media_resolver_service_js_1.MediaResolverService.resolveAssetVariants([
+            assetId,
+        ]);
         const vars = variantMap.get(assetId) || {};
         const avatarUrl = vars.avatar || vars.thumbnail || vars.medium || "";
         // 4. Update user profile
@@ -155,7 +165,9 @@ class DomainMediaService {
             throw errors_js_1.Errors.validation("Only public-media assets can be used as category banner.");
         }
         // 3. Resolve banner WebP URL
-        const variantMap = await media_resolver_service_js_1.MediaResolverService.resolveAssetVariants([assetId]);
+        const variantMap = await media_resolver_service_js_1.MediaResolverService.resolveAssetVariants([
+            assetId,
+        ]);
         const vars = variantMap.get(assetId) || {};
         const bannerUrl = vars.banner || vars.medium || vars.cover || "";
         // 4. Update category
@@ -188,7 +200,9 @@ class DomainMediaService {
             .maybeSingle();
         if (rErr || !review)
             throw errors_js_1.Errors.notFound("Product review");
-        if (review.customer_id !== user.id && user.role !== "admin" && user.role !== "super_admin") {
+        if (review.customer_id !== user.id &&
+            user.role !== "admin" &&
+            user.role !== "super_admin") {
             throw errors_js_1.Errors.forbidden("You do not own this product review.");
         }
         // 2. Verify media asset eligibility & user ownership
@@ -199,7 +213,9 @@ class DomainMediaService {
             .maybeSingle();
         if (aErr || !asset)
             throw errors_js_1.Errors.notFound("Media asset");
-        if (asset.uploaded_by_user_id !== user.id && user.role !== "admin" && user.role !== "super_admin") {
+        if (asset.uploaded_by_user_id !== user.id &&
+            user.role !== "admin" &&
+            user.role !== "super_admin") {
             throw errors_js_1.Errors.forbidden("Cross-user review image attachment is prohibited.");
         }
         if (asset.status !== "READY") {
@@ -281,7 +297,9 @@ class DomainMediaService {
             throw errors_js_1.Errors.notFound("Seller document");
         // Security check: Only seller owner or admin can access private document
         const sellerUserId = doc.seller?.user_id;
-        if (sellerUserId !== user.id && user.role !== "admin" && user.role !== "super_admin") {
+        if (sellerUserId !== user.id &&
+            user.role !== "admin" &&
+            user.role !== "super_admin") {
             throw errors_js_1.Errors.forbidden("Unauthorized access to private seller document.");
         }
         // 2. Get storage path from asset or document record
@@ -328,7 +346,9 @@ class DomainMediaService {
             .maybeSingle();
         if (sErr || !seller)
             throw errors_js_1.Errors.notFound("Seller profile");
-        if (seller.user_id !== user.id && user.role !== "admin" && user.role !== "super_admin") {
+        if (seller.user_id !== user.id &&
+            user.role !== "admin" &&
+            user.role !== "super_admin") {
             throw errors_js_1.Errors.forbidden("You do not own this nursery profile.");
         }
         // 2. Verify media asset eligibility
@@ -352,7 +372,9 @@ class DomainMediaService {
             throw errors_js_1.Errors.validation("Only public-media assets can be used as nursery banner.");
         }
         // 3. Resolve nursery cover WebP URL
-        const variantMap = await media_resolver_service_js_1.MediaResolverService.resolveAssetVariants([assetId]);
+        const variantMap = await media_resolver_service_js_1.MediaResolverService.resolveAssetVariants([
+            assetId,
+        ]);
         const vars = variantMap.get(assetId) || {};
         const bannerUrl = vars.cover || vars.card || vars.medium || "";
         // 4. Update seller profile nursery cover/logo
@@ -369,7 +391,9 @@ class DomainMediaService {
         if (uErr || !updated) {
             throw errors_js_1.Errors.database(`Failed to update nursery banner: ${uErr?.message}`);
         }
-        const [enriched] = await media_resolver_service_js_1.MediaResolverService.enrichSellerProfiles([updated]);
+        const [enriched] = await media_resolver_service_js_1.MediaResolverService.enrichSellerProfiles([
+            updated,
+        ]);
         return enriched;
     }
 }

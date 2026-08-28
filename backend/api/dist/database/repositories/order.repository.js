@@ -53,7 +53,9 @@ class OrderRepository {
         if (filters?.search) {
             const queryStr = filters.search.toLowerCase();
             results = results.filter((o) => o.id.toLowerCase().includes(queryStr) ||
-                (o.delivery_address_snapshot?.full_name || "").toLowerCase().includes(queryStr));
+                (o.delivery_address_snapshot?.full_name || "")
+                    .toLowerCase()
+                    .includes(queryStr));
         }
         return results;
     }
@@ -97,13 +99,21 @@ class OrderRepository {
             throw new Error(`Order insertion failed: ${orderErr?.message}`);
         }
         const orderId = order.id;
-        const itemsWithOrderId = lineItems.map((li) => ({ ...li, order_id: orderId }));
-        const { error: itemsErr } = await db.from("order_items").insert(itemsWithOrderId);
+        const itemsWithOrderId = lineItems.map((li) => ({
+            ...li,
+            order_id: orderId,
+        }));
+        const { error: itemsErr } = await db
+            .from("order_items")
+            .insert(itemsWithOrderId);
         if (itemsErr) {
             await db.from("orders").delete().eq("id", orderId);
             throw new Error(`Order items insertion failed: ${itemsErr.message}`);
         }
-        const fulfillmentsWithOrderId = fulfillments.map((f) => ({ ...f, order_id: orderId }));
+        const fulfillmentsWithOrderId = fulfillments.map((f) => ({
+            ...f,
+            order_id: orderId,
+        }));
         await db.from("seller_order_fulfillments").insert(fulfillmentsWithOrderId);
         return orderId;
     }

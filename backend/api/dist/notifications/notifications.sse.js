@@ -13,7 +13,10 @@ async function streamNotifications(req, res) {
     if (!userId) {
         res.status(401).json({
             success: false,
-            error: { code: "UNAUTHORIZED", message: "Authentication token required for SSE stream" },
+            error: {
+                code: "UNAUTHORIZED",
+                message: "Authentication token required for SSE stream",
+            },
         });
         return;
     }

@@ -80,33 +80,51 @@ class SellersService {
     async updateProfile(userId, updates) {
         const profile = await this.getProfile(userId);
         // Server-side validation
-        if (updates.business_name !== undefined && updates.business_name !== null && !updates.business_name.trim()) {
+        if (updates.business_name !== undefined &&
+            updates.business_name !== null &&
+            !updates.business_name.trim()) {
             throw errors_js_1.Errors.validation("Business name is required");
         }
-        if (updates.contact_phone !== undefined && updates.contact_phone !== null && updates.contact_phone.trim()) {
-            const cleanPhone = updates.contact_phone.replace(/[\s\-+()\u00a0]/g, "").replace(/^91/, "");
+        if (updates.contact_phone !== undefined &&
+            updates.contact_phone !== null &&
+            updates.contact_phone.trim()) {
+            const cleanPhone = updates.contact_phone
+                .replace(/[\s\-+()\u00a0]/g, "")
+                .replace(/^91/, "");
             if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
                 throw errors_js_1.Errors.validation("Invalid phone number format (must be 10 digits)");
             }
         }
-        if (updates.whatsapp_number !== undefined && updates.whatsapp_number !== null && updates.whatsapp_number.trim()) {
-            const cleanWhatsapp = updates.whatsapp_number.replace(/[\s\-+()\u00a0]/g, "").replace(/^91/, "");
+        if (updates.whatsapp_number !== undefined &&
+            updates.whatsapp_number !== null &&
+            updates.whatsapp_number.trim()) {
+            const cleanWhatsapp = updates.whatsapp_number
+                .replace(/[\s\-+()\u00a0]/g, "")
+                .replace(/^91/, "");
             if (!/^[6-9]\d{9}$/.test(cleanWhatsapp)) {
                 throw errors_js_1.Errors.validation("Invalid WhatsApp number format (must be 10 digits)");
             }
         }
-        if (updates.alternate_phone !== undefined && updates.alternate_phone !== null && updates.alternate_phone.trim()) {
-            const cleanAlt = updates.alternate_phone.replace(/[\s\-+()\u00a0]/g, "").replace(/^91/, "");
+        if (updates.alternate_phone !== undefined &&
+            updates.alternate_phone !== null &&
+            updates.alternate_phone.trim()) {
+            const cleanAlt = updates.alternate_phone
+                .replace(/[\s\-+()\u00a0]/g, "")
+                .replace(/^91/, "");
             if (!/^[6-9]\d{9}$/.test(cleanAlt)) {
                 throw errors_js_1.Errors.validation("Invalid alternate phone number format (must be 10 digits)");
             }
         }
-        if (updates.contact_email !== undefined && updates.contact_email !== null && updates.contact_email.trim()) {
+        if (updates.contact_email !== undefined &&
+            updates.contact_email !== null &&
+            updates.contact_email.trim()) {
             if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(updates.contact_email.trim())) {
                 throw errors_js_1.Errors.validation("Invalid email address format");
             }
         }
-        if (updates.pincode !== undefined && updates.pincode !== null && updates.pincode.trim()) {
+        if (updates.pincode !== undefined &&
+            updates.pincode !== null &&
+            updates.pincode.trim()) {
             if (!/^\d{6}$/.test(updates.pincode.trim())) {
                 throw errors_js_1.Errors.validation("Invalid Indian PIN code (must be 6 digits)");
             }
@@ -137,7 +155,9 @@ class SellersService {
         if (!phoneRaw) {
             throw errors_js_1.Errors.validation("Contact phone number is required.");
         }
-        const cleanPhone = phoneRaw.replace(/[\s\-+()\u00a0]/g, "").replace(/^91/, "");
+        const cleanPhone = phoneRaw
+            .replace(/[\s\-+()\u00a0]/g, "")
+            .replace(/^91/, "");
         if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
             throw errors_js_1.Errors.validation("Invalid 10-digit Indian phone number format.");
         }
@@ -280,7 +300,9 @@ class SellersService {
         if (sellerProfile.status !== "approved") {
             throw errors_js_1.Errors.forbidden("Pending or suspended sellers cannot update inventory");
         }
-        if (updates.stock_quantity !== undefined && typeof updates.stock_quantity === "number" && updates.stock_quantity < 0) {
+        if (updates.stock_quantity !== undefined &&
+            typeof updates.stock_quantity === "number" &&
+            updates.stock_quantity < 0) {
             throw errors_js_1.Errors.validation("Stock quantity cannot be negative");
         }
         const updated = await seller_repository_js_1.sellerRepository.updateProduct(sellerProfile.id, productId, updates);
@@ -332,7 +354,8 @@ class SellersService {
         }
         // Notification check for low / out of stock
         try {
-            if (updates.stock_quantity !== undefined && typeof updates.stock_quantity === "number") {
+            if (updates.stock_quantity !== undefined &&
+                typeof updates.stock_quantity === "number") {
                 const threshold = updated.low_stock_threshold ?? 5;
                 const { notificationService } = await import("../notifications/notification.service.js");
                 if (updates.stock_quantity <= 0) {
@@ -345,7 +368,11 @@ class SellersService {
                         data: { productId, stockQuantity: 0 },
                         source_type: "inventory",
                         source_id: `${productId}_out_of_stock`,
-                        navigation: { entityType: "PRODUCT", entityId: productId, action: "VIEW" },
+                        navigation: {
+                            entityType: "PRODUCT",
+                            entityId: productId,
+                            action: "VIEW",
+                        },
                     });
                 }
                 else if (updates.stock_quantity <= threshold) {
@@ -358,7 +385,11 @@ class SellersService {
                         data: { productId, stockQuantity: updates.stock_quantity },
                         source_type: "inventory",
                         source_id: `${productId}_low_stock`,
-                        navigation: { entityType: "PRODUCT", entityId: productId, action: "VIEW" },
+                        navigation: {
+                            entityType: "PRODUCT",
+                            entityId: productId,
+                            action: "VIEW",
+                        },
                     });
                 }
             }
@@ -396,7 +427,11 @@ class SellersService {
                 const { notificationService } = await import("../notifications/notification.service.js");
                 const { getAdminDb } = await import("../config/database.js");
                 const db = getAdminDb();
-                const { data: order } = await db.from("orders").select("customer_id").eq("id", masterOrderId).maybeSingle();
+                const { data: order } = await db
+                    .from("orders")
+                    .select("customer_id")
+                    .eq("id", masterOrderId)
+                    .maybeSingle();
                 if (order?.customer_id) {
                     await notificationService.createNotification({
                         user_id: order.customer_id,
@@ -407,7 +442,11 @@ class SellersService {
                         data: { orderId: masterOrderId, status: newStatus },
                         source_type: "fulfillment",
                         source_id: `${masterOrderId}_${newStatus}`,
-                        navigation: { entityType: "ORDER", entityId: masterOrderId, action: "VIEW" },
+                        navigation: {
+                            entityType: "ORDER",
+                            entityId: masterOrderId,
+                            action: "VIEW",
+                        },
                     });
                 }
             }
@@ -440,7 +479,13 @@ class SellersService {
         if (!payload.documentType || !payload.fileName || !payload.fileUrl) {
             throw errors_js_1.Errors.validation("documentType, fileName, and fileUrl are required");
         }
-        const ALLOWED_MIME_TYPES = ["application/pdf", "image/jpeg", "image/jpg", "image/png", "image/webp"];
+        const ALLOWED_MIME_TYPES = [
+            "application/pdf",
+            "image/jpeg",
+            "image/jpg",
+            "image/png",
+            "image/webp",
+        ];
         const mime = (payload.mimeType || "").toLowerCase();
         if (mime && !ALLOWED_MIME_TYPES.includes(mime)) {
             throw errors_js_1.Errors.validation("Invalid document file type. Allowed: PDF, JPG, PNG, WebP.");
@@ -463,7 +508,10 @@ class SellersService {
             action: "SELLER_DOCUMENT_UPLOADED",
             resource_type: "seller_document",
             resource_id: doc.id,
-            metadata: { documentType: payload.documentType, fileName: payload.fileName },
+            metadata: {
+                documentType: payload.documentType,
+                fileName: payload.fileName,
+            },
         });
         return doc;
     }

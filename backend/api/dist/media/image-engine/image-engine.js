@@ -46,7 +46,9 @@ class ImageEngine {
         // 2. Decode & Inspect Metadata safely
         let metadata;
         try {
-            metadata = await (0, sharp_1.default)(inputBuffer, { limitInputPixels: exports.MAX_INPUT_PIXELS }).metadata();
+            metadata = await (0, sharp_1.default)(inputBuffer, {
+                limitInputPixels: exports.MAX_INPUT_PIXELS,
+            }).metadata();
         }
         catch (err) {
             throw new image_engine_errors_js_1.CorruptImageError(err?.message || "Failed to parse image headers");
@@ -56,7 +58,8 @@ class ImageEngine {
             throw new image_engine_errors_js_1.UnsupportedFormatError(format || "unknown");
         }
         // Explicit HEIC runtime check
-        if ((format === "heic" || format === "heif") && !ImageEngine.isHeicSupported()) {
+        if ((format === "heic" || format === "heif") &&
+            !ImageEngine.isHeicSupported()) {
             throw new image_engine_errors_js_1.UnsupportedFormatError("heic/heif (libvips HEIC decoder is not compiled into the current Sharp runtime)");
         }
         const width = metadata.width || 0;

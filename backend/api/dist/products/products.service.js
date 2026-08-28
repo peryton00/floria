@@ -18,9 +18,13 @@ class ProductsService {
             const basePrice = inv.base_price_paise ?? inv.price_paise ?? 0;
             const calc = pricing_service_js_1.pricingService.calculateProductPricingSync(basePrice, settings);
             const customerPrice = override?.custom_customer_price_paise ?? calc.customerProductPricePaise;
-            const originalPrice = inv.original_price_paise && inv.original_price_paise > customerPrice ? inv.original_price_paise : null;
+            const originalPrice = inv.original_price_paise && inv.original_price_paise > customerPrice
+                ? inv.original_price_paise
+                : null;
             const discountAmount = originalPrice ? originalPrice - customerPrice : 0;
-            const discountPercent = originalPrice ? Math.round((discountAmount / originalPrice) * 100) : 0;
+            const discountPercent = originalPrice
+                ? Math.round((discountAmount / originalPrice) * 100)
+                : 0;
             return {
                 ...inv,
                 base_price_paise: basePrice,

@@ -4,7 +4,10 @@ exports.operationsController = exports.OperationsController = void 0;
 const operations_service_js_1 = require("./operations.service.js");
 class OperationsController {
     async getHealth(req, res) {
-        res.json({ success: true, data: { status: "healthy", role: req.user.role } });
+        res.json({
+            success: true,
+            data: { status: "healthy", role: req.user.role },
+        });
     }
     async getDashboard(_req, res, next) {
         try {

@@ -50,12 +50,14 @@ class MediaResolverService {
             if (item.logo_asset_id && variantMap.has(item.logo_asset_id)) {
                 const vars = variantMap.get(item.logo_asset_id);
                 item.logo_variants = vars;
-                item.logo_url = vars.standard || vars.medium || vars.thumbnail || item.logo_url;
+                item.logo_url =
+                    vars.standard || vars.medium || vars.thumbnail || item.logo_url;
             }
             if (item.banner_asset_id && variantMap.has(item.banner_asset_id)) {
                 const vars = variantMap.get(item.banner_asset_id);
                 item.banner_variants = vars;
-                item.banner_url = vars.cover || vars.card || vars.banner || item.banner_url;
+                item.banner_url =
+                    vars.cover || vars.card || vars.banner || item.banner_url;
             }
         }
         return sellers;
@@ -66,7 +68,9 @@ class MediaResolverService {
     static async enrichUserProfiles(users) {
         if (!users || users.length === 0)
             return users;
-        const assetIds = users.map((u) => u.avatar_asset_id).filter(Boolean);
+        const assetIds = users
+            .map((u) => u.avatar_asset_id)
+            .filter(Boolean);
         if (assetIds.length === 0)
             return users;
         const variantMap = await this.resolveAssetVariants(assetIds);
@@ -75,7 +79,8 @@ class MediaResolverService {
             if (item.avatar_asset_id && variantMap.has(item.avatar_asset_id)) {
                 const vars = variantMap.get(item.avatar_asset_id);
                 item.avatar_variants = vars;
-                item.avatar_url = vars.avatar || vars.thumbnail || vars.medium || item.avatar_url;
+                item.avatar_url =
+                    vars.avatar || vars.thumbnail || vars.medium || item.avatar_url;
             }
         }
         return users;
@@ -89,14 +94,21 @@ class MediaResolverService {
         const assetIds = categories
             .map((c) => c.banner_asset_id || c.asset_id)
             .filter(Boolean);
-        const variantMap = assetIds.length > 0 ? await this.resolveAssetVariants(assetIds) : new Map();
+        const variantMap = assetIds.length > 0
+            ? await this.resolveAssetVariants(assetIds)
+            : new Map();
         for (const c of categories) {
             const item = c;
             const astId = item.banner_asset_id || item.asset_id;
             if (astId && variantMap.has(astId)) {
                 const vars = variantMap.get(astId);
                 item.banner_variants = vars;
-                item.banner_url = vars.banner || vars.medium || vars.cover || vars.thumbnail || item.image_url;
+                item.banner_url =
+                    vars.banner ||
+                        vars.medium ||
+                        vars.cover ||
+                        vars.thumbnail ||
+                        item.image_url;
                 item.image_url = item.banner_url;
             }
             else if (item.image_url) {
@@ -111,7 +123,9 @@ class MediaResolverService {
     static async enrichReviewMedia(reviewMediaList) {
         if (!reviewMediaList || reviewMediaList.length === 0)
             return reviewMediaList;
-        const assetIds = reviewMediaList.map((rm) => rm.asset_id).filter(Boolean);
+        const assetIds = reviewMediaList
+            .map((rm) => rm.asset_id)
+            .filter(Boolean);
         if (assetIds.length === 0)
             return reviewMediaList;
         const variantMap = await this.resolveAssetVariants(assetIds);

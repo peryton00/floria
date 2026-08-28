@@ -51,10 +51,10 @@ class OperationsService {
         // State machine transitions allowed for operations
         const allowedTransitions = {
             "picked up": "packing",
-            "packing": "out for delivery",
+            packing: "out for delivery",
             "out for delivery": "delivered",
-            "picked_up": "packing",
-            "out_for_delivery": "delivered",
+            picked_up: "packing",
+            out_for_delivery: "delivered",
         };
         const normalizeCurrent = currentStatus.toLowerCase();
         const normalizeNext = newStatus.toLowerCase();
@@ -88,7 +88,7 @@ class OperationsService {
         const orders = await order_repository_js_1.orderRepository.findAllMasterOrders();
         let pickupOrders = orders.filter((o) => {
             const st = (o.status || "").toLowerCase();
-            return st === "ready for pickup" || st === "picked up" || st === "preparing";
+            return (st === "ready for pickup" || st === "picked up" || st === "preparing");
         });
         if (status && status !== "all") {
             pickupOrders = pickupOrders.filter((o) => (o.status || "").toLowerCase() === status.toLowerCase());
@@ -108,7 +108,8 @@ class OperationsService {
         if (!order)
             throw errors_js_1.Errors.notFound("Order");
         let action = "PICKUP_UPDATED";
-        if (status.toLowerCase() === "picked up" || status.toLowerCase() === "picked_up") {
+        if (status.toLowerCase() === "picked up" ||
+            status.toLowerCase() === "picked_up") {
             action = "PICKUP_COMPLETED";
         }
         await audit_repository_js_1.auditRepository.log({
@@ -143,14 +144,20 @@ class OperationsService {
         const order = await order_repository_js_1.orderRepository.findById(orderId);
         if (!order)
             throw errors_js_1.Errors.notFound("Order");
-        let action = status.toLowerCase() === "packing" ? "PACKING_STARTED" : "PACKING_COMPLETED";
+        let action = status.toLowerCase() === "packing"
+            ? "PACKING_STARTED"
+            : "PACKING_COMPLETED";
         await audit_repository_js_1.auditRepository.log({
             actor_user_id: opUserId,
             actor_role: "operations",
             action,
             resource_type: "packing_task",
             resource_id: orderId,
-            metadata: { from: order.status, to: status, verifiedItemsCount: verifiedItemsCount ?? null },
+            metadata: {
+                from: order.status,
+                to: status,
+                verifiedItemsCount: verifiedItemsCount ?? null,
+            },
         });
         return { orderId, status, verifiedItemsCount };
     }
@@ -234,7 +241,8 @@ class OperationsService {
             throw errors_js_1.Errors.forbidden("You are not assigned to complete this delivery.");
         }
         // 3. Idempotency Guard: If already delivered with the same POD asset, return existing delivery
-        if (delivery.status === "delivered" && delivery.pod_asset_id === podAssetId) {
+        if (delivery.status === "delivered" &&
+            delivery.pod_asset_id === podAssetId) {
             return delivery;
         }
         // 4. Validate Delivery State Transition (must be out_for_delivery to complete drop-off)
@@ -334,7 +342,8 @@ class OperationsService {
             throw errors_js_1.Errors.notFound("Proof of delivery media asset record");
         }
         // 4. Generate signed URL from private-documents (valid 1 hour / 3600 seconds)
-        const storagePath = asset.original_path || `pod/${asset.uploaded_by_user_id}/${asset.id}.webp`;
+        const storagePath = asset.original_path ||
+            `pod/${asset.uploaded_by_user_id}/${asset.id}.webp`;
         const { data: signed, error: signErr } = await adminDb.storage
             .from("private-documents")
             .createSignedUrl(storagePath, 3600);

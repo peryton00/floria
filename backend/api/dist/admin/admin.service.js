@@ -143,7 +143,8 @@ class AdminService {
             action = "SELLER_REJECTED";
         else if (status === "suspended")
             action = "SELLER_SUSPENDED";
-        else if (status === "pending" || (currentStatus === "suspended" && status === "approved"))
+        else if (status === "pending" ||
+            (currentStatus === "suspended" && status === "approved"))
             action = "SELLER_REACTIVATED";
         const success = await seller_repository_js_1.sellerRepository.updateStatus(sellerId, status);
         if (!success)
@@ -172,7 +173,11 @@ class AdminService {
                             : "Your Floria nursery seller account has been suspended.",
                     source_type: "seller_profile",
                     source_id: `${sellerId}_${status}`,
-                    navigation: { entityType: "SELLER", entityId: sellerId, action: "VIEW" },
+                    navigation: {
+                        entityType: "SELLER",
+                        entityId: sellerId,
+                        action: "VIEW",
+                    },
                 });
             }
             catch (notifErr) {
@@ -188,8 +193,16 @@ class AdminService {
         return {
             sellerId,
             documents: [
-                { type: "nursery_license", url: "/documents/sample_license.pdf", status: "verified" },
-                { type: "gst_certificate", url: "/documents/sample_gst.pdf", status: "verified" },
+                {
+                    type: "nursery_license",
+                    url: "/documents/sample_license.pdf",
+                    status: "verified",
+                },
+                {
+                    type: "gst_certificate",
+                    url: "/documents/sample_gst.pdf",
+                    status: "verified",
+                },
             ],
         };
     }
@@ -311,7 +324,10 @@ class AdminService {
         if (range === "12m") {
             filtered.forEach((o) => {
                 const d = new Date(o.created_at);
-                const key = d.toLocaleString("default", { month: "short", year: "numeric" });
+                const key = d.toLocaleString("default", {
+                    month: "short",
+                    year: "numeric",
+                });
                 if (!groups[key])
                     groups[key] = { gmv: 0, orders: 0, revenue: 0 };
                 const gmv = o.total_paise || o.subtotal_paise || 0;
@@ -323,7 +339,10 @@ class AdminService {
         else {
             filtered.forEach((o) => {
                 const d = new Date(o.created_at);
-                const key = d.toLocaleString("default", { day: "numeric", month: "short" });
+                const key = d.toLocaleString("default", {
+                    day: "numeric",
+                    month: "short",
+                });
                 if (!groups[key])
                     groups[key] = { gmv: 0, orders: 0, revenue: 0 };
                 const gmv = o.total_paise || o.subtotal_paise || 0;

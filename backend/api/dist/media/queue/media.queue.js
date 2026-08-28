@@ -25,7 +25,7 @@ function validateMediaJobPayload(payload) {
     if (!payload || typeof payload !== "object") {
         throw new Error("Invalid job payload: Payload must be a non-null object");
     }
-    const { assetId, sessionId, sellerId, uploadedByUserId, profile, stagingPath } = payload;
+    const { assetId, sessionId, sellerId, uploadedByUserId, profile, stagingPath, } = payload;
     if (!assetId || typeof assetId !== "string") {
         throw new Error("Invalid job payload: 'assetId' must be a valid UUID string");
     }

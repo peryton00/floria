@@ -87,27 +87,34 @@ class PricingService {
         const db = (0, database_js_1.getAdminDb)();
         const previous = await this.getFinancialSettings();
         if (updates.sellerCommissionRate !== undefined) {
-            if (typeof updates.sellerCommissionRate !== "number" || updates.sellerCommissionRate < 0 || updates.sellerCommissionRate > 50) {
+            if (typeof updates.sellerCommissionRate !== "number" ||
+                updates.sellerCommissionRate < 0 ||
+                updates.sellerCommissionRate > 50) {
                 throw errors_js_1.Errors.validation("Seller commission rate must be a valid number between 0% and 50%.");
             }
         }
         if (updates.floriaProfitRate !== undefined) {
-            if (typeof updates.floriaProfitRate !== "number" || updates.floriaProfitRate < 0 || updates.floriaProfitRate > 50) {
+            if (typeof updates.floriaProfitRate !== "number" ||
+                updates.floriaProfitRate < 0 ||
+                updates.floriaProfitRate > 50) {
                 throw errors_js_1.Errors.validation("Floria profit rate must be a valid number between 0% and 50%.");
             }
         }
         if (updates.platformMaintenanceFeePaise !== undefined) {
-            if (typeof updates.platformMaintenanceFeePaise !== "number" || updates.platformMaintenanceFeePaise < 0) {
+            if (typeof updates.platformMaintenanceFeePaise !== "number" ||
+                updates.platformMaintenanceFeePaise < 0) {
                 throw errors_js_1.Errors.validation("Platform maintenance fee must be a non-negative integer in paise.");
             }
         }
         if (updates.freeDeliveryThresholdPaise !== undefined) {
-            if (typeof updates.freeDeliveryThresholdPaise !== "number" || updates.freeDeliveryThresholdPaise < 0) {
+            if (typeof updates.freeDeliveryThresholdPaise !== "number" ||
+                updates.freeDeliveryThresholdPaise < 0) {
                 throw errors_js_1.Errors.validation("Free delivery threshold must be a non-negative integer in paise.");
             }
         }
         if (updates.freeDeliveryRecoveryPaise !== undefined) {
-            if (typeof updates.freeDeliveryRecoveryPaise !== "number" || updates.freeDeliveryRecoveryPaise < 0) {
+            if (typeof updates.freeDeliveryRecoveryPaise !== "number" ||
+                updates.freeDeliveryRecoveryPaise < 0) {
                 throw errors_js_1.Errors.validation("Free delivery recovery must be a non-negative integer in paise.");
             }
         }
@@ -182,7 +189,9 @@ class PricingService {
      * Deterministically calculates all product financial components in integer paise.
      */
     async calculateProductPricing(sellerBasePricePaise, customSettings) {
-        if (typeof sellerBasePricePaise !== "number" || sellerBasePricePaise < 0 || isNaN(sellerBasePricePaise)) {
+        if (typeof sellerBasePricePaise !== "number" ||
+            sellerBasePricePaise < 0 ||
+            isNaN(sellerBasePricePaise)) {
             throw errors_js_1.Errors.validation("Seller base price must be a non-negative integer in paise.");
         }
         const settings = customSettings || (await this.getFinancialSettings());
@@ -195,7 +204,9 @@ class PricingService {
         // 3. Product-Level Free Delivery Eligibility & Recovery
         // A product qualifies if its pre-recovery customer price >= dynamic threshold from active policy
         const isFreeDeliveryEligible = preRecoveryPricePaise >= settings.freeDeliveryThresholdPaise;
-        const deliveryRecoveryPaise = isFreeDeliveryEligible ? settings.freeDeliveryRecoveryPaise : 0;
+        const deliveryRecoveryPaise = isFreeDeliveryEligible
+            ? settings.freeDeliveryRecoveryPaise
+            : 0;
         // 4. Customer Product Price
         const customerProductPricePaise = preRecoveryPricePaise + deliveryRecoveryPaise;
         return {
@@ -215,13 +226,17 @@ class PricingService {
      * Synchronous variant using pre-fetched database financial settings.
      */
     calculateProductPricingSync(sellerBasePricePaise, settings) {
-        const validBasePrice = typeof sellerBasePricePaise === "number" && sellerBasePricePaise > 0 ? sellerBasePricePaise : 0;
+        const validBasePrice = typeof sellerBasePricePaise === "number" && sellerBasePricePaise > 0
+            ? sellerBasePricePaise
+            : 0;
         const sellerCommissionPaise = Math.round(validBasePrice * (settings.sellerCommissionRate / 100.0));
         const sellerNetPaise = validBasePrice - sellerCommissionPaise;
         const floriaProfitPaise = Math.round(validBasePrice * (settings.floriaProfitRate / 100.0));
         const preRecoveryPricePaise = validBasePrice + floriaProfitPaise;
         const isFreeDeliveryEligible = preRecoveryPricePaise >= settings.freeDeliveryThresholdPaise;
-        const deliveryRecoveryPaise = isFreeDeliveryEligible ? settings.freeDeliveryRecoveryPaise : 0;
+        const deliveryRecoveryPaise = isFreeDeliveryEligible
+            ? settings.freeDeliveryRecoveryPaise
+            : 0;
         const customerProductPricePaise = preRecoveryPricePaise + deliveryRecoveryPaise;
         return {
             sellerBasePricePaise: validBasePrice,

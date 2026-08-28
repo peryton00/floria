@@ -60,18 +60,24 @@ class CashfreePaymentProvider {
         }
         // Sanitize customer details according to Cashfree API requirements
         // customer_id: alphanumeric + underscore + hyphen, max 50 chars. Strip dashes from UUID then prepend 'cust_'.
-        const rawCustId = (input.customerId || "user").replace(/[^a-zA-Z0-9]/g, "").slice(0, 44);
+        const rawCustId = (input.customerId || "user")
+            .replace(/[^a-zA-Z0-9]/g, "")
+            .slice(0, 44);
         const sanitizedCustId = `cust_${rawCustId}`;
         let rawPhone = (input.customerPhone || "").replace(/\D/g, "");
         if (rawPhone.length > 10)
             rawPhone = rawPhone.slice(-10);
         const sanitizedPhone = rawPhone.length === 10 ? rawPhone : "9999999999";
-        const sanitizedEmail = input.customerEmail && /^[^@]+@[^@]+\.[^@]+$/.test(input.customerEmail.trim())
+        const sanitizedEmail = input.customerEmail &&
+            /^[^@]+@[^@]+\.[^@]+$/.test(input.customerEmail.trim())
             ? input.customerEmail.trim()
             : `cust${rawCustId.slice(0, 8)}@floria.in`;
         const sanitizedName = (input.customerName?.trim() || "Floria Customer").slice(0, 50);
-        const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || "https://floriaa-web.vercel.app";
-        const returnUrl = input.returnUrl || `${appUrl}/checkout?order_id={order_id}&floria_order_id=${input.masterOrderId}`;
+        const appUrl = process.env.APP_URL ||
+            process.env.NEXT_PUBLIC_APP_URL ||
+            "https://floriaa-web.vercel.app";
+        const returnUrl = input.returnUrl ||
+            `${appUrl}/checkout?order_id={order_id}&floria_order_id=${input.masterOrderId}`;
         const url = `${this.getBaseUrl()}/orders`;
         const body = {
             order_id: cfOrderId,
@@ -108,9 +114,15 @@ class CashfreePaymentProvider {
             console.error("[CashfreePaymentProvider] Cashfree API error:", JSON.stringify({
                 status: response.status,
                 resJson,
-                sentPayload: { order_id: cfOrderId, order_amount: orderAmountRupees, customer_id: sanitizedCustId },
+                sentPayload: {
+                    order_id: cfOrderId,
+                    order_amount: orderAmountRupees,
+                    customer_id: sanitizedCustId,
+                },
             }));
-            const errMsg = resJson?.message || resJson?.code || `Cashfree API HTTP ${response.status}`;
+            const errMsg = resJson?.message ||
+                resJson?.code ||
+                `Cashfree API HTTP ${response.status}`;
             throw new Error(`Cashfree Payment Error: ${errMsg}`);
         }
         return {
@@ -134,13 +146,25 @@ class CashfreePaymentProvider {
         const order = body?.data?.order;
         const payment = body?.data?.payment;
         const cfOrderId = order?.order_id || body?.orderId || body?.eventId;
-        const cfPaymentId = payment?.cf_payment_id ? String(payment.cf_payment_id) : (body?.providerPaymentId ? String(body.providerPaymentId) : undefined);
+        const cfPaymentId = payment?.cf_payment_id
+            ? String(payment.cf_payment_id)
+            : body?.providerPaymentId
+                ? String(body.providerPaymentId)
+                : undefined;
         const rawStatus = payment?.payment_status || order?.order_status || body?.status;
-        const amtPaise = payment?.payment_amount ? Math.round(Number(payment.payment_amount) * 100) : (body?.amountPaise ? Number(body.amountPaise) : undefined);
+        const amtPaise = payment?.payment_amount
+            ? Math.round(Number(payment.payment_amount) * 100)
+            : body?.amountPaise
+                ? Number(body.amountPaise)
+                : undefined;
         if (!secret || !input.signature) {
             return {
                 isValid: false,
-                providerEventId: body?.event_time ? `cf_evt_${body.event_time}_${cfOrderId}` : (body?.eventId ? String(body.eventId) : undefined),
+                providerEventId: body?.event_time
+                    ? `cf_evt_${body.event_time}_${cfOrderId}`
+                    : body?.eventId
+                        ? String(body.eventId)
+                        : undefined,
                 eventType: body?.type || body?.event,
                 cfOrderId,
                 cfPaymentId,
@@ -150,15 +174,22 @@ class CashfreePaymentProvider {
             };
         }
         try {
-            const ts = input.timestamp || input.headers["x-webhook-timestamp"] || "";
+            const ts = input.timestamp ||
+                input.headers["x-webhook-timestamp"] ||
+                "";
             const payloadToSign = ts ? `${ts}${input.rawBody}` : input.rawBody;
             const computedSig = (0, crypto_1.createHmac)("sha256", secret)
                 .update(payloadToSign)
                 .digest("base64");
-            const isValid = computedSig === input.signature || input.signature.includes(computedSig);
+            const isValid = computedSig === input.signature ||
+                input.signature.includes(computedSig);
             return {
                 isValid,
-                providerEventId: body?.event_time ? `cf_evt_${body.event_time}_${cfOrderId}` : (body?.eventId ? String(body.eventId) : undefined),
+                providerEventId: body?.event_time
+                    ? `cf_evt_${body.event_time}_${cfOrderId}`
+                    : body?.eventId
+                        ? String(body.eventId)
+                        : undefined,
                 eventType: body?.type || body?.event,
                 cfOrderId,
                 cfPaymentId,
@@ -183,7 +214,10 @@ class CashfreePaymentProvider {
                 refundReference: refundRef,
                 status: "processed",
                 amountPaise: input.amountPaise,
-                rawProviderResponse: { mode: "cashfree_mock_refund", reason: input.reason },
+                rawProviderResponse: {
+                    mode: "cashfree_mock_refund",
+                    reason: input.reason,
+                },
             };
         }
         try {
@@ -205,7 +239,9 @@ class CashfreePaymentProvider {
                 refundReference: refundRef,
                 status: resJson?.refund_status === "SUCCESS" ? "processed" : "pending",
                 amountPaise: input.amountPaise,
-                cfRefundId: resJson?.cf_refund_id ? String(resJson.cf_refund_id) : undefined,
+                cfRefundId: resJson?.cf_refund_id
+                    ? String(resJson.cf_refund_id)
+                    : undefined,
                 rawProviderResponse: resJson,
             };
         }
@@ -215,7 +251,10 @@ class CashfreePaymentProvider {
                 refundReference: refundRef,
                 status: "pending",
                 amountPaise: input.amountPaise,
-                rawProviderResponse: { error: err?.message, mode: "cashfree_refund_queued" },
+                rawProviderResponse: {
+                    error: err?.message,
+                    mode: "cashfree_refund_queued",
+                },
             };
         }
     }

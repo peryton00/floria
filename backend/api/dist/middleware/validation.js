@@ -23,7 +23,9 @@ function validateRequest(schemas) {
         }
         catch (error) {
             if (error instanceof zod_1.ZodError) {
-                const message = error.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join("; ");
+                const message = error.errors
+                    .map((e) => `${e.path.join(".")}: ${e.message}`)
+                    .join("; ");
                 return next(errors_js_1.Errors.validation(message));
             }
             next(error);

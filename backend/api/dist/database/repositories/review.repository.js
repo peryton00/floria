@@ -184,31 +184,37 @@ class ReviewRepository {
             .maybeSingle();
         if (existing) {
             // Remove vote + decrement
-            await db.from("review_helpful_votes")
+            await db
+                .from("review_helpful_votes")
                 .delete()
                 .eq("review_id", reviewId)
                 .eq("customer_id", customerId);
             // Decrement via rpc if it exists, otherwise clamp at 0 via update
-            const { data: rev } = await db.from("product_reviews")
+            const { data: rev } = await db
+                .from("product_reviews")
                 .select("helpful_count")
                 .eq("id", reviewId)
                 .maybeSingle();
             if (rev) {
-                await db.from("product_reviews")
+                await db
+                    .from("product_reviews")
                     .update({ helpful_count: Math.max(0, (rev.helpful_count ?? 1) - 1) })
                     .eq("id", reviewId);
             }
             return "removed";
         }
         // Insert vote + increment
-        await db.from("review_helpful_votes")
+        await db
+            .from("review_helpful_votes")
             .insert({ review_id: reviewId, customer_id: customerId });
-        const { data: rev } = await db.from("product_reviews")
+        const { data: rev } = await db
+            .from("product_reviews")
             .select("helpful_count")
             .eq("id", reviewId)
             .maybeSingle();
         if (rev) {
-            await db.from("product_reviews")
+            await db
+                .from("product_reviews")
                 .update({ helpful_count: (rev.helpful_count ?? 0) + 1 })
                 .eq("id", reviewId);
         }
@@ -235,12 +241,14 @@ class ReviewRepository {
             .eq("status", "approved");
         if (!error) {
             // Increment reported_count
-            const { data: rev } = await db.from("product_reviews")
+            const { data: rev } = await db
+                .from("product_reviews")
                 .select("reported_count")
                 .eq("id", reviewId)
                 .maybeSingle();
             if (rev) {
-                await db.from("product_reviews")
+                await db
+                    .from("product_reviews")
                     .update({ reported_count: (rev.reported_count ?? 0) + 1 })
                     .eq("id", reviewId);
             }
@@ -281,9 +289,7 @@ class ReviewRepository {
         const pageSize = filters.pageSize ?? 30;
         const from = (page - 1) * pageSize;
         const to = from + pageSize - 1;
-        let q = db
-            .from("product_reviews")
-            .select(`id, rating, title, body, status, helpful_count, reported_count,
+        let q = db.from("product_reviews").select(`id, rating, title, body, status, helpful_count, reported_count,
          moderation_note, created_at, updated_at,
          customer:user_profiles(id, full_name),
          product:products(id, name, slug, seller_id)`, { count: "exact" });

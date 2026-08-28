@@ -1,7 +1,9 @@
 // src/index.ts
 function buildQueryString(params) {
   if (!params) return "";
-  const cleanEntries = Object.entries(params).filter(([_, v]) => v !== void 0 && v !== "");
+  const cleanEntries = Object.entries(params).filter(
+    ([_, v]) => v !== void 0 && v !== ""
+  );
   if (cleanEntries.length === 0) return "";
   return `?${new URLSearchParams(cleanEntries.map(([k, v]) => [k, String(v)])).toString()}`;
 }
@@ -94,7 +96,10 @@ var FloriaApiClient = class {
   }
   // Public Catalog API (/api/v1/catalog)
   async getProducts(params, options = {}) {
-    return this.request(`/api/v1/catalog/products${buildQueryString(params)}`, options);
+    return this.request(
+      `/api/v1/catalog/products${buildQueryString(params)}`,
+      options
+    );
   }
   async getProductBySlug(slug, options = {}) {
     return this.request(`/api/v1/catalog/products/${slug}`, options);
@@ -186,14 +191,20 @@ var FloriaApiClient = class {
     });
   }
   async setDefaultAddress(addressId) {
-    return this.request(`/api/v1/customer/users/addresses/${addressId}/default`, {
-      method: "PATCH"
-    });
+    return this.request(
+      `/api/v1/customer/users/addresses/${addressId}/default`,
+      {
+        method: "PATCH"
+      }
+    );
   }
   async deleteAddress(addressId) {
-    return this.request(`/api/v1/customer/users/addresses/${addressId}`, {
-      method: "DELETE"
-    });
+    return this.request(
+      `/api/v1/customer/users/addresses/${addressId}`,
+      {
+        method: "DELETE"
+      }
+    );
   }
   // Customer Checkout & Orders
   async createCheckout(data) {
@@ -210,7 +221,9 @@ var FloriaApiClient = class {
     });
   }
   async getOrderByCfOrderId(cfOrderId) {
-    return this.request(`/api/v1/payments/lookup-order?cf_order_id=${encodeURIComponent(cfOrderId)}`);
+    return this.request(
+      `/api/v1/payments/lookup-order?cf_order_id=${encodeURIComponent(cfOrderId)}`
+    );
   }
   async getPaymentStatus(paymentId) {
     return this.request(`/api/v1/payments/${paymentId}/status`);
@@ -227,7 +240,9 @@ var FloriaApiClient = class {
     if (params?.search) query.set("search", params.search);
     if (params?.limit) query.set("limit", String(params.limit));
     const qStr = query.toString();
-    return this.request(`/api/v1/payments/admin/all${qStr ? `?${qStr}` : ""}`);
+    return this.request(
+      `/api/v1/payments/admin/all${qStr ? `?${qStr}` : ""}`
+    );
   }
   // Admin Media & Images Management
   async getAdminMedia(params) {
@@ -283,7 +298,9 @@ var FloriaApiClient = class {
     return this.request("/api/v1/seller/applications");
   }
   async getSellerProducts(params) {
-    return this.request(`/api/v1/seller/products${buildQueryString(params)}`);
+    return this.request(
+      `/api/v1/seller/products${buildQueryString(params)}`
+    );
   }
   async getSellerProductById(id) {
     return this.request(`/api/v1/seller/products/${id}`);
@@ -319,9 +336,12 @@ var FloriaApiClient = class {
     });
   }
   async completeMediaUploadSession(sessionId) {
-    return this.request(`/api/v1/media/upload-session/${sessionId}/complete`, {
-      method: "POST"
-    });
+    return this.request(
+      `/api/v1/media/upload-session/${sessionId}/complete`,
+      {
+        method: "POST"
+      }
+    );
   }
   async getMediaUploadSessionStatus(sessionId) {
     return this.request(`/api/v1/media/upload-session/${sessionId}`);
@@ -333,26 +353,38 @@ var FloriaApiClient = class {
     });
   }
   async removeProductImage(productId, imageId) {
-    return this.request(`/api/v1/seller/products/${productId}/images/${imageId}`, {
-      method: "DELETE"
-    });
+    return this.request(
+      `/api/v1/seller/products/${productId}/images/${imageId}`,
+      {
+        method: "DELETE"
+      }
+    );
   }
   async reorderProductImages(productId, imageOrders) {
-    return this.request(`/api/v1/seller/products/${productId}/images/reorder`, {
-      method: "PATCH",
-      body: JSON.stringify({ imageOrders })
-    });
+    return this.request(
+      `/api/v1/seller/products/${productId}/images/reorder`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ imageOrders })
+      }
+    );
   }
   async setPrimaryProductImage(productId, imageId) {
-    return this.request(`/api/v1/seller/products/${productId}/images/${imageId}/primary`, {
-      method: "PATCH"
-    });
+    return this.request(
+      `/api/v1/seller/products/${productId}/images/${imageId}/primary`,
+      {
+        method: "PATCH"
+      }
+    );
   }
   async replaceProductImage(productId, imageId, params) {
-    return this.request(`/api/v1/seller/products/${productId}/images/${imageId}`, {
-      method: "PUT",
-      body: JSON.stringify(params)
-    });
+    return this.request(
+      `/api/v1/seller/products/${productId}/images/${imageId}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(params)
+      }
+    );
   }
   // ── STAGE 9 REMAINING MEDIA DOMAIN INTEGRATIONS ─────────────────────────
   async updateSellerLogo(assetId) {
@@ -386,7 +418,9 @@ var FloriaApiClient = class {
     });
   }
   async getSignedDocumentUrl(documentId) {
-    return this.request(`/api/v1/media/seller-documents/${documentId}/download`);
+    return this.request(
+      `/api/v1/media/seller-documents/${documentId}/download`
+    );
   }
   async updateNurseryBanner(assetId) {
     return this.request("/api/v1/media/nursery-banner", {
@@ -404,7 +438,9 @@ var FloriaApiClient = class {
     });
   }
   async getSellerOrders(params) {
-    return this.request(`/api/v1/seller/orders${buildQueryString(params)}`);
+    return this.request(
+      `/api/v1/seller/orders${buildQueryString(params)}`
+    );
   }
   async getSellerOrderById(id) {
     return this.request(`/api/v1/seller/orders/${id}`);
@@ -425,7 +461,9 @@ var FloriaApiClient = class {
     return this.request("/api/v1/seller/payouts");
   }
   async getSellerAnalytics(params) {
-    return this.request(`/api/v1/seller/analytics${buildQueryString(params)}`);
+    return this.request(
+      `/api/v1/seller/analytics${buildQueryString(params)}`
+    );
   }
   async getSellerDocuments() {
     return this.request("/api/v1/seller/documents");
@@ -437,20 +475,29 @@ var FloriaApiClient = class {
     });
   }
   async getSellerNotificationSettings() {
-    return this.request("/api/v1/seller/settings/notifications");
+    return this.request(
+      "/api/v1/seller/settings/notifications"
+    );
   }
   async updateSellerNotificationSettings(settings) {
-    return this.request("/api/v1/seller/settings/notifications", {
-      method: "PATCH",
-      body: JSON.stringify(settings)
-    });
+    return this.request(
+      "/api/v1/seller/settings/notifications",
+      {
+        method: "PATCH",
+        body: JSON.stringify(settings)
+      }
+    );
   }
   // ── Notifications API (/api/v1/notifications) ─────────────────────────────
   async getNotifications(params) {
-    return this.request(`/api/v1/notifications${buildQueryString(params)}`);
+    return this.request(
+      `/api/v1/notifications${buildQueryString(params)}`
+    );
   }
   async getUnreadNotificationCount() {
-    return this.request("/api/v1/notifications/unread-count");
+    return this.request(
+      "/api/v1/notifications/unread-count"
+    );
   }
   async markNotificationRead(id) {
     return this.request(`/api/v1/notifications/${id}/read`, {
@@ -478,7 +525,9 @@ var FloriaApiClient = class {
     return this.request("/api/v1/admin/dashboard");
   }
   async getAdminAnalytics(params) {
-    return this.request(`/api/v1/admin/analytics${buildQueryString(params)}`);
+    return this.request(
+      `/api/v1/admin/analytics${buildQueryString(params)}`
+    );
   }
   async updateAdminUser(id, payload) {
     return this.request(`/api/v1/admin/users/${id}`, {
@@ -505,7 +554,9 @@ var FloriaApiClient = class {
     });
   }
   async getAdminUsers(params) {
-    return this.request(`/api/v1/admin/users${buildQueryString(params)}`);
+    return this.request(
+      `/api/v1/admin/users${buildQueryString(params)}`
+    );
   }
   async getAdminUserById(id) {
     return this.request(`/api/v1/admin/users/${id}`);
@@ -517,7 +568,9 @@ var FloriaApiClient = class {
     });
   }
   async getAdminSellers(params) {
-    return this.request(`/api/v1/admin/sellers${buildQueryString(params)}`);
+    return this.request(
+      `/api/v1/admin/sellers${buildQueryString(params)}`
+    );
   }
   async getAdminSellerById(id) {
     return this.request(`/api/v1/admin/sellers/${id}`);
@@ -546,7 +599,9 @@ var FloriaApiClient = class {
     return this.request(`/api/v1/admin/sellers/${id}/documents`);
   }
   async getAdminProducts(params) {
-    return this.request(`/api/v1/admin/products${buildQueryString(params)}`);
+    return this.request(
+      `/api/v1/admin/products${buildQueryString(params)}`
+    );
   }
   async getAdminProductById(id) {
     return this.request(`/api/v1/admin/products/${id}`);
@@ -558,19 +613,27 @@ var FloriaApiClient = class {
     });
   }
   async publishProduct(id) {
-    return this.request(`/api/v1/admin/products/${id}/publish`, { method: "PATCH" });
+    return this.request(`/api/v1/admin/products/${id}/publish`, {
+      method: "PATCH"
+    });
   }
   async unpublishProduct(id) {
-    return this.request(`/api/v1/admin/products/${id}/unpublish`, { method: "PATCH" });
+    return this.request(`/api/v1/admin/products/${id}/unpublish`, {
+      method: "PATCH"
+    });
   }
   async archiveProduct(id) {
-    return this.request(`/api/v1/admin/products/${id}/archive`, { method: "PATCH" });
+    return this.request(`/api/v1/admin/products/${id}/archive`, {
+      method: "PATCH"
+    });
   }
   async getAdminCategories() {
     return this.request("/api/v1/admin/categories");
   }
   async getCategoryProductsCount(id) {
-    return this.request(`/api/v1/admin/categories/${id}/products-count`);
+    return this.request(
+      `/api/v1/admin/categories/${id}/products-count`
+    );
   }
   async createAdminCategory(data) {
     return this.request("/api/v1/admin/categories", {
@@ -585,22 +648,31 @@ var FloriaApiClient = class {
     });
   }
   async getAdminOrders(params) {
-    return this.request(`/api/v1/admin/orders${buildQueryString(params)}`);
+    return this.request(
+      `/api/v1/admin/orders${buildQueryString(params)}`
+    );
   }
   async getAdminOrderById(id) {
     return this.request(`/api/v1/admin/orders/${id}`);
   }
   async getAuditLogs(params) {
-    return this.request(`/api/v1/admin/audit-logs${buildQueryString(params)}`);
+    return this.request(
+      `/api/v1/admin/audit-logs${buildQueryString(params)}`
+    );
   }
   async getPlatformSettings() {
-    return this.request("/api/v1/admin/settings/platform");
+    return this.request(
+      "/api/v1/admin/settings/platform"
+    );
   }
   async updateCommissionRate(commissionRate) {
-    return this.request("/api/v1/admin/settings/commission", {
-      method: "PATCH",
-      body: JSON.stringify({ commissionRate })
-    });
+    return this.request(
+      "/api/v1/admin/settings/commission",
+      {
+        method: "PATCH",
+        body: JSON.stringify({ commissionRate })
+      }
+    );
   }
   // ── Operations API (/api/v1/operations) ──────────────────────────────────
   async getOperationsHealth() {
@@ -610,7 +682,9 @@ var FloriaApiClient = class {
     return this.request("/api/v1/operations/dashboard");
   }
   async getOperationsOrders(params) {
-    return this.request(`/api/v1/operations/orders${buildQueryString(params)}`);
+    return this.request(
+      `/api/v1/operations/orders${buildQueryString(params)}`
+    );
   }
   async getOperationsOrderById(id) {
     return this.request(`/api/v1/operations/orders/${id}`);
@@ -622,7 +696,9 @@ var FloriaApiClient = class {
     });
   }
   async getPickups(params) {
-    return this.request(`/api/v1/operations/pickups${buildQueryString(params)}`);
+    return this.request(
+      `/api/v1/operations/pickups${buildQueryString(params)}`
+    );
   }
   async updatePickupStatus(id, status, notes) {
     return this.request(`/api/v1/operations/pickups/${id}/status`, {
@@ -631,7 +707,9 @@ var FloriaApiClient = class {
     });
   }
   async getPackingTasks(params) {
-    return this.request(`/api/v1/operations/packing${buildQueryString(params)}`);
+    return this.request(
+      `/api/v1/operations/packing${buildQueryString(params)}`
+    );
   }
   async updatePackingTask(id, status, verifiedItemsCount) {
     return this.request(`/api/v1/operations/packing/${id}/status`, {
@@ -640,37 +718,55 @@ var FloriaApiClient = class {
     });
   }
   async getDeliveries(params) {
-    return this.request(`/api/v1/operations/deliveries${buildQueryString(params)}`);
+    return this.request(
+      `/api/v1/operations/deliveries${buildQueryString(params)}`
+    );
   }
   async getDeliveryById(id) {
-    return this.request(`/api/v1/operations/deliveries/${id}`);
+    return this.request(
+      `/api/v1/operations/deliveries/${id}`
+    );
   }
   async assignDelivery(id, data) {
-    return this.request(`/api/v1/operations/deliveries/${id}/assign`, {
-      method: "POST",
-      body: JSON.stringify(data)
-    });
+    return this.request(
+      `/api/v1/operations/deliveries/${id}/assign`,
+      {
+        method: "POST",
+        body: JSON.stringify(data)
+      }
+    );
   }
   async reassignDelivery(id, data) {
-    return this.request(`/api/v1/operations/deliveries/${id}/reassign`, {
-      method: "POST",
-      body: JSON.stringify(data)
-    });
+    return this.request(
+      `/api/v1/operations/deliveries/${id}/reassign`,
+      {
+        method: "POST",
+        body: JSON.stringify(data)
+      }
+    );
   }
   async updateDeliveryStatus(id, status) {
-    return this.request(`/api/v1/operations/deliveries/${id}/status`, {
-      method: "POST",
-      body: JSON.stringify({ status })
-    });
+    return this.request(
+      `/api/v1/operations/deliveries/${id}/status`,
+      {
+        method: "POST",
+        body: JSON.stringify({ status })
+      }
+    );
   }
   async completeDeliveryWithPod(id, data) {
-    return this.request(`/api/v1/operations/deliveries/${id}/complete`, {
-      method: "POST",
-      body: JSON.stringify(data)
-    });
+    return this.request(
+      `/api/v1/operations/deliveries/${id}/complete`,
+      {
+        method: "POST",
+        body: JSON.stringify(data)
+      }
+    );
   }
   async getDeliveryPod(id) {
-    return this.request(`/api/v1/operations/deliveries/${id}/pod`);
+    return this.request(
+      `/api/v1/operations/deliveries/${id}/pod`
+    );
   }
   // ── Media Upload Sessions (/api/v1/media) ──────────────────────────────────
   async createUploadSession(data) {
@@ -691,9 +787,7 @@ var FloriaApiClient = class {
     );
   }
   async getReviewEligibility(productId) {
-    return this.request(
-      `/api/v1/catalog/products/${productId}/review-eligibility`
-    );
+    return this.request(`/api/v1/catalog/products/${productId}/review-eligibility`);
   }
   async submitReview(productId, payload) {
     return this.request(`/api/v1/catalog/products/${productId}/reviews`, {
@@ -708,9 +802,12 @@ var FloriaApiClient = class {
     });
   }
   async markReviewHelpful(productId, reviewId) {
-    return this.request(`/api/v1/catalog/products/${productId}/reviews/${reviewId}/helpful`, {
-      method: "POST"
-    });
+    return this.request(
+      `/api/v1/catalog/products/${productId}/reviews/${reviewId}/helpful`,
+      {
+        method: "POST"
+      }
+    );
   }
   async getMyReviews(params) {
     return this.request(
@@ -723,7 +820,9 @@ var FloriaApiClient = class {
     );
   }
   async flagReview(reviewId) {
-    return this.request(`/api/v1/seller/reviews/${reviewId}/flag`, { method: "PATCH" });
+    return this.request(`/api/v1/seller/reviews/${reviewId}/flag`, {
+      method: "PATCH"
+    });
   }
   async adminGetReviews(params) {
     return this.request(
@@ -744,16 +843,17 @@ var FloriaApiClient = class {
     );
   }
   async getRelatedProducts(slug, options = {}) {
-    return this.request(`/api/v1/catalog/products/${slug}/related`, options);
+    return this.request(
+      `/api/v1/catalog/products/${slug}/related`,
+      options
+    );
   }
   async getRankedNurseries(options = {}) {
     return this.request(`/api/v1/catalog/sellers`, options);
   }
   // ── ADMIN FINANCIAL TRANSPARENCY ─────────────────────────────────────────
   async getAdminProductFinancialCalculation(productId) {
-    return this.request(
-      `/api/v1/admin/products/${productId}/financial-calculation`
-    );
+    return this.request(`/api/v1/admin/products/${productId}/financial-calculation`);
   }
   async getAdminOrderFinancialBreakdown(orderId) {
     return this.request(
@@ -801,9 +901,7 @@ var FloriaApiClient = class {
   }
   // ── VERSIONED PRICING POLICIES (PHASE 3.23) ───────────────────────────────
   async getPricingPolicies() {
-    return this.request(
-      "/api/v1/admin/pricing-policies"
-    );
+    return this.request("/api/v1/admin/pricing-policies");
   }
   async getActivePricingPolicy() {
     return this.request(

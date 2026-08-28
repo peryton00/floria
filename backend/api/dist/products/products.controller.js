@@ -29,7 +29,12 @@ class ProductsController {
         try {
             const product = await product_repository_js_1.productRepository.findBySlug(String(req.params.slug));
             if (!product) {
-                res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Product not found." } });
+                res
+                    .status(404)
+                    .json({
+                    success: false,
+                    error: { code: "NOT_FOUND", message: "Product not found." },
+                });
                 return;
             }
             const related = await products_service_js_1.productsService.getRelated(product.product?.id ?? product.id, product.product?.category_id ?? product.category_id);

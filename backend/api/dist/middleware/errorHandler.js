@@ -21,7 +21,9 @@ function errorHandler(err, _req, res, _next) {
         success: false,
         error: {
             code: "INTERNAL_ERROR",
-            message: isProd ? "An unexpected internal server error occurred." : err.message,
+            message: isProd
+                ? "An unexpected internal server error occurred."
+                : err.message,
         },
     });
 }

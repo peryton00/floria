@@ -80,17 +80,32 @@ class PaymentsService {
         if (!verification.isValid && process.env.NODE_ENV === "production") {
             throw errors_js_1.Errors.authRequired("Invalid Cashfree webhook signature");
         }
-        const eventId = verification.providerEventId || (input.headers["x-webhook-timestamp"] ? `cf_evt_${input.headers["x-webhook-timestamp"]}` : undefined);
-        const cfOrderId = verification.cfOrderId || verification.payload?.data?.order?.order_id;
-        const cfPaymentId = verification.cfPaymentId || verification.payload?.data?.payment?.cf_payment_id;
-        const rawStatus = (verification.status || verification.payload?.data?.payment?.payment_status || "").toUpperCase();
+        const eventId = verification.providerEventId ||
+            (input.headers["x-webhook-timestamp"]
+                ? `cf_evt_${input.headers["x-webhook-timestamp"]}`
+                : undefined);
+        const cfOrderId = verification.cfOrderId ||
+            verification.payload?.data?.order?.order_id;
+        const cfPaymentId = verification.cfPaymentId ||
+            verification.payload?.data?.payment?.cf_payment_id;
+        const rawStatus = (verification.status ||
+            verification.payload?.data?.payment?.payment_status ||
+            "").toUpperCase();
         if (!cfOrderId) {
-            return { success: false, idempotent: false, message: "Missing order reference in webhook payload" };
+            return {
+                success: false,
+                idempotent: false,
+                message: "Missing order reference in webhook payload",
+            };
         }
         const eventKey = eventId || `cf_${cfOrderId}_${rawStatus}`;
         // Idempotency check
         if (processedWebhookEvents.has(eventKey)) {
-            return { success: true, idempotent: true, message: "Webhook event already processed" };
+            return {
+                success: true,
+                idempotent: true,
+                message: "Webhook event already processed",
+            };
         }
         const db = (0, database_js_1.getAdminDb)();
         if (eventId) {
@@ -102,7 +117,11 @@ class PaymentsService {
                     .maybeSingle();
                 if (existingEvt) {
                     processedWebhookEvents.add(eventKey);
-                    return { success: true, idempotent: true, message: "Webhook event recorded in payment_events" };
+                    return {
+                        success: true,
+                        idempotent: true,
+                        message: "Webhook event recorded in payment_events",
+                    };
                 }
             }
             catch { }
@@ -111,27 +130,45 @@ class PaymentsService {
         // Locate corresponding payment in database by cf_order_id, payment_reference, or order_id
         let payment = null;
         try {
-            const q = db.from("payments").select("id, order_id, customer_id, amount_paise, status");
+            const q = db
+                .from("payments")
+                .select("id, order_id, customer_id, amount_paise, status");
             if (typeof q.or === "function") {
-                const { data } = await q.or(`cf_order_id.eq.${cfOrderId},payment_reference.eq.${cfOrderId},order_id.eq.${cfOrderId}`).maybeSingle();
+                const { data } = await q
+                    .or(`cf_order_id.eq.${cfOrderId},payment_reference.eq.${cfOrderId},order_id.eq.${cfOrderId}`)
+                    .maybeSingle();
                 payment = data;
             }
             else {
-                const { data } = await q.eq("payment_reference", cfOrderId).maybeSingle();
+                const { data } = await q
+                    .eq("payment_reference", cfOrderId)
+                    .maybeSingle();
                 payment = data;
             }
         }
         catch {
             try {
-                const { data } = await db.from("payments").select("id, order_id, customer_id, amount_paise, status").eq("order_id", cfOrderId).maybeSingle();
+                const { data } = await db
+                    .from("payments")
+                    .select("id, order_id, customer_id, amount_paise, status")
+                    .eq("order_id", cfOrderId)
+                    .maybeSingle();
                 payment = data;
             }
             catch { }
         }
-        const isPaidSuccess = rawStatus === "SUCCESS" || rawStatus === "PAID" || rawStatus === "CAPTURED";
-        const isFailed = rawStatus === "FAILED" || rawStatus === "CANCELLED" || rawStatus === "USER_DROPPED";
+        const isPaidSuccess = rawStatus === "SUCCESS" ||
+            rawStatus === "PAID" ||
+            rawStatus === "CAPTURED";
+        const isFailed = rawStatus === "FAILED" ||
+            rawStatus === "CANCELLED" ||
+            rawStatus === "USER_DROPPED";
         if (payment) {
-            const newStatus = isPaidSuccess ? "paid" : isFailed ? "failed" : "pending";
+            const newStatus = isPaidSuccess
+                ? "paid"
+                : isFailed
+                    ? "failed"
+                    : "pending";
             await db
                 .from("payments")
                 .update({
@@ -157,7 +194,10 @@ class PaymentsService {
             }
             // Order & Notification state transitions
             if (isPaidSuccess && payment.order_id) {
-                await db.from("orders").update({ status: "seller_pending" }).eq("id", payment.order_id);
+                await db
+                    .from("orders")
+                    .update({ status: "seller_pending" })
+                    .eq("id", payment.order_id);
                 // Update seller ledger entries to available
                 await db
                     .from("seller_ledger_entries")
@@ -192,7 +232,11 @@ class PaymentsService {
                             data: { orderId: payment.order_id, paymentId: payment.id },
                             source_type: "payment",
                             source_id: `${payment.id}_paid`,
-                            navigation: { entityType: "ORDER", entityId: payment.order_id, action: "VIEW" },
+                            navigation: {
+                                entityType: "ORDER",
+                                entityId: payment.order_id,
+                                action: "VIEW",
+                            },
                         });
                     }
                     catch (notifErr) {
@@ -281,7 +325,9 @@ class PaymentsService {
             reason,
         });
         // Save refund record
-        const { data: refundRow } = await db.from("refunds").insert({
+        const { data: refundRow } = await db
+            .from("refunds")
+            .insert({
             payment_id: payment.id,
             order_id: payment.order_id,
             refund_reference: refundResult.refundReference,
@@ -290,10 +336,15 @@ class PaymentsService {
             status: refundResult.status,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
-        }).select().maybeSingle();
+        })
+            .select()
+            .maybeSingle();
         // Update payment status to refunded or partially_refunded
         const newPayStatus = amountPaise >= payment.amount_paise ? "refunded" : "partially_refunded";
-        await db.from("payments").update({ status: newPayStatus }).eq("id", payment.id);
+        await db
+            .from("payments")
+            .update({ status: newPayStatus })
+            .eq("id", payment.id);
         await audit_repository_js_1.auditRepository.log({
             actor_user_id: adminOrSellerUserId,
             actor_role: "admin",

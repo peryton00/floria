@@ -20,7 +20,7 @@ async function authenticateToken(req, _res, next) {
     }
     try {
         const supabase = (0, database_js_1.getAnonDb)();
-        const { data: { user }, error } = await supabase.auth.getUser(token);
+        const { data: { user }, error, } = await supabase.auth.getUser(token);
         if (error || !user) {
             return next(errors_js_1.Errors.authRequired("Invalid or expired session token."));
         }
@@ -34,7 +34,9 @@ async function authenticateToken(req, _res, next) {
         const role = roleStr;
         let sellerId;
         let sellerStatus;
-        if (roleStr === "seller" || roleStr === "admin" || roleStr === "super_admin") {
+        if (roleStr === "seller" ||
+            roleStr === "admin" ||
+            roleStr === "super_admin") {
             const { data: sp } = await adminDb
                 .from("seller_profiles")
                 .select("id, status")

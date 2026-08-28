@@ -242,7 +242,9 @@ class ProductMediaService {
         if (!asset || asset.seller_id !== sellerId) {
             throw errors_js_1.Errors.forbidden("Cross-seller media asset attachment is prohibited.");
         }
-        if (asset.status !== "READY" || asset.media_category !== "IMAGE" || asset.storage_bucket !== "public-media") {
+        if (asset.status !== "READY" ||
+            asset.media_category !== "IMAGE" ||
+            asset.storage_bucket !== "public-media") {
             throw errors_js_1.Errors.validation("Target media asset is not a valid READY public image.");
         }
         const supabaseUrl = process.env.SUPABASE_URL || "https://supabase.co";

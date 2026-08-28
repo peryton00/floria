@@ -17,7 +17,11 @@ class AddressService {
     async createAddress(userId, input) {
         const db = (0, database_js_1.getAdminDb)();
         // Ensure user_profiles row exists for foreign key constraint
-        const { data: profile } = await db.from("user_profiles").select("id").eq("id", userId).maybeSingle();
+        const { data: profile } = await db
+            .from("user_profiles")
+            .select("id")
+            .eq("id", userId)
+            .maybeSingle();
         if (!profile) {
             await db.from("user_profiles").insert({
                 id: userId,
@@ -31,7 +35,10 @@ class AddressService {
         const shouldBeDefault = existing.length === 0 || input.is_default === true;
         if (shouldBeDefault && existing.length > 0) {
             // Clear existing default flags
-            await db.from("addresses").update({ is_default: false }).eq("user_id", userId);
+            await db
+                .from("addresses")
+                .update({ is_default: false })
+                .eq("user_id", userId);
         }
         const { data: addr, error } = await db
             .from("addresses")
@@ -62,7 +69,10 @@ class AddressService {
         if (!target)
             throw errors_js_1.Errors.notFound("Address");
         if (input.is_default && existing.length > 1) {
-            await db.from("addresses").update({ is_default: false }).eq("user_id", userId);
+            await db
+                .from("addresses")
+                .update({ is_default: false })
+                .eq("user_id", userId);
         }
         const { data: addr, error } = await db
             .from("addresses")
@@ -99,7 +109,10 @@ class AddressService {
             .maybeSingle();
         if (!target)
             throw errors_js_1.Errors.notFound("Address");
-        await db.from("addresses").update({ is_default: false }).eq("user_id", userId);
+        await db
+            .from("addresses")
+            .update({ is_default: false })
+            .eq("user_id", userId);
         await db.from("addresses").update({ is_default: true }).eq("id", addressId);
         return this.getAddresses(userId);
     }
@@ -109,12 +122,19 @@ class AddressService {
         const target = existing.find((a) => a.id === addressId);
         if (!target)
             throw errors_js_1.Errors.notFound("Address");
-        await db.from("addresses").delete().eq("id", addressId).eq("user_id", userId);
+        await db
+            .from("addresses")
+            .delete()
+            .eq("id", addressId)
+            .eq("user_id", userId);
         // If deleted address was default, promote another address to default
         if (target.is_default) {
             const remaining = existing.filter((a) => a.id !== addressId);
             if (remaining.length > 0) {
-                await db.from("addresses").update({ is_default: true }).eq("id", remaining[0].id);
+                await db
+                    .from("addresses")
+                    .update({ is_default: true })
+                    .eq("id", remaining[0].id);
             }
         }
         return this.getAddresses(userId);

@@ -126,7 +126,9 @@ class MediaWorker {
                     })
                         .eq("id", payload.sessionId);
                 }
-                await adminDb.storage.from("media-staging").remove([payload.stagingPath]);
+                await adminDb.storage
+                    .from("media-staging")
+                    .remove([payload.stagingPath]);
                 console.log(`[MediaWorker] Document asset '${payload.assetId}' processed into private-documents.`);
                 return;
             }
@@ -167,7 +169,9 @@ class MediaWorker {
                 }
                 // 6. Database Finalization: Insert media_variants
                 if (variantRecords.length > 0) {
-                    const { error: insertErr } = await adminDb.from("media_variants").insert(variantRecords);
+                    const { error: insertErr } = await adminDb
+                        .from("media_variants")
+                        .insert(variantRecords);
                     if (insertErr) {
                         throw new Error(`Failed to insert media_variants records: ${insertErr.message}`);
                     }
@@ -214,14 +218,19 @@ class MediaWorker {
                 durationMs,
                 inputSizeBytes: engineResult.input.sizeBytes,
                 outputSizeBytes: totalOutputBytes,
-                variantsGenerated: variantRecords.map((v) => ({ name: v.variant_name, path: v.storage_path })),
+                variantsGenerated: variantRecords.map((v) => ({
+                    name: v.variant_name,
+                    path: v.storage_path,
+                })),
             }));
         }
         catch (err) {
             // ROLLBACK: Delete any partial storage variants uploaded during this attempt
             if (uploadedVariantPaths.length > 0) {
                 try {
-                    await adminDb.storage.from("public-media").remove(uploadedVariantPaths);
+                    await adminDb.storage
+                        .from("public-media")
+                        .remove(uploadedVariantPaths);
                 }
                 catch (cleanupErr) {
                     console.error(`[MediaWorker] Cleanup error for asset '${payload.assetId}': ${cleanupErr.message}`);

@@ -33,7 +33,11 @@ class SellerRepository {
         const db = (0, database_js_1.getAdminDb)();
         // Auto-sync address string if structured components are updated
         let address = updates.address;
-        if (!address && (updates.address_line1 || updates.city || updates.state || updates.pincode)) {
+        if (!address &&
+            (updates.address_line1 ||
+                updates.city ||
+                updates.state ||
+                updates.pincode)) {
             address = [
                 updates.address_line1,
                 updates.address_line2,
@@ -177,13 +181,17 @@ class SellerRepository {
         if (filters?.search) {
             q = q.or(`name.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
         }
-        const { data } = await (typeof q.order === "function" ? q.order("created_at", { ascending: false }) : q);
+        const { data } = await (typeof q.order === "function"
+            ? q.order("created_at", { ascending: false })
+            : q);
         let results = data || [];
         results = results.filter((p) => p.status !== "deleted");
         if (filters?.stock === "low") {
             results = results.filter((p) => {
                 const qty = p.inventory?.[0]?.stock_quantity ?? p.inventory?.stock_quantity ?? 0;
-                const thresh = p.inventory?.[0]?.low_stock_threshold ?? p.inventory?.low_stock_threshold ?? 5;
+                const thresh = p.inventory?.[0]?.low_stock_threshold ??
+                    p.inventory?.low_stock_threshold ??
+                    5;
                 return qty > 0 && qty <= thresh;
             });
         }
@@ -195,14 +203,19 @@ class SellerRepository {
         }
         results = await productRepo.enrichProductImages(results);
         // Self-heal any stale media-staging URLs in product_images
-        const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "https://supabase.co";
+        const supabaseUrl = process.env.SUPABASE_URL ||
+            process.env.NEXT_PUBLIC_SUPABASE_URL ||
+            "https://supabase.co";
         for (const p of results) {
             if (Array.isArray(p.images)) {
                 for (const img of p.images) {
                     if (img.asset_id && img.url?.includes("/media-staging/")) {
                         const cleanUrl = `${supabaseUrl}/storage/v1/object/public/public-media/products/${sellerId}/${img.asset_id}/medium.webp`;
                         img.url = cleanUrl;
-                        await db.from("product_images").update({ url: cleanUrl }).eq("id", img.id);
+                        await db
+                            .from("product_images")
+                            .update({ url: cleanUrl })
+                            .eq("id", img.id);
                     }
                 }
             }
@@ -222,12 +235,17 @@ class SellerRepository {
             return null;
         const [enriched] = await productRepo.enrichProductImages([data]);
         if (enriched && Array.isArray(enriched.images)) {
-            const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "https://supabase.co";
+            const supabaseUrl = process.env.SUPABASE_URL ||
+                process.env.NEXT_PUBLIC_SUPABASE_URL ||
+                "https://supabase.co";
             for (const img of enriched.images) {
                 if (img.asset_id && img.url?.includes("/media-staging/")) {
                     const cleanUrl = `${supabaseUrl}/storage/v1/object/public/public-media/products/${sellerId}/${img.asset_id}/medium.webp`;
                     img.url = cleanUrl;
-                    await db.from("product_images").update({ url: cleanUrl }).eq("id", img.id);
+                    await db
+                        .from("product_images")
+                        .update({ url: cleanUrl })
+                        .eq("id", img.id);
                 }
             }
         }
@@ -259,7 +277,8 @@ class SellerRepository {
         if (prodErr || !prod)
             throw prodErr || new Error("Failed to create product");
         // Auto-generate permanent unique SKU if not provided
-        const autoSku = productData.sku?.trim() || `FLR-${prod.id.replace(/-/g, "").slice(0, 8).toUpperCase()}`;
+        const autoSku = productData.sku?.trim() ||
+            `FLR-${prod.id.replace(/-/g, "").slice(0, 8).toUpperCase()}`;
         // Inventory
         await db.from("inventory").insert({
             product_id: prod.id,
@@ -271,7 +290,9 @@ class SellerRepository {
             updated_at: now,
         });
         // Primary & Additional Images Support
-        const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "https://supabase.co";
+        const supabaseUrl = process.env.SUPABASE_URL ||
+            process.env.NEXT_PUBLIC_SUPABASE_URL ||
+            "https://supabase.co";
         const resolveSanitizedUrl = (aId, rUrl) => {
             if (aId) {
                 return `${supabaseUrl}/storage/v1/object/public/public-media/products/${sellerId}/${aId}/medium.webp`;
@@ -284,9 +305,15 @@ class SellerRepository {
         if (Array.isArray(productData.images) && productData.images.length > 0) {
             for (let i = 0; i < productData.images.length; i++) {
                 const imgObj = productData.images[i];
-                const assetId = typeof imgObj === "string" ? imgObj : (imgObj.asset_id || imgObj.assetId || null);
-                const rawUrl = typeof imgObj === "string" ? imgObj : (imgObj.url || productData.image_url || "/floria-logo.png");
-                const isPrimary = typeof imgObj === "object" && imgObj.is_primary !== undefined ? imgObj.is_primary : i === 0;
+                const assetId = typeof imgObj === "string"
+                    ? imgObj
+                    : imgObj.asset_id || imgObj.assetId || null;
+                const rawUrl = typeof imgObj === "string"
+                    ? imgObj
+                    : imgObj.url || productData.image_url || "/floria-logo.png";
+                const isPrimary = typeof imgObj === "object" && imgObj.is_primary !== undefined
+                    ? imgObj.is_primary
+                    : i === 0;
                 await db.from("product_images").insert({
                     product_id: prod.id,
                     asset_id: assetId,
@@ -327,10 +354,15 @@ class SellerRepository {
         if (updates.description !== undefined)
             prodPayload["description"] = updates.description?.trim() || null;
         if (updates.care_instructions !== undefined)
-            prodPayload["care_instructions"] = updates.care_instructions?.trim() || null;
+            prodPayload["care_instructions"] =
+                updates.care_instructions?.trim() || null;
         if (updates.status)
             prodPayload["status"] = updates.status;
-        await db.from("products").update(prodPayload).eq("id", productId).eq("seller_id", sellerId);
+        await db
+            .from("products")
+            .update(prodPayload)
+            .eq("id", productId)
+            .eq("seller_id", sellerId);
         // Update Inventory
         if (updates.price_paise !== undefined ||
             updates.stock_quantity !== undefined ||
@@ -345,11 +377,17 @@ class SellerRepository {
                 invPayload["low_stock_threshold"] = Math.max(0, updates.low_stock_threshold);
             if (updates.sku !== undefined)
                 invPayload["sku"] = updates.sku?.trim() || null;
-            await db.from("inventory").update(invPayload).eq("product_id", productId).eq("seller_id", sellerId);
+            await db
+                .from("inventory")
+                .update(invPayload)
+                .eq("product_id", productId)
+                .eq("seller_id", sellerId);
         }
         // Update Primary image if image_url or asset_id provided
         if (updates.asset_id || updates.image_url) {
-            const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "https://supabase.co";
+            const supabaseUrl = process.env.SUPABASE_URL ||
+                process.env.NEXT_PUBLIC_SUPABASE_URL ||
+                "https://supabase.co";
             const { data: primaryImg } = await db
                 .from("product_images")
                 .select("id")
@@ -367,7 +405,10 @@ class SellerRepository {
                 const imgPayload = { url: cleanUrl };
                 if (aId)
                     imgPayload["asset_id"] = aId;
-                await db.from("product_images").update(imgPayload).eq("id", primaryImg.id);
+                await db
+                    .from("product_images")
+                    .update(imgPayload)
+                    .eq("id", primaryImg.id);
             }
             else {
                 await db.from("product_images").insert({
@@ -410,7 +451,9 @@ class SellerRepository {
     async findSellerOrders(sellerId, filters) {
         const db = (0, database_js_1.getAdminDb)();
         // Retrieve seller profile to get both seller profile ID and user_id
-        const profQuery = db.from("seller_profiles").select("id, user_id, business_name");
+        const profQuery = db
+            .from("seller_profiles")
+            .select("id, user_id, business_name");
         const { data: sellerProf } = await (typeof profQuery.or === "function"
             ? profQuery.or(`id.eq.${sellerId},user_id.eq.${sellerId}`).maybeSingle()
             : profQuery.eq("id", sellerId).maybeSingle());
@@ -437,7 +480,7 @@ class SellerRepository {
             const lineItems = (order.order_items || []).map((item) => {
                 const pricePaise = item.unit_price_paise_snapshot || 0;
                 const basePrice = item.base_price_paise_snapshot ?? item.unit_price_paise_snapshot ?? 0;
-                const commRate = item.commission_rate_snapshot ?? (order.commission_rate ?? 0);
+                const commRate = item.commission_rate_snapshot ?? order.commission_rate ?? 0;
                 const commPaise = item.commission_paise_snapshot ?? Math.round(basePrice * commRate);
                 const sellerNetPaise = basePrice - commPaise;
                 return {
@@ -453,7 +496,9 @@ class SellerRepository {
                     commission_paise: commPaise,
                 };
             });
-            const subtotalPaise = lineItems.reduce((sum, it) => sum + it.pricePaise * it.quantity, 0) || order.subtotal_paise || 0;
+            const subtotalPaise = lineItems.reduce((sum, it) => sum + it.pricePaise * it.quantity, 0) ||
+                order.subtotal_paise ||
+                0;
             const sellerPayoutPaise = lineItems.reduce((sum, it) => sum + it.seller_net_paise * it.quantity, 0);
             orderMap.set(order.id, {
                 masterOrderId: order.id,
@@ -471,7 +516,9 @@ class SellerRepository {
                 totalPaise: subtotalPaise,
                 status: order.status === "preparing" ? "Preparing" : "Order Placed",
                 masterStatus: order.status,
-                paymentMethod: order.notes?.includes("COD") ? "Cash on Delivery" : "Online Payment",
+                paymentMethod: order.notes?.includes("COD")
+                    ? "Cash on Delivery"
+                    : "Online Payment",
                 createdAt: new Date(order.created_at || Date.now()).toLocaleDateString("en-IN", {
                     day: "numeric",
                     month: "short",
@@ -501,7 +548,9 @@ class SellerRepository {
                     totalPaise: 0,
                     status: order.status === "preparing" ? "Preparing" : "Order Placed",
                     masterStatus: order.status,
-                    paymentMethod: order.notes?.includes("COD") ? "Cash on Delivery" : "Online Payment",
+                    paymentMethod: order.notes?.includes("COD")
+                        ? "Cash on Delivery"
+                        : "Online Payment",
                     createdAt: new Date(order.created_at || Date.now()).toLocaleDateString("en-IN", {
                         day: "numeric",
                         month: "short",
@@ -515,7 +564,7 @@ class SellerRepository {
             if (!exists) {
                 const pricePaise = item.unit_price_paise_snapshot || 0;
                 const basePrice = item.base_price_paise_snapshot ?? item.unit_price_paise_snapshot ?? 0;
-                const commRate = item.commission_rate_snapshot ?? (order.commission_rate ?? 0);
+                const commRate = item.commission_rate_snapshot ?? order.commission_rate ?? 0;
                 const commPaise = item.commission_paise_snapshot ?? Math.round(basePrice * commRate);
                 const sellerNetPaise = basePrice - commPaise;
                 entry.items.push({
@@ -532,7 +581,8 @@ class SellerRepository {
                 });
                 entry.subtotalPaise += pricePaise * item.quantity;
                 entry.totalPaise = entry.subtotalPaise;
-                entry.seller_payout_paise = (entry.seller_payout_paise || 0) + (sellerNetPaise * item.quantity);
+                entry.seller_payout_paise =
+                    (entry.seller_payout_paise || 0) + sellerNetPaise * item.quantity;
             }
         });
         // Apply status overrides from seller_order_fulfillments table
@@ -578,7 +628,9 @@ class SellerRepository {
             .maybeSingle();
         if (!order)
             return null;
-        const profQuery = db.from("seller_profiles").select("id, user_id, business_name");
+        const profQuery = db
+            .from("seller_profiles")
+            .select("id, user_id, business_name");
         const { data: sellerProf } = await (typeof profQuery.or === "function"
             ? profQuery.or(`id.eq.${sellerId},user_id.eq.${sellerId}`).maybeSingle()
             : profQuery.eq("id", sellerId).maybeSingle());
@@ -591,7 +643,7 @@ class SellerRepository {
         const lineItems = items.map((it) => {
             const pricePaise = it.unit_price_paise_snapshot || 0;
             const basePrice = it.base_price_paise_snapshot ?? it.unit_price_paise_snapshot ?? 0;
-            const commRate = it.commission_rate_snapshot ?? (order.commission_rate ?? 0);
+            const commRate = it.commission_rate_snapshot ?? order.commission_rate ?? 0;
             const commPaise = it.commission_paise_snapshot ?? Math.round(basePrice * commRate);
             const sellerNetPaise = basePrice - commPaise;
             return {
@@ -607,7 +659,9 @@ class SellerRepository {
                 commission_paise: commPaise,
             };
         });
-        const subtotalPaise = lineItems.reduce((sum, it) => sum + it.pricePaise * it.quantity, 0) || order.subtotal_paise || 0;
+        const subtotalPaise = lineItems.reduce((sum, it) => sum + it.pricePaise * it.quantity, 0) ||
+            order.subtotal_paise ||
+            0;
         const sellerPayoutPaise = lineItems.reduce((sum, it) => sum + it.seller_net_paise * it.quantity, 0);
         return {
             masterOrderId: order.id,
@@ -619,16 +673,27 @@ class SellerRepository {
                 phone: order.delivery_address_snapshot?.phone || "",
                 address: typeof order.delivery_address_snapshot === "string"
                     ? order.delivery_address_snapshot
-                    : [order.delivery_address_snapshot?.line1, order.delivery_address_snapshot?.line2, order.delivery_address_snapshot?.city, order.delivery_address_snapshot?.state, order.delivery_address_snapshot?.pincode].filter(Boolean).join(", ") || "Raipur, Chhattisgarh",
+                    : [
+                        order.delivery_address_snapshot?.line1,
+                        order.delivery_address_snapshot?.line2,
+                        order.delivery_address_snapshot?.city,
+                        order.delivery_address_snapshot?.state,
+                        order.delivery_address_snapshot?.pincode,
+                    ]
+                        .filter(Boolean)
+                        .join(", ") || "Raipur, Chhattisgarh",
                 addressSnapshot: order.delivery_address_snapshot || {},
             },
             items: lineItems,
             subtotalPaise,
             discountPaise: 0,
             totalPaise: subtotalPaise,
-            status: fulMatch?.status || (order.status === "preparing" ? "Preparing" : "Order Placed"),
+            status: fulMatch?.status ||
+                (order.status === "preparing" ? "Preparing" : "Order Placed"),
             masterStatus: order.status,
-            paymentMethod: order.notes?.includes("COD") ? "Cash on Delivery" : "Online Payment",
+            paymentMethod: order.notes?.includes("COD")
+                ? "Cash on Delivery"
+                : "Online Payment",
             createdAt: new Date(order.created_at || Date.now()).toLocaleDateString("en-IN", {
                 day: "numeric",
                 month: "short",
@@ -647,7 +712,7 @@ class SellerRepository {
         const allowedTransitions = {
             "Order Placed": "Nursery Confirmed",
             "Nursery Confirmed": "Preparing",
-            "Preparing": "Ready for Pickup",
+            Preparing: "Ready for Pickup",
             "Ready for Pickup": "Picked Up",
         };
         if (allowedTransitions[currentStatus] !== newStatus) {
@@ -667,17 +732,19 @@ class SellerRepository {
             payload["ready_at"] = new Date().toISOString();
         if (newStatus === "Picked Up")
             payload["picked_up_at"] = new Date().toISOString();
-        const { error } = await db.from("seller_order_fulfillments").upsert(payload, {
+        const { error } = await db
+            .from("seller_order_fulfillments")
+            .upsert(payload, {
             onConflict: "order_id,seller_id",
         });
         if (error)
             throw error;
         const masterStatusMap = {
             "Nursery Confirmed": "nursery_confirmed",
-            "Preparing": "preparing",
+            Preparing: "preparing",
             "Ready for Pickup": "ready_for_pickup",
             "Picked Up": "picked_up",
-            "Delivered": "delivered",
+            Delivered: "delivered",
         };
         const masterStatus = masterStatusMap[newStatus] || newStatus.toLowerCase().replace(/ /g, "_");
         await db
@@ -705,7 +772,9 @@ class SellerRepository {
             else if (p.status === "draft")
                 draftProducts++;
             const qty = p.inventory?.[0]?.stock_quantity ?? p.inventory?.stock_quantity ?? 0;
-            const thresh = p.inventory?.[0]?.low_stock_threshold ?? p.inventory?.low_stock_threshold ?? 5;
+            const thresh = p.inventory?.[0]?.low_stock_threshold ??
+                p.inventory?.low_stock_threshold ??
+                5;
             const pricePaise = p.inventory?.[0]?.price_paise ?? p.inventory?.price_paise ?? 0;
             if (qty <= 0) {
                 outOfStockProducts++;
@@ -739,9 +808,14 @@ class SellerRepository {
         let totalRevenuePaise = 0;
         orders.forEach((o) => {
             const s = o.status;
-            if (s === "Order Placed" || s === "order_placed" || s === "seller_pending" || s === "Order Placed")
+            if (s === "Order Placed" ||
+                s === "order_placed" ||
+                s === "seller_pending" ||
+                s === "Order Placed")
                 newOrders++;
-            else if (s === "Nursery Confirmed" || s === "Preparing" || s === "preparing")
+            else if (s === "Nursery Confirmed" ||
+                s === "Preparing" ||
+                s === "preparing")
                 preparingOrders++;
             else if (s === "Ready for Pickup" || s === "ready_for_pickup")
                 readyForPickupOrders++;
@@ -820,7 +894,7 @@ class SellerRepository {
                 totalCommissionPaise: 0,
                 totalNetEarningsPaise: 0,
                 ordersCount: 0,
-                payouts: []
+                payouts: [],
             };
         let totalGross = 0;
         let totalCommission = 0;
@@ -844,7 +918,7 @@ class SellerRepository {
             totalCommissionPaise: totalCommission,
             totalNetEarningsPaise: net,
             ordersCount: uniqueOrders.size,
-            payouts: []
+            payouts: [],
         };
     }
     async getPayouts(sellerId) {
@@ -875,7 +949,7 @@ class SellerRepository {
                 summary: { grossRevenuePaise: 0, ordersCount: 0, unitsSold: 0 },
                 series: [],
                 topProducts: [],
-                categories: []
+                categories: [],
             };
         }
         const now = Date.now();
@@ -893,7 +967,7 @@ class SellerRepository {
             if (!order)
                 return false;
             const orderTime = new Date(order.created_at).getTime();
-            return (now - orderTime) <= filterMs;
+            return now - orderTime <= filterMs;
         });
         let totalGross = 0;
         let unitsSold = 0;
@@ -912,21 +986,33 @@ class SellerRepository {
             const prodId = item.product_id;
             const prodName = item.product_name_snapshot || item.product?.name || "Plant Product";
             if (!productStats.has(prodId)) {
-                productStats.set(prodId, { name: prodName, quantity: 0, revenuePaise: 0 });
+                productStats.set(prodId, {
+                    name: prodName,
+                    quantity: 0,
+                    revenuePaise: 0,
+                });
             }
             const pStat = productStats.get(prodId);
             pStat.quantity += item.quantity;
             pStat.revenuePaise += gross;
             const catName = item.product?.category?.name || "Uncategorized";
             if (!categoryStats.has(catName)) {
-                categoryStats.set(catName, { name: catName, quantity: 0, revenuePaise: 0 });
+                categoryStats.set(catName, {
+                    name: catName,
+                    quantity: 0,
+                    revenuePaise: 0,
+                });
             }
             const cStat = categoryStats.get(catName);
             cStat.quantity += item.quantity;
             cStat.revenuePaise += gross;
             const dateStr = new Date(order.created_at).toISOString().split("T")[0];
             if (!seriesStats.has(dateStr)) {
-                seriesStats.set(dateStr, { grossRevenuePaise: 0, ordersCount: 0, unitsSold: 0 });
+                seriesStats.set(dateStr, {
+                    grossRevenuePaise: 0,
+                    ordersCount: 0,
+                    unitsSold: 0,
+                });
             }
             const sStat = seriesStats.get(dateStr);
             sStat.grossRevenuePaise += gross;
@@ -951,8 +1037,7 @@ class SellerRepository {
         const topProducts = Array.from(productStats.values())
             .sort((a, b) => b.revenuePaise - a.revenuePaise)
             .slice(0, 5);
-        const categories = Array.from(categoryStats.values())
-            .sort((a, b) => b.revenuePaise - a.revenuePaise);
+        const categories = Array.from(categoryStats.values()).sort((a, b) => b.revenuePaise - a.revenuePaise);
         const series = Array.from(seriesStats.entries())
             .map(([date, val]) => ({ date, ...val }))
             .sort((a, b) => a.date.localeCompare(b.date));
@@ -960,11 +1045,11 @@ class SellerRepository {
             summary: {
                 grossRevenuePaise: totalGross,
                 ordersCount: uniqueOrders.size,
-                unitsSold
+                unitsSold,
             },
             series,
             topProducts,
-            categories
+            categories,
         };
     }
     // ── Documents ────────────────────────────────────────────────────────────
@@ -1037,8 +1122,12 @@ class SellerRepository {
         const existing = await this.findSellerSettings(sellerId);
         const payload = {
             seller_id: sellerId,
-            new_order_notifications: updates.new_order_notifications ?? existing.new_order_notifications ?? true,
-            low_stock_notifications: updates.low_stock_notifications ?? existing.low_stock_notifications ?? true,
+            new_order_notifications: updates.new_order_notifications ??
+                existing.new_order_notifications ??
+                true,
+            low_stock_notifications: updates.low_stock_notifications ??
+                existing.low_stock_notifications ??
+                true,
             email_notifications: updates.email_notifications ?? existing.email_notifications ?? true,
             updated_at: new Date().toISOString(),
         };

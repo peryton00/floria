@@ -105,21 +105,28 @@ class AdminFinancialService {
                 const lineGross = basePrice * it.quantity;
                 const lineComm = Math.round(lineGross * commRate);
                 const lineNet = lineGross - lineComm;
-                totalFloriaProfit += (it.floria_profit_paise_snapshot || 0) * it.quantity;
-                totalDeliveryRecovery += (it.delivery_recovery_paise_snapshot || 0) * it.quantity;
+                totalFloriaProfit +=
+                    (it.floria_profit_paise_snapshot || 0) * it.quantity;
+                totalDeliveryRecovery +=
+                    (it.delivery_recovery_paise_snapshot || 0) * it.quantity;
                 return {
                     productId: it.product_id,
                     productName: it.product_name_snapshot || "Product",
-                    unitPricePaise: it.customer_price_paise_snapshot || it.unit_price_paise_snapshot || 0,
+                    unitPricePaise: it.customer_price_paise_snapshot ||
+                        it.unit_price_paise_snapshot ||
+                        0,
                     quantity: it.quantity,
-                    lineTotalPaise: (it.customer_price_paise_snapshot || it.unit_price_paise_snapshot || 0) * it.quantity,
+                    lineTotalPaise: (it.customer_price_paise_snapshot ||
+                        it.unit_price_paise_snapshot ||
+                        0) * it.quantity,
                     commissionPaise: lineComm,
                     sellerNetPaise: lineNet,
                 };
             });
-            const sellerGrossPaise = fin?.seller_gross_paise ?? mappedItems.reduce((s, i) => s + (i.unitPricePaise * i.quantity), 0);
+            const sellerGrossPaise = fin?.seller_gross_paise ??
+                mappedItems.reduce((s, i) => s + i.unitPricePaise * i.quantity, 0);
             const commissionPaise = fin?.commission_paise ?? Math.round(sellerGrossPaise * commRate);
-            const sellerNetPaise = fin?.seller_net_paise ?? (sellerGrossPaise - commissionPaise);
+            const sellerNetPaise = fin?.seller_net_paise ?? sellerGrossPaise - commissionPaise;
             totalPlatformCommission += commissionPaise;
             nurseryBreakdown.push({
                 sellerId,
@@ -131,10 +138,14 @@ class AdminFinancialService {
                 sellerNetPaise,
             });
         }
-        const customerObj = Array.isArray(order.customer) ? order.customer[0] : order.customer;
+        const customerObj = Array.isArray(order.customer)
+            ? order.customer[0]
+            : order.customer;
         return {
             masterOrderId: order.id,
-            customerName: customerObj?.full_name || order.delivery_address_snapshot?.full_name || "Customer",
+            customerName: customerObj?.full_name ||
+                order.delivery_address_snapshot?.full_name ||
+                "Customer",
             customerTotalPaise: order.total_paise || order.subtotal_paise || 0,
             subtotalPaise: order.subtotal_paise || 0,
             maintenanceFeePaise: order.maintenance_fee_paise || 0,

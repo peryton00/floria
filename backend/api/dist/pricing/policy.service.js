@@ -203,11 +203,36 @@ class PolicyService {
         }
         // 3. Mirror to platform_settings for backward compatibility
         await db.from("platform_settings").upsert([
-            { key: "seller_commission_rate", value: activated.seller_commission_rate, updated_at: now, updated_by: adminUserId },
-            { key: "floria_profit_rate", value: activated.floria_profit_rate, updated_at: now, updated_by: adminUserId },
-            { key: "platform_maintenance_fee_paise", value: activated.platform_maintenance_fee_paise, updated_at: now, updated_by: adminUserId },
-            { key: "free_delivery_threshold_paise", value: activated.free_delivery_threshold_paise, updated_at: now, updated_by: adminUserId },
-            { key: "free_delivery_recovery_paise", value: activated.free_delivery_recovery_paise, updated_at: now, updated_by: adminUserId },
+            {
+                key: "seller_commission_rate",
+                value: activated.seller_commission_rate,
+                updated_at: now,
+                updated_by: adminUserId,
+            },
+            {
+                key: "floria_profit_rate",
+                value: activated.floria_profit_rate,
+                updated_at: now,
+                updated_by: adminUserId,
+            },
+            {
+                key: "platform_maintenance_fee_paise",
+                value: activated.platform_maintenance_fee_paise,
+                updated_at: now,
+                updated_by: adminUserId,
+            },
+            {
+                key: "free_delivery_threshold_paise",
+                value: activated.free_delivery_threshold_paise,
+                updated_at: now,
+                updated_by: adminUserId,
+            },
+            {
+                key: "free_delivery_recovery_paise",
+                value: activated.free_delivery_recovery_paise,
+                updated_at: now,
+                updated_by: adminUserId,
+            },
         ]);
         await audit_repository_js_1.auditRepository.log({
             actor_user_id: adminUserId,

@@ -6,7 +6,9 @@ const logger_js_1 = require("../utils/logger.js");
 function requestCorrelationMiddleware(req, res, next) {
     // Validate or generate X-Request-ID
     const incomingId = req.header("X-Request-ID");
-    const requestId = incomingId && /^[a-zA-Z0-9_-]{8,64}$/.test(incomingId) ? incomingId : (0, crypto_1.randomUUID)();
+    const requestId = incomingId && /^[a-zA-Z0-9_-]{8,64}$/.test(incomingId)
+        ? incomingId
+        : (0, crypto_1.randomUUID)();
     // Attach to request and response header
     req.headers["x-request-id"] = requestId;
     res.setHeader("X-Request-ID", requestId);

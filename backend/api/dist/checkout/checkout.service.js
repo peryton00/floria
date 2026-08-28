@@ -70,7 +70,10 @@ class CheckoutService {
                 .in("product_id", productIds)
                 .eq("is_active", true);
             if (overrides) {
-                overrideMap = new Map(overrides.map((o) => [o.product_id, o.custom_customer_price_paise]));
+                overrideMap = new Map(overrides.map((o) => [
+                    o.product_id,
+                    o.custom_customer_price_paise,
+                ]));
             }
         }
         catch { }
@@ -89,7 +92,9 @@ class CheckoutService {
                 allItemsFreeDeliveryEligible = false;
             }
             const overridePrice = overrideMap.get(p.id);
-            const effectiveCustomerPrice = typeof overridePrice === "number" ? overridePrice : calc.customerProductPricePaise;
+            const effectiveCustomerPrice = typeof overridePrice === "number"
+                ? overridePrice
+                : calc.customerProductPricePaise;
             lineItems.push({
                 product_id: p.id,
                 product_name_snapshot: p.name,
@@ -116,7 +121,10 @@ class CheckoutService {
             }
             const { data: updatedInv, error: invErr } = await db
                 .from("inventory")
-                .update({ stock_quantity: newStock, updated_at: new Date().toISOString() })
+                .update({
+                stock_quantity: newStock,
+                updated_at: new Date().toISOString(),
+            })
                 .eq("product_id", li.product_id)
                 .gte("stock_quantity", li.quantity)
                 .select();
@@ -135,7 +143,8 @@ class CheckoutService {
             deliveryFeePaise = 0;
             deliveryFeeReason = "DELIVERY_DISABLED";
         }
-        else if (deliverySettings.freeDeliveryEnabled && allItemsFreeDeliveryEligible) {
+        else if (deliverySettings.freeDeliveryEnabled &&
+            allItemsFreeDeliveryEligible) {
             deliveryFeePaise = 0;
             deliveryFeeReason = "FREE_DELIVERY_THRESHOLD";
         }
@@ -146,10 +155,12 @@ class CheckoutService {
         const finalTotalPaise = subtotalPaise + maintenanceFeePaise + deliveryFeePaise;
         const ratePct = finSettings.sellerCommissionRate;
         const commissionDecimalRate = ratePct / 100.0;
-        const sellerBaseSubtotal = lineItems.reduce((s, li) => s + (li.base_price_paise_snapshot * li.quantity), 0);
+        const sellerBaseSubtotal = lineItems.reduce((s, li) => s + li.base_price_paise_snapshot * li.quantity, 0);
         const commissionPaise = Math.round(sellerBaseSubtotal * commissionDecimalRate);
         const primarySellerId = lineItems[0].seller_id_snapshot;
-        const uniqueSellers = [...new Set(lineItems.map((li) => li.seller_id_snapshot))];
+        const uniqueSellers = [
+            ...new Set(lineItems.map((li) => li.seller_id_snapshot)),
+        ];
         const fulfillments = uniqueSellers.map((sellerId) => ({
             seller_id: sellerId,
             status: "Order Placed",
@@ -193,11 +204,16 @@ class CheckoutService {
                     status: "pending",
                     amountPaise: finalTotalPaise,
                     currency: "INR",
-                    rawProviderResponse: { note: intentErr?.message || "Intent creation deferred to session endpoint" },
+                    rawProviderResponse: {
+                        note: intentErr?.message ||
+                            "Intent creation deferred to session endpoint",
+                    },
                 };
             }
             // Insert Payments Record
-            const { data: paymentRow } = await db.from("payments").insert({
+            const { data: paymentRow } = await db
+                .from("payments")
+                .insert({
                 order_id: orderId,
                 customer_id: input.userId,
                 payment_reference: paymentIntent.paymentReference,
@@ -208,7 +224,9 @@ class CheckoutService {
                 amount_paise: finalTotalPaise,
                 status: paymentIntent.status,
                 raw_provider_response: paymentIntent.rawProviderResponse,
-            }).select().maybeSingle();
+            })
+                .select()
+                .maybeSingle();
             const paymentId = paymentRow?.id;
             // Per-seller financial attribution & ledger credit
             for (const sellerId of uniqueSellers) {
@@ -251,7 +269,11 @@ class CheckoutService {
             action: "ORDER_CREATED",
             resource_type: "order",
             resource_id: orderId,
-            metadata: { subtotalPaise, sellerCount: uniqueSellers.length, paymentMethod: input.paymentMethod },
+            metadata: {
+                subtotalPaise,
+                sellerCount: uniqueSellers.length,
+                paymentMethod: input.paymentMethod,
+            },
         });
         // 8. Notifications Integration
         try {
@@ -289,7 +311,11 @@ class CheckoutService {
                         data: { orderId, sellerId: sId },
                         source_type: "order",
                         source_id: orderId,
-                        navigation: { entityType: "ORDER", entityId: orderId, action: "VIEW" },
+                        navigation: {
+                            entityType: "ORDER",
+                            entityId: orderId,
+                            action: "VIEW",
+                        },
                     });
                 }
                 else {
@@ -308,7 +334,11 @@ class CheckoutService {
                                 data: { orderId, sellerId: sId },
                                 source_type: "order",
                                 source_id: orderId,
-                                navigation: { entityType: "ORDER", entityId: orderId, action: "VIEW" },
+                                navigation: {
+                                    entityType: "ORDER",
+                                    entityId: orderId,
+                                    action: "VIEW",
+                                },
                             });
                         }
                     }

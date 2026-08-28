@@ -137,7 +137,9 @@ class RecalculationService {
                     try {
                         await db
                             .from("product_pricing")
-                            .upsert(rowsToUpsert, { onConflict: "policy_version_id,product_id" });
+                            .upsert(rowsToUpsert, {
+                            onConflict: "policy_version_id,product_id",
+                        });
                     }
                     catch (e) {
                         console.warn(`[RecalculationService] Batch ${batchIdx + 1} upsert warning:`, e?.message);
@@ -162,7 +164,9 @@ class RecalculationService {
                 .from("pricing_recalculation_jobs")
                 .update({
                 status: finalJobStatus,
-                error_message: failedCount > 0 ? `${failedCount} items failed during calculation` : null,
+                error_message: failedCount > 0
+                    ? `${failedCount} items failed during calculation`
+                    : null,
                 completed_at: now,
                 updated_at: now,
             })

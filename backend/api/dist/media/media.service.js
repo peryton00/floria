@@ -55,8 +55,12 @@ class MediaService {
         }
         // 3. Profile Authorization Rules
         let sellerId = null;
-        if (input.profile === "PRODUCT" || input.profile === "NURSERY" || input.profile === "SELLER_LOGO") {
-            if (user.role !== "seller" && user.role !== "admin" && user.role !== "super_admin") {
+        if (input.profile === "PRODUCT" ||
+            input.profile === "NURSERY" ||
+            input.profile === "SELLER_LOGO") {
+            if (user.role !== "seller" &&
+                user.role !== "admin" &&
+                user.role !== "super_admin") {
                 throw errors_js_1.Errors.forbidden("Seller role required to create seller-owned media upload sessions.");
             }
             if (!user.sellerId && user.role === "seller") {
@@ -70,7 +74,9 @@ class MediaService {
             }
         }
         else if (input.profile === "DELIVERY_POD") {
-            if (user.role !== "operations" && user.role !== "admin" && user.role !== "super_admin") {
+            if (user.role !== "operations" &&
+                user.role !== "admin" &&
+                user.role !== "super_admin") {
                 throw errors_js_1.Errors.forbidden("Operations role required to create proof of delivery upload sessions.");
             }
         }
@@ -84,7 +90,9 @@ class MediaService {
         const stagingPath = `staging/${ownerPathSegment}/${sessionId}/${assetId}.tmp`;
         const expiresAt = new Date(Date.now() + exports.SESSION_EXPIRATION_MS).toISOString();
         // 5. Insert Record into media_upload_sessions
-        const { error: insertErr } = await adminDb.from("media_upload_sessions").insert({
+        const { error: insertErr } = await adminDb
+            .from("media_upload_sessions")
+            .insert({
             id: sessionId,
             seller_id: sellerId,
             uploaded_by_user_id: user.id,
@@ -153,7 +161,9 @@ class MediaService {
             throw errors_js_1.Errors.notFound("Upload session");
         }
         // Ownership Verification
-        if (session.uploaded_by_user_id !== user.id && user.role !== "admin" && user.role !== "super_admin") {
+        if (session.uploaded_by_user_id !== user.id &&
+            user.role !== "admin" &&
+            user.role !== "super_admin") {
             throw errors_js_1.Errors.forbidden("You do not have permission to finalize this upload session.");
         }
         // Idempotency: If already COMPLETED, return current state
@@ -225,7 +235,9 @@ class MediaService {
                 updated_at: new Date().toISOString(),
             })
                 .eq("id", sessionId);
-            await adminDb.storage.from("media-staging").remove([session.staging_path]);
+            await adminDb.storage
+                .from("media-staging")
+                .remove([session.staging_path]);
             return {
                 sessionId,
                 assetId: existingAsset.id,
@@ -236,7 +248,9 @@ class MediaService {
         }
         // 5. Create media_assets Record in PostgreSQL
         const assetId = crypto_1.default.randomUUID();
-        const { error: assetInsertErr } = await adminDb.from("media_assets").insert({
+        const { error: assetInsertErr } = await adminDb
+            .from("media_assets")
+            .insert({
             id: assetId,
             seller_id: session.seller_id,
             uploaded_by_user_id: session.uploaded_by_user_id,
@@ -258,7 +272,9 @@ class MediaService {
         try {
             if (session.target_domain === "DOCUMENT") {
                 const privatePath = `private/seller_${session.seller_id || "admin"}/${assetId}/document.pdf`;
-                await adminDb.storage.from("private-documents").upload(privatePath, buffer, {
+                await adminDb.storage
+                    .from("private-documents")
+                    .upload(privatePath, buffer, {
                     contentType: "application/pdf",
                     upsert: true,
                 });
@@ -347,7 +363,9 @@ class MediaService {
                 }
             }
             // Cleanup staging file
-            await adminDb.storage.from("media-staging").remove([session.staging_path]);
+            await adminDb.storage
+                .from("media-staging")
+                .remove([session.staging_path]);
         }
         catch (procErr) {
             console.warn(`[MediaService] Inline processing warning for session '${sessionId}':`, procErr.message);
@@ -399,7 +417,9 @@ class MediaService {
             throw errors_js_1.Errors.notFound("Upload session");
         }
         // Authorization: Owner or Admin only
-        if (session.uploaded_by_user_id !== user.id && user.role !== "admin" && user.role !== "super_admin") {
+        if (session.uploaded_by_user_id !== user.id &&
+            user.role !== "admin" &&
+            user.role !== "super_admin") {
             throw errors_js_1.Errors.forbidden("You do not have permission to view this upload session.");
         }
         let assetStatus = "NOT_CREATED";

@@ -42,7 +42,9 @@ async function completeUploadSession(req, res, next) {
             return next(errors_js_1.Errors.authRequired());
         }
         const sessionIdParam = req.params.sessionId;
-        const sessionId = Array.isArray(sessionIdParam) ? sessionIdParam[0] : sessionIdParam;
+        const sessionId = Array.isArray(sessionIdParam)
+            ? sessionIdParam[0]
+            : sessionIdParam;
         if (!sessionId) {
             return next(errors_js_1.Errors.validation("Parameter 'sessionId' is required."));
         }
@@ -62,7 +64,9 @@ async function getUploadSessionStatus(req, res, next) {
             return next(errors_js_1.Errors.authRequired());
         }
         const sessionIdParam = req.params.sessionId;
-        const sessionId = Array.isArray(sessionIdParam) ? sessionIdParam[0] : sessionIdParam;
+        const sessionId = Array.isArray(sessionIdParam)
+            ? sessionIdParam[0]
+            : sessionIdParam;
         if (!sessionId) {
             return next(errors_js_1.Errors.validation("Parameter 'sessionId' is required."));
         }
