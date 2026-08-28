@@ -5,10 +5,11 @@ import {
   ScrollView,
   StyleSheet,
   RefreshControl,
-  FlatList,
   TouchableOpacity,
+  StatusBar,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { api } from "../../lib/api";
 import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
 import { ProductCard } from "../../components/customer/ProductCard";
@@ -16,6 +17,14 @@ import { NurseryCard } from "../../components/customer/NurseryCard";
 import { CategoryChip } from "../../components/customer/CategoryChip";
 import { LoadingState } from "../../components/ui/LoadingState";
 import { ErrorState } from "../../components/ui/ErrorState";
+
+// Trust strip items — mirrors web's mobile trust strip
+const TRUST_ITEMS = [
+  { icon: "storefront-outline" as const, lines: ["Trusted", "Nurseries"] },
+  { icon: "leaf-outline" as const, lines: ["Quality", "Products"] },
+  { icon: "shield-checkmark-outline" as const, lines: ["Secure", "Payments"] },
+  { icon: "bicycle-outline" as const, lines: ["Fast", "Delivery"] },
+];
 
 export default function CustomerHomeScreen() {
   const router = useRouter();
@@ -41,13 +50,11 @@ export default function CustomerHomeScreen() {
       if (prodRes.success && prodRes.data) {
         setFeaturedProducts(prodRes.data);
 
-        // Derive unique nursery partners from real product catalog
         const uniqueNurseriesMap = new Map<string, any>();
         prodRes.data.forEach((p: any) => {
           const seller = p.seller || {
             id: p.seller_id || "nursery-1",
-            business_name:
-              p.seller_name || p.nursery_name || "Green Oasis Nursery",
+            business_name: p.seller_name || p.nursery_name || "Green Oasis Nursery",
             city: "Bengaluru",
           };
           if (seller.id && !uniqueNurseriesMap.has(seller.id)) {
@@ -55,8 +62,7 @@ export default function CustomerHomeScreen() {
               id: seller.id,
               name: seller.business_name || "Green Oasis Botanical Nursery",
               city: seller.city || "Bengaluru",
-              story:
-                "Certified regional grower specializing in acclimatized tropical foliage, rare aroids, and organic potting mediums.",
+              story: "Certified regional grower specializing in acclimatized tropical foliage, rare aroids, and organic potting mediums.",
               rating: 4.9,
               plantCount: 18,
             });
@@ -72,226 +78,350 @@ export default function CustomerHomeScreen() {
     }
   }, []);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    fetchData();
-  };
+  const onRefresh = () => { setRefreshing(true); fetchData(); };
 
-  if (loading) {
-    return <LoadingState message="Discovering botanical nurseries..." />;
-  }
-
-  if (error && featuredProducts.length === 0) {
-    return <ErrorState message={error} onRetry={fetchData} />;
-  }
+  if (loading) return <LoadingState message="Discovering botanical nurseries..." />;
+  if (error && featuredProducts.length === 0) return <ErrorState message={error} onRetry={fetchData} />;
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.contentContainer}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          colors={[Colors.forest]}
-        />
-      }
-    >
-      {/* Hero Banner */}
-      <View style={styles.hero}>
-        <Text style={styles.heroPre}>Hyperlocal Plant Marketplace</Text>
-        <Text style={styles.heroTitle}>Living Art for Mindful Sanctuaries</Text>
-        <Text style={styles.heroSubtitle}>
-          Directly sourced from Bengaluru's master botanical nurseries and
-          delivered within hours.
-        </Text>
-        <TouchableOpacity
-          activeOpacity={0.85}
-          onPress={() => router.push("/(tabs)/explore" as any)}
-          style={styles.heroButton}
-        >
-          <Text style={styles.heroButtonText}>Explore Catalog →</Text>
-        </TouchableOpacity>
-      </View>
+    <>
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.page} />
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.contentContainer}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.forest]} />
+        }
+      >
+        {/* ── HERO ── */}
+        <View style={styles.hero}>
+          {/* Pill badge — "PURE. ORGANIC. SUSTAINABLE." */}
+          <View style={styles.heroPill}>
+            <Ionicons name="leaf-outline" size={10} color={Colors.sage} />
+            <Text style={styles.heroPillText}>PURE. ORGANIC. SUSTAINABLE.</Text>
+          </View>
 
-      {/* Botanical Categories */}
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Botanical Taxonomy</Text>
-          <TouchableOpacity
-            onPress={() => router.push("/(tabs)/explore" as any)}
-          >
-            <Text style={styles.seeAll}>View All →</Text>
-          </TouchableOpacity>
+          {/* Headline */}
+          <Text style={styles.heroTitle}>
+            {"Discover.\nChoose. Grow."}
+          </Text>
+          <Text style={styles.heroSubtitle}>
+            Plants & gardening essentials from trusted nurseries, delivered to your door.
+          </Text>
+
+          {/* CTAs — matches web's two-button row */}
+          <View style={styles.heroCTAs}>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => router.push("/(tabs)/explore" as any)}
+              style={styles.heroButtonPrimary}
+            >
+              <Text style={styles.heroButtonPrimaryText}>Explore Plants →</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => router.push("/(tabs)/explore" as any)}
+              style={styles.heroButtonOutline}
+            >
+              <Text style={styles.heroButtonOutlineText}>SHOP GARDENING</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.categoriesList}
-        >
-          <CategoryChip
-            label="All Plants"
-            selected={selectedCategory === "all"}
-            onPress={() => setSelectedCategory("all")}
-          />
-          {categories.map((c) => (
-            <CategoryChip
-              key={c.id}
-              label={c.name}
-              selected={selectedCategory === c.slug}
-              onPress={() => {
-                setSelectedCategory(c.slug);
-                router.push({
-                  pathname: "/(tabs)/explore",
-                  params: { category: c.slug },
-                } as any);
-              }}
-            />
+        {/* ── TRUST STRIP — mirrors web mobile strip ── */}
+        <View style={styles.trustStrip}>
+          {TRUST_ITEMS.map(({ icon, lines }, i) => (
+            <View
+              key={i}
+              style={[
+                styles.trustItem,
+                i < TRUST_ITEMS.length - 1 && styles.trustItemBorder,
+              ]}
+            >
+              <Ionicons name={icon} size={20} color={Colors.forest} />
+              <Text style={styles.trustLine}>{lines[0]}</Text>
+              <Text style={styles.trustLine}>{lines[1]}</Text>
+            </View>
           ))}
-        </ScrollView>
-      </View>
+        </View>
 
-      {/* Featured Plants Grid */}
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Curated Specimens</Text>
-          <TouchableOpacity
-            onPress={() => router.push("/(tabs)/explore" as any)}
+        {/* ── SHOP BY CATEGORY ── */}
+        <View style={styles.section}>
+          <View style={styles.sectionLabelRow}>
+            <View style={styles.sectionPill}>
+              <Text style={styles.sectionPillText}>Curated Flora & Essentials</Text>
+            </View>
+          </View>
+          <View style={styles.sectionHeader}>
+            <View>
+              <Text style={styles.sectionTitle}>Shop by Category</Text>
+              <Text style={styles.sectionSubtitle}>
+                From air-purifying foliage to handcrafted planters.
+              </Text>
+            </View>
+            <TouchableOpacity onPress={() => router.push("/(tabs)/explore" as any)}>
+              <Text style={styles.seeAll}>View All →</Text>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.categoriesList}
           >
-            <Text style={styles.seeAll}>See More →</Text>
-          </TouchableOpacity>
+            <CategoryChip
+              label="All Plants"
+              selected={selectedCategory === "all"}
+              onPress={() => setSelectedCategory("all")}
+            />
+            {categories.map((c) => (
+              <CategoryChip
+                key={c.id}
+                label={c.name}
+                selected={selectedCategory === c.slug}
+                onPress={() => {
+                  setSelectedCategory(c.slug);
+                  router.push({ pathname: "/(tabs)/explore", params: { category: c.slug } } as any);
+                }}
+              />
+            ))}
+          </ScrollView>
         </View>
 
-        <View style={styles.productsGrid}>
-          {featuredProducts.map((p) => {
-            const prod = p.product || p;
-            const primaryImage =
-              prod.images?.find((img: any) => img.is_primary)?.url ||
-              prod.images?.[0]?.url;
-            return (
-              <View key={prod.id} style={styles.gridItem}>
-                <ProductCard
-                  id={prod.id}
-                  name={prod.name}
-                  pricePaise={
-                    p.price_paise || p.inventory?.price_paise || 129900
-                  }
-                  nurseryId={p.seller_id || prod.seller_id || "nursery-1"}
-                  nurseryName={
-                    p.seller_name || p.nursery_name || "Green Oasis Nursery"
-                  }
-                  imageUrl={primaryImage}
-                  careLevel={prod.care_level || "EASY"}
-                />
+        {/* ── BEST SELLERS ── */}
+        <View style={styles.section}>
+          <View style={styles.sectionLabelRow}>
+            <View style={styles.sectionPill}>
+              <Text style={styles.sectionPillText}>Hand-Picked Specimens</Text>
+            </View>
+          </View>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Best Sellers</Text>
+            <TouchableOpacity onPress={() => router.push("/(tabs)/explore" as any)}>
+              <Text style={styles.seeAll}>See More →</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.productsGrid}>
+            {featuredProducts.slice(0, 6).map((p) => {
+              const prod = p.product || p;
+              const primaryImage =
+                prod.images?.find((img: any) => img.is_primary)?.url ||
+                prod.images?.[0]?.url;
+              return (
+                <View key={prod.id} style={styles.gridItem}>
+                  <ProductCard
+                    id={prod.id}
+                    name={prod.name}
+                    pricePaise={p.price_paise || p.inventory?.price_paise || 129900}
+                    nurseryId={p.seller_id || prod.seller_id || "nursery-1"}
+                    nurseryName={p.seller_name || p.nursery_name || "Green Oasis Nursery"}
+                    imageUrl={primaryImage}
+                    careLevel={prod.care_level || "EASY"}
+                    isVerified={p.seller?.is_verified}
+                    rating={p.rating_summary?.avg_rating}
+                    reviewCount={p.rating_summary?.review_count ?? 0}
+                  />
+                </View>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* ── PARTNER NURSERIES ── */}
+        {nurseries.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionLabelRow}>
+              <View style={styles.sectionPill}>
+                <Text style={styles.sectionPillText}>Verified Partners</Text>
               </View>
-            );
-          })}
-        </View>
-      </View>
+            </View>
+            <Text style={styles.sectionTitle}>Our Nurseries</Text>
+            {nurseries.map((n) => (
+              <NurseryCard
+                key={n.id}
+                id={n.id}
+                name={n.business_name || n.name}
+                city={n.city || "Bengaluru"}
+                story={n.story || n.description}
+                rating={n.rating || 4.9}
+                plantCount={n.product_count || 18}
+              />
+            ))}
+          </View>
+        )}
 
-      {/* Verified Partner Nurseries */}
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Partner Nurseries</Text>
+        {/* ── 7-DAY GUARANTEE BANNER ── */}
+        <View style={styles.guaranteeBanner}>
+          <Ionicons name="shield-checkmark" size={20} color={Colors.forestDark} style={{ marginRight: 8 }} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.guaranteeTitle}>7-Day Botanical Transit Guarantee</Text>
+            <Text style={styles.guaranteeText}>
+              Every plant arrives hand-delivered with insulated packaging and guaranteed healthy.
+            </Text>
+          </View>
         </View>
-
-        {nurseries.map((n) => (
-          <NurseryCard
-            key={n.id}
-            id={n.id}
-            name={n.business_name || n.name}
-            city={n.city || "Bengaluru"}
-            story={n.story || n.description}
-            rating={n.rating || 4.9}
-            plantCount={n.product_count || 18}
-          />
-        ))}
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.page,
-  },
-  contentContainer: {
-    paddingBottom: Spacing.xl,
-  },
+  container: { flex: 1, backgroundColor: Colors.page },
+  contentContainer: { paddingBottom: Spacing.xxl },
+
+  // ── Hero ──
   hero: {
-    backgroundColor: Colors.forest,
-    margin: Spacing.md,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.lg,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    backgroundColor: Colors.page,
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
   },
-  heroPre: {
-    fontSize: 10,
+  heroPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    gap: 4,
+    backgroundColor: "#F0F5EB",
+    borderWidth: 1,
+    borderColor: "#D5DEC8",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: BorderRadius.sm,
+    marginBottom: 10,
+  },
+  heroPillText: {
+    fontSize: 9,
     fontWeight: "700",
-    color: Colors.botanical,
+    color: "#4A6B43",
     textTransform: "uppercase",
     letterSpacing: 1,
-    marginBottom: Spacing.xs,
   },
   heroTitle: {
-    fontSize: Typography.fontSizes.xl,
+    fontSize: Typography.fontSizes.xxl,
     fontWeight: "bold",
-    color: Colors.white,
+    color: Colors.forest,
     fontFamily: "Georgia",
-    lineHeight: Typography.lineHeights.xl,
+    letterSpacing: -0.5,
+    lineHeight: Typography.lineHeights.xxl,
     marginBottom: Spacing.xs,
   },
   heroSubtitle: {
-    fontSize: Typography.fontSizes.xs,
-    color: Colors.botanical,
-    lineHeight: 16,
+    fontSize: Typography.fontSizes.sm,
+    color: Colors.inkLight,
+    lineHeight: Typography.lineHeights.sm,
     marginBottom: Spacing.md,
+    maxWidth: 280,
   },
-  heroButton: {
-    backgroundColor: Colors.terracotta,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+  heroCTAs: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+    flexWrap: "wrap",
+  },
+  heroButtonPrimary: {
+    backgroundColor: "#1E3E26",
+    paddingHorizontal: 18,
+    paddingVertical: 12,
     borderRadius: BorderRadius.md,
-    alignSelf: "flex-start",
   },
-  heroButtonText: {
+  heroButtonPrimaryText: {
     color: Colors.white,
     fontSize: Typography.fontSizes.xs,
-    fontWeight: "bold",
-    textTransform: "uppercase",
+    fontWeight: "700",
+  },
+  heroButtonOutline: {
+    borderWidth: 1.5,
+    borderColor: "#1E3E26",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: BorderRadius.md,
+  },
+  heroButtonOutlineText: {
+    color: "#1E3E26",
+    fontSize: Typography.fontSizes.xs,
+    fontWeight: "700",
     letterSpacing: 0.5,
   },
+
+  // ── Trust strip ──
+  trustStrip: {
+    flexDirection: "row",
+    backgroundColor: Colors.page,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+    paddingVertical: Spacing.sm,
+  },
+  trustItem: {
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: 4,
+  },
+  trustItemBorder: {
+    borderRightWidth: 1,
+    borderRightColor: Colors.border,
+  },
+  trustLine: {
+    fontSize: 8,
+    fontWeight: "700",
+    color: Colors.ink,
+    textAlign: "center",
+    lineHeight: 11,
+    marginTop: 2,
+  },
+
+  // ── Sections ──
   section: {
-    marginTop: Spacing.md,
+    marginTop: Spacing.lg,
     paddingHorizontal: Spacing.md,
+  },
+  sectionLabelRow: {
+    marginBottom: Spacing.xs,
+  },
+  sectionPill: {
+    alignSelf: "flex-start",
+    backgroundColor: "#F0F5EB",
+    borderWidth: 1,
+    borderColor: "#C4D3C5",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: BorderRadius.full,
+  },
+  sectionPillText: {
+    fontSize: 9,
+    fontWeight: "700",
+    color: Colors.forest,
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
   },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-end",
     marginBottom: Spacing.sm,
   },
   sectionTitle: {
-    fontSize: Typography.fontSizes.md,
+    fontSize: Typography.fontSizes.lg,
     fontWeight: "bold",
     color: Colors.ink,
     fontFamily: "Georgia",
+    letterSpacing: -0.3,
+  },
+  sectionSubtitle: {
+    fontSize: Typography.fontSizes.xs,
+    color: Colors.inkMuted,
+    marginTop: 2,
+    maxWidth: 220,
   },
   seeAll: {
     fontSize: Typography.fontSizes.xs,
-    color: Colors.terracotta,
-    fontWeight: "bold",
+    color: Colors.forest,
+    fontWeight: "700",
     textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   categoriesList: {
     paddingVertical: Spacing.xs,
@@ -301,7 +431,30 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     marginHorizontal: -Spacing.xs,
   },
-  gridItem: {
-    width: "50%",
+  gridItem: { width: "50%" },
+
+  // ── Guarantee banner ──
+  guaranteeBanner: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    margin: Spacing.md,
+    marginTop: Spacing.lg,
+    backgroundColor: Colors.sand,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  guaranteeTitle: {
+    fontSize: Typography.fontSizes.xs,
+    fontWeight: "700",
+    color: Colors.forestDark,
+    textTransform: "uppercase",
+    marginBottom: 3,
+  },
+  guaranteeText: {
+    fontSize: 11,
+    color: Colors.inkLight,
+    lineHeight: 16,
   },
 });

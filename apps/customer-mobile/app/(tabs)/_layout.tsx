@@ -1,23 +1,33 @@
 import React from "react";
+import { View, Text, StyleSheet } from "react-native";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../../lib/theme";
 import { useCart } from "../../lib/contexts/CartContext";
 
+// Floria wordmark header — matches web sidebar/nav brand
+function FloriaWordmark() {
+  return (
+    <View style={styles.wordmark}>
+      <View style={styles.logoBox}>
+        <Ionicons name="leaf" size={14} color="#ffffff" />
+      </View>
+      <View>
+        <Text style={styles.wordmarkTitle}>Floria</Text>
+        <Text style={styles.wordmarkSub}>Plant Marketplace</Text>
+      </View>
+    </View>
+  );
+}
+
 function TabIcon({ name, color }: { name: string; color?: any }) {
   switch (name) {
-    case "home":
-      return <Ionicons name="leaf-outline" size={22} color={color} />;
-    case "explore":
-      return <Ionicons name="search-outline" size={22} color={color} />;
-    case "wishlist":
-      return <Ionicons name="heart-outline" size={22} color={color} />;
-    case "cart":
-      return <Ionicons name="bag-handle-outline" size={22} color={color} />;
-    case "profile":
-      return <Ionicons name="person-outline" size={22} color={color} />;
-    default:
-      return <Ionicons name="ellipse-outline" size={22} color={color} />;
+    case "home":    return <Ionicons name="leaf-outline" size={22} color={color} />;
+    case "explore": return <Ionicons name="search-outline" size={22} color={color} />;
+    case "wishlist":return <Ionicons name="heart-outline" size={22} color={color} />;
+    case "cart":    return <Ionicons name="bag-handle-outline" size={22} color={color} />;
+    case "profile": return <Ionicons name="person-outline" size={22} color={color} />;
+    default:        return <Ionicons name="ellipse-outline" size={22} color={color} />;
   }
 }
 
@@ -30,16 +40,23 @@ export default function TabLayout() {
         headerShown: true,
         headerStyle: {
           backgroundColor: Colors.page,
+          borderBottomWidth: 1,
+          borderBottomColor: Colors.border,
+          // @ts-ignore — RN shadow
+          shadowColor: "transparent",
+          elevation: 0,
         },
         headerTintColor: Colors.forest,
         headerTitleStyle: {
           fontFamily: "Georgia",
           fontWeight: "bold",
-          fontSize: 18,
+          fontSize: 17,
+          color: Colors.ink,
         },
         tabBarStyle: {
           backgroundColor: Colors.linen,
           borderTopColor: Colors.border,
+          borderTopWidth: 1,
           height: 60,
           paddingBottom: 8,
           paddingTop: 6,
@@ -57,7 +74,9 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Floria",
+          // Show wordmark instead of plain title on home tab
+          headerTitle: () => <FloriaWordmark />,
+          headerLeft: () => null,
           tabBarLabel: "Discover",
           tabBarIcon: ({ color }) => <TabIcon name="home" color={color} />,
         }}
@@ -65,7 +84,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="explore"
         options={{
-          title: "Explore Botanical Catalog",
+          title: "Explore Catalog",
           tabBarLabel: "Search",
           tabBarIcon: ({ color }) => <TabIcon name="explore" color={color} />,
         }}
@@ -104,3 +123,34 @@ export default function TabLayout() {
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  wordmark: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  logoBox: {
+    width: 28,
+    height: 28,
+    borderRadius: 6,
+    backgroundColor: Colors.forest,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  wordmarkTitle: {
+    fontSize: 15,
+    fontFamily: "Georgia",
+    fontWeight: "bold",
+    color: Colors.ink,
+    lineHeight: 18,
+  },
+  wordmarkSub: {
+    fontSize: 8,
+    fontWeight: "700",
+    color: Colors.inkMuted,
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
+    lineHeight: 10,
+  },
+});
