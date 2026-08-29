@@ -2,28 +2,28 @@ import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
+  TextInput,
   ScrollView,
   StyleSheet,
   RefreshControl,
   TouchableOpacity,
-  StatusBar,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "../../lib/api";
 import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
+import { LocationSelector } from "../../components/customer/LocationSelector";
 import { ProductCard } from "../../components/customer/ProductCard";
 import { NurseryCard } from "../../components/customer/NurseryCard";
 import { CategoryChip } from "../../components/customer/CategoryChip";
 import { LoadingState } from "../../components/ui/LoadingState";
 import { ErrorState } from "../../components/ui/ErrorState";
 
-// Trust strip items — mirrors web's mobile trust strip
 const TRUST_ITEMS = [
-  { icon: "storefront-outline" as const, lines: ["Trusted", "Nurseries"] },
-  { icon: "leaf-outline" as const, lines: ["Quality", "Products"] },
-  { icon: "shield-checkmark-outline" as const, lines: ["Secure", "Payments"] },
-  { icon: "bicycle-outline" as const, lines: ["Fast", "Delivery"] },
+  { icon: "storefront-outline" as const, title: "Verified Nurseries", desc: "Certified growers" },
+  { icon: "shield-checkmark-outline" as const, title: "Plant Guarantee", desc: "7-day root health" },
+  { icon: "card-outline" as const, title: "Secure Checkout", desc: "Cashfree encrypted" },
+  { icon: "car-outline" as const, title: "Careful Dispatch", desc: "Insulated transit" },
 ];
 
 export default function CustomerHomeScreen() {
@@ -31,6 +31,7 @@ export default function CustomerHomeScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const [categories, setCategories] = useState<any[]>([]);
   const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
   const [nurseries, setNurseries] = useState<any[]>([]);
@@ -41,7 +42,7 @@ export default function CustomerHomeScreen() {
       setError(null);
       const [catRes, prodRes] = await Promise.all([
         api.getCategories(),
-        api.getProducts({ limit: 12 }),
+        api.getProducts({ limit: 16 }),
       ]);
 
       if (catRes.success && catRes.data) {
@@ -54,17 +55,17 @@ export default function CustomerHomeScreen() {
         prodRes.data.forEach((p: any) => {
           const seller = p.seller || {
             id: p.seller_id || "nursery-1",
-            business_name: p.seller_name || p.nursery_name || "FLORIA Garden",
-            city: "raipur",
+            business_name: p.seller_name || p.nursery_name || "Floria Partner Nursery",
+            city: "Raipur",
           };
           if (seller.id && !uniqueNurseriesMap.has(seller.id)) {
             uniqueNurseriesMap.set(seller.id, {
               id: seller.id,
-              name: seller.business_name || "Floria partner",
-              city: seller.city || "raipur",
-              story: "Floria partner nursery",
-              rating: 4.9,
-              plantCount: 18,
+              name: seller.business_name || "Floria Partner Nursery",
+              city: seller.city || "Raipur",
+              story: "Certified partner botanical grower",
+              rating: p.rating || 4.9,
+              plantCount: 12,
             });
           }
         });
@@ -87,6 +88,15 @@ export default function CustomerHomeScreen() {
     fetchData();
   };
 
+  const handleSearchSubmit = () => {
+    if (searchQuery.trim()) {
+      router.push({
+        pathname: "/(tabs)/explore",
+        params: { search: searchQuery.trim() },
+      } as any);
+    }
+  };
+
   if (loading) {
     return <LoadingState message="Discovering botanical nurseries..." />;
   }
@@ -107,31 +117,75 @@ export default function CustomerHomeScreen() {
         />
       }
     >
-      {/* Hero Banner */}
+      {/* 1. Header Location Selector & Search */}
+      <View style={styles.topHeaderBar}>
+        <LocationSelector />
+        <TouchableOpacity
+          onPress={() => router.push("/(tabs)/profile" as any)}
+          style={styles.profileAvatarBtn}
+        >
+          <Ionicons name="person-circle-outline" size={28} color={Colors.forest} />
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.searchBarContainer}>
+        <Ionicons name="search-outline" size={18} color={Colors.inkMuted} style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search Monstera, Ficus, Bonsai, Planters..."
+          placeholderTextColor={Colors.inkSubtle}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          onSubmitEditing={handleSearchSubmit}
+          returnKeyType="search"
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery("")}>
+            <Ionicons name="close-circle" size={18} color={Colors.inkMuted} />
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {/* 2. Hero Banner */}
       <View style={styles.hero}>
-        <Text style={styles.heroPre}>Hyperlocal Plant Marketplace</Text>
+        <View style={styles.heroPreRow}>
+          <Ionicons name="leaf-outline" size={12} color={Colors.botanical} />
+          <Text style={styles.heroPre}>Artisanal Botanical Marketplace</Text>
+        </View>
         <Text style={styles.heroTitle}>Living Art for Mindful Sanctuaries</Text>
         <Text style={styles.heroSubtitle}>
-          Directly sourced from Bengaluru's master botanical nurseries and
-          delivered within hours.
+          Directly sourced from certified master nurseries with guaranteed transit health protection.
         </Text>
         <TouchableOpacity
           activeOpacity={0.85}
           onPress={() => router.push("/(tabs)/explore" as any)}
           style={styles.heroButton}
         >
-          <Text style={styles.heroButtonText}>Explore Catalog →</Text>
+          <Text style={styles.heroButtonText}>Explore Catalog</Text>
+          <Ionicons name="chevron-forward" size={13} color={Colors.white} />
         </TouchableOpacity>
       </View>
 
-      {/* Botanical Categories */}
+      {/* 3. Trust Strip */}
+      <View style={styles.trustGrid}>
+        {TRUST_ITEMS.map((item, idx) => (
+          <View key={idx} style={styles.trustCard}>
+            <Ionicons name={item.icon} size={18} color={Colors.forest} style={{ marginBottom: 4 }} />
+            <Text style={styles.trustTitle}>{item.title}</Text>
+            <Text style={styles.trustDesc}>{item.desc}</Text>
+          </View>
+        ))}
+      </View>
+
+      {/* 4. Botanical Categories Horizontal Rail */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Botanical Taxonomy</Text>
-          <TouchableOpacity
-            onPress={() => router.push("/(tabs)/explore" as any)}
-          >
-            <Text style={styles.seeAll}>View All →</Text>
+          <TouchableOpacity onPress={() => router.push("/(tabs)/explore" as any)}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
+              <Text style={styles.seeAll}>View All</Text>
+              <Ionicons name="chevron-forward" size={12} color={Colors.terracotta} />
+            </View>
           </TouchableOpacity>
         </View>
 
@@ -162,14 +216,15 @@ export default function CustomerHomeScreen() {
         </ScrollView>
       </View>
 
-      {/* Featured Plants Grid */}
+      {/* 5. Featured Plants Grid */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Curated Specimens</Text>
-          <TouchableOpacity
-            onPress={() => router.push("/(tabs)/explore" as any)}
-          >
-            <Text style={styles.seeAll}>See More →</Text>
+          <TouchableOpacity onPress={() => router.push("/(tabs)/explore" as any)}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
+              <Text style={styles.seeAll}>See More</Text>
+              <Ionicons name="chevron-forward" size={12} color={Colors.terracotta} />
+            </View>
           </TouchableOpacity>
         </View>
 
@@ -184,15 +239,13 @@ export default function CustomerHomeScreen() {
                 <ProductCard
                   id={prod.id}
                   name={prod.name}
-                  pricePaise={
-                    p.price_paise || p.inventory?.price_paise || 129900
-                  }
+                  pricePaise={p.price_paise || p.inventory?.price_paise || 129900}
                   nurseryId={p.seller_id || prod.seller_id || "nursery-1"}
-                  nurseryName={
-                    p.seller_name || p.nursery_name || "Green Oasis Nursery"
-                  }
+                  nurseryName={p.seller_name || p.nursery_name || "Floria Partner Nursery"}
                   imageUrl={primaryImage}
                   careLevel={prod.care_level || "EASY"}
+                  rating={p.rating}
+                  reviewCount={p.review_count}
                 />
               </View>
             );
@@ -200,7 +253,7 @@ export default function CustomerHomeScreen() {
         </View>
       </View>
 
-      {/* Verified Partner Nurseries */}
+      {/* 6. Verified Partner Nurseries */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Partner Nurseries</Text>
@@ -211,10 +264,10 @@ export default function CustomerHomeScreen() {
             key={n.id}
             id={n.id}
             name={n.business_name || n.name}
-            city={n.city || "Bengaluru"}
+            city={n.city || "Raipur"}
             story={n.story || n.description}
             rating={n.rating || 4.9}
-            plantCount={n.product_count || 18}
+            plantCount={n.product_count || 12}
           />
         ))}
       </View>
@@ -230,6 +283,37 @@ const styles = StyleSheet.create({
   contentContainer: {
     paddingBottom: Spacing.xl,
   },
+  topHeaderBar: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.xs,
+  },
+  profileAvatarBtn: {
+    padding: Spacing.xs,
+  },
+  searchBarContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.linen,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    marginHorizontal: Spacing.md,
+    marginVertical: Spacing.xs,
+    paddingHorizontal: Spacing.sm,
+    height: 42,
+  },
+  searchIcon: {
+    marginRight: Spacing.xs,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: Typography.fontSizes.sm,
+    color: Colors.ink,
+  },
   hero: {
     backgroundColor: Colors.forest,
     margin: Spacing.md,
@@ -241,13 +325,18 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  heroPreRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginBottom: Spacing.xs,
+  },
   heroPre: {
     fontSize: 10,
     fontWeight: "700",
     color: Colors.botanical,
     textTransform: "uppercase",
     letterSpacing: 1,
-    marginBottom: Spacing.xs,
   },
   heroTitle: {
     fontSize: Typography.fontSizes.xl,
@@ -264,9 +353,12 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   heroButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
     backgroundColor: Colors.terracotta,
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 9,
     borderRadius: BorderRadius.md,
     alignSelf: "flex-start",
   },
@@ -276,6 +368,34 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textTransform: "uppercase",
     letterSpacing: 0.5,
+  },
+  trustGrid: {
+    flexDirection: "row",
+    paddingHorizontal: Spacing.md,
+    gap: Spacing.xs,
+    marginBottom: Spacing.sm,
+  },
+  trustCard: {
+    flex: 1,
+    backgroundColor: Colors.linen,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: Spacing.xs + 2,
+    alignItems: "center",
+    textAlign: "center",
+  },
+  trustTitle: {
+    fontSize: 9,
+    fontWeight: "700",
+    color: Colors.ink,
+    textAlign: "center",
+  },
+  trustDesc: {
+    fontSize: 8,
+    color: Colors.inkMuted,
+    textAlign: "center",
+    marginTop: 1,
   },
   section: {
     marginTop: Spacing.md,

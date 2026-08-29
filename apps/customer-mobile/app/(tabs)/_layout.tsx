@@ -4,6 +4,7 @@ import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../../lib/theme";
 import { useCart } from "../../lib/contexts/CartContext";
+import { useWishlist } from "../../lib/contexts/WishlistContext";
 
 // Floria wordmark header — matches web sidebar/nav brand
 function FloriaWordmark() {
@@ -33,6 +34,7 @@ function TabIcon({ name, color }: { name: string; color?: any }) {
 
 export default function TabLayout() {
   const { itemCount } = useCart();
+  const { wishlist } = useWishlist();
 
   return (
     <Tabs
@@ -74,26 +76,32 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          // Show wordmark instead of plain title on home tab
           headerTitle: () => <FloriaWordmark />,
           headerLeft: () => null,
-          tabBarLabel: "Discover",
+          tabBarLabel: "Home",
           tabBarIcon: ({ color }) => <TabIcon name="home" color={color} />,
         }}
       />
       <Tabs.Screen
         name="explore"
         options={{
-          title: "Explore Catalog",
-          tabBarLabel: "Search",
+          title: "Botanical Categories",
+          tabBarLabel: "Categories",
           tabBarIcon: ({ color }) => <TabIcon name="explore" color={color} />,
         }}
       />
       <Tabs.Screen
         name="wishlist"
         options={{
-          title: "Saved Plants",
+          title: "Saved Wishlist",
           tabBarLabel: "Wishlist",
+          tabBarBadge: wishlist.length > 0 ? wishlist.length : undefined,
+          tabBarBadgeStyle: {
+            backgroundColor: Colors.terracotta,
+            color: Colors.white,
+            fontSize: 10,
+            fontWeight: "bold",
+          },
           tabBarIcon: ({ color }) => <TabIcon name="wishlist" color={color} />,
         }}
       />

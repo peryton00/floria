@@ -15,7 +15,6 @@ import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
 import { formatINR } from "../../lib/format";
 import { useCart } from "../../lib/contexts/CartContext";
 import { useWishlist } from "../../lib/contexts/WishlistContext";
-import { Button } from "../../components/ui/Button";
 import { LoadingState } from "../../components/ui/LoadingState";
 import { ErrorState } from "../../components/ui/ErrorState";
 
@@ -29,6 +28,7 @@ export default function ProductDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   const fetchProduct = useCallback(async () => {
     if (!id) return;
@@ -70,9 +70,13 @@ export default function ProductDetailScreen() {
   const inventory = productData.inventory || {};
   const pricePaise = inventory.price_paise || productData.price_paise || 129900;
   const stock = inventory.stock_quantity ?? productData.stock_quantity ?? 10;
+  const images = prod.images && prod.images.length > 0 ? prod.images : [];
   const primaryImage =
+    images[activeImageIndex]?.url ||
+    images[0]?.url ||
     prod.images?.find((img: any) => img.is_primary)?.url ||
     prod.images?.[0]?.url;
+
   const isLiked = isInWishlist(prod.id);
 
   const handleAddToCart = () => {
@@ -80,7 +84,7 @@ export default function ProductDetailScreen() {
       {
         productId: prod.id,
         nurseryId: seller.id || "nursery-1",
-        nurseryName: seller.business_name || seller.name || "Nursery Partner",
+        nurseryName: seller.business_name || seller.name || "Floria Partner Nursery",
         name: prod.name,
         pricePaise,
         imageUrl: primaryImage,
@@ -97,10 +101,25 @@ export default function ProductDetailScreen() {
     );
   };
 
+  const handleBuyNow = () => {
+    addItem(
+      {
+        productId: prod.id,
+        nurseryId: seller.id || "nursery-1",
+        nurseryName: seller.business_name || seller.name || "Floria Partner Nursery",
+        name: prod.name,
+        pricePaise,
+        imageUrl: primaryImage,
+      },
+      quantity,
+    );
+    router.push("/(tabs)/cart" as any);
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
-        {/* Main Photo Gallery */}
+        {/* Photo Gallery Showcase */}
         <View style={styles.imageContainer}>
           {primaryImage ? (
             <Image
@@ -114,6 +133,7 @@ export default function ProductDetailScreen() {
             </View>
           )}
 
+          {/* Top-Right Wishlist Heart */}
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={() =>
@@ -121,7 +141,7 @@ export default function ProductDetailScreen() {
                 productId: prod.id,
                 name: prod.name,
                 pricePaise,
-                nurseryName: seller.business_name || "Nursery Partner",
+                nurseryName: seller.business_name || "Floria Partner Nursery",
                 imageUrl: primaryImage,
               })
             }
@@ -135,7 +155,29 @@ export default function ProductDetailScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Botanical Identity & Nursery */}
+        {/* Thumbnail selector if multiple images exist */}
+        {images.length > 1 && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.thumbnailRow}
+          >
+            {images.map((img: any, idx: number) => (
+              <TouchableOpacity
+                key={idx}
+                onPress={() => setActiveImageIndex(idx)}
+                style={[
+                  styles.thumbnailWrapper,
+                  activeImageIndex === idx && styles.thumbnailActive,
+                ]}
+              >
+                <Image source={{ uri: img.url }} style={styles.thumbnail} />
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
+
+        {/* Botanical Identity & Nursery Card */}
         <View style={styles.detailsContainer}>
           <TouchableOpacity
             activeOpacity={0.8}
@@ -144,10 +186,11 @@ export default function ProductDetailScreen() {
             }
             style={styles.nurseryChip}
           >
+            <Ionicons name="storefront-outline" size={13} color={Colors.forest} />
             <Text style={styles.nurseryName}>
-              {seller.business_name || "Verified Nursery Partner"}
+              {seller.business_name || "Floria Partner Nursery"}
             </Text>
-            <Ionicons name="arrow-forward" size={12} color={Colors.forest} />
+            <Ionicons name="chevron-forward" size={12} color={Colors.forest} />
           </TouchableOpacity>
 
           <Text style={styles.productName}>{prod.name}</Text>
@@ -179,11 +222,11 @@ export default function ProductDetailScreen() {
             <View style={styles.specCard}>
               <Ionicons
                 name="sunny-outline"
-                size={20}
+                size={18}
                 color={Colors.forest}
                 style={{ marginBottom: 4 }}
               />
-              <Text style={styles.specTitle}>Light</Text>
+              <Text style={styles.specTitle}>Sunlight</Text>
               <Text style={styles.specVal}>
                 {prod.light_requirement || "Bright Indirect"}
               </Text>
@@ -191,11 +234,11 @@ export default function ProductDetailScreen() {
             <View style={styles.specCard}>
               <Ionicons
                 name="water-outline"
-                size={20}
+                size={18}
                 color={Colors.forest}
                 style={{ marginBottom: 4 }}
               />
-              <Text style={styles.specTitle}>Water</Text>
+              <Text style={styles.specTitle}>Watering</Text>
               <Text style={styles.specVal}>
                 {prod.watering_schedule || "Every 4–6 Days"}
               </Text>
@@ -203,24 +246,35 @@ export default function ProductDetailScreen() {
             <View style={styles.specCard}>
               <Ionicons
                 name="leaf-outline"
-                size={20}
+                size={18}
                 color={Colors.forest}
                 style={{ marginBottom: 4 }}
               />
-              <Text style={styles.specTitle}>Care</Text>
+              <Text style={styles.specTitle}>Care Level</Text>
               <Text style={styles.specVal}>
                 {prod.care_level || "Easy Care"}
               </Text>
             </View>
           </View>
 
-          {/* Description */}
+          {/* Botanical Overview */}
           {prod.description && (
             <View style={styles.descriptionSection}>
               <Text style={styles.sectionHeading}>Botanical Overview</Text>
               <Text style={styles.descriptionText}>{prod.description}</Text>
             </View>
           )}
+
+          {/* 7-Day Guarantee Banner */}
+          <View style={styles.guaranteeBanner}>
+            <Ionicons name="shield-checkmark-outline" size={18} color={Colors.forest} />
+            <View style={styles.guaranteeTextCol}>
+              <Text style={styles.guaranteeTitle}>7-Day Transit Health Guarantee</Text>
+              <Text style={styles.guaranteeSub}>
+                Guaranteed hydrated root delivery from our certified grower network.
+              </Text>
+            </View>
+          </View>
 
           {/* Quantity Selector */}
           <View style={styles.quantitySection}>
@@ -244,20 +298,27 @@ export default function ProductDetailScreen() {
         </View>
       </ScrollView>
 
-      {/* Fixed Sticky Footer */}
+      {/* Flipkart-Style Sticky Bottom Bar: [ Add to Bag ] + [ Buy Now ] */}
       <View style={styles.footer}>
-        <View style={styles.footerPriceContainer}>
-          <Text style={styles.footerLabel}>Total</Text>
-          <Text style={styles.footerPrice}>
-            {formatINR(pricePaise * quantity)}
-          </Text>
-        </View>
-        <Button
-          label="Add to Botanical Bag"
-          onPress={handleAddToCart}
+        <TouchableOpacity
+          activeOpacity={0.85}
           disabled={stock <= 0}
-          style={styles.addToCartBtn}
-        />
+          onPress={handleAddToCart}
+          style={[styles.addToBagBtn, stock <= 0 && styles.btnDisabled]}
+        >
+          <Ionicons name="bag-handle-outline" size={16} color={Colors.terracotta} />
+          <Text style={styles.addToBagText}>Add to Bag</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          activeOpacity={0.85}
+          disabled={stock <= 0}
+          onPress={handleBuyNow}
+          style={[styles.buyNowBtn, stock <= 0 && styles.btnDisabled]}
+        >
+          <Ionicons name="flash-outline" size={16} color={Colors.white} />
+          <Text style={styles.buyNowText}>Buy Now</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -282,60 +343,68 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   placeholder: {
-    flex: 1,
+    width: "100%",
+    height: "100%",
     alignItems: "center",
     justifyContent: "center",
   },
-  placeholderEmoji: {
-    fontSize: 80,
-  },
   wishlistButton: {
     position: "absolute",
-    top: 16,
-    right: 16,
-    width: 44,
-    height: 44,
-    borderRadius: BorderRadius.full,
+    top: Spacing.md,
+    right: Spacing.md,
     backgroundColor: "rgba(255, 255, 255, 0.9)",
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
-    shadowRadius: 3,
+    shadowRadius: 4,
     elevation: 3,
   },
-  wishlistIcon: {
-    fontSize: 22,
-    color: Colors.inkLight,
+  thumbnailRow: {
+    flexDirection: "row",
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    gap: Spacing.xs,
+    backgroundColor: Colors.linen,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
   },
-  wishlistIconActive: {
-    color: Colors.terracotta,
+  thumbnailWrapper: {
+    width: 52,
+    height: 52,
+    borderRadius: BorderRadius.sm,
+    borderWidth: 1.5,
+    borderColor: "transparent",
+    overflow: "hidden",
+  },
+  thumbnailActive: {
+    borderColor: Colors.forest,
+  },
+  thumbnail: {
+    width: "100%",
+    height: "100%",
   },
   detailsContainer: {
-    padding: Spacing.lg,
+    padding: Spacing.md,
   },
   nurseryChip: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.linen,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: BorderRadius.full,
-    borderWidth: 1,
-    borderColor: Colors.border,
     alignSelf: "flex-start",
-    marginBottom: Spacing.xs,
+    backgroundColor: Colors.botanical,
+    paddingHorizontal: Spacing.sm + 2,
+    paddingVertical: 5,
+    borderRadius: BorderRadius.full,
+    gap: 4,
+    marginBottom: Spacing.sm,
   },
   nurseryName: {
     fontSize: Typography.fontSizes.xs,
     fontWeight: "700",
-    color: Colors.forest,
-    textTransform: "uppercase",
-    marginRight: 4,
-  },
-  nurseryArrow: {
-    fontSize: 12,
     color: Colors.forest,
   },
   productName: {
@@ -343,21 +412,24 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontFamily: "Georgia",
     color: Colors.ink,
-    lineHeight: 30,
-    marginTop: Spacing.xs,
+    lineHeight: Typography.lineHeights.xl,
   },
   botanicalName: {
     fontSize: Typography.fontSizes.sm,
     fontStyle: "italic",
     color: Colors.sage,
     marginTop: 2,
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.xs,
   },
   priceRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginVertical: Spacing.sm,
+    marginTop: Spacing.xs,
+    marginBottom: Spacing.md,
+    paddingBottom: Spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
   },
   price: {
     fontSize: Typography.fontSizes.xxl,
@@ -366,9 +438,9 @@ const styles = StyleSheet.create({
   },
   stockBadge: {
     backgroundColor: Colors.botanical,
-    paddingHorizontal: 10,
+    paddingHorizontal: Spacing.sm,
     paddingVertical: 4,
-    borderRadius: BorderRadius.sm,
+    borderRadius: BorderRadius.full,
   },
   stockBadgeLow: {
     backgroundColor: Colors.warningBg,
@@ -378,46 +450,40 @@ const styles = StyleSheet.create({
   },
   stockBadgeText: {
     fontSize: Typography.fontSizes.xs,
-    fontWeight: "700",
-    color: Colors.forestDark,
-    textTransform: "uppercase",
+    fontWeight: "bold",
+    color: Colors.forest,
   },
   specsGrid: {
     flexDirection: "row",
-    gap: Spacing.sm,
-    marginVertical: Spacing.md,
+    gap: Spacing.xs,
+    marginBottom: Spacing.md,
   },
   specCard: {
     flex: 1,
     backgroundColor: Colors.linen,
     borderRadius: BorderRadius.md,
-    padding: Spacing.sm,
     borderWidth: 1,
     borderColor: Colors.border,
+    padding: Spacing.sm,
     alignItems: "center",
-  },
-  specIcon: {
-    fontSize: 20,
-    marginBottom: 4,
+    textAlign: "center",
   },
   specTitle: {
     fontSize: 10,
     fontWeight: "700",
-    color: Colors.inkMuted,
+    color: Colors.inkLight,
     textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   specVal: {
     fontSize: Typography.fontSizes.xs,
-    fontWeight: "bold",
+    fontWeight: "600",
     color: Colors.ink,
-    textAlign: "center",
     marginTop: 2,
+    textAlign: "center",
   },
   descriptionSection: {
-    marginVertical: Spacing.md,
-    paddingTop: Spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    marginBottom: Spacing.md,
   },
   sectionHeading: {
     fontSize: Typography.fontSizes.sm,
@@ -425,30 +491,56 @@ const styles = StyleSheet.create({
     fontFamily: "Georgia",
     color: Colors.ink,
     marginBottom: Spacing.xs,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
   },
   descriptionText: {
     fontSize: Typography.fontSizes.sm,
     color: Colors.inkLight,
     lineHeight: Typography.lineHeights.base,
   },
-  quantitySection: {
+  guaranteeBanner: {
     flexDirection: "row",
     alignItems: "center",
+    backgroundColor: Colors.linen,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: Spacing.sm + 2,
+    gap: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  guaranteeTextCol: {
+    flex: 1,
+  },
+  guaranteeTitle: {
+    fontSize: Typography.fontSizes.xs,
+    fontWeight: "700",
+    color: Colors.forest,
+  },
+  guaranteeSub: {
+    fontSize: 11,
+    color: Colors.inkMuted,
+    marginTop: 1,
+  },
+  quantitySection: {
+    flexDirection: "row",
     justifyContent: "space-between",
-    marginVertical: Spacing.md,
-    paddingTop: Spacing.sm,
+    alignItems: "center",
+    backgroundColor: Colors.linen,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
   },
   quantityLabel: {
     fontSize: Typography.fontSizes.sm,
-    fontWeight: "bold",
+    fontWeight: "600",
     color: Colors.ink,
   },
   stepper: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.sand,
+    backgroundColor: Colors.page,
     borderRadius: BorderRadius.md,
     borderWidth: 1,
     borderColor: Colors.border,
@@ -460,14 +552,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   stepperBtnText: {
-    fontSize: 18,
+    fontSize: Typography.fontSizes.lg,
     fontWeight: "bold",
-    color: Colors.ink,
+    color: Colors.forest,
   },
   stepperVal: {
-    fontSize: Typography.fontSizes.sm,
+    minWidth: 32,
+    textAlign: "center",
+    fontSize: Typography.fontSizes.base,
     fontWeight: "bold",
-    paddingHorizontal: 12,
     color: Colors.ink,
   },
   footer: {
@@ -480,24 +573,50 @@ const styles = StyleSheet.create({
     borderTopColor: Colors.border,
     padding: Spacing.md,
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    gap: Spacing.sm,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 6,
   },
-  footerPriceContainer: {
+  addToBagBtn: {
     flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 13,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1.5,
+    borderColor: Colors.terracotta,
+    backgroundColor: Colors.page,
   },
-  footerLabel: {
-    fontSize: 10,
-    color: Colors.inkMuted,
-    textTransform: "uppercase",
-    fontWeight: "700",
-  },
-  footerPrice: {
-    fontSize: Typography.fontSizes.lg,
+  addToBagText: {
+    color: Colors.terracotta,
+    fontSize: Typography.fontSizes.sm,
     fontWeight: "bold",
-    color: Colors.forest,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
-  addToCartBtn: {
-    flex: 1.5,
+  buyNowBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 13,
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.forest,
+  },
+  buyNowText: {
+    color: Colors.white,
+    fontSize: Typography.fontSizes.sm,
+    fontWeight: "bold",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  btnDisabled: {
+    opacity: 0.5,
   },
 });

@@ -10,6 +10,7 @@ import {
   ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import * as Location from "expo-location";
 import { api } from "../../lib/api";
 import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
 import { Button } from "../../components/ui/Button";
@@ -24,9 +25,53 @@ export default function AddressManagementScreen() {
 
   const [name, setName] = useState("");
   const [street, setStreet] = useState("");
-  const [city, setCity] = useState("Bengaluru");
+  const [city, setCity] = useState("Raipur");
   const [pincode, setPincode] = useState("");
   const [phone, setPhone] = useState("");
+  const [locating, setLocating] = useState(false);
+
+  const handleUseCurrentLocation = async () => {
+    try {
+      setLocating(true);
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission Required",
+          "Please enable location permissions to auto-detect your delivery address.",
+        );
+        return;
+      }
+
+      const position = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+
+      const [geocode] = await Location.reverseGeocodeAsync({
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+      });
+
+      if (geocode) {
+        const detectedStreet = [
+          geocode.name,
+          geocode.street,
+          geocode.subregion,
+        ]
+          .filter(Boolean)
+          .join(", ");
+        if (detectedStreet) setStreet(detectedStreet);
+        if (geocode.city || geocode.subregion) setCity(geocode.city || geocode.subregion || "Raipur");
+        if (geocode.postalCode) setPincode(geocode.postalCode);
+      }
+    } catch (err: any) {
+      Alert.alert(
+        "Location Error",
+        err.message || "Could not fetch current GPS location.",
+      );
+    } finally {
+      setLocating(false);
+    }
+  };
 
   const fetchAddresses = useCallback(async () => {
     try {
@@ -121,6 +166,22 @@ export default function AddressManagementScreen() {
       {showAddForm && (
         <View style={styles.formCard}>
           <Text style={styles.formTitle}>New Delivery Address</Text>
+
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={handleUseCurrentLocation}
+            disabled={locating}
+            style={styles.gpsButton}
+          >
+            {locating ? (
+              <Ionicons name="sync-outline" size={16} color={Colors.forest} />
+            ) : (
+              <Ionicons name="navigate-outline" size={16} color={Colors.forest} />
+            )}
+            <Text style={styles.gpsButtonText}>
+              {locating ? "Detecting GPS Location..." : "Use Current Location (GPS Auto-Fill)"}
+            </Text>
+          </TouchableOpacity>
 
           <View style={styles.field}>
             <Text style={styles.label}>Recipient / Residence Name</Text>
@@ -351,6 +412,22 @@ const styles = StyleSheet.create({
     color: Colors.sage,
     marginTop: 4,
     fontWeight: "600",
+  },
+  gpsButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.botanical,
+    padding: Spacing.sm + 2,
+    borderRadius: BorderRadius.md,
+    marginBottom: Spacing.md,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  gpsButtonText: {
+    fontSize: Typography.fontSizes.xs,
+    fontWeight: "700",
+    color: Colors.forest,
   },
   deleteBtn: {
     alignSelf: "flex-end",

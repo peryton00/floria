@@ -6,45 +6,50 @@ import {
   StyleSheet,
   ActivityIndicator,
   RefreshControl,
+  TouchableOpacity,
+  Alert,
+  Linking,
 } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "../../lib/api";
 import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
 import { formatINR, formatDate } from "../../lib/format";
 import { LoadingState } from "../../components/ui/LoadingState";
 import { ErrorState } from "../../components/ui/ErrorState";
+import { Button } from "../../components/ui/Button";
 
 const STAGES = [
   {
     key: "confirmed",
-    label: "Order Confirmed",
-    desc: "Nursery received order",
+    label: "Order Placed & Confirmed",
+    desc: "Nursery received botanical order and verified live stock.",
   },
   {
     key: "preparing",
-    label: "Specimen Inspection",
-    desc: "Pruned and watered for transit",
+    label: "Specimen Inspection & Care",
+    desc: "Living plant foliage inspected, pruned, and hydrated for transit.",
   },
   {
     key: "picked_up",
-    label: "Hyperlocal Dispatch",
-    desc: "Courier on route with plant carrier",
+    label: "Dispatched from Nursery",
+    desc: "Handed over to courier in insulated botanical transit packaging.",
   },
   {
     key: "out_for_delivery",
     label: "Out for Delivery",
-    desc: "Arriving at your sanctuary",
+    desc: "Courier en route to your sanctuary address.",
   },
   {
     key: "delivered",
-    label: "Hand Delivered",
-    desc: "Care guidelines transferred",
+    label: "Delivered & Transferred",
+    desc: "Specimen safely hand-delivered with 7-day health guarantee.",
   },
 ];
 
 export default function OrderDetailTrackingScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
   const [order, setOrder] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -77,6 +82,27 @@ export default function OrderDetailTrackingScreen() {
     fetchOrderDetail();
   };
 
+  const handleSupportContact = () => {
+    Alert.alert(
+      "Floria Order Support",
+      `Need assistance with Order #${order?.id?.substring(0, 8)}?`,
+      [
+        {
+          text: "Email Support",
+          onPress: () =>
+            Linking.openURL(
+              `mailto:support@floria.in?subject=Help%20with%20Order%20%23${order?.id?.substring(0, 8)}`,
+            ),
+        },
+        {
+          text: "Call Helpline",
+          onPress: () => Linking.openURL("tel:+918000000000"),
+        },
+        { text: "Cancel", style: "cancel" },
+      ],
+    );
+  };
+
   if (loading && !refreshing) {
     return <LoadingState message="Connecting to live dispatch..." />;
   }
@@ -106,22 +132,19 @@ export default function OrderDetailTrackingScreen() {
         />
       }
     >
-      {/* Header Info */}
+      {/* 1. Header Order Info */}
       <View style={styles.headerCard}>
-        <Text style={styles.orderLabel}>Live Botanical Dispatch</Text>
+        <View style={styles.orderLabelRow}>
+          <Ionicons name="cube-outline" size={12} color={Colors.botanical} />
+          <Text style={styles.orderLabel}>Live Botanical Order</Text>
+        </View>
         <Text style={styles.orderId}>Order #{order.id?.substring(0, 8)}</Text>
         <Text style={styles.orderPlaced}>
           Placed on {formatDate(order.created_at)}
         </Text>
-        <View style={[styles.deliveryEstimate, { flexDirection: "row", alignItems: "center", gap: 5 }]}>
-          <Ionicons name="flash-outline" size={13} color={Colors.forest} />
-          <Text style={styles.estimateText}>
-            Estimated Delivery: Within 4 Hours
-          </Text>
-        </View>
       </View>
 
-      {/* Progress Stepper */}
+      {/* 2. Flipkart-Style Fulfillment Timeline Stepper */}
       <View style={styles.trackerCard}>
         <Text style={styles.sectionTitle}>Fulfillment Timeline</Text>
         <View style={styles.timeline}>
@@ -170,9 +193,9 @@ export default function OrderDetailTrackingScreen() {
         </View>
       </View>
 
-      {/* Order Items */}
+      {/* 3. Ordered Botanical Items */}
       <View style={styles.detailsCard}>
-        <Text style={styles.sectionTitle}>Ordered Botanical Items</Text>
+        <Text style={styles.sectionTitle}>Ordered Plant Specimens</Text>
         {(order.items || []).map((item: any, idx: number) => (
           <View key={item.id || idx} style={styles.itemRow}>
             <View style={styles.itemInfo}>
@@ -198,19 +221,41 @@ export default function OrderDetailTrackingScreen() {
         </View>
       </View>
 
-      {/* Delivery Address */}
+      {/* 4. Delivery Destination Address */}
       {order.shipping_address && (
         <View style={styles.detailsCard}>
-          <Text style={styles.sectionTitle}>Delivery Destination</Text>
+          <View style={styles.addressHeader}>
+            <Ionicons name="location-outline" size={16} color={Colors.forest} />
+            <Text style={styles.sectionTitle}>Delivery Destination</Text>
+          </View>
           <Text style={styles.addressText}>
             {order.shipping_address.street ||
               order.shipping_address.address_line1}
           </Text>
           <Text style={styles.addressCity}>
-            {order.shipping_address.city}, {order.shipping_address.pincode}
+            {order.shipping_address.city || "Raipur"}, {order.shipping_address.pincode || "492001"}
           </Text>
         </View>
       )}
+
+      {/* 5. Floria Support Action Card */}
+      <View style={styles.supportCard}>
+        <View style={styles.supportInfo}>
+          <Ionicons name="headset-outline" size={22} color={Colors.forest} />
+          <View style={styles.supportTextCol}>
+            <Text style={styles.supportTitle}>Need Help with this Order?</Text>
+            <Text style={styles.supportSub}>Connect with Floria Customer Support for any issues</Text>
+          </View>
+        </View>
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={handleSupportContact}
+          style={styles.supportBtn}
+        >
+          <Ionicons name="chatbubble-ellipses-outline" size={14} color={Colors.forest} />
+          <Text style={styles.supportBtnText}>Contact Support</Text>
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 }
@@ -230,6 +275,11 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     marginBottom: Spacing.md,
   },
+  orderLabelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
   orderLabel: {
     fontSize: 10,
     fontWeight: "700",
@@ -248,17 +298,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: Colors.botanical,
     marginTop: 4,
-  },
-  deliveryEstimate: {
-    marginTop: Spacing.md,
-    backgroundColor: "rgba(255, 255, 255, 0.15)",
-    padding: Spacing.sm,
-    borderRadius: BorderRadius.md,
-  },
-  estimateText: {
-    color: Colors.white,
-    fontSize: Typography.fontSizes.xs,
-    fontWeight: "600",
   },
   trackerCard: {
     backgroundColor: Colors.linen,
@@ -285,11 +324,12 @@ const styles = StyleSheet.create({
   timelineIconCol: {
     alignItems: "center",
     marginRight: Spacing.md,
+    width: 24,
   },
   timelineCircle: {
     width: 24,
     height: 24,
-    borderRadius: BorderRadius.full,
+    borderRadius: 12,
     backgroundColor: Colors.sand,
     alignItems: "center",
     justifyContent: "center",
@@ -303,29 +343,27 @@ const styles = StyleSheet.create({
   circleText: {
     fontSize: 10,
     fontWeight: "bold",
-    color: Colors.white,
+    color: Colors.inkLight,
   },
   timelineLine: {
     width: 2,
     flex: 1,
     backgroundColor: Colors.border,
-    minHeight: 24,
+    marginVertical: 4,
   },
   timelineLineDone: {
     backgroundColor: Colors.forest,
   },
   timelineContent: {
     flex: 1,
-    paddingTop: 2,
   },
   timelineTitle: {
-    fontSize: Typography.fontSizes.xs,
+    fontSize: Typography.fontSizes.sm,
     fontWeight: "bold",
-    color: Colors.inkLight,
+    color: Colors.ink,
   },
   timelineTitleCurrent: {
     color: Colors.terracotta,
-    fontSize: Typography.fontSizes.sm,
   },
   timelineDesc: {
     fontSize: 11,
@@ -340,37 +378,47 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     marginBottom: Spacing.md,
   },
+  addressHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: Spacing.xs,
+  },
   itemRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: Spacing.xs,
+    alignItems: "center",
+    paddingVertical: Spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
   itemInfo: {
     flex: 1,
-    paddingRight: Spacing.sm,
+    marginRight: Spacing.sm,
   },
   itemName: {
-    fontSize: Typography.fontSizes.xs,
-    fontWeight: "bold",
+    fontSize: Typography.fontSizes.sm,
+    fontWeight: "600",
     color: Colors.ink,
   },
   itemQty: {
-    fontSize: 10,
+    fontSize: 11,
     color: Colors.inkMuted,
     marginTop: 2,
   },
   itemPrice: {
-    fontSize: Typography.fontSizes.xs,
+    fontSize: Typography.fontSizes.sm,
     fontWeight: "bold",
     color: Colors.forest,
   },
   totalRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: Spacing.sm,
-    paddingTop: Spacing.xs,
+    alignItems: "center",
+    marginTop: Spacing.md,
+    paddingTop: Spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
   },
   totalLabel: {
     fontSize: Typography.fontSizes.sm,
@@ -378,17 +426,63 @@ const styles = StyleSheet.create({
     color: Colors.ink,
   },
   totalPrice: {
-    fontSize: Typography.fontSizes.base,
+    fontSize: Typography.fontSizes.md,
     fontWeight: "bold",
     color: Colors.forest,
   },
   addressText: {
-    fontSize: Typography.fontSizes.xs,
+    fontSize: Typography.fontSizes.sm,
     color: Colors.ink,
+    lineHeight: 18,
   },
   addressCity: {
     fontSize: 11,
     color: Colors.inkMuted,
     marginTop: 2,
+  },
+  supportCard: {
+    backgroundColor: Colors.linen,
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    marginBottom: Spacing.md,
+  },
+  supportInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  supportTextCol: {
+    flex: 1,
+  },
+  supportTitle: {
+    fontSize: Typography.fontSizes.sm,
+    fontWeight: "bold",
+    color: Colors.ink,
+  },
+  supportSub: {
+    fontSize: 11,
+    color: Colors.inkMuted,
+    marginTop: 1,
+  },
+  supportBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: Colors.botanical,
+    paddingVertical: 10,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  supportBtnText: {
+    fontSize: Typography.fontSizes.xs,
+    fontWeight: "700",
+    color: Colors.forest,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
 });
