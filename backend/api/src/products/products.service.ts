@@ -69,11 +69,18 @@ export class ProductsService {
     }
   }
 
-  async getProducts(categoryId?: string, search?: string) {
+  async getProducts(
+    categoryIdOrSlug?: string,
+    search?: string,
+    sellerId?: string,
+    limit?: number,
+  ) {
     const settings = await pricingService.getFinancialSettings();
     const products = await productRepository.findActiveCatalog(
-      categoryId,
+      categoryIdOrSlug,
       search,
+      sellerId,
+      limit,
     );
 
     // Check for active overrides in parallel

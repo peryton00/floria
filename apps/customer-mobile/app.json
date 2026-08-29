@@ -14,6 +14,11 @@
     "android": {
       "package": "com.floria.customer"
     },
+    "androidStatusBar": {
+      "barStyle": "dark-content",
+      "backgroundColor": "#FBF8F3",
+      "translucent": false
+    },
     "plugins": ["expo-router"],
     "experiments": {
       "typedRoutes": true

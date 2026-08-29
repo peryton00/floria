@@ -131,6 +131,12 @@ var FloriaApiClient = class {
   async getCategories(options = {}) {
     return this.request("/api/v1/catalog/categories", options);
   }
+  async getNurseries(options = {}) {
+    return this.request("/api/v1/catalog/sellers", options);
+  }
+  async getNurseryById(id, options = {}) {
+    return this.request(`/api/v1/catalog/sellers/${id}`, options);
+  }
   // Customer Cart API (/api/v1/customer/cart)
   async getCart() {
     return this.request("/api/v1/customer/cart");

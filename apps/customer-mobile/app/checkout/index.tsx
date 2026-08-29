@@ -5,8 +5,6 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  Alert,
-  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -15,13 +13,17 @@ import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
 import { formatINR } from "../../lib/format";
 import { useCart } from "../../lib/contexts/CartContext";
 import { useCustomerAuth } from "../../lib/contexts/CustomerAuthContext";
+import { useFeedback } from "../../lib/contexts/FloriaFeedbackContext";
+import { haptics } from "../../lib/haptics";
 import { Button } from "../../components/ui/Button";
+import { ListSkeleton } from "../../components/ui/ListSkeleton";
 
 export default function CustomerCheckoutScreen() {
   const router = useRouter();
   const { items, subtotalPaise, deliveryFeePaise, totalPaise, clearCart } =
     useCart();
   const { user } = useCustomerAuth();
+  const { showSuccess, showError, showConfirmSheet } = useFeedback();
 
   const [addresses, setAddresses] = useState<any[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
@@ -56,17 +58,14 @@ export default function CustomerCheckoutScreen() {
 
   const handlePlaceOrder = async () => {
     if (!selectedAddressId && addresses.length === 0) {
-      Alert.alert(
-        "Delivery Address Required",
-        "Please add a delivery address to complete your order.",
-        [
-          { text: "Cancel", style: "cancel" },
-          {
-            text: "Add Address",
-            onPress: () => router.push("/addresses" as any),
-          },
-        ],
-      );
+      showConfirmSheet({
+        title: "Delivery Address Required",
+        message: "Please add a delivery destination address to complete your order fulfillment.",
+        icon: "location-outline",
+        confirmLabel: "Add Address",
+        cancelLabel: "Cancel",
+        onConfirm: () => router.push("/addresses" as any),
+      });
       return;
     }
 
@@ -96,52 +95,46 @@ export default function CustomerCheckoutScreen() {
           );
         }
 
-        // For mobile sandbox verification, simulate payment completion callback
-        Alert.alert(
-          "Cashfree Payment Gateway",
-          `Payment Session #${sessionRes.data.cfOrderId} initialized for ${formatINR(totalPaise)}. Proceed to finalize?`,
-          [
-            {
-              text: "Cancel",
-              style: "cancel",
-              onPress: () => setProcessing(false),
-            },
-            {
-              text: "Authorize Payment",
-              onPress: () => {
-                clearCart();
-                router.replace({
-                  pathname: "/orders/[id]",
-                  params: { id: orderId },
-                } as any);
-              },
-            },
-          ],
-        );
+        // Cashfree authorization bottom sheet
+        showConfirmSheet({
+          title: "Authorize Payment",
+          message: `Authorize payment of ${formatINR(totalPaise)} via Cashfree PG to finalize your botanical order?`,
+          icon: "shield-checkmark-outline",
+          confirmLabel: "Authorize Payment",
+          cancelLabel: "Cancel",
+          onConfirm: () => {
+            clearCart();
+            haptics.success();
+            showSuccess("Order confirmed successfully");
+            router.replace({
+              pathname: "/orders/[id]",
+              params: { id: orderId },
+            } as any);
+          },
+          onCancel: () => setProcessing(false),
+        });
       } else {
         // Cash on Delivery
         clearCart();
-        Alert.alert(
-          "Order Confirmed",
-          "Your botanical order has been placed successfully.",
-        );
+        haptics.success();
+        showSuccess("Order placed successfully (Cash on Delivery)");
         router.replace({
           pathname: "/orders/[id]",
           params: { id: orderId },
         } as any);
       }
     } catch (err: any) {
-      Alert.alert("Checkout Error", err.message || "Failed to process order.");
+      haptics.error();
+      showError(err.message || "Failed to process order.");
     } finally {
       setProcessing(false);
     }
   };
 
-  if (loading) {
+  if (loading && addresses.length === 0) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.forest} />
-        <Text style={styles.loadingText}>Preparing checkout...</Text>
+      <View style={styles.container}>
+        <ListSkeleton count={3} />
       </View>
     );
   }

@@ -1,6 +1,8 @@
 import React from "react";
-import { TouchableOpacity, Text, StyleSheet } from "react-native";
+import { Text, StyleSheet } from "react-native";
 import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
+import { PressableScale } from "../ui/PressableScale";
+import { MotionTokens } from "../../lib/motion";
 
 export function CategoryChip({
   label,
@@ -12,15 +14,15 @@ export function CategoryChip({
   onPress: () => void;
 }) {
   return (
-    <TouchableOpacity
-      activeOpacity={0.8}
+    <PressableScale
       onPress={onPress}
+      targetScale={MotionTokens.scale.pressedCompact}
       style={[styles.chip, selected && styles.chipSelected]}
     >
       <Text style={[styles.text, selected && styles.textSelected]}>
         {label}
       </Text>
-    </TouchableOpacity>
+    </PressableScale>
   );
 }
 

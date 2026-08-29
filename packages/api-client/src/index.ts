@@ -323,6 +323,19 @@ export class FloriaApiClient {
     return this.request<any[]>("/api/v1/catalog/categories", options);
   }
 
+  public async getNurseries(
+    options: RequestInit = {},
+  ): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>("/api/v1/catalog/sellers", options);
+  }
+
+  public async getNurseryById(
+    id: string,
+    options: RequestInit = {},
+  ): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/v1/catalog/sellers/${id}`, options);
+  }
+
   // Customer Cart API (/api/v1/customer/cart)
   public async getCart(): Promise<ApiResponse<any>> {
     return this.request<any>("/api/v1/customer/cart");

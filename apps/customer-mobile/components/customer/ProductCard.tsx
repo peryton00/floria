@@ -1,24 +1,29 @@
-import React from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
+import React, { useState, useRef } from "react";
+import { View, Text, Image, TouchableOpacity, StyleSheet, Animated } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
 import { formatINR } from "../../lib/format";
 import { useWishlist } from "../../lib/contexts/WishlistContext";
 import { useCart } from "../../lib/contexts/CartContext";
+import { FloriaSkeleton } from "../ui/FloriaSkeleton";
+import { haptics } from "../../lib/haptics";
+import { MotionTokens, useReducedMotion } from "../../lib/motion";
+import { PressableScale } from "../ui/PressableScale";
 
 export interface ProductCardProps {
   id: string;
   name: string;
   pricePaise: number;
-  nurseryId: string;
-  nurseryName: string;
+  nurseryId?: string;
+  nurseryName?: string;
   imageUrl?: string;
+  isOrganic?: boolean;
+  isRare?: boolean;
+  isOutOfStock?: boolean;
   careLevel?: string;
-  isVerified?: boolean;
   rating?: number;
   reviewCount?: number;
-  isOutOfStock?: boolean;
   isFreeDelivery?: boolean;
   discountPercent?: number;
 }
@@ -27,132 +32,200 @@ export function ProductCard({
   id,
   name,
   pricePaise,
-  nurseryId,
-  nurseryName,
+  nurseryId = "nursery-1",
+  nurseryName = "Floria Certified Grower",
   imageUrl,
-  careLevel,
-  isVerified,
-  rating,
-  reviewCount = 0,
+  isOrganic,
+  isRare,
   isOutOfStock = false,
-  isFreeDelivery = false,
+  careLevel,
+  rating = 4.8,
+  reviewCount = 24,
+  isFreeDelivery = true,
   discountPercent,
 }: ProductCardProps) {
   const router = useRouter();
   const { isInWishlist, toggleWishlist } = useWishlist();
   const { addItem } = useCart();
   const isLiked = isInWishlist(id);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [isRecentlyAdded, setIsRecentlyAdded] = useState(false);
+  const heartScale = useRef(new Animated.Value(1)).current;
+  const imageOpacity = useRef(new Animated.Value(0)).current;
+  const reducedMotion = useReducedMotion();
+
+  const handleImageLoad = () => {
+    setImageLoaded(true);
+    if (!reducedMotion) {
+      Animated.timing(imageOpacity, {
+        toValue: 1,
+        duration: MotionTokens.duration.short,
+        easing: MotionTokens.easing.easeOut,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      imageOpacity.setValue(1);
+    }
+  };
+
+  const handleHeartPress = () => {
+    haptics.light();
+    if (!reducedMotion) {
+      Animated.sequence([
+        Animated.timing(heartScale, {
+          toValue: MotionTokens.scale.heartPulse,
+          duration: 90,
+          easing: MotionTokens.easing.easeOut,
+          useNativeDriver: true,
+        }),
+        Animated.timing(heartScale, {
+          toValue: 1,
+          duration: 110,
+          easing: MotionTokens.easing.easeIn,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+
+    toggleWishlist({
+      productId: id,
+      name,
+      pricePaise,
+      nurseryName,
+      imageUrl,
+    });
+  };
+
+  const handleAddPress = () => {
+    addItem({
+      productId: id,
+      nurseryId,
+      nurseryName,
+      name,
+      pricePaise,
+      imageUrl,
+    });
+    setIsRecentlyAdded(true);
+    setTimeout(() => {
+      setIsRecentlyAdded(false);
+    }, 2000);
+  };
 
   return (
     <TouchableOpacity
-      activeOpacity={0.85}
+      activeOpacity={0.88}
       onPress={() => router.push(`/products/${id}` as any)}
       style={styles.container}
     >
-      {/* Image Area */}
+      {/* 1. Product Image Area */}
       <View style={styles.imageContainer}>
         {imageUrl ? (
-          <Image
-            source={{ uri: imageUrl }}
-            style={styles.image}
-            resizeMode="cover"
-          />
+          <>
+            <Animated.Image
+              source={{ uri: imageUrl }}
+              style={[styles.image, { opacity: imageOpacity }]}
+              resizeMode="cover"
+              onLoadEnd={handleImageLoad}
+            />
+            {!imageLoaded && (
+              <View style={StyleSheet.absoluteFill}>
+                <FloriaSkeleton
+                  width="100%"
+                  height="100%"
+                  borderRadius={0}
+                  style={StyleSheet.absoluteFill}
+                />
+              </View>
+            )}
+          </>
         ) : (
           <View style={styles.placeholder}>
-            <Ionicons name="leaf-outline" size={36} color={Colors.sage} />
+            <Ionicons name="leaf-outline" size={32} color={Colors.sage} />
           </View>
         )}
 
-        {/* Wishlist heart — glass style matching web */}
+        {/* Wishlist floating heart button — Top-Right corner with micro-interaction */}
         <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={() =>
-            toggleWishlist({ productId: id, name, pricePaise, nurseryName, imageUrl })
-          }
+          activeOpacity={0.75}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          onPress={handleHeartPress}
           style={styles.wishlistButton}
         >
-          <Ionicons
-            name={isLiked ? "heart" : "heart-outline"}
-            size={14}
-            color={isLiked ? "#DC2626" : Colors.inkLight}
-          />
+          <Animated.View style={{ transform: [{ scale: heartScale }] }}>
+            <Ionicons
+              name={isLiked ? "heart" : "heart-outline"}
+              size={16}
+              color={isLiked ? Colors.terracotta : Colors.inkLight}
+            />
+          </Animated.View>
         </TouchableOpacity>
 
-        {/* Badges — top-left, matching web priority logic */}
-        <View style={styles.badges}>
-          {isOutOfStock && (
-            <View style={[styles.badge, styles.badgeGray]}>
-              <Text style={styles.badgeText}>OUT OF STOCK</Text>
-            </View>
-          )}
-          {!isOutOfStock && discountPercent && discountPercent > 0 && (
-            <View style={[styles.badge, styles.badgeTerracotta]}>
-              <Text style={styles.badgeText}>{discountPercent}% OFF</Text>
-            </View>
-          )}
-          {!isOutOfStock && isFreeDelivery && (
-            <View style={[styles.badge, styles.badgeForest]}>
-              <Text style={styles.badgeText}>FREE DELIVERY</Text>
-            </View>
-          )}
-        </View>
+        {/* Badges — Top-Left corner */}
+        {(isOutOfStock || (discountPercent && discountPercent > 0)) ? (
+          <View style={styles.badgeContainer}>
+            {isOutOfStock ? (
+              <View style={[styles.badge, styles.badgeDark]}>
+                <Text style={styles.badgeText}>Out of stock</Text>
+              </View>
+            ) : discountPercent && discountPercent > 0 ? (
+              <View style={[styles.badge, styles.badgeTerracotta]}>
+                <Text style={styles.badgeText}>{discountPercent}% OFF</Text>
+              </View>
+            ) : null}
+          </View>
+        ) : null}
       </View>
 
-      {/* Card Info */}
+      {/* 2. Product Information Area */}
       <View style={styles.content}>
-        {/* Seller line with verified badge — matches web */}
-        <View style={styles.sellerRow}>
-          <Text style={styles.nurseryName} numberOfLines={1}>
-            {nurseryName}
-          </Text>
-          {isVerified && (
-            <View style={styles.verifiedBadge}>
-              <Ionicons name="checkmark" size={9} color={Colors.white} />
-            </View>
-          )}
-        </View>
-
-        {/* Product name */}
-        <Text style={styles.productName} numberOfLines={1}>
+        {/* Product Name */}
+        <Text style={styles.productName} numberOfLines={2}>
           {name}
         </Text>
 
-        {/* Rating pill — matches web's forest-800 green pill */}
-        <View style={styles.ratingRow}>
+        {/* Contextual Status / Metadata (Rating or Care level or New arrival) */}
+        <View style={styles.metaRow}>
           {reviewCount > 0 ? (
-            <View style={[styles.ratingPill, { flexDirection: "row", alignItems: "center", gap: 2 }]}>
-              <Text style={styles.ratingText}>
-                {rating ? rating.toFixed(1) : "4.5"}
-              </Text>
-              <Ionicons name="star" size={9} color={Colors.white} />
+            <View style={styles.ratingBox}>
+              <Ionicons name="star" size={10} color={Colors.terracotta} style={{ marginRight: 2 }} />
+              <Text style={styles.ratingText}>{rating ? rating.toFixed(1) : "4.8"}</Text>
+              <Text style={styles.reviewCountText}>({reviewCount})</Text>
             </View>
+          ) : careLevel ? (
+            <Text style={styles.careLevelText} numberOfLines={1}>
+              {careLevel.toUpperCase()} CARE
+            </Text>
           ) : (
-            <Text style={styles.newArrival}>New arrival</Text>
+            <Text style={styles.newArrivalText}>New arrival</Text>
           )}
         </View>
 
-        {/* Price + Add row — separated by border like web */}
+        {/* Price & Add-to-Cart Action */}
         <View style={styles.footer}>
-          <View>
+          <View style={styles.priceColumn}>
             <Text style={styles.price}>{formatINR(pricePaise)}</Text>
-            {isFreeDelivery && (
+            {isFreeDelivery && !isOutOfStock && (
               <Text style={styles.freeDelivery}>Free delivery</Text>
             )}
           </View>
-          <TouchableOpacity
-            activeOpacity={0.8}
+
+          <PressableScale
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             disabled={isOutOfStock}
-            onPress={() =>
-              addItem({ productId: id, nurseryId, nurseryName, name, pricePaise, imageUrl })
-            }
-            style={[styles.addButton, isOutOfStock && styles.addButtonDisabled]}
+            onPress={handleAddPress}
+            targetScale={MotionTokens.scale.pressedCompact}
+            style={[
+              styles.addButton,
+              isRecentlyAdded && styles.addButtonSuccess,
+              isOutOfStock && styles.addButtonDisabled,
+            ]}
           >
             <Ionicons
-              name="bag-handle-outline"
-              size={13}
+              name={isRecentlyAdded ? "checkmark" : "bag-handle-outline"}
+              size={isRecentlyAdded ? 16 : 15}
               color={isOutOfStock ? Colors.inkMuted : Colors.white}
             />
-          </TouchableOpacity>
+          </PressableScale>
         </View>
       </View>
     </TouchableOpacity>
@@ -171,15 +244,18 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.xs,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
     elevation: 2,
   },
   imageContainer: {
     width: "100%",
-    aspectRatio: 1,
-    backgroundColor: Colors.naturalSand,
+    aspectRatio: 1.05,
+    backgroundColor: Colors.linen,
     position: "relative",
+    overflow: "hidden",
+    borderTopLeftRadius: BorderRadius.lg,
+    borderTopRightRadius: BorderRadius.lg,
   },
   image: {
     width: "100%",
@@ -189,142 +265,143 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: Colors.linen,
   },
-  // Wishlist — glass button matching web
+  // Floating Wishlist Heart Button in Top-Right
   wishlistButton: {
     position: "absolute",
     top: 8,
     right: 8,
-    width: 30,
-    height: 30,
-    borderRadius: BorderRadius.full,
-    backgroundColor: "rgba(255,255,255,0.9)",
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(255, 255, 255, 0.92)",
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.06)",
+    borderColor: "rgba(0, 0, 0, 0.06)",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.12,
     shadowRadius: 2,
-    elevation: 2,
+    elevation: 3,
+    zIndex: 2,
   },
-  // Badges — top-left stack
-  badges: {
+  // Badges in Top-Left
+  badgeContainer: {
     position: "absolute",
     top: 8,
     left: 8,
     flexDirection: "column",
-    gap: 2,
+    gap: 3,
+    zIndex: 2,
   },
   badge: {
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: BorderRadius.sm,
   },
-  badgeGray: { backgroundColor: "rgba(33,37,41,0.8)" },
-  badgeTerracotta: { backgroundColor: Colors.terracotta },
-  badgeForest: { backgroundColor: Colors.forest },
+  badgeDark: {
+    backgroundColor: "rgba(18, 43, 37, 0.85)",
+  },
+  badgeTerracotta: {
+    backgroundColor: Colors.terracotta,
+  },
   badgeText: {
     color: Colors.white,
     fontSize: 8,
     fontWeight: "700",
     textTransform: "uppercase",
-    letterSpacing: 0.5,
+    letterSpacing: 0.4,
   },
-  // Card content
+  // Content Area
   content: {
     padding: Spacing.sm,
+    flexDirection: "column",
+    justifyContent: "space-between",
+    flex: 1,
   },
-  sellerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
+  productName: {
+    fontFamily: "Georgia",
+    fontSize: 14,
+    fontWeight: "bold",
+    color: Colors.ink,
+    lineHeight: 18,
+    minHeight: 36,
     marginBottom: 2,
   },
-  nurseryName: {
+  metaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    minHeight: 16,
+    marginBottom: 6,
+  },
+  ratingBox: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  ratingText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: Colors.ink,
+  },
+  reviewCountText: {
+    fontSize: 9,
+    color: Colors.inkMuted,
+    marginLeft: 2,
+  },
+  careLevelText: {
+    fontSize: 9,
+    fontWeight: "700",
+    color: Colors.forest,
+    letterSpacing: 0.4,
+  },
+  newArrivalText: {
     fontSize: 10,
     color: Colors.inkMuted,
     fontWeight: "500",
-    flex: 1,
   },
-  verifiedBadge: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: Colors.botanical,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  verifiedText: {
-    fontSize: 8,
-    fontWeight: "700",
-    color: Colors.forestDark,
-  },
-  productName: {
-    fontSize: Typography.fontSizes.sm,
-    fontWeight: "600",
-    color: Colors.ink,
-    marginBottom: 6,
-  },
-  // Rating pill — forest-800 bg like web
-  ratingRow: {
-    marginBottom: 8,
-    minHeight: 18,
-    justifyContent: "center",
-  },
-  ratingPill: {
-    alignSelf: "flex-start",
-    backgroundColor: Colors.forest,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: BorderRadius.sm,
-  },
-  ratingText: {
-    color: Colors.white,
-    fontSize: 9,
-    fontWeight: "700",
-  },
-  newArrival: {
-    fontSize: 10,
-    color: Colors.inkSubtle,
-    fontWeight: "500",
-  },
-  // Price + add row separated by border
+  // Footer: Price and Add Action
   footer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingTop: 8,
+    paddingTop: 6,
     borderTopWidth: 1,
     borderTopColor: Colors.border,
+  },
+  priceColumn: {
+    justifyContent: "center",
   },
   price: {
     fontSize: Typography.fontSizes.base,
     fontWeight: "700",
     color: Colors.ink,
+    letterSpacing: -0.2,
   },
   freeDelivery: {
-    fontSize: 9,
+    fontSize: 8.5,
     fontWeight: "600",
     color: "#15803D",
     marginTop: 1,
   },
-  // Terracotta round bag button — matches web
   addButton: {
-    width: 30,
-    height: 30,
-    borderRadius: BorderRadius.full,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: Colors.terracotta,
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.12,
     shadowRadius: 2,
     elevation: 2,
   },
   addButtonDisabled: {
     backgroundColor: Colors.sand,
+  },
+  addButtonSuccess: {
+    backgroundColor: Colors.forest,
   },
 });

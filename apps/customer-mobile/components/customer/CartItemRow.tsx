@@ -1,9 +1,12 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
 import { formatINR } from "../../lib/format";
 import { CartItem } from "../../lib/contexts/CartContext";
+import { haptics } from "../../lib/haptics";
+import { PressableScale } from "../ui/PressableScale";
+import { MotionTokens } from "../../lib/motion";
 
 export function CartItemRow({
   item,
@@ -14,6 +17,27 @@ export function CartItemRow({
   onUpdateQuantity: (quantity: number) => void;
   onRemove: () => void;
 }) {
+  const handleDecrement = () => {
+    if (item.quantity > 1) {
+      haptics.selection();
+      onUpdateQuantity(item.quantity - 1);
+    } else {
+      // Trying to decrement below 1 triggers remove with confirmation haptic
+      haptics.light();
+      onRemove();
+    }
+  };
+
+  const handleIncrement = () => {
+    haptics.selection();
+    onUpdateQuantity(item.quantity + 1);
+  };
+
+  const handleRemove = () => {
+    haptics.light();
+    onRemove();
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.info}>
@@ -26,24 +50,30 @@ export function CartItemRow({
 
       <View style={styles.controls}>
         <View style={styles.quantityStepper}>
-          <TouchableOpacity
-            onPress={() => onUpdateQuantity(item.quantity - 1)}
+          <PressableScale
+            onPress={handleDecrement}
+            targetScale={MotionTokens.scale.pressedCompact}
             style={styles.stepperButton}
           >
             <Text style={styles.stepperText}>−</Text>
-          </TouchableOpacity>
+          </PressableScale>
           <Text style={styles.quantityText}>{item.quantity}</Text>
-          <TouchableOpacity
-            onPress={() => onUpdateQuantity(item.quantity + 1)}
+          <PressableScale
+            onPress={handleIncrement}
+            targetScale={MotionTokens.scale.pressedCompact}
             style={styles.stepperButton}
           >
             <Text style={styles.stepperText}>+</Text>
-          </TouchableOpacity>
+          </PressableScale>
         </View>
 
-        <TouchableOpacity onPress={onRemove} style={styles.removeButton}>
+        <PressableScale
+          onPress={handleRemove}
+          targetScale={MotionTokens.scale.pressedCompact}
+          style={styles.removeButton}
+        >
           <Ionicons name="trash-outline" size={18} color={Colors.inkMuted} />
-        </TouchableOpacity>
+        </PressableScale>
       </View>
     </View>
   );

@@ -1,6 +1,5 @@
 import React from "react";
 import {
-  TouchableOpacity,
   Text,
   ActivityIndicator,
   StyleSheet,
@@ -8,6 +7,8 @@ import {
   TextStyle,
 } from "react-native";
 import { Colors, Typography, BorderRadius } from "../../lib/theme";
+import { PressableScale } from "./PressableScale";
+import { MotionTokens } from "../../lib/motion";
 
 export interface ButtonProps {
   label: string;
@@ -52,10 +53,10 @@ export function Button({
   };
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.8}
+    <PressableScale
       onPress={onPress}
       disabled={disabled || loading}
+      targetScale={MotionTokens.scale.pressed}
       style={[
         styles.base,
         styles[size],
@@ -78,7 +79,7 @@ export function Button({
           {label}
         </Text>
       )}
-    </TouchableOpacity>
+    </PressableScale>
   );
 }
 

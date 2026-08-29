@@ -6,21 +6,26 @@ import {
   Modal,
   StyleSheet,
   ActivityIndicator,
-  Alert,
 } from "react-native";
+import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
+import { useFeedback } from "../../lib/contexts/FloriaFeedbackContext";
 
 export interface LocationSelectorProps {
   currentLocation?: string;
   onLocationChange?: (location: string) => void;
+  compact?: boolean;
 }
 
 export function LocationSelector({
   currentLocation = "Raipur, Chhattisgarh",
   onLocationChange,
+  compact = false,
 }: LocationSelectorProps) {
+  const router = useRouter();
+  const { showSuccess, showError, showWarning } = useFeedback();
   const [selectedLocation, setSelectedLocation] = useState(currentLocation);
   const [modalVisible, setModalVisible] = useState(false);
   const [locating, setLocating] = useState(false);
@@ -30,13 +35,14 @@ export function LocationSelector({
     "Bengaluru, Karnataka",
     "Mumbai, Maharashtra",
     "Delhi NCR",
-    "Hyderabad, Telangana",
     "Pune, Maharashtra",
+    "Hyderabad, Telangana",
   ];
 
   const handleSelectCity = (city: string) => {
     setSelectedLocation(city);
     onLocationChange?.(city);
+    showSuccess(`Delivery location set to ${city}`);
     setModalVisible(false);
   };
 
@@ -45,10 +51,7 @@ export function LocationSelector({
       setLocating(true);
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        Alert.alert(
-          "Permission Required",
-          "Please enable location permissions in your settings to auto-detect your delivery address.",
-        );
+        showWarning("Please enable location permissions in settings to auto-detect your delivery address.");
         return;
       }
 
@@ -67,13 +70,11 @@ export function LocationSelector({
         const detected = `${city}, ${region}`;
         setSelectedLocation(detected);
         onLocationChange?.(detected);
+        showSuccess(`Delivery location set to ${detected}`);
         setModalVisible(false);
       }
     } catch (err: any) {
-      Alert.alert(
-        "Location Error",
-        err.message || "Could not fetch current GPS location.",
-      );
+      showError(err.message || "Could not fetch current GPS location.");
     } finally {
       setLocating(false);
     }
@@ -84,18 +85,24 @@ export function LocationSelector({
       <TouchableOpacity
         activeOpacity={0.8}
         onPress={() => setModalVisible(true)}
-        style={styles.container}
+        style={compact ? styles.compactContainer : styles.container}
       >
-        <View style={styles.iconCircle}>
-          <Ionicons name="location" size={14} color={Colors.white} />
-        </View>
+        {compact ? (
+          <View style={styles.compactIconPill}>
+            <Ionicons name="location-sharp" size={13} color={Colors.forest} />
+          </View>
+        ) : (
+          <View style={styles.iconCircle}>
+            <Ionicons name="location" size={14} color={Colors.white} />
+          </View>
+        )}
         <View style={styles.textColumn}>
-          <Text style={styles.deliveryLabel}>Deliver to</Text>
+          <Text style={compact ? styles.compactDeliveryLabel : styles.deliveryLabel}>Deliver to</Text>
           <View style={styles.locationRow}>
-            <Text style={styles.locationText} numberOfLines={1}>
-              {selectedLocation}
+            <Text style={compact ? styles.compactLocationText : styles.locationText} numberOfLines={1}>
+              {selectedLocation.split(",")[0]}
             </Text>
-            <Ionicons name="chevron-down" size={12} color={Colors.inkLight} />
+            <Ionicons name="chevron-down" size={compact ? 11 : 12} color={Colors.forest} />
           </View>
         </View>
       </TouchableOpacity>
@@ -133,6 +140,22 @@ export function LocationSelector({
                 <Text style={styles.gpsTitle}>Use Current Location</Text>
                 <Text style={styles.gpsSub}>Enable device GPS for pinpoint accuracy</Text>
               </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => {
+                setModalVisible(false);
+                router.push("/addresses" as any);
+              }}
+              style={styles.manageAddressBtn}
+            >
+              <Ionicons name="home-outline" size={18} color={Colors.forest} />
+              <View style={styles.gpsTextCol}>
+                <Text style={styles.gpsTitle}>Manage Saved Addresses</Text>
+                <Text style={styles.gpsSub}>Add, edit, or set default delivery addresses</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={14} color={Colors.forest} />
             </TouchableOpacity>
 
             <Text style={styles.sectionHeading}>Select City</Text>
@@ -186,11 +209,26 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
   },
+  compactContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.linen,
+    borderRadius: BorderRadius.full,
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    gap: 5,
+  },
   iconCircle: {
     width: 26,
     height: 26,
     borderRadius: 13,
     backgroundColor: Colors.forest,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  compactIconPill: {
     alignItems: "center",
     justifyContent: "center",
   },
@@ -204,6 +242,14 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
+  compactDeliveryLabel: {
+    fontSize: 8,
+    color: Colors.inkMuted,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+    lineHeight: 10,
+  },
   locationRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -214,6 +260,13 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: Colors.ink,
     maxWidth: 160,
+  },
+  compactLocationText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: Colors.ink,
+    maxWidth: 110,
+    lineHeight: 13,
   },
   modalOverlay: {
     flex: 1,
@@ -251,6 +304,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: Colors.botanical,
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    marginBottom: Spacing.sm,
+    gap: Spacing.sm,
+  },
+  manageAddressBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.linen,
     padding: Spacing.md,
     borderRadius: BorderRadius.md,
     borderWidth: 1,

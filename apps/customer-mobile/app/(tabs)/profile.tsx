@@ -2,23 +2,33 @@ import React, { useState } from "react";
 import {
   View,
   Text,
+  TextInput,
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Alert,
   Modal,
   Linking,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { api } from "../../lib/api";
 import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
 import { useCustomerAuth } from "../../lib/contexts/CustomerAuthContext";
+import { useFeedback } from "../../lib/contexts/FloriaFeedbackContext";
+import { haptics } from "../../lib/haptics";
 import { Button } from "../../components/ui/Button";
 
 export default function CustomerProfileScreen() {
   const router = useRouter();
-  const { user, isAuthenticated, signOut } = useCustomerAuth();
+  const { user, isAuthenticated, signOut, refreshProfile } = useCustomerAuth();
+  const { showSuccess, showError, showConfirmSheet } = useFeedback();
   const [policyModal, setPolicyModal] = useState<{ title: string; content: string } | null>(null);
+
+  // Edit Profile Modal State
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editFullName, setEditFullName] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [updatingProfile, setUpdatingProfile] = useState(false);
 
   const POLICIES = {
     guarantee: {
@@ -43,35 +53,67 @@ export default function CustomerProfileScreen() {
     },
   };
 
+  const handleOpenEditProfile = () => {
+    setEditFullName(user?.fullName || "");
+    setEditPhone(user?.phone || "");
+    setEditModalVisible(true);
+  };
+
+  const handleSaveProfile = async () => {
+    if (!editFullName.trim()) {
+      showError("Please enter your full name.");
+      return;
+    }
+    try {
+      setUpdatingProfile(true);
+      const res = await api.updateProfile({
+        full_name: editFullName.trim(),
+        phone: editPhone.trim(),
+      });
+      if (res.success) {
+        await refreshProfile();
+        setEditModalVisible(false);
+        haptics.success();
+        showSuccess("Profile details saved");
+      } else {
+        haptics.error();
+        showError(res.error?.message || "Failed to update profile.");
+      }
+    } catch (err: any) {
+      haptics.error();
+      showError(err.message || "Failed to update profile.");
+    } finally {
+      setUpdatingProfile(false);
+    }
+  };
+
   const handleContactSupport = () => {
-    Alert.alert(
-      "Floria Customer Care",
-      "Connect with our botanical support team for order inquiries, plant care advice, or nursery assistance.",
-      [
-        {
-          text: "Email Support",
-          onPress: () => Linking.openURL("mailto:support@floria.in?subject=Floria%20Customer%20Inquiry"),
-        },
-        {
-          text: "Helpline",
-          onPress: () => Linking.openURL("tel:+918000000000"),
-        },
-        { text: "Close", style: "cancel" },
-      ],
-    );
+    showConfirmSheet({
+      title: "Floria Customer Support",
+      message: "Connect with our botanical support team for order inquiries, plant care advice, or nursery assistance.",
+      icon: "chatbubble-ellipses-outline",
+      confirmLabel: "Email Support",
+      cancelLabel: "Close",
+      onConfirm: () => {
+        Linking.openURL("mailto:support@floria.in?subject=Floria%20Customer%20Inquiry");
+      },
+    });
   };
 
   const handleSignOut = () => {
-    Alert.alert("Sign Out", "Are you sure you want to sign out of Floria?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Sign Out",
-        style: "destructive",
-        onPress: async () => {
-          await signOut();
-        },
+    showConfirmSheet({
+      title: "Sign Out",
+      message: "Are you sure you want to sign out of your Floria botanical account?",
+      icon: "log-out-outline",
+      confirmLabel: "Sign Out",
+      cancelLabel: "Stay Signed In",
+      isDestructive: true,
+      onConfirm: async () => {
+        await signOut();
+        haptics.light();
+        showSuccess("Signed out successfully");
       },
-    ]);
+    });
   };
 
   return (
@@ -98,11 +140,13 @@ export default function CustomerProfileScreen() {
               </View>
             )}
           </View>
+          {/* Pencil Icon opens Profile Edit */}
           <TouchableOpacity
-            onPress={() => router.push("/addresses" as any)}
+            activeOpacity={0.7}
+            onPress={handleOpenEditProfile}
             style={styles.editProfileBtn}
           >
-            <Ionicons name="pencil-outline" size={16} color={Colors.forest} />
+            <Ionicons name="pencil" size={15} color={Colors.forest} />
           </TouchableOpacity>
         </View>
       ) : (
@@ -123,7 +167,7 @@ export default function CustomerProfileScreen() {
         </View>
       )}
 
-      {/* 2. Flipkart-Style 2x2 Quick Action Cards */}
+      {/* 2. Quick Action Cards */}
       <View style={styles.quickActionsGrid}>
         <TouchableOpacity
           activeOpacity={0.8}
@@ -178,6 +222,21 @@ export default function CustomerProfileScreen() {
       <View style={styles.sectionCard}>
         <Text style={styles.sectionHeading}>Account Settings</Text>
 
+        {isAuthenticated && (
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={handleOpenEditProfile}
+            style={styles.menuRow}
+          >
+            <Ionicons name="person-outline" size={18} color={Colors.forest} style={styles.menuRowIcon} />
+            <View style={styles.menuRowTextCol}>
+              <Text style={styles.menuRowTitle}>Personal Information</Text>
+              <Text style={styles.menuRowSub}>Update full name & phone number</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={Colors.inkMuted} />
+          </TouchableOpacity>
+        )}
+
         <TouchableOpacity
           activeOpacity={0.7}
           onPress={() => (isAuthenticated ? router.push("/addresses" as any) : router.push("/(auth)/login" as any))}
@@ -186,7 +245,7 @@ export default function CustomerProfileScreen() {
           <Ionicons name="map-outline" size={18} color={Colors.forest} style={styles.menuRowIcon} />
           <View style={styles.menuRowTextCol}>
             <Text style={styles.menuRowTitle}>Saved Delivery Addresses</Text>
-            <Text style={styles.menuRowSub}>Raipur & registered destinations</Text>
+            <Text style={styles.menuRowSub}>Manage residential & sanctuary destinations</Text>
           </View>
           <Ionicons name="chevron-forward" size={16} color={Colors.inkMuted} />
         </TouchableOpacity>
@@ -229,8 +288,8 @@ export default function CustomerProfileScreen() {
         >
           <Ionicons name="document-text-outline" size={18} color={Colors.forest} style={styles.menuRowIcon} />
           <View style={styles.menuRowTextCol}>
-            <Text style={styles.menuRowTitle}>Terms & Conditions (T&C)</Text>
-            <Text style={styles.menuRowSub}>Marketplace rules and guidelines</Text>
+            <Text style={styles.menuRowTitle}>Terms of Botanical Service</Text>
+            <Text style={styles.menuRowSub}>Marketplace rules & quality standards</Text>
           </View>
           <Ionicons name="chevron-forward" size={16} color={Colors.inkMuted} />
         </TouchableOpacity>
@@ -242,8 +301,8 @@ export default function CustomerProfileScreen() {
         >
           <Ionicons name="lock-closed-outline" size={18} color={Colors.forest} style={styles.menuRowIcon} />
           <View style={styles.menuRowTextCol}>
-            <Text style={styles.menuRowTitle}>Privacy Policy</Text>
-            <Text style={styles.menuRowSub}>Data protection & privacy commitment</Text>
+            <Text style={styles.menuRowTitle}>Privacy & Data Protection</Text>
+            <Text style={styles.menuRowSub}>Encrypted courier routing & records</Text>
           </View>
           <Ionicons name="chevron-forward" size={16} color={Colors.inkMuted} />
         </TouchableOpacity>
@@ -253,10 +312,10 @@ export default function CustomerProfileScreen() {
           onPress={() => setPolicyModal(POLICIES.returns)}
           style={styles.menuRow}
         >
-          <Ionicons name="swap-horizontal-outline" size={18} color={Colors.forest} style={styles.menuRowIcon} />
+          <Ionicons name="refresh-outline" size={18} color={Colors.forest} style={styles.menuRowIcon} />
           <View style={styles.menuRowTextCol}>
-            <Text style={styles.menuRowTitle}>Cancellation & Return Policy</Text>
-            <Text style={styles.menuRowSub}>Hassle-free cancellation before dispatch</Text>
+            <Text style={styles.menuRowTitle}>Return & Cancellation Policy</Text>
+            <Text style={styles.menuRowSub}>Transit stress policy & replacements</Text>
           </View>
           <Ionicons name="chevron-forward" size={16} color={Colors.inkMuted} />
         </TouchableOpacity>
@@ -264,9 +323,9 @@ export default function CustomerProfileScreen() {
         <TouchableOpacity
           activeOpacity={0.7}
           onPress={handleContactSupport}
-          style={[styles.menuRow, { borderBottomWidth: 0 }]}
+          style={styles.menuRow}
         >
-          <Ionicons name="chatbubbles-outline" size={18} color={Colors.forest} style={styles.menuRowIcon} />
+          <Ionicons name="chatbox-ellipses-outline" size={18} color={Colors.forest} style={styles.menuRowIcon} />
           <View style={styles.menuRowTextCol}>
             <Text style={styles.menuRowTitle}>Contact Floria Support</Text>
             <Text style={styles.menuRowSub}>Dedicated email helpline & resolution</Text>
@@ -289,6 +348,76 @@ export default function CustomerProfileScreen() {
         <Text style={styles.versionText}>Floria Plant Marketplace • Version 0.1.0</Text>
         <Text style={styles.copyrightText}>Hand-grown with care for mindful sanctuaries</Text>
       </View>
+
+      {/* Edit Profile Modal */}
+      <Modal
+        visible={editModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setEditModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Edit Profile Information</Text>
+              <TouchableOpacity
+                onPress={() => setEditModalVisible(false)}
+                style={styles.closeBtn}
+              >
+                <Ionicons name="close" size={20} color={Colors.inkLight} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.editField}>
+              <Text style={styles.editLabel}>Full Name</Text>
+              <TextInput
+                style={styles.editInput}
+                value={editFullName}
+                onChangeText={setEditFullName}
+                placeholder="Your full name"
+                placeholderTextColor={Colors.inkSubtle}
+              />
+            </View>
+
+            <View style={styles.editField}>
+              <Text style={styles.editLabel}>Contact Phone Number</Text>
+              <TextInput
+                style={styles.editInput}
+                value={editPhone}
+                onChangeText={setEditPhone}
+                placeholder="+91 98765 43210"
+                placeholderTextColor={Colors.inkSubtle}
+                keyboardType="phone-pad"
+              />
+            </View>
+
+            <View style={styles.editField}>
+              <Text style={styles.editLabel}>Account Email (Linked)</Text>
+              <View style={styles.disabledEmailBox}>
+                <Ionicons name="mail-outline" size={15} color={Colors.inkMuted} />
+                <Text style={styles.disabledEmailText}>{user?.email}</Text>
+              </View>
+            </View>
+
+            <View style={styles.editModalActions}>
+              <Button
+                label="Cancel"
+                variant="outline"
+                size="sm"
+                onPress={() => setEditModalVisible(false)}
+                style={{ flex: 1, marginRight: Spacing.sm }}
+              />
+              <Button
+                label="Save Changes"
+                size="sm"
+                loading={updatingProfile}
+                onPress={handleSaveProfile}
+                style={{ flex: 1 }}
+              />
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Policy Reader Modal */}
       <Modal
@@ -348,12 +477,12 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.forest,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: Spacing.md,
+    marginRight: Spacing.sm,
   },
   avatarText: {
-    color: Colors.white,
-    fontWeight: "bold",
     fontSize: Typography.fontSizes.lg,
+    fontWeight: "bold",
+    color: Colors.white,
     fontFamily: "Georgia",
   },
   profileInfo: {
@@ -362,25 +491,34 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: Typography.fontSizes.base,
     fontWeight: "bold",
+    fontFamily: "Georgia",
     color: Colors.ink,
   },
   userEmail: {
     fontSize: Typography.fontSizes.xs,
     color: Colors.inkMuted,
-    marginTop: 1,
+    marginTop: 2,
   },
   phoneRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    marginTop: 2,
+    marginTop: 4,
   },
   userPhone: {
-    fontSize: Typography.fontSizes.xs,
+    fontSize: 11,
     color: Colors.inkLight,
+    fontWeight: "500",
   },
   editProfileBtn: {
-    padding: Spacing.xs,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.page,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    alignItems: "center",
+    justifyContent: "center",
   },
   guestCard: {
     flexDirection: "row",
@@ -396,7 +534,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: Colors.botanical,
+    backgroundColor: Colors.sand,
     alignItems: "center",
     justifyContent: "center",
     marginRight: Spacing.sm,
@@ -408,6 +546,7 @@ const styles = StyleSheet.create({
     fontSize: Typography.fontSizes.sm,
     fontWeight: "bold",
     color: Colors.ink,
+    fontFamily: "Georgia",
   },
   guestSub: {
     fontSize: 11,
@@ -416,14 +555,16 @@ const styles = StyleSheet.create({
   },
   guestLoginBtn: {
     backgroundColor: Colors.forest,
-    paddingHorizontal: 14,
+    paddingHorizontal: Spacing.sm + 4,
     paddingVertical: 8,
     borderRadius: BorderRadius.md,
   },
   guestLoginText: {
     color: Colors.white,
     fontSize: Typography.fontSizes.xs,
-    fontWeight: "700",
+    fontWeight: "bold",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   quickActionsGrid: {
     flexDirection: "row",
@@ -432,7 +573,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   quickActionCard: {
-    width: "48.5%",
+    width: "48%",
     backgroundColor: Colors.linen,
     borderRadius: BorderRadius.lg,
     padding: Spacing.md,
@@ -440,17 +581,12 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
   },
   quickActionIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: Colors.page,
-    alignItems: "center",
-    justifyContent: "center",
     marginBottom: Spacing.xs,
   },
   quickActionLabel: {
     fontSize: Typography.fontSizes.sm,
     fontWeight: "bold",
+    fontFamily: "Georgia",
     color: Colors.ink,
   },
   quickActionSub: {
@@ -461,25 +597,28 @@ const styles = StyleSheet.create({
   sectionCard: {
     backgroundColor: Colors.linen,
     borderRadius: BorderRadius.xl,
-    padding: Spacing.md,
     borderWidth: 1,
     borderColor: Colors.border,
     marginBottom: Spacing.md,
+    overflow: "hidden",
   },
   sectionHeading: {
-    fontSize: 10,
-    fontWeight: "700",
-    textTransform: "uppercase",
+    fontSize: Typography.fontSizes.xs,
+    fontWeight: "bold",
     color: Colors.inkLight,
+    textTransform: "uppercase",
     letterSpacing: 0.8,
-    marginBottom: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.xs,
   },
   menuRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm + 2,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
   },
   menuRowIcon: {
     marginRight: Spacing.sm,
@@ -493,7 +632,7 @@ const styles = StyleSheet.create({
     color: Colors.ink,
   },
   menuRowSub: {
-    fontSize: 11,
+    fontSize: 10.5,
     color: Colors.inkMuted,
     marginTop: 1,
   },
@@ -514,6 +653,7 @@ const styles = StyleSheet.create({
     color: Colors.inkSubtle,
     marginTop: 2,
   },
+  // Modals
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.45)",
@@ -528,6 +668,11 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     borderWidth: 1,
     borderColor: Colors.border,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 8,
   },
   modalHeader: {
     flexDirection: "row",
@@ -549,5 +694,46 @@ const styles = StyleSheet.create({
     fontSize: Typography.fontSizes.sm,
     color: Colors.inkLight,
     lineHeight: 20,
+  },
+  // Edit Profile Styles
+  editField: {
+    marginBottom: Spacing.md,
+  },
+  editLabel: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: Colors.inkLight,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
+  editInput: {
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 10,
+    fontSize: Typography.fontSizes.sm,
+    color: Colors.ink,
+  },
+  disabledEmailBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: Colors.linen,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 10,
+  },
+  disabledEmailText: {
+    fontSize: Typography.fontSizes.sm,
+    color: Colors.inkMuted,
+  },
+  editModalActions: {
+    flexDirection: "row",
+    marginTop: Spacing.sm,
   },
 });

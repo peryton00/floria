@@ -11,7 +11,7 @@ import { useRouter } from "expo-router";
 import { api } from "../../lib/api";
 import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
 import { formatINR, formatDate } from "../../lib/format";
-import { LoadingState } from "../../components/ui/LoadingState";
+import { ListSkeleton } from "../../components/ui/ListSkeleton";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { ErrorState } from "../../components/ui/ErrorState";
 
@@ -61,8 +61,12 @@ export default function OrderHistoryScreen() {
     }
   };
 
-  if (loading && !refreshing) {
-    return <LoadingState message="Retrieving order history..." />;
+  if (loading && !refreshing && orders.length === 0) {
+    return (
+      <View style={[styles.container, { paddingHorizontal: Spacing.md, paddingTop: Spacing.xs }]}>
+        <ListSkeleton count={4} />
+      </View>
+    );
   }
 
   if (error && orders.length === 0) {
@@ -158,7 +162,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.page,
   },
   list: {
-    padding: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.xs,
+    paddingBottom: Spacing.xl,
   },
   orderCard: {
     backgroundColor: Colors.linen,

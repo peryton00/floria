@@ -17,6 +17,11 @@ router.get(
   publicCatalogRateLimiter,
   productsController.getRankedNurseries,
 );
+router.get(
+  "/catalog/sellers/:id",
+  publicCatalogRateLimiter,
+  productsController.getNurseryById,
+);
 
 // ── PUBLIC: product reviews list + summary ────────────────────────────────
 // Mounted at /api/v1  →  GET /api/v1/catalog/products/:id/reviews

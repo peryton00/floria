@@ -4,8 +4,10 @@ import React, {
   useState,
   useEffect,
   useCallback,
+  useRef,
 } from "react";
 import * as WebBrowser from "expo-web-browser";
+import * as Linking from "expo-linking";
 import { makeRedirectUri } from "expo-auth-session";
 import { supabase } from "../supabase";
 import { api } from "../api";
@@ -43,20 +45,30 @@ export function CustomerAuthProvider({
 }) {
   const [user, setUser] = useState<CustomerUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   const refreshProfile = useCallback(async () => {
     try {
-      setIsLoading(true);
+      if (isMountedRef.current) setIsLoading(true);
       const {
         data: { session },
       } = await supabase.auth.getSession();
 
       if (!session?.user) {
-        setUser(null);
+        if (isMountedRef.current) setUser(null);
         return;
       }
 
       const res = await api.getProfile();
+
+      if (!isMountedRef.current) return;
 
       if (res.success && res.data) {
         const u = res.data.user || {};
@@ -66,6 +78,7 @@ export function CustomerAuthProvider({
           email: u.email || session.user.email,
           fullName:
             p.full_name || u.full_name || session.user.user_metadata?.full_name,
+          phone: p.phone || u.phone,
           role: p.role || u.role || "customer",
         });
       } else {
@@ -77,17 +90,28 @@ export function CustomerAuthProvider({
         });
       }
     } catch {
-      setUser(null);
+      if (isMountedRef.current) setUser(null);
     } finally {
-      setIsLoading(false);
+      if (isMountedRef.current) setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    refreshProfile();
+    let active = true;
+
+    const init = async () => {
+      await refreshProfile();
+    };
+
+    init();
+
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event: any, session: any) => {
+    } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
+      if (!active) return;
+      if (event === "INITIAL_SESSION") {
+        return; // Already handled by init()
+      }
       if (session?.user) {
         await refreshProfile();
       } else {
@@ -97,6 +121,7 @@ export function CustomerAuthProvider({
     });
 
     return () => {
+      active = false;
       subscription.unsubscribe();
     };
   }, [refreshProfile]);
@@ -141,29 +166,64 @@ export function CustomerAuthProvider({
     setUser(null);
   };
 
+  const parseAuthUrl = (urlString: string) => {
+    const params: Record<string, string> = {};
+    const queryIndex = urlString.indexOf("?");
+    const hashIndex = urlString.indexOf("#");
+
+    if (queryIndex !== -1) {
+      const queryString =
+        hashIndex !== -1 && hashIndex > queryIndex
+          ? urlString.substring(queryIndex + 1, hashIndex)
+          : urlString.substring(queryIndex + 1);
+      new URLSearchParams(queryString).forEach((val, key) => {
+        params[key] = val;
+      });
+    }
+
+    if (hashIndex !== -1) {
+      const hashString = urlString.substring(hashIndex + 1);
+      new URLSearchParams(hashString).forEach((val, key) => {
+        params[key] = val;
+      });
+    }
+
+    return params;
+  };
+
   const signInWithGoogle = async () => {
-    const redirectTo = makeRedirectUri({ scheme: "floria", path: "auth/callback" });
+    // In Expo Go, Linking.createURL generates exp://.../--/auth/callback
+    // In Standalone builds, it generates floria://auth/callback
+    const redirectTo =
+      Linking.createURL("auth/callback") ||
+      makeRedirectUri({ scheme: "floria", path: "auth/callback" });
+
+    console.log("[Floria Auth] Generated OAuth Redirect URI:", redirectTo);
+
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo, skipBrowserRedirect: true },
+      options: {
+        redirectTo,
+        skipBrowserRedirect: true,
+        queryParams: {
+          prompt: "select_account",
+          access_type: "offline",
+        },
+      },
     });
     if (error || !data.url) {
       throw new Error(error?.message || "Google sign-in failed");
     }
     const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
     if (result.type === "success" && result.url) {
-      // Extract tokens from the redirect URL and set the session
-      const url = new URL(result.url);
-      const accessToken = url.searchParams.get("access_token");
-      const refreshToken = url.searchParams.get("refresh_token");
-      if (accessToken && refreshToken) {
-        await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
-      } else {
-        // PKCE flow: extract code and exchange
-        const code = url.searchParams.get("code");
-        if (code) {
-          await supabase.auth.exchangeCodeForSession(code);
-        }
+      const params = parseAuthUrl(result.url);
+      if (params.access_token && params.refresh_token) {
+        await supabase.auth.setSession({
+          access_token: params.access_token,
+          refresh_token: params.refresh_token,
+        });
+      } else if (params.code) {
+        await supabase.auth.exchangeCodeForSession(params.code);
       }
       await refreshProfile();
     }

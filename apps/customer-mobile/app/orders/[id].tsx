@@ -4,10 +4,8 @@ import {
   Text,
   ScrollView,
   StyleSheet,
-  ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
-  Alert,
   Linking,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -15,7 +13,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { api } from "../../lib/api";
 import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
 import { formatINR, formatDate } from "../../lib/format";
-import { LoadingState } from "../../components/ui/LoadingState";
+import { useFeedback } from "../../lib/contexts/FloriaFeedbackContext";
+import { OrderDetailSkeleton } from "../../components/ui/ListSkeleton";
 import { ErrorState } from "../../components/ui/ErrorState";
 import { Button } from "../../components/ui/Button";
 
@@ -26,31 +25,28 @@ const STAGES = [
     desc: "Nursery received botanical order and verified live stock.",
   },
   {
-    key: "preparing",
-    label: "Specimen Inspection & Care",
-    desc: "Living plant foliage inspected, pruned, and hydrated for transit.",
+    key: "packed",
+    label: "Hydrated & Securely Packed",
+    desc: "Specimen roots hydrated with breathable biodegradable cushioning.",
   },
   {
-    key: "picked_up",
-    label: "Dispatched from Nursery",
-    desc: "Handed over to courier in insulated botanical transit packaging.",
-  },
-  {
-    key: "out_for_delivery",
-    label: "Out for Delivery",
-    desc: "Courier en route to your sanctuary address.",
+    key: "shipped",
+    label: "Handed to Hyperlocal Courier",
+    desc: "Dispatched for direct climate-controlled transit.",
   },
   {
     key: "delivered",
-    label: "Delivered & Transferred",
-    desc: "Specimen safely hand-delivered with 7-day health guarantee.",
+    label: "Delivered to Sanctuary",
+    desc: "Living plants delivered to your residence.",
   },
 ];
 
-export default function OrderDetailTrackingScreen() {
+export default function OrderDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const [order, setOrder] = useState<any | null>(null);
+  const { showConfirmSheet } = useFeedback();
+
+  const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -63,10 +59,10 @@ export default function OrderDetailTrackingScreen() {
       if (res.success && res.data) {
         setOrder(res.data);
       } else {
-        setError(res.error?.message || "Could not locate order.");
+        setError(res.error?.message || "Could not load order tracking details.");
       }
-    } catch (err: any) {
-      setError(err.message || "Failed to load order tracking.");
+    } catch (e: any) {
+      setError(e.message || "Failed to load order.");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -83,28 +79,26 @@ export default function OrderDetailTrackingScreen() {
   };
 
   const handleSupportContact = () => {
-    Alert.alert(
-      "Floria Order Support",
-      `Need assistance with Order #${order?.id?.substring(0, 8)}?`,
-      [
-        {
-          text: "Email Support",
-          onPress: () =>
-            Linking.openURL(
-              `mailto:support@floria.in?subject=Help%20with%20Order%20%23${order?.id?.substring(0, 8)}`,
-            ),
-        },
-        {
-          text: "Call Helpline",
-          onPress: () => Linking.openURL("tel:+918000000000"),
-        },
-        { text: "Cancel", style: "cancel" },
-      ],
-    );
+    showConfirmSheet({
+      title: "Floria Order Care",
+      message: `Need assistance with Order #${order?.id?.substring(0, 8)}? Our botanical care specialists are ready to help.`,
+      icon: "chatbubble-ellipses-outline",
+      confirmLabel: "Email Support",
+      cancelLabel: "Close",
+      onConfirm: () => {
+        Linking.openURL(
+          `mailto:support@floria.in?subject=Help%20with%20Order%20%23${order?.id?.substring(0, 8)}`,
+        );
+      },
+    });
   };
 
-  if (loading && !refreshing) {
-    return <LoadingState message="Connecting to live dispatch..." />;
+  if (loading && !refreshing && !order) {
+    return (
+      <View style={styles.container}>
+        <OrderDetailSkeleton />
+      </View>
+    );
   }
 
   if (error || !order) {
@@ -266,7 +260,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.page,
   },
   content: {
-    padding: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.xs,
     paddingBottom: Spacing.xxl,
   },
   headerCard: {

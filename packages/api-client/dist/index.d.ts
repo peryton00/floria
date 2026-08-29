@@ -166,6 +166,8 @@ declare class FloriaApiClient {
     getProducts(params?: QueryParams, options?: RequestInit): Promise<ApiResponse<any[]>>;
     getProductBySlug(slug: string, options?: RequestInit): Promise<ApiResponse<any>>;
     getCategories(options?: RequestInit): Promise<ApiResponse<any[]>>;
+    getNurseries(options?: RequestInit): Promise<ApiResponse<any[]>>;
+    getNurseryById(id: string, options?: RequestInit): Promise<ApiResponse<any>>;
     getCart(): Promise<ApiResponse<any>>;
     addToCart(productId: string, quantity: number): Promise<ApiResponse<any>>;
     updateCartQuantity(productId: string, quantity: number): Promise<ApiResponse<any>>;

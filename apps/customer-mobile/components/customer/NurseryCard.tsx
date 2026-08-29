@@ -16,10 +16,10 @@ export interface NurseryCardProps {
 export function NurseryCard({
   id,
   name,
-  city = "Bangalore",
+  city = "Raipur",
   story,
-  rating = 4.8,
-  plantCount = 24,
+  rating = 4.9,
+  plantCount = 18,
 }: NurseryCardProps) {
   const router = useRouter();
 
@@ -31,7 +31,9 @@ export function NurseryCard({
     >
       <View style={styles.header}>
         <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{name.charAt(0)}</Text>
+          <Text style={styles.avatarText}>
+            {(name || "G").charAt(0).toUpperCase()}
+          </Text>
         </View>
         <View style={styles.headerInfo}>
           <Text style={styles.title} numberOfLines={1}>
@@ -40,8 +42,8 @@ export function NurseryCard({
           <View style={styles.locationRow}>
             <Ionicons
               name="location-sharp"
-              size={12}
-              color={Colors.inkMuted}
+              size={11}
+              color={Colors.forest}
               style={{ marginRight: 2 }}
             />
             <Text style={styles.location}>{city}</Text>
@@ -52,9 +54,9 @@ export function NurseryCard({
             name="star"
             size={11}
             color={Colors.forest}
-            style={{ marginRight: 2 }}
+            style={{ marginRight: 3 }}
           />
-          <Text style={styles.ratingText}>{rating}</Text>
+          <Text style={styles.ratingText}>{rating.toFixed(1)}</Text>
         </View>
       </View>
 
@@ -66,9 +68,12 @@ export function NurseryCard({
 
       <View style={styles.footer}>
         <Text style={styles.plantCount}>
-          {plantCount} Botanical Specimens Available
+          {plantCount} Cultivated Specimens
         </Text>
-        <Text style={styles.viewLink}>View Nursery →</Text>
+        <View style={styles.viewLinkRow}>
+          <Text style={styles.viewLink}>Explore Collection</Text>
+          <Ionicons name="chevron-forward" size={11} color={Colors.terracotta} />
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -89,8 +94,8 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
   },
   avatar: {
-    width: 40,
-    height: 40,
+    width: 38,
+    height: 38,
     borderRadius: BorderRadius.md,
     backgroundColor: Colors.forest,
     alignItems: "center",
@@ -100,20 +105,22 @@ const styles = StyleSheet.create({
   avatarText: {
     color: Colors.white,
     fontWeight: "bold",
-    fontSize: Typography.fontSizes.md,
+    fontSize: Typography.fontSizes.sm,
+    fontFamily: "Georgia",
   },
   headerInfo: {
     flex: 1,
   },
   title: {
-    fontSize: Typography.fontSizes.base,
+    fontSize: Typography.fontSizes.sm + 1,
     fontWeight: "bold",
+    fontFamily: "Georgia",
     color: Colors.ink,
   },
   locationRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 2,
+    marginTop: 1,
   },
   location: {
     fontSize: Typography.fontSizes.xs,
@@ -122,10 +129,12 @@ const styles = StyleSheet.create({
   ratingBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.sand,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    backgroundColor: Colors.botanical,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
     borderRadius: BorderRadius.sm,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   ratingText: {
     fontSize: 11,
@@ -148,14 +157,20 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.xs,
   },
   plantCount: {
-    fontSize: 11,
-    color: Colors.sage,
+    fontSize: 10.5,
+    color: Colors.forest,
     fontWeight: "600",
   },
+  viewLinkRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 2,
+  },
   viewLink: {
-    fontSize: 11,
+    fontSize: 10.5,
     color: Colors.terracotta,
     fontWeight: "bold",
     textTransform: "uppercase",
+    letterSpacing: 0.3,
   },
 });

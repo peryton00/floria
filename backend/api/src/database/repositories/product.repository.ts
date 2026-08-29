@@ -107,8 +107,10 @@ export class ProductRepository {
   }
 
   async findActiveCatalog(
-    categoryId?: string,
+    categoryIdOrSlug?: string,
     search?: string,
+    sellerId?: string,
+    limit?: number,
   ): Promise<any[]> {
     const db = getAdminDb();
     let q = db
@@ -116,12 +118,40 @@ export class ProductRepository {
       .select(PRODUCT_LISTING_SELECT)
       .eq("status", "active");
 
-    if (categoryId) {
-      q = q.eq("category_id", categoryId);
+    if (categoryIdOrSlug && categoryIdOrSlug !== "all") {
+      const isUuid =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          categoryIdOrSlug,
+        );
+      if (isUuid) {
+        q = q.eq("category_id", categoryIdOrSlug);
+      } else {
+        // Look up category id by slug
+        const { data: cat } = await db
+          .from("categories")
+          .select("id")
+          .eq("slug", categoryIdOrSlug)
+          .maybeSingle();
+
+        if (cat?.id) {
+          q = q.eq("category_id", cat.id);
+        } else {
+          q = q.eq("category_id", categoryIdOrSlug);
+        }
+      }
     }
 
-    if (search) {
-      q = q.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
+    if (sellerId) {
+      q = q.eq("seller_id", sellerId);
+    }
+
+    if (search && search.trim()) {
+      const term = search.trim();
+      q = q.or(`name.ilike.%${term}%,description.ilike.%${term}%`);
+    }
+
+    if (limit && limit > 0) {
+      q = q.limit(limit);
     }
 
     const { data, error } = await q;

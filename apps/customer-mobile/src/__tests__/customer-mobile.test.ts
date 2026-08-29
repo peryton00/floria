@@ -174,3 +174,78 @@ describe("Customer Mobile — Cashfree Payment Initiation Validation", () => {
     ).toBe(false);
   });
 });
+
+describe("Customer Mobile — Floria Feedback System Contract", () => {
+  interface FeedbackMessage {
+    type: "success" | "error" | "warning" | "info";
+    message: string;
+    action?: { label: string; actionType: string };
+  }
+
+  const formatCartFeedback = (item: { name: string; quantity: number }): FeedbackMessage => ({
+    type: "success",
+    message: `${item.quantity} × ${item.name} added to your bag`,
+    action: { label: "View Bag", actionType: "NAVIGATE_CART" },
+  });
+
+  const formatUndoRemovalFeedback = (item: { name: string }): FeedbackMessage => ({
+    type: "info",
+    message: `${item.name} removed from bag`,
+    action: { label: "Undo", actionType: "RESTORE_ITEM" },
+  });
+
+  it("generates human-friendly, concise success feedback for bag additions", () => {
+    const feedback = formatCartFeedback({ name: "Monstera Deliciosa", quantity: 1 });
+    expect(feedback.type).toBe("success");
+    expect(feedback.message).toBe("1 × Monstera Deliciosa added to your bag");
+    expect(feedback.action?.label).toBe("View Bag");
+  });
+
+  it("generates undo action feedback on plant specimen removal", () => {
+    const feedback = formatUndoRemovalFeedback({ name: "Calathea Orbifolia" });
+    expect(feedback.type).toBe("info");
+    expect(feedback.message).toBe("Calathea Orbifolia removed from bag");
+    expect(feedback.action?.label).toBe("Undo");
+  });
+});
+
+describe("Customer Mobile — Semantic Haptics Hierarchy", () => {
+  type SemanticHaptic = "selection" | "light" | "success" | "warning" | "error" | "boundary";
+
+  const getHapticIntensity = (type: SemanticHaptic): number => {
+    switch (type) {
+      case "selection":
+        return 1;
+      case "light":
+        return 2;
+      case "boundary":
+        return 2;
+      case "warning":
+        return 3;
+      case "error":
+        return 4;
+      case "success":
+        return 4;
+    }
+  };
+
+  it("maintains appropriate restrained hierarchy for semantic haptics", () => {
+    expect(getHapticIntensity("selection")).toBeLessThan(getHapticIntensity("success"));
+    expect(getHapticIntensity("light")).toBeLessThan(getHapticIntensity("error"));
+  });
+
+  it("throttles rapid consecutive haptic triggers within 60ms", () => {
+    let lastTime = 1000;
+    const throttleMs = 60;
+    const canTrigger = (now: number) => {
+      if (now - lastTime < throttleMs) return false;
+      lastTime = now;
+      return true;
+    };
+
+    expect(canTrigger(1020)).toBe(false); // 20ms delta -> throttled
+    expect(canTrigger(1070)).toBe(true);  // 70ms delta -> permitted
+  });
+});
+
+

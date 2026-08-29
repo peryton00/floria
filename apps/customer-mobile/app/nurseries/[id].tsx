@@ -5,7 +5,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { api } from "../../lib/api";
 import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
 import { ProductCard } from "../../components/customer/ProductCard";
-import { LoadingState } from "../../components/ui/LoadingState";
+import { ProductGridSkeleton } from "../../components/ui/ProductCardSkeleton";
+import { FloriaSkeleton } from "../../components/ui/FloriaSkeleton";
+import { EmptyState } from "../../components/ui/EmptyState";
 import { ErrorState } from "../../components/ui/ErrorState";
 
 export default function NurseryDetailScreen() {
@@ -20,32 +22,55 @@ export default function NurseryDetailScreen() {
     try {
       setLoading(true);
       setError(null);
-      const prodsRes = await api.getProducts({ sellerId: id, limit: 30 });
 
-      if (prodsRes.success && prodsRes.data && prodsRes.data.length > 0) {
-        setProducts(prodsRes.data);
-        const sample = prodsRes.data[0];
-        const seller = sample.seller || {
+      const [nurseryRes, prodsRes] = await Promise.allSettled([
+        api.getNurseryById(id),
+        api.getProducts({ sellerId: id, limit: 40 }),
+      ]);
+
+      let nurseryData: any = null;
+      if (nurseryRes.status === "fulfilled" && nurseryRes.value.success && nurseryRes.value.data) {
+        nurseryData = nurseryRes.value.data;
+      }
+
+      let loadedProducts: any[] = [];
+      if (prodsRes.status === "fulfilled" && prodsRes.value.success && Array.isArray(prodsRes.value.data)) {
+        // Filter strictly for this seller's products
+        loadedProducts = prodsRes.value.data.filter(
+          (p: any) =>
+            p.seller_id === id ||
+            p.seller?.id === id ||
+            p.product?.seller_id === id ||
+            !p.seller_id, // include if not tagged
+        );
+        setProducts(loadedProducts);
+      } else {
+        setProducts([]);
+      }
+
+      if (nurseryData) {
+        setNursery(nurseryData);
+      } else if (loadedProducts.length > 0) {
+        const sample = loadedProducts[0];
+        setNursery(sample.seller || {
           id,
           business_name:
             sample.seller_name ||
             sample.nursery_name ||
-            "Green Oasis Botanical Nursery",
+            "Floria Partner Nursery",
           city: "Bengaluru",
           state: "Karnataka",
           story:
             "A verified boutique nursery partner specializing in healthy tropical plants and exotic flora.",
-        };
-        setNursery(seller);
+        });
       } else {
-        // Fallback default nursery info
         setNursery({
           id,
-          business_name: "Green Oasis Botanical Nursery",
-          city: "Bengaluru",
-          state: "Karnataka",
+          business_name: "Floria Partner Nursery",
+          city: "Raipur",
+          state: "Chhattisgarh",
           story:
-            "A verified boutique nursery partner specializing in healthy tropical plants and exotic flora.",
+            "A verified boutique botanical grower specializing in healthy nursery specimens.",
         });
       }
     } catch (err: any) {
@@ -59,16 +84,27 @@ export default function NurseryDetailScreen() {
     fetchNurseryData();
   }, [fetchNurseryData]);
 
-  if (loading) {
+  if (loading && !nursery) {
     return (
-      <LoadingState message="Loading nursery profile & botanical specimens..." />
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        <View style={styles.headerCard}>
+          <FloriaSkeleton width={56} height={56} borderRadius={28} style={{ marginBottom: 12 }} />
+          <FloriaSkeleton width="60%" height={22} borderRadius={4} style={{ marginBottom: 8 }} />
+          <FloriaSkeleton width="40%" height={14} borderRadius={4} style={{ marginBottom: 12 }} />
+          <FloriaSkeleton width="90%" height={32} borderRadius={BorderRadius.md} />
+        </View>
+        <View style={styles.catalogSection}>
+          <FloriaSkeleton width={140} height={18} borderRadius={4} style={{ marginBottom: 12 }} />
+          <ProductGridSkeleton count={4} />
+        </View>
+      </ScrollView>
     );
   }
 
   if (error || !nursery) {
     return (
       <ErrorState
-        message={error || "Nursery unavailable."}
+        message={error || "Botanical collection unavailable."}
         onRetry={fetchNurseryData}
       />
     );
@@ -119,29 +155,36 @@ export default function NurseryDetailScreen() {
           Available Specimens ({products.length})
         </Text>
 
-        <View style={styles.productsGrid}>
-          {products.map((p) => {
-            const prod = p.product || p;
-            const primaryImage =
-              prod.images?.find((img: any) => img.is_primary)?.url ||
-              prod.images?.[0]?.url;
-            return (
-              <View key={prod.id} style={styles.gridItem}>
-                <ProductCard
-                  id={prod.id}
-                  name={prod.name}
-                  pricePaise={
-                    p.price_paise || p.inventory?.price_paise || 129900
-                  }
-                  nurseryId={nursery.id}
-                  nurseryName={nursery.business_name || nursery.name}
-                  imageUrl={primaryImage}
-                  careLevel={prod.care_level || "EASY"}
-                />
-              </View>
-            );
-          })}
-        </View>
+        {products.length === 0 ? (
+          <EmptyState
+            title="No Specimens Currently Listed"
+            message="This grower's seasonal specimens are currently being potted and cultivated."
+          />
+        ) : (
+          <View style={styles.productsGrid}>
+            {products.map((p) => {
+              const prod = p.product || p;
+              const primaryImage =
+                prod.images?.find((img: any) => img.is_primary)?.url ||
+                prod.images?.[0]?.url;
+              return (
+                <View key={prod.id} style={styles.gridItem}>
+                  <ProductCard
+                    id={prod.id}
+                    name={prod.name}
+                    pricePaise={
+                      p.price_paise || p.inventory?.price_paise || 129900
+                    }
+                    nurseryId={nursery.id}
+                    nurseryName={nursery.business_name || nursery.name}
+                    imageUrl={primaryImage}
+                    careLevel={prod.care_level || "EASY"}
+                  />
+                </View>
+              );
+            })}
+          </View>
+        )}
       </View>
     </ScrollView>
   );

@@ -51,7 +51,7 @@ export function AnimatedSection({
   return (
     <div
       ref={ref}
-      className={`transition-all duration-350 ease-out ${
+      className={`transition-[opacity,transform] duration-300 ease-out motion-reduce:transition-none motion-reduce:transform-none motion-reduce:opacity-100 ${
         isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
       } ${className}`}
       style={{
