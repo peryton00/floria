@@ -5,8 +5,13 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
+import * as WebBrowser from "expo-web-browser";
+import { makeRedirectUri } from "expo-auth-session";
 import { supabase } from "../supabase";
 import { api } from "../api";
+
+// Required for expo-auth-session on Android
+WebBrowser.maybeCompleteAuthSession();
 
 export interface CustomerUser {
   id: string;
@@ -21,6 +26,7 @@ export interface CustomerAuthContextType {
   isLoading: boolean;
   signIn: (email: string, pass: string) => Promise<void>;
   signUp: (email: string, pass: string, fullName: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -134,6 +140,34 @@ export function CustomerAuthProvider({
     setUser(null);
   };
 
+  const signInWithGoogle = async () => {
+    const redirectTo = makeRedirectUri({ scheme: "floria", path: "auth/callback" });
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo, skipBrowserRedirect: true },
+    });
+    if (error || !data.url) {
+      throw new Error(error?.message || "Google sign-in failed");
+    }
+    const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+    if (result.type === "success" && result.url) {
+      // Extract tokens from the redirect URL and set the session
+      const url = new URL(result.url);
+      const accessToken = url.searchParams.get("access_token");
+      const refreshToken = url.searchParams.get("refresh_token");
+      if (accessToken && refreshToken) {
+        await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+      } else {
+        // PKCE flow: extract code and exchange
+        const code = url.searchParams.get("code");
+        if (code) {
+          await supabase.auth.exchangeCodeForSession(code);
+        }
+      }
+      await refreshProfile();
+    }
+  };
+
   return (
     <CustomerAuthContext.Provider
       value={{
@@ -142,6 +176,7 @@ export function CustomerAuthProvider({
         isLoading,
         signIn,
         signUp,
+        signInWithGoogle,
         signOut,
         refreshProfile,
       }}
