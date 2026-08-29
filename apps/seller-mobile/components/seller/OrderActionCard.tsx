@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
 import { formatINR, formatDate } from "../../lib/format";
 import { StatusBadge } from "../ui/StatusBadge";
@@ -79,15 +80,21 @@ export function OrderActionCard({
 
       <View style={styles.itemsList}>
         {items.map((item, idx) => (
-          <Text key={idx} style={styles.itemText} numberOfLines={1}>
-            🌱 {item.quantity} × {item.name}
-          </Text>
+          <View key={idx} style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 2 }}>
+            <Ionicons name="leaf-outline" size={11} color={Colors.forest} />
+            <Text style={styles.itemText} numberOfLines={1}>
+              {item.quantity} × {item.name}
+            </Text>
+          </View>
         ))}
       </View>
 
       <View style={styles.footer}>
         <View>
-          <Text style={styles.deliveryBadge}>⚡ {deliveryType}</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+            <Ionicons name="flash-outline" size={10} color={Colors.sage} />
+            <Text style={styles.deliveryBadge}>{deliveryType}</Text>
+          </View>
           <Text style={styles.total}>{formatINR(totalPaise)}</Text>
         </View>
 

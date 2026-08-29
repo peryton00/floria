@@ -5,8 +5,10 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
 import { useSellerAuth } from "../../lib/contexts/SellerAuthContext";
 import { Button } from "../../components/ui/Button";
@@ -43,7 +45,10 @@ export default function SellerProfileScreen() {
 
       {/* Operational Policy & Guidelines */}
       <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>🌿 Operational Guidelines</Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+          <Ionicons name="document-text-outline" size={14} color={Colors.forest} />
+          <Text style={styles.sectionTitle}>Operational Guidelines</Text>
+        </View>
         <View style={styles.guidelineItem}>
           <Text style={styles.itemTitle}>1. Rapid Specimen Preparation</Text>
           <Text style={styles.itemDesc}>
@@ -75,14 +80,14 @@ export default function SellerProfileScreen() {
           style={styles.actionLink}
         >
           <Text style={styles.linkText}>Manage Botanical Catalog</Text>
-          <Text style={styles.linkArrow}>→</Text>
+          <Ionicons name="chevron-forward-outline" size={16} color={Colors.inkMuted} />
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => router.push("/(tabs)/inventory" as any)}
           style={styles.actionLink}
         >
           <Text style={styles.linkText}>Live Inventory Levels</Text>
-          <Text style={styles.linkArrow}>→</Text>
+          <Ionicons name="chevron-forward-outline" size={16} color={Colors.inkMuted} />
         </TouchableOpacity>
       </View>
 

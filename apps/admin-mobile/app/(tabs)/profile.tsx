@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
 import { useAdminAuth } from "../../lib/contexts/AdminAuthContext";
 import { Button } from "../../components/ui/Button";
@@ -51,12 +52,15 @@ export default function AdminProfileScreen() {
           style={styles.actionLink}
         >
           <View>
-            <Text style={styles.linkText}>📜 Immutable Audit Logs</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <Ionicons name="receipt-outline" size={15} color={Colors.forest} />
+              <Text style={styles.linkText}>Immutable Audit Logs</Text>
+            </View>
             <Text style={styles.linkSub}>
               Inspect administrative actions and mutation history
             </Text>
           </View>
-          <Text style={styles.linkArrow}>→</Text>
+          <Ionicons name="chevron-forward-outline" size={16} color={Colors.inkMuted} />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -64,12 +68,15 @@ export default function AdminProfileScreen() {
           style={styles.actionLink}
         >
           <View>
-            <Text style={styles.linkText}>🏪 Partner Nursery Compliance</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <Ionicons name="storefront-outline" size={15} color={Colors.forest} />
+              <Text style={styles.linkText}>Partner Nursery Compliance</Text>
+            </View>
             <Text style={styles.linkSub}>
               Verify KYC, trade licenses, and nursery locations
             </Text>
           </View>
-          <Text style={styles.linkArrow}>→</Text>
+          <Ionicons name="chevron-forward-outline" size={16} color={Colors.inkMuted} />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -77,12 +84,15 @@ export default function AdminProfileScreen() {
           style={styles.actionLink}
         >
           <View>
-            <Text style={styles.linkText}>🌿 Plant Catalog Standards</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <Ionicons name="leaf-outline" size={15} color={Colors.forest} />
+              <Text style={styles.linkText}>Plant Catalog Standards</Text>
+            </View>
             <Text style={styles.linkSub}>
               Botanical nomenclature, price limits, and imagery
             </Text>
           </View>
-          <Text style={styles.linkArrow}>→</Text>
+          <Ionicons name="chevron-forward-outline" size={16} color={Colors.inkMuted} />
         </TouchableOpacity>
       </View>
 

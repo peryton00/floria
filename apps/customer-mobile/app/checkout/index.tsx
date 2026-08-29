@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { api } from "../../lib/api";
 import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
 import { formatINR } from "../../lib/format";
@@ -150,9 +151,15 @@ export default function CustomerCheckoutScreen() {
       {/* 1. Delivery Address Card */}
       <View style={styles.sectionCard}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>📍 1. Delivery Address</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <Ionicons name="location-outline" size={15} color={Colors.forest} />
+            <Text style={styles.sectionTitle}>1. Delivery Address</Text>
+          </View>
           <TouchableOpacity onPress={() => router.push("/addresses" as any)}>
-            <Text style={styles.changeAction}>Manage →</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <Text style={styles.changeAction}>Manage</Text>
+              <Ionicons name="chevron-forward-outline" size={13} color={Colors.terracotta} />
+            </View>
           </TouchableOpacity>
         </View>
 
@@ -206,7 +213,10 @@ export default function CustomerCheckoutScreen() {
 
       {/* 2. Payment Method Card */}
       <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>💳 2. Payment Gateway</Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+          <Ionicons name="card-outline" size={15} color={Colors.forest} />
+          <Text style={styles.sectionTitle}>2. Payment Gateway</Text>
+        </View>
         <View style={styles.paymentOptions}>
           <TouchableOpacity
             activeOpacity={0.8}
@@ -254,9 +264,10 @@ export default function CustomerCheckoutScreen() {
 
       {/* 3. Order Items Summary */}
       <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>
-          🌿 3. Order Review ({items.length} items)
-        </Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+          <Ionicons name="leaf-outline" size={15} color={Colors.forest} />
+          <Text style={styles.sectionTitle}>3. Order Review ({items.length} items)</Text>
+        </View>
         <View style={styles.itemsSummary}>
           {items.map((i) => (
             <View key={i.productId} style={styles.summaryItem}>

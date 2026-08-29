@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, ScrollView, StyleSheet, FlatList } from "react-native";
 import { useLocalSearchParams } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { api } from "../../lib/api";
 import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
 import { ProductCard } from "../../components/customer/ProductCard";
@@ -87,17 +88,22 @@ export default function NurseryDetailScreen() {
         <Text style={styles.nurseryTitle}>
           {nursery.business_name || nursery.name}
         </Text>
-        <Text style={styles.location}>
-          📍 {nursery.city || "Bengaluru"}, {nursery.state || "Karnataka"}
-        </Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 4 }}>
+          <Ionicons name="location-outline" size={13} color={Colors.inkMuted} />
+          <Text style={styles.location}>
+            {nursery.city || "Bengaluru"}, {nursery.state || "Karnataka"}
+          </Text>
+        </View>
 
         <View style={styles.badgeRow}>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>★ 4.9 Verified Grower</Text>
+          <View style={[styles.badge, { flexDirection: "row", alignItems: "center", gap: 4 }]}>
+            <Ionicons name="star" size={11} color={Colors.forest} />
+            <Text style={styles.badgeText}>4.9 Verified Grower</Text>
           </View>
-          <View style={[styles.badge, styles.hyperlocalBadge]}>
+          <View style={[styles.badge, styles.hyperlocalBadge, { flexDirection: "row", alignItems: "center", gap: 4 }]}>
+            <Ionicons name="flash" size={11} color={Colors.forest} />
             <Text style={[styles.badgeText, styles.hyperlocalText]}>
-              ⚡ 4-Hour Hyperlocal
+              4-Hour Hyperlocal
             </Text>
           </View>
         </View>

@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { api } from "../../lib/api";
 import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
 import { formatINR } from "../../lib/format";
@@ -70,7 +71,7 @@ export default function AdminDashboardScreen() {
   if (!isAuthenticated) {
     return (
       <View style={styles.unauthContainer}>
-        <Text style={styles.unauthEmoji}>🛡️</Text>
+        <Ionicons name="shield-checkmark-outline" size={48} color={Colors.forest} style={{ marginBottom: 12 }} />
         <Text style={styles.unauthTitle}>Platform Governance Portal</Text>
         <Text style={styles.unauthSubtitle}>
           Sign in with administrator credentials to access platform triage,
@@ -129,9 +130,12 @@ export default function AdminDashboardScreen() {
             <Text style={styles.securityText}>ENFORCED RBAC</Text>
           </View>
         </View>
-        <Text style={styles.healthSummary}>
-          ⚡ Hyperlocal Grid Active in Bengaluru Zone
-        </Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+          <Ionicons name="flash-outline" size={13} color={Colors.forest} />
+          <Text style={styles.healthSummary}>
+            Hyperlocal Grid Active in Bengaluru Zone
+          </Text>
+        </View>
       </View>
 
       {/* Triage & Priority Queues */}
@@ -185,13 +189,19 @@ export default function AdminDashboardScreen() {
       {/* Operational Dispatch Snapshot */}
       <View style={styles.sectionCard}>
         <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>
-            🚚 Hyperlocal Dispatch Operations
-          </Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <Ionicons name="car-outline" size={16} color={Colors.forest} />
+            <Text style={styles.cardTitle}>
+              Hyperlocal Dispatch Operations
+            </Text>
+          </View>
           <TouchableOpacity
             onPress={() => router.push("/(tabs)/operations" as any)}
           >
-            <Text style={styles.linkText}>Details →</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
+              <Text style={styles.linkText}>Details</Text>
+              <Ionicons name="chevron-forward-outline" size={13} color={Colors.forest} />
+            </View>
           </TouchableOpacity>
         </View>
         <View style={styles.opsGrid}>

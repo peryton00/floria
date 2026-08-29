@@ -7,6 +7,7 @@ import {
   RefreshControl,
   TouchableOpacity,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { api } from "../../lib/api";
 import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
 import { formatINR, formatDate } from "../../lib/format";
@@ -50,9 +51,10 @@ export default function OperationsOversightScreen() {
   return (
     <View style={styles.container}>
       {/* Notice Banner */}
-      <View style={styles.notice}>
+      <View style={[styles.notice, { flexDirection: "row", alignItems: "center", gap: 6 }]}>
+        <Ionicons name="flash-outline" size={13} color={Colors.forest} />
         <Text style={styles.noticeText}>
-          ⚡ Real-time oversight of Bengaluru 4-hour hyperlocal dispatch grid.
+          Real-time oversight of Bengaluru 4-hour hyperlocal dispatch grid.
         </Text>
       </View>
 
@@ -106,7 +108,10 @@ export default function OperationsOversightScreen() {
                     item.total_amount_paise || item.total_paise || 129900,
                   )}
                 </Text>
-                <Text style={styles.paymentStatus}>⚡ Cashfree Settled</Text>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+                  <Ionicons name="flash-outline" size={10} color={Colors.sage} />
+                  <Text style={styles.paymentStatus}>Cashfree Settled</Text>
+                </View>
               </View>
             </View>
           )}

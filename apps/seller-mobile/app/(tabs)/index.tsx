@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { api } from "../../lib/api";
 import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
 import { formatINR } from "../../lib/format";
@@ -59,7 +60,7 @@ export default function SellerDashboardScreen() {
   if (!isAuthenticated) {
     return (
       <View style={styles.unauthContainer}>
-        <Text style={styles.unauthEmoji}>🌱</Text>
+        <Ionicons name="leaf-outline" size={48} color={Colors.forest} style={{ marginBottom: 12 }} />
         <Text style={styles.unauthTitle}>Nursery Partner Portal</Text>
         <Text style={styles.unauthSubtitle}>
           Sign in to view real-time orders, manage live stock, and prepare plant
@@ -119,9 +120,10 @@ export default function SellerDashboardScreen() {
             <Text style={styles.statusText}>STORE OPEN</Text>
           </View>
         </View>
-        <Text style={styles.hyperlocalNote}>
-          ⚡ 4-Hour Hyperlocal Courier Dispatch Enabled
-        </Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+          <Ionicons name="flash-outline" size={13} color={Colors.forest} />
+          <Text style={styles.hyperlocalNote}>4-Hour Hyperlocal Courier Dispatch Enabled</Text>
+        </View>
       </View>
 
       {/* Operational Radar Metrics */}
@@ -171,21 +173,24 @@ export default function SellerDashboardScreen() {
       {/* Action Items List */}
       {actionItems.length > 0 && (
         <View style={styles.sectionCard}>
-          <Text style={styles.cardTitle}>⚠️ Urgent Actions Required</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <Ionicons name="warning-outline" size={15} color={Colors.terracotta} />
+            <Text style={styles.cardTitle}>Urgent Actions Required</Text>
+          </View>
           {actionItems.map((act: any, idx: number) => (
             <TouchableOpacity
               key={idx}
               onPress={() => router.push("/(tabs)/orders" as any)}
               style={styles.actionRow}
             >
-              <Text style={styles.actionIcon}>🚨</Text>
+              <Ionicons name="alert-circle-outline" size={18} color={Colors.terracotta} />
               <View style={styles.actionInfo}>
                 <Text style={styles.actionTitle}>{act.title}</Text>
                 <Text style={styles.actionCount}>
                   {act.count} order(s) pending
                 </Text>
               </View>
-              <Text style={styles.actionArrow}>→</Text>
+              <Ionicons name="chevron-forward-outline" size={16} color={Colors.inkMuted} />
             </TouchableOpacity>
           ))}
         </View>

@@ -1,27 +1,17 @@
 import React from "react";
 import { Tabs } from "expo-router";
-import { Text } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../../lib/theme";
 
 function TabIcon({ name, color }: { name: string; color?: any }) {
-  const getIcon = () => {
-    switch (name) {
-      case "dashboard":
-        return "⚡";
-      case "orders":
-        return "📦";
-      case "inventory":
-        return "📊";
-      case "products":
-        return "🌿";
-      case "profile":
-        return "🏪";
-      default:
-        return "•";
-    }
-  };
-
-  return <Text style={{ fontSize: 18, color }}>{getIcon()}</Text>;
+  switch (name) {
+    case "dashboard":  return <Ionicons name="grid-outline" size={22} color={color} />;
+    case "orders":     return <Ionicons name="receipt-outline" size={22} color={color} />;
+    case "inventory":  return <Ionicons name="stats-chart-outline" size={22} color={color} />;
+    case "products":   return <Ionicons name="leaf-outline" size={22} color={color} />;
+    case "profile":    return <Ionicons name="storefront-outline" size={22} color={color} />;
+    default:           return <Ionicons name="ellipse-outline" size={22} color={color} />;
+  }
 }
 
 export default function TabLayout() {

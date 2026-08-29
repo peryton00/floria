@@ -7,6 +7,7 @@ import {
   RefreshControl,
   Alert,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { api } from "../../lib/api";
 import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
 import { InventoryStockRow } from "../../components/seller/InventoryStockRow";
@@ -79,9 +80,10 @@ export default function SellerInventoryScreen() {
   return (
     <View style={styles.container}>
       {/* Notice Banner */}
-      <View style={styles.noticeBanner}>
+      <View style={[styles.noticeBanner, { flexDirection: "row", alignItems: "center", gap: 6 }]}>
+        <Ionicons name="flash-outline" size={13} color={Colors.forest} />
         <Text style={styles.noticeText}>
-          ⚡ Tap + or − to adjust live available specimen quantities instantly.
+          Tap + or − to adjust live available specimen quantities instantly.
         </Text>
       </View>
 

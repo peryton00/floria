@@ -8,6 +8,7 @@ import {
   RefreshControl,
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { api } from "../../lib/api";
 import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
 import { formatINR, formatDate } from "../../lib/format";
@@ -112,9 +113,10 @@ export default function OrderDetailTrackingScreen() {
         <Text style={styles.orderPlaced}>
           Placed on {formatDate(order.created_at)}
         </Text>
-        <View style={styles.deliveryEstimate}>
+        <View style={[styles.deliveryEstimate, { flexDirection: "row", alignItems: "center", gap: 5 }]}>
+          <Ionicons name="flash-outline" size={13} color={Colors.forest} />
           <Text style={styles.estimateText}>
-            ⚡ Estimated Delivery: Within 4 Hours
+            Estimated Delivery: Within 4 Hours
           </Text>
         </View>
       </View>
@@ -136,9 +138,11 @@ export default function OrderDetailTrackingScreen() {
                       isCurrent && styles.timelineCircleCurrent,
                     ]}
                   >
-                    <Text style={styles.circleText}>
-                      {isDone ? "✓" : idx + 1}
-                    </Text>
+                    {isDone ? (
+                      <Ionicons name="checkmark" size={12} color={Colors.white} />
+                    ) : (
+                      <Text style={styles.circleText}>{idx + 1}</Text>
+                    )}
                   </View>
                   {idx < STAGES.length - 1 && (
                     <View

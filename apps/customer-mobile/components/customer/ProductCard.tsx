@@ -107,7 +107,7 @@ export function ProductCard({
           </Text>
           {isVerified && (
             <View style={styles.verifiedBadge}>
-              <Text style={styles.verifiedText}>✓</Text>
+              <Ionicons name="checkmark" size={9} color={Colors.white} />
             </View>
           )}
         </View>
@@ -120,10 +120,11 @@ export function ProductCard({
         {/* Rating pill — matches web's forest-800 green pill */}
         <View style={styles.ratingRow}>
           {reviewCount > 0 ? (
-            <View style={styles.ratingPill}>
+            <View style={[styles.ratingPill, { flexDirection: "row", alignItems: "center", gap: 2 }]}>
               <Text style={styles.ratingText}>
-                {rating ? rating.toFixed(1) : "4.5"}★
+                {rating ? rating.toFixed(1) : "4.5"}
               </Text>
+              <Ionicons name="star" size={9} color={Colors.white} />
             </View>
           ) : (
             <Text style={styles.newArrival}>New arrival</Text>

@@ -8,6 +8,7 @@ import {
   RefreshControl,
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { api } from "../../lib/api";
 import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
 import { formatINR, formatDate } from "../../lib/format";
@@ -118,9 +119,10 @@ export default function SellerOrderDetailScreen() {
           </View>
           <StatusBadge status={order.status || "pending"} />
         </View>
-        <View style={styles.deliveryBadge}>
+        <View style={[styles.deliveryBadge, { flexDirection: "row", alignItems: "center", gap: 5 }]}>
+          <Ionicons name="flash-outline" size={12} color={Colors.forest} />
           <Text style={styles.deliveryText}>
-            ⚡ Hyperlocal 4-Hour Dispatch Required
+            Hyperlocal 4-Hour Dispatch Required
           </Text>
         </View>
       </View>
@@ -164,18 +166,19 @@ export default function SellerOrderDetailScreen() {
           )}
 
           {currentStatus === "out_for_delivery" && (
-            <View style={styles.infoBanner}>
+            <View style={[styles.infoBanner, { flexDirection: "row", alignItems: "center", gap: 6 }]}>
+              <Ionicons name="bicycle-outline" size={16} color={Colors.terracotta} />
               <Text style={styles.infoBannerText}>
-                🚀 Courier is currently in transit to deliver specimen to
-                customer.
+                Courier is currently in transit to deliver specimen to customer.
               </Text>
             </View>
           )}
 
           {currentStatus === "delivered" && (
-            <View style={[styles.infoBanner, styles.deliveredBanner]}>
+            <View style={[styles.infoBanner, styles.deliveredBanner, { flexDirection: "row", alignItems: "center", gap: 6 }]}>
+              <Ionicons name="checkmark-circle-outline" size={16} color={Colors.forest} />
               <Text style={styles.deliveredBannerText}>
-                ✓ Specimen successfully hand-delivered and confirmed with POD.
+                Specimen successfully hand-delivered and confirmed with POD.
               </Text>
             </View>
           )}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, FlatList, StyleSheet, RefreshControl } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { api } from "../../lib/api";
 import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
 import { AuditLogItem } from "../../components/admin/AuditLogItem";
@@ -41,10 +42,10 @@ export default function AuditLogsScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.notice}>
+      <View style={[styles.notice, { flexDirection: "row", alignItems: "center", gap: 6 }]}>
+        <Ionicons name="lock-closed-outline" size={13} color={Colors.inkMuted} />
         <Text style={styles.noticeText}>
-          🔒 Cryptographically logged administrative mutations & security
-          events.
+          Cryptographically logged administrative mutations & security events.
         </Text>
       </View>
 

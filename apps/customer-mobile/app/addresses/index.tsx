@@ -9,6 +9,7 @@ import {
   Alert,
   ScrollView,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { api } from "../../lib/api";
 import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
 import { Button } from "../../components/ui/Button";
@@ -222,7 +223,12 @@ export default function AddressManagementScreen() {
             <Text style={styles.addressCity}>
               {a.city}, {a.pincode}
             </Text>
-            {a.phone && <Text style={styles.phone}>📞 {a.phone}</Text>}
+            {a.phone && (
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                <Ionicons name="call-outline" size={11} color={Colors.inkMuted} />
+                <Text style={styles.phone}>{a.phone}</Text>
+              </View>
+            )}
 
             <TouchableOpacity
               onPress={() => handleDelete(a.id)}

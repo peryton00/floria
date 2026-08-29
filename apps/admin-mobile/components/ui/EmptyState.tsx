@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
 import { Button } from "./Button";
 
@@ -17,7 +18,7 @@ export function EmptyState({
   return (
     <View style={styles.container}>
       <View style={styles.iconCircle}>
-        <Text style={styles.emoji}>🛡️</Text>
+        <Ionicons name="leaf-outline" size={28} color={Colors.forest} />
       </View>
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.message}>{message}</Text>

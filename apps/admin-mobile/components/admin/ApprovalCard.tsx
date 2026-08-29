@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
 import { StatusBadge } from "../ui/StatusBadge";
 import { Button } from "../ui/Button";
@@ -45,9 +46,14 @@ export function ApprovalCard({
             {businessName}
           </Text>
           <Text style={styles.subtitle}>
-            {ownerName ? `${ownerName} • ` : ""}📍 {city}
+            {ownerName ? `${ownerName} · ` : ""}
+            <Ionicons name="location-outline" size={11} color={Colors.inkMuted} /> {city}
           </Text>
-          {phone ? <Text style={styles.phone}>📞 {phone}</Text> : null}
+          {phone ? (
+            <Text style={styles.phone}>
+              <Ionicons name="call-outline" size={10} color={Colors.sage} /> {phone}
+            </Text>
+          ) : null}
         </View>
         <StatusBadge status={status} />
       </TouchableOpacity>
