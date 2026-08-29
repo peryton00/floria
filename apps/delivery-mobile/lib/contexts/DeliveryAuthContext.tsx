@@ -7,9 +7,13 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
+import * as WebBrowser from "expo-web-browser";
+import { makeRedirectUri } from "expo-auth-session";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "../supabase";
 import { api } from "../api";
+
+WebBrowser.maybeCompleteAuthSession();
 
 export interface DeliveryAuthContextType {
   user: User | null;
@@ -17,10 +21,8 @@ export interface DeliveryAuthContextType {
   role: string | null;
   loading: boolean;
   isAuthorizedCourier: boolean;
-  signIn: (
-    email: string,
-    password: string,
-  ) => Promise<{ success: boolean; error?: string }>;
+  signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -116,6 +118,27 @@ export function DeliveryAuthProvider({
     setRole(null);
   }, []);
 
+  const signInWithGoogle = useCallback(async () => {
+    const redirectTo = makeRedirectUri({ scheme: "floria-delivery", path: "auth/callback" });
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo, skipBrowserRedirect: true },
+    });
+    if (error || !data.url) throw new Error(error?.message || "Google sign-in failed");
+    const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+    if (result.type === "success" && result.url) {
+      const url = new URL(result.url);
+      const accessToken = url.searchParams.get("access_token");
+      const refreshToken = url.searchParams.get("refresh_token");
+      if (accessToken && refreshToken) {
+        await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+      } else {
+        const code = url.searchParams.get("code");
+        if (code) await supabase.auth.exchangeCodeForSession(code);
+      }
+    }
+  }, []);
+
   const isAuthorizedCourier = useMemo(() => {
     return role === "operations" || role === "admin" || role === "super_admin";
   }, [role]);
@@ -128,6 +151,7 @@ export function DeliveryAuthProvider({
       loading,
       isAuthorizedCourier,
       signIn,
+      signInWithGoogle,
       signOut,
       refreshProfile,
     }),
@@ -138,6 +162,7 @@ export function DeliveryAuthProvider({
       loading,
       isAuthorizedCourier,
       signIn,
+      signInWithGoogle,
       signOut,
       refreshProfile,
     ],

@@ -5,8 +5,12 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
+import * as WebBrowser from "expo-web-browser";
+import { makeRedirectUri } from "expo-auth-session";
 import { supabase } from "../supabase";
 import { api } from "../api";
+
+WebBrowser.maybeCompleteAuthSession();
 
 export interface SellerProfileData {
   id: string;
@@ -23,6 +27,7 @@ export interface SellerAuthContextType {
   isAuthorizedSeller: boolean;
   isLoading: boolean;
   signIn: (email: string, pass: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -130,6 +135,28 @@ export function SellerAuthProvider({
     setSeller(null);
   };
 
+  const signInWithGoogle = async () => {
+    const redirectTo = makeRedirectUri({ scheme: "floria-seller", path: "auth/callback" });
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo, skipBrowserRedirect: true },
+    });
+    if (error || !data.url) throw new Error(error?.message || "Google sign-in failed");
+    const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+    if (result.type === "success" && result.url) {
+      const url = new URL(result.url);
+      const accessToken = url.searchParams.get("access_token");
+      const refreshToken = url.searchParams.get("refresh_token");
+      if (accessToken && refreshToken) {
+        await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+      } else {
+        const code = url.searchParams.get("code");
+        if (code) await supabase.auth.exchangeCodeForSession(code);
+      }
+      await refreshProfile();
+    }
+  };
+
   const isAuthorizedSeller = Boolean(
     seller &&
     (seller.role === "seller" ||
@@ -145,6 +172,7 @@ export function SellerAuthProvider({
         isAuthorizedSeller,
         isLoading,
         signIn,
+        signInWithGoogle,
         signOut,
         refreshProfile,
       }}

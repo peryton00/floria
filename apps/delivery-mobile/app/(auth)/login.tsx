@@ -18,12 +18,26 @@ import { Button } from "../../components/ui/Button";
 
 export default function CourierLoginScreen() {
   const router = useRouter();
-  const { signIn, isAuthorizedCourier } = useDeliveryAuth();
+  const { signIn, signInWithGoogle, isAuthorizedCourier } = useDeliveryAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handleGoogle = async () => {
+    try {
+      setGoogleLoading(true);
+      setError(null);
+      await signInWithGoogle();
+      router.replace("/(tabs)");
+    } catch (e: any) {
+      setError(e.message || "Could not sign in with Google.");
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -91,6 +105,25 @@ export default function CourierLoginScreen() {
               <Text style={styles.errorText}>{error}</Text>
             </View>
           )}
+
+          {/* Google Sign-In */}
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={handleGoogle}
+            disabled={googleLoading || loading}
+            style={styles.googleButton}
+          >
+            <Text style={styles.googleG}>G</Text>
+            <Text style={styles.googleButtonText}>
+              {googleLoading ? "Opening Google…" : "Continue with Google"}
+            </Text>
+          </TouchableOpacity>
+
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>or sign in with email</Text>
+            <View style={styles.dividerLine} />
+          </View>
 
           {/* Email Input */}
           <View style={styles.inputGroup}>
@@ -292,5 +325,45 @@ const styles = StyleSheet.create({
     color: theme.colors.muted,
     fontSize: 11,
     lineHeight: 16,
+  },
+  googleButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderRadius: theme.radius.sm,
+    borderWidth: 1.5,
+    borderColor: theme.colors.divider,
+    paddingVertical: 13,
+    paddingHorizontal: theme.spacing.md,
+    marginBottom: theme.spacing.md,
+  },
+  googleG: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#4285F4",
+    marginRight: theme.spacing.sm,
+  },
+  googleButtonText: {
+    flex: 1,
+    textAlign: "center",
+    fontSize: 14,
+    fontWeight: "600",
+    color: theme.colors.charcoal,
+  },
+  divider: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: theme.spacing.md,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: theme.colors.divider,
+  },
+  dividerText: {
+    fontSize: 11,
+    color: theme.colors.muted,
+    marginHorizontal: theme.spacing.sm,
+    fontWeight: "500",
   },
 });

@@ -4,11 +4,24 @@
     "strict": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "@floria/types": ["../../packages/types/src/index.ts"],
-      "@floria/validation": ["../../packages/validation/src/index.ts"],
-      "@floria/api-client": ["../../packages/api-client/src/index.ts"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@floria/types": [
+        "../../packages/types/src/index.ts"
+      ],
+      "@floria/validation": [
+        "../../packages/validation/src/index.ts"
+      ],
+      "@floria/api-client": [
+        "../../packages/api-client/src/index.ts"
+      ]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
+  ]
 }

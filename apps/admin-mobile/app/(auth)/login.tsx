@@ -6,17 +6,32 @@ import {
   StyleSheet,
   Alert,
   ScrollView,
+  TouchableOpacity,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
 import { Button } from "../../components/ui/Button";
 import { useAdminAuth } from "../../lib/contexts/AdminAuthContext";
 
 export default function AdminLoginScreen() {
   const router = useRouter();
-  const { signIn, isLoading } = useAdminAuth();
+  const { signIn, signInWithGoogle, isLoading } = useAdminAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  const handleGoogle = async () => {
+    try {
+      setGoogleLoading(true);
+      await signInWithGoogle();
+      router.back();
+    } catch (e: any) {
+      Alert.alert("Google Sign-In Failed", e.message || "Could not sign in with Google.");
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -41,12 +56,32 @@ export default function AdminLoginScreen() {
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.header}>
         <View style={styles.logo}>
-          <Text style={styles.logoText}>🛡️</Text>
+          <Ionicons name="shield-checkmark" size={28} color={Colors.white} />
         </View>
         <Text style={styles.title}>Floria Governance Command</Text>
         <Text style={styles.subtitle}>
           Mobile triage, moderation & operational governance
         </Text>
+      </View>
+
+      <TouchableOpacity
+        activeOpacity={0.85}
+        onPress={handleGoogle}
+        disabled={googleLoading || isLoading}
+        style={styles.googleButton}
+      >
+        <View style={styles.googleIconBox}>
+          <Text style={styles.googleG}>G</Text>
+        </View>
+        <Text style={styles.googleButtonText}>
+          {googleLoading ? "Opening Google…" : "Continue with Google"}
+        </Text>
+      </TouchableOpacity>
+
+      <View style={styles.divider}>
+        <View style={styles.dividerLine} />
+        <Text style={styles.dividerText}>or sign in with email</Text>
+        <View style={styles.dividerLine} />
       </View>
 
       <View style={styles.form}>
@@ -151,5 +186,58 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: Spacing.sm,
+  },
+  googleButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.white,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    paddingVertical: 13,
+    paddingHorizontal: Spacing.md,
+    marginBottom: Spacing.md,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  googleIconBox: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: Spacing.sm,
+  },
+  googleG: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#4285F4",
+  },
+  googleButtonText: {
+    flex: 1,
+    textAlign: "center",
+    fontSize: Typography.fontSizes.base,
+    fontWeight: "600",
+    color: Colors.ink,
+  },
+  divider: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: Spacing.md,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: Colors.border,
+  },
+  dividerText: {
+    fontSize: Typography.fontSizes.xs,
+    color: Colors.inkMuted,
+    marginHorizontal: Spacing.sm,
+    fontWeight: "500",
   },
 });

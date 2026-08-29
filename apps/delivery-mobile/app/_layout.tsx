@@ -63,6 +63,7 @@ export default function RootLayout() {
           }}
         >
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="auth/callback" options={{ headerShown: false }} />
           <Stack.Screen
             name="(auth)/login"
             options={{ title: "Courier Login", headerBackVisible: false }}
