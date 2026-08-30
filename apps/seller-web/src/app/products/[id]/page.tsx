@@ -39,25 +39,30 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [financialSettings, setFinancialSettings] = useState<any>(null);
 
   useEffect(() => {
     async function loadData() {
       try {
         setLoading(true);
-        const [catRes, prodRes] = await Promise.all([
+        const [catRes, prodRes, finRes] = await Promise.all([
           api.getCategories(),
           api.getSellerProductById(productId),
+          api.getFinancialSettings().catch(() => ({ success: false, data: null })),
         ]);
 
         if (catRes.success && catRes.data) {
           setCategories(catRes.data);
+        }
+        if (finRes.success && finRes.data) {
+          setFinancialSettings(finRes.data);
         }
 
         if (prodRes.success && prodRes.data) {
           const p = prodRes.data;
           const qty = p.inventory?.[0]?.stock_quantity ?? p.inventory?.stock_quantity ?? 0;
           const thresh = p.inventory?.[0]?.low_stock_threshold ?? p.inventory?.low_stock_threshold ?? 5;
-          const pricePaise = p.inventory?.[0]?.price_paise ?? p.inventory?.price_paise ?? 0;
+          const pricePaise = p.inventory?.[0]?.base_price_paise ?? p.inventory?.base_price_paise ?? p.inventory?.[0]?.price_paise ?? p.inventory?.price_paise ?? 0;
           const skuCode = p.inventory?.[0]?.sku ?? p.inventory?.sku ?? "";
 
           setName(p.name);
@@ -281,6 +286,58 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
             />
           </div>
         </div>
+
+        {/* Live Business Logic & Profit Calculation */}
+        {parseFloat(priceRupees) > 0 && (() => {
+          const commRate = financialSettings?.sellerCommissionRate ?? 12.0;
+          const profitRate = financialSettings?.floriaProfitRate ?? 2.0;
+          const thresholdPaise = financialSettings?.freeDeliveryThresholdPaise ?? 59900;
+          const recoveryPaise = financialSettings?.freeDeliveryRecoveryPaise ?? 2000;
+
+          const basePaise = Math.round((parseFloat(priceRupees) || 0) * 100);
+          const profitPaise = Math.round(basePaise * (profitRate / 100));
+          const preRecoveryPaise = basePaise + profitPaise;
+          const isFreeDel = preRecoveryPaise >= thresholdPaise;
+          const deliveryRecoveryPaise = isFreeDel ? recoveryPaise : 0;
+          const customerPricePaise = preRecoveryPaise + deliveryRecoveryPaise;
+          const commissionPaise = Math.round(basePaise * (commRate / 100));
+          const netPayoutPaise = basePaise - commissionPaise;
+
+          return (
+            <div className="bg-[#FAF8F5] border border-[#E8DFC8] rounded-xl p-4 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-[11px] font-bold text-[#6D5D4B] uppercase tracking-wider">
+                  Automated Pricing & Profit Breakdown
+                </span>
+                <span className="text-[10px] font-mono text-emerald-800 font-bold bg-emerald-100/80 px-2 py-0.5 rounded">
+                  Database Policy Active
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                <div className="p-3 bg-white rounded-lg border border-[#E8DFC8]/60 shadow-2xs">
+                  <span className="text-[10px] text-slate-500 font-medium block">Nursery Base Price</span>
+                  <span className="font-mono font-bold text-sm text-ink-900">₹{(basePaise / 100).toFixed(2)}</span>
+                </div>
+                <div className="p-3 bg-white rounded-lg border border-[#E8DFC8]/60 shadow-2xs">
+                  <span className="text-[10px] text-slate-500 font-medium block">
+                    Estimated Net Nursery Payout ({(100 - commRate).toFixed(0)}%)
+                  </span>
+                  <span className="font-mono font-bold text-sm text-emerald-700">₹{(netPayoutPaise / 100).toFixed(2)}</span>
+                  <span className="text-[9px] text-slate-400 block mt-0.5">After {commRate}% seller commission</span>
+                </div>
+                <div className="p-3 bg-white rounded-lg border border-emerald-300 bg-emerald-50/50 shadow-2xs">
+                  <span className="text-[10px] text-emerald-900 font-semibold block">Storefront Final Customer Price</span>
+                  <span className="font-mono font-bold text-sm text-[#1B4D3E]">
+                    ₹{(customerPricePaise / 100).toFixed(2)}
+                  </span>
+                  <span className="text-[9px] text-emerald-700 block mt-0.5">
+                    +{profitRate}% margin {isFreeDel ? `+ ₹${(recoveryPaise / 100).toFixed(0)} free delivery recovery` : ""}
+                  </span>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Permanent SKU Display */}
         <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded p-3.5 flex items-center justify-between">

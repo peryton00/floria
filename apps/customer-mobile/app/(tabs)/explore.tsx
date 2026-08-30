@@ -426,7 +426,12 @@ export default function CustomerExploreScreen() {
                       id={prod.id}
                       name={prod.name}
                       pricePaise={
-                        item.price_paise || item.inventory?.price_paise || 129900
+                        item.pricing?.customerPricePaise ||
+                        item.pricing?.sellingPricePaise ||
+                        item.customer_price_paise ||
+                        item.price_paise ||
+                        item.inventory?.price_paise ||
+                        129900
                       }
                       nurseryId={item.seller_id || prod.seller_id || "nursery-1"}
                       nurseryName={

@@ -185,7 +185,12 @@ export default function NurseryDetailScreen() {
                     id={prod.id}
                     name={prod.name}
                     pricePaise={
-                      p.price_paise || p.inventory?.price_paise || 129900
+                      p.pricing?.customerPricePaise ||
+                      p.pricing?.sellingPricePaise ||
+                      p.customer_price_paise ||
+                      p.price_paise ||
+                      p.inventory?.price_paise ||
+                      129900
                     }
                     nurseryId={nursery.id}
                     nurseryName={nursery.business_name || nursery.name}

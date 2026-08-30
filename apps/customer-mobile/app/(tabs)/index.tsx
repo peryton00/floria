@@ -256,7 +256,14 @@ export default function CustomerHomeScreen() {
                   <ProductCard
                     id={prod.id || p.id}
                     name={prod.name}
-                    pricePaise={p.price_paise || p.inventory?.price_paise || 129900}
+                    pricePaise={
+                      p.pricing?.customerPricePaise ||
+                      p.pricing?.sellingPricePaise ||
+                      p.customer_price_paise ||
+                      p.price_paise ||
+                      p.inventory?.price_paise ||
+                      129900
+                    }
                     nurseryId={p.seller_id || prod.seller_id || "nursery-1"}
                     nurseryName={p.seller_name || p.nursery_name || "Floria Nursery"}
                     imageUrl={primaryImage}

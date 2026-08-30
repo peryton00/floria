@@ -203,7 +203,14 @@ export default function ProductDetailScreen() {
   const prod = productData.product || productData;
   const seller = productData.seller || productData.nursery || {};
   const inventory = productData.inventory || {};
-  const pricePaise = inventory.price_paise || productData.price_paise || 129900;
+  const pricePaise =
+    productData.pricing?.customerPricePaise ||
+    productData.pricing?.sellingPricePaise ||
+    productData.customer_price_paise ||
+    inventory.customer_price_paise ||
+    inventory.price_paise ||
+    productData.price_paise ||
+    129900;
   const stock = inventory.stock_quantity ?? productData.stock_quantity ?? 10;
   const images = prod.images && prod.images.length > 0 ? prod.images : [];
   const primaryImage =

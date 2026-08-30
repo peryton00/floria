@@ -69,25 +69,25 @@ export class PricingService {
 
     const sellerCommissionRate = map.has("seller_commission_rate")
       ? Number(map.get("seller_commission_rate"))
-      : 0;
+      : 12.0;
 
     const floriaProfitRate = map.has("floria_profit_rate")
       ? Number(map.get("floria_profit_rate"))
-      : 0;
+      : 2.0;
 
     const platformMaintenanceFeePaise = map.has(
       "platform_maintenance_fee_paise",
     )
       ? Number(map.get("platform_maintenance_fee_paise"))
-      : 0;
+      : 1000;
 
     const freeDeliveryThresholdPaise = map.has("free_delivery_threshold_paise")
       ? Number(map.get("free_delivery_threshold_paise"))
-      : 0;
+      : 59900;
 
     const freeDeliveryRecoveryPaise = map.has("free_delivery_recovery_paise")
       ? Number(map.get("free_delivery_recovery_paise"))
-      : 0;
+      : 2000;
 
     return {
       sellerCommissionRate,
