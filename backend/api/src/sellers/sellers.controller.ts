@@ -596,6 +596,20 @@ export class SellersController {
       next(err);
     }
   }
+
+  async getFinancialSettings(
+    _req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      const { pricingService } = await import("../pricing/pricing.service.js");
+      const settings = await pricingService.getFinancialSettings();
+      res.json({ success: true, data: settings });
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 export const sellersController = new SellersController();

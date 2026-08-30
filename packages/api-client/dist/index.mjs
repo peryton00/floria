@@ -945,7 +945,7 @@ var FloriaApiClient = class {
   // ── FINANCIAL SETTINGS & UNIFIED PRICING ENGINE ───────────────────────────
   async getFinancialSettings() {
     return this.request(
-      "/api/v1/admin/settings/financials"
+      "/api/v1/seller/settings/financials"
     );
   }
   async updateFinancialSettings(updates) {

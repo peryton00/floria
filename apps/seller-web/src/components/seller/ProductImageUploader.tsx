@@ -83,113 +83,60 @@ export function ProductImageUploader({
 
     onChange([...workingImages]);
 
+    const readFileAsBase64 = (f: File): Promise<string> => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = (err) => reject(err);
+        reader.readAsDataURL(f);
+      });
+    };
+
     await Promise.all(
       tasks.map(async ({ file, tempIndex }) => {
         try {
-          // 1. Request Media Upload Session
-          const sessionRes = await api.createMediaUploadSession({
-            profile: "PRODUCT",
-            filename: file.name,
-            mimeType: file.type || "image/jpeg",
-            sizeBytes: file.size,
-          });
-
-          if (!sessionRes.success || !sessionRes.data) {
-            throw new Error(sessionRes.error?.message || "Failed to create upload session");
-          }
-
-          const { sessionId, stagingPath } = sessionRes.data;
-
-          // 2. Upload binary to Supabase media-staging via signed upload token.
-          // media-staging is a PRIVATE bucket — must use uploadToSignedUrl with the token
-          // returned by the backend createSignedUploadUrl call. Raw PUT to signedUrl does not
-          // work on private buckets; only the token-authenticated path works.
-          const uploadTarget = sessionRes.data.upload;
-          const supabase = getSupabaseBrowserClient();
-          const token = uploadTarget?.token;
-
-          if (!token) {
-            throw new Error("No signed upload token received from server. Cannot upload to staging.");
-          }
-
-          const { error: uploadErr } = await supabase.storage
-            .from("media-staging")
-            .uploadToSignedUrl(stagingPath, token, file, {
-              contentType: file.type || "image/jpeg",
-            });
-
-          if (uploadErr) {
-            throw new Error(`Staging upload failed: ${uploadErr.message}`);
-          }
-
-          // Update UI status to PROCESSING
           const item = workingImages[tempIndex];
           if (item) {
             item.status = "PROCESSING";
-            item.sessionId = sessionId;
             onChange([...workingImages]);
           }
 
-          // 3. Complete session
-          const compRes = await api.completeMediaUploadSession(sessionId);
-          if (!compRes.success || !compRes.data) {
-            throw new Error(compRes.error?.message || "Failed to finalize upload session");
+          // 1. Read file as base64 and upload directly to Floria Backend Image Engine
+          const base64Data = await readFileAsBase64(file);
+          const uploadRes = await api.uploadMediaDirect({
+            filename: file.name,
+            mimeType: file.type || "image/jpeg",
+            base64Data,
+            profile: "PRODUCT",
+          });
+
+          if (!uploadRes.success || !uploadRes.data) {
+            throw new Error(uploadRes.error?.message || "Failed to process image with backend Image Engine");
           }
 
-          const authoritativeAssetId = compRes.data.assetId;
+          const { assetId, variants, url } = uploadRes.data;
+          const resolvedUrl =
+            url ||
+            variants?.medium ||
+            variants?.large ||
+            variants?.thumbnail;
+
           if (item) {
-            item.assetId = authoritativeAssetId;
-          }
-
-          // 4. Poll status until READY
-          let assetReady = compRes.data.assetStatus === "READY";
-          let attempts = 0;
-          let finalVariants: Record<string, string> = {};
-
-          while (!assetReady && attempts < 20) {
-            await new Promise((r) => setTimeout(r, 1000));
-            const statusRes = await api.getMediaUploadSessionStatus(sessionId);
-            if (statusRes.success && statusRes.data) {
-              if (statusRes.data.variants && Object.keys(statusRes.data.variants).length > 0) {
-                finalVariants = statusRes.data.variants;
-              }
-              if (statusRes.data.assetStatus === "READY") {
-                assetReady = true;
-              } else if (statusRes.data.assetStatus === "FAILED") {
-                throw new Error(statusRes.data.failureReason || "Async image processing failed");
-              }
-            }
-            attempts++;
-          }
-
-          // 5. Update UI with READY asset and permanent HTTPS URL
-          if (item) {
-            const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://supabase.co";
-            let resolvedUrl =
-              finalVariants.medium ||
-              finalVariants.large ||
-              finalVariants.thumbnail;
-
-            if (!resolvedUrl || resolvedUrl.startsWith("blob:") || resolvedUrl.includes("/media-staging/")) {
-              resolvedUrl = `${supabaseUrl}/storage/v1/object/public/public-media/products/s-1/${authoritativeAssetId}/medium.webp`;
-            }
-
-            // Revoke temporary browser blob URL to free memory and prevent dead blob reference leaks
+            // Revoke temporary blob URL
             if (item.url && item.url.startsWith("blob:")) {
               try {
                 URL.revokeObjectURL(item.url);
-              } catch (e) {
-                // Ignore blob revocation errors
-              }
+              } catch (_) {}
             }
 
+            item.assetId = assetId;
             item.url = resolvedUrl;
             item.status = "READY";
 
             // If editing existing product, attach to product immediately via API
             if (productId) {
               const attachRes = await api.attachProductImage(productId, {
-                assetId: authoritativeAssetId,
+                assetId: assetId,
                 altText: file.name,
                 isPrimary: item.isPrimary,
               });

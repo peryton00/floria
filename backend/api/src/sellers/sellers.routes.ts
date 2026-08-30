@@ -223,6 +223,12 @@ router.post(
   sellersController.uploadDocument,
 );
 router.get(
+  "/settings/financials",
+  authenticateToken,
+  requireRole("seller", "admin"),
+  sellersController.getFinancialSettings,
+);
+router.get(
   "/settings/notifications",
   authenticateToken,
   requireRole("seller", "admin"),

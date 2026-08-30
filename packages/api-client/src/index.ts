@@ -1654,7 +1654,7 @@ export class FloriaApiClient {
     ApiResponse<import("@floria/types").FinancialSettings>
   > {
     return this.request<import("@floria/types").FinancialSettings>(
-      "/api/v1/admin/settings/financials",
+      "/api/v1/seller/settings/financials",
     );
   }
 
