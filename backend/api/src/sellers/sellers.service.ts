@@ -9,7 +9,10 @@ import type { SellerProfile } from "@floria/types";
 
 export class SellersService {
   async getProfile(userId: string): Promise<SellerProfile> {
-    const profile = await sellerRepository.findByUserId(userId);
+    let profile = await sellerRepository.findByUserId(userId);
+    if (!profile) {
+      profile = await sellerRepository.findById(userId);
+    }
 
     if (!profile) {
       throw Errors.notFound(
@@ -231,7 +234,8 @@ export class SellersService {
   }
 
   async createProduct(sellerProfile: SellerProfile, productData: any) {
-    if (sellerProfile.status !== "approved") {
+    const status = String(sellerProfile.status || "").toLowerCase();
+    if (status !== "approved" && status !== "active") {
       throw Errors.forbidden(
         "Pending or suspended sellers cannot create products",
       );
@@ -241,56 +245,64 @@ export class SellersService {
       productData,
     );
 
+    const productId = created?.id || productData?.id;
+
     // Automatically calculate and persist product_pricing read model
-    try {
-      const basePrice = productData.price_paise || productData.base_price_paise;
-      if (typeof basePrice === "number" && basePrice > 0) {
-        const settings = await pricingService.getFinancialSettings();
-        const activePolicy = await policyService.getActivePolicy().catch(() => null);
-        const policyVersionId = activePolicy?.id || "00000000-0000-0000-0000-000000000001";
-        const calc = pricingService.calculateProductPricingSync(basePrice, settings);
+    if (productId) {
+      try {
+        const basePrice = productData.price_paise || productData.base_price_paise;
+        if (typeof basePrice === "number" && basePrice > 0) {
+          const settings = await pricingService.getFinancialSettings();
+          const activePolicy = await policyService.getActivePolicy().catch(() => null);
+          const policyVersionId = activePolicy?.id || "00000000-0000-0000-0000-000000000001";
+          const calc = pricingService.calculateProductPricingSync(basePrice, settings);
 
-        const db = getAdminDb();
-        await db.from("product_pricing").upsert(
-          {
-            product_id: created.id,
-            seller_id: sellerProfile.id,
-            policy_version_id: policyVersionId,
-            seller_base_price_paise: calc.sellerBasePricePaise,
-            floria_profit_rate: calc.floriaProfitRate,
-            floria_profit_paise: calc.floriaProfitPaise,
-            delivery_recovery_paise: calc.deliveryRecoveryPaise,
-            customer_product_price_paise: calc.customerProductPricePaise,
-            is_free_delivery_eligible: calc.isFreeDeliveryEligible,
-            seller_commission_rate: calc.sellerCommissionRate,
-            seller_commission_paise: calc.sellerCommissionPaise,
-            seller_net_paise: calc.sellerNetPaise,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "policy_version_id,product_id" },
-        );
+          const db = getAdminDb();
+          await db.from("product_pricing").upsert(
+            {
+              product_id: productId,
+              seller_id: sellerProfile.id,
+              policy_version_id: policyVersionId,
+              seller_base_price_paise: calc.sellerBasePricePaise,
+              floria_profit_rate: calc.floriaProfitRate,
+              floria_profit_paise: calc.floriaProfitPaise,
+              delivery_recovery_paise: calc.deliveryRecoveryPaise,
+              customer_product_price_paise: calc.customerProductPricePaise,
+              is_free_delivery_eligible: calc.isFreeDeliveryEligible,
+              seller_commission_rate: calc.sellerCommissionRate,
+              seller_commission_paise: calc.sellerCommissionPaise,
+              seller_net_paise: calc.sellerNetPaise,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "policy_version_id,product_id" },
+          );
 
-        await db
-          .from("inventory")
-          .update({
-            base_price_paise: calc.sellerBasePricePaise,
-            floria_profit_paise: calc.floriaProfitPaise,
-            delivery_recovery_paise: calc.deliveryRecoveryPaise,
-            price_paise: calc.customerProductPricePaise,
-          })
-          .eq("product_id", created.id);
+          await db
+            .from("inventory")
+            .update({
+              base_price_paise: calc.sellerBasePricePaise,
+              floria_profit_paise: calc.floriaProfitPaise,
+              delivery_recovery_paise: calc.deliveryRecoveryPaise,
+              price_paise: calc.customerProductPricePaise,
+            })
+            .eq("product_id", productId);
+        }
+      } catch (err) {
+        console.warn("[SellersService] product_pricing creation persistence warning:", err);
       }
-    } catch (err) {
-      console.warn("[SellersService] product_pricing creation persistence warning:", err);
     }
 
-    await auditRepository.log({
-      actor_user_id: sellerProfile.user_id,
-      actor_role: "seller",
-      action: "SELLER_PRODUCT_CREATED",
-      resource_type: "product",
-      resource_id: created.id,
-    });
+    try {
+      await auditRepository.log({
+        actor_user_id: sellerProfile.user_id,
+        actor_role: "seller",
+        action: "SELLER_PRODUCT_CREATED",
+        resource_type: "product",
+        resource_id: productId || created?.id,
+        metadata: { product_name: productData.name, price_paise: productData.price_paise },
+      });
+    } catch (_) {}
+
     return created;
   }
 

@@ -3,6 +3,9 @@ import { Request, Response, NextFunction } from "express";
 import { sellersService } from "./sellers.service.js";
 import { sellerAuthService } from "./seller-auth.service.js";
 
+const getTargetSellerId = (req: Request): string =>
+  req.user?.id || req.user?.sellerId || "";
+
 export class SellersController {
   async login(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
@@ -129,7 +132,7 @@ export class SellersController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const profile = await sellersService.getProfile(req.user!.id);
+      const profile = await sellersService.getProfile(getTargetSellerId(req));
       res.json({ success: true, data: profile });
     } catch (err) {
       next(err);
@@ -143,7 +146,7 @@ export class SellersController {
   ): Promise<void> {
     try {
       const updated = await sellersService.updateProfile(
-        req.user!.id,
+        getTargetSellerId(req),
         req.body,
       );
       res.json({ success: true, data: updated });
@@ -166,7 +169,7 @@ export class SellersController {
       }
 
       const profile = await sellersService.submitApplication(
-        req.user!.id,
+        getTargetSellerId(req),
         req.body,
       );
       res.json({ success: true, data: profile });
@@ -181,7 +184,7 @@ export class SellersController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const profile = await sellersService.getApplication(req.user!.id);
+      const profile = await sellersService.getApplication(getTargetSellerId(req));
       res.json({ success: true, data: profile });
     } catch (err) {
       next(err);
@@ -194,7 +197,7 @@ export class SellersController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const profile = await sellersService.getProfile(req.user!.id);
+      const profile = await sellersService.getProfile(getTargetSellerId(req));
       const search =
         typeof req.query.search === "string" ? req.query.search : undefined;
       const status =
@@ -219,7 +222,7 @@ export class SellersController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const profile = await sellersService.getProfile(req.user!.id);
+      const profile = await sellersService.getProfile(getTargetSellerId(req));
       const product = await sellersService.getProductById(
         profile.id,
         req.params.id as string,
@@ -236,7 +239,7 @@ export class SellersController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const profile = await sellersService.getProfile(req.user!.id);
+      const profile = await sellersService.getProfile(getTargetSellerId(req));
       const product = await sellersService.createProduct(profile, req.body);
       res.status(201).json({ success: true, data: product });
     } catch (err) {
@@ -250,7 +253,7 @@ export class SellersController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const profile = await sellersService.getProfile(req.user!.id);
+      const profile = await sellersService.getProfile(getTargetSellerId(req));
       const product = await sellersService.updateProduct(
         profile,
         req.params.id as string,
@@ -268,7 +271,7 @@ export class SellersController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const profile = await sellersService.getProfile(req.user!.id);
+      const profile = await sellersService.getProfile(getTargetSellerId(req));
       const product = await sellersService.updateProductStatus(
         profile,
         req.params.id as string,
@@ -286,7 +289,7 @@ export class SellersController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const profile = await sellersService.getProfile(req.user!.id);
+      const profile = await sellersService.getProfile(getTargetSellerId(req));
       const result = await sellersService.deleteProduct(
         profile,
         req.params.id as string,
@@ -303,7 +306,7 @@ export class SellersController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const profile = await sellersService.getProfile(req.user!.id);
+      const profile = await sellersService.getProfile(getTargetSellerId(req));
       const product = await sellersService.attachProductImage(
         profile,
         req.params.productId as string,
@@ -321,7 +324,7 @@ export class SellersController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const profile = await sellersService.getProfile(req.user!.id);
+      const profile = await sellersService.getProfile(getTargetSellerId(req));
       const product = await sellersService.removeProductImage(
         profile,
         req.params.productId as string,
@@ -339,7 +342,7 @@ export class SellersController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const profile = await sellersService.getProfile(req.user!.id);
+      const profile = await sellersService.getProfile(getTargetSellerId(req));
       const product = await sellersService.reorderProductImages(
         profile,
         req.params.productId as string,
@@ -357,7 +360,7 @@ export class SellersController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const profile = await sellersService.getProfile(req.user!.id);
+      const profile = await sellersService.getProfile(getTargetSellerId(req));
       const product = await sellersService.setPrimaryProductImage(
         profile,
         req.params.productId as string,
@@ -375,7 +378,7 @@ export class SellersController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const profile = await sellersService.getProfile(req.user!.id);
+      const profile = await sellersService.getProfile(getTargetSellerId(req));
       const product = await sellersService.replaceProductImage(
         profile,
         req.params.productId as string,
@@ -394,7 +397,7 @@ export class SellersController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const profile = await sellersService.getProfile(req.user!.id);
+      const profile = await sellersService.getProfile(getTargetSellerId(req));
       const inv = await sellersService.getInventory(profile.id);
       res.json({ success: true, data: inv });
     } catch (err) {
@@ -408,7 +411,7 @@ export class SellersController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const profile = await sellersService.getProfile(req.user!.id);
+      const profile = await sellersService.getProfile(getTargetSellerId(req));
       const inv = await sellersService.updateInventory(
         profile,
         req.params.productId as string,
@@ -426,7 +429,7 @@ export class SellersController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const profile = await sellersService.getProfile(req.user!.id);
+      const profile = await sellersService.getProfile(getTargetSellerId(req));
       const search =
         typeof req.query.search === "string" ? req.query.search : undefined;
       const status =
@@ -448,7 +451,7 @@ export class SellersController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const profile = await sellersService.getProfile(req.user!.id);
+      const profile = await sellersService.getProfile(getTargetSellerId(req));
       const order = await sellersService.getOrderById(
         profile.id,
         req.params.id as string,
@@ -465,7 +468,7 @@ export class SellersController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const profile = await sellersService.getProfile(req.user!.id);
+      const profile = await sellersService.getProfile(getTargetSellerId(req));
       const masterOrderId = req.body.masterOrderId || req.params.orderId;
       const newStatus = req.body.newStatus || req.body.status;
 
@@ -486,7 +489,7 @@ export class SellersController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const profile = await sellersService.getProfile(req.user!.id);
+      const profile = await sellersService.getProfile(getTargetSellerId(req));
       const stats = await sellersService.getDashboard(profile.id);
       res.json({ success: true, data: stats });
     } catch (err) {
@@ -500,7 +503,7 @@ export class SellersController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const profile = await sellersService.getProfile(req.user!.id);
+      const profile = await sellersService.getProfile(getTargetSellerId(req));
       const earnings = await sellersService.getEarnings(profile.id);
       res.json({ success: true, data: earnings });
     } catch (err) {
@@ -514,7 +517,7 @@ export class SellersController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const profile = await sellersService.getProfile(req.user!.id);
+      const profile = await sellersService.getProfile(getTargetSellerId(req));
       const payouts = await sellersService.getPayouts(profile.id);
       res.json({ success: true, data: payouts });
     } catch (err) {
@@ -528,7 +531,7 @@ export class SellersController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const profile = await sellersService.getProfile(req.user!.id);
+      const profile = await sellersService.getProfile(getTargetSellerId(req));
       const range =
         typeof req.query.range === "string" ? req.query.range : "30d";
       const stats = await sellersService.getAnalytics(profile.id, range);
@@ -544,7 +547,7 @@ export class SellersController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const profile = await sellersService.getProfile(req.user!.id);
+      const profile = await sellersService.getProfile(getTargetSellerId(req));
       const docs = await sellersService.getDocuments(profile.id);
       res.json({ success: true, data: docs });
     } catch (err) {
@@ -558,7 +561,7 @@ export class SellersController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const profile = await sellersService.getProfile(req.user!.id);
+      const profile = await sellersService.getProfile(getTargetSellerId(req));
       const doc = await sellersService.uploadDocument(profile.id, req.body);
       res.json({ success: true, data: doc });
     } catch (err) {
@@ -572,7 +575,7 @@ export class SellersController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const profile = await sellersService.getProfile(req.user!.id);
+      const profile = await sellersService.getProfile(getTargetSellerId(req));
       const settings = await sellersService.getNotificationSettings(profile.id);
       res.json({ success: true, data: settings });
     } catch (err) {
@@ -586,7 +589,7 @@ export class SellersController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const profile = await sellersService.getProfile(req.user!.id);
+      const profile = await sellersService.getProfile(getTargetSellerId(req));
       const updated = await sellersService.updateNotificationSettings(
         profile.id,
         req.body,

@@ -10,14 +10,23 @@ const PRODUCT_LISTING_SELECT = `*, category:categories(id,name,slug), seller:sel
 export class SellerRepository {
   async findByUserId(userId: string): Promise<SellerProfile | null> {
     const db = getAdminDb();
-    const { data, error } = await db
+    const { data: byUser, error: errUser } = await db
       .from("seller_profiles")
       .select("*")
       .eq("user_id", userId)
       .maybeSingle();
 
-    if (error || !data) return null;
-    return data as SellerProfile;
+    if (!errUser && byUser) return byUser as SellerProfile;
+
+    // Secondary fallback lookup by ID
+    const { data: byId } = await db
+      .from("seller_profiles")
+      .select("*")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (byId) return byId as SellerProfile;
+    return null;
   }
 
   async findById(sellerId: string): Promise<SellerProfile | null> {
@@ -435,7 +444,8 @@ export class SellerRepository {
       });
     }
 
-    return this.findSellerProductById(sellerId, prod.id);
+    const finalProduct = await this.findSellerProductById(sellerId, prod.id);
+    return finalProduct || prod;
   }
 
   async updateProduct(

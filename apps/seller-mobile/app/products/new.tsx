@@ -34,7 +34,8 @@ export default function AddPlantScreen() {
   const { seller } = useSellerAuth();
   const { showSuccess, showError } = useSellerFeedback();
 
-  const isApproved = seller?.status === "approved" || seller?.status === "active";
+  const rawStatus = String(seller?.status || (seller as any)?.sellerStatus || "").toLowerCase();
+  const isApproved = rawStatus === "approved" || rawStatus === "active";
 
   // Tab Mode: 'CUSTOM' (Create new plant product) vs 'CATALOG' (Quick-add from catalog)
   const [creationMode, setCreationMode] = useState<"CUSTOM" | "CATALOG">("CUSTOM");
