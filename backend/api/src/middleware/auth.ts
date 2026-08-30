@@ -115,7 +115,6 @@ export async function authenticateToken(
         sellerStatus = sp.status as SellerStatus;
       }
     }
-
     const permissions = ROLE_PERMISSIONS[role] || ROLE_PERMISSIONS["customer"];
 
     req.user = {

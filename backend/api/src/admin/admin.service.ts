@@ -201,10 +201,13 @@ export class AdminService {
     });
 
     // 2. Update user_profiles role if approved
-    if (isActive && seller.user_id) {
+    if (isActive) {
       try {
         const db = (await import("../config/database.js")).getAdminDb();
-        await db.from("user_profiles").update({ role: "seller" }).eq("id", seller.user_id);
+        const targetUserId = seller.user_id;
+        if (targetUserId) {
+          await db.from("user_profiles").update({ role: "seller" }).eq("id", targetUserId);
+        }
       } catch {
         // Continue
       }
