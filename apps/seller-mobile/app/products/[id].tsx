@@ -8,6 +8,8 @@ import {
   Image,
   ActivityIndicator,
   StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -18,7 +20,11 @@ import { useSellerFeedback } from "../../lib/contexts/SellerFeedbackContext";
 import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
 import { rupeesToPaise } from "../../lib/format";
 import { Button } from "../../components/ui/Button";
-import { SellerPendingVerificationShield } from "../../components/seller";
+import {
+  SellerPendingVerificationShield,
+  MobileProductImageUploader,
+  MobileProductImage,
+} from "../../components/seller";
 
 export default function EditProductScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -33,29 +39,14 @@ export default function EditProductScreen() {
   const [saving, setSaving] = useState<boolean>(false);
   const [product, setProduct] = useState<any>(null);
 
-  if (!isApproved) {
-    return (
-      <View style={[styles.screen, { paddingTop: insets.top }]}>
-        <View style={styles.topBar}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={22} color={Colors.forest} />
-          </TouchableOpacity>
-          <Text style={styles.pageTitle}>Edit Plant Listing</Text>
-        </View>
-        <SellerPendingVerificationShield
-          seller={seller}
-          featureName="Edit Plant Listing"
-        />
-      </View>
-    );
-  }
-
   // Form State
+  const [name, setName] = useState<string>("");
   const [priceRupees, setPriceRupees] = useState<string>("");
   const [stockQuantity, setStockQuantity] = useState<string>("");
   const [lowStockThreshold, setLowStockThreshold] = useState<string>("5");
   const [status, setStatus] = useState<"active" | "draft" | "inactive">("active");
   const [notes, setNotes] = useState<string>("");
+  const [images, setImages] = useState<MobileProductImage[]>([]);
 
   const fetchProduct = useCallback(async () => {
     if (!id) return;
@@ -65,6 +56,7 @@ export default function EditProductScreen() {
       if (res.success && res.data) {
         const p = res.data;
         setProduct(p);
+        setName(p.name || "");
         const price =
           p.price_paise ??
           p.inventory?.[0]?.price_paise ??
@@ -86,6 +78,27 @@ export default function EditProductScreen() {
         setLowStockThreshold(String(thresh));
         setStatus(p.status || "active");
         setNotes(p.description || "");
+
+        // Map existing images
+        if (Array.isArray(p.images) && p.images.length > 0) {
+          setImages(
+            p.images.map((img: any, idx: number) => ({
+              id: img.id,
+              assetId: img.asset_id || img.assetId,
+              url: img.url,
+              isPrimary: img.is_primary ?? idx === 0,
+              status: "READY",
+            })),
+          );
+        } else if (p.image_url || p.primary_image_url) {
+          setImages([
+            {
+              url: p.primary_image_url || p.image_url,
+              isPrimary: true,
+              status: "READY",
+            },
+          ]);
+        }
       }
     } catch (err) {
       console.warn("[EditProduct] Fetch error:", err);
@@ -97,6 +110,23 @@ export default function EditProductScreen() {
   useEffect(() => {
     fetchProduct();
   }, [fetchProduct, seller?.id]);
+
+  if (!isApproved) {
+    return (
+      <View style={[styles.screen, { paddingTop: insets.top }]}>
+        <View style={styles.topBar}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={22} color={Colors.forest} />
+          </TouchableOpacity>
+          <Text style={styles.pageTitle}>Edit Plant Listing</Text>
+        </View>
+        <SellerPendingVerificationShield
+          seller={seller}
+          featureName="Edit Plant Listing"
+        />
+      </View>
+    );
+  }
 
   const handleSave = async () => {
     if (!id) return;
@@ -112,14 +142,39 @@ export default function EditProductScreen() {
     }
     const threshNum = parseInt(lowStockThreshold, 10) || 5;
 
+    // Check if any image is still uploading or processing
+    const isImageInProgress = images.some(
+      (img) => img.status === "UPLOADING" || img.status === "PROCESSING",
+    );
+    if (isImageInProgress) {
+      showError("Please wait until photos finish processing through image engine.");
+      return;
+    }
+
     try {
       setSaving(true);
-      const updates = {
+      const cleanImages = images
+        .filter((img) => img.status !== "FAILED")
+        .map((img) => ({
+          asset_id: img.assetId || undefined,
+          url: img.url,
+          is_primary: img.isPrimary,
+        }));
+
+      const primaryUrl =
+        cleanImages.find((img) => img.is_primary)?.url ||
+        cleanImages[0]?.url ||
+        product?.image_url;
+
+      const updates: any = {
+        name: name.trim() || undefined,
         price_paise: rupeesToPaise(priceNum),
         stock_quantity: stockNum,
         low_stock_threshold: threshNum,
         status,
         description: notes.trim() || undefined,
+        images: cleanImages,
+        image_url: primaryUrl,
       };
 
       const res = await api.updateSellerProduct(id, updates);
@@ -183,27 +238,17 @@ export default function EditProductScreen() {
     );
   }
 
-  const imageUrl =
-    product.primary_image_url ||
-    product.image_url ||
-    product.images?.[0]?.url ||
-    "/floria-logo.png";
-
   return (
-    <View style={styles.screen}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      style={styles.screen}
+    >
       <ScrollView
         contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 90 }]}
+        showsVerticalScrollIndicator={false}
       >
-        {/* ── Canonical Specimen Header Card ── */}
+        {/* Specimen Header Card */}
         <View style={styles.specimenCard}>
-          <Image
-            source={{
-              uri: imageUrl.startsWith("http")
-                ? imageUrl
-                : "https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=200",
-            }}
-            style={styles.specimenImage}
-          />
           <View style={styles.specimenInfo}>
             <Text style={styles.specimenName}>{product.name}</Text>
             {product.botanical_name && (
@@ -213,6 +258,23 @@ export default function EditProductScreen() {
               {product.category?.name || "Botanical Specimen"}
             </Text>
           </View>
+        </View>
+
+        {/* ── Section: Device Photo Gallery with Image Engine ── */}
+        <View style={styles.formCard}>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.formHeader}>Plant Photos ({images.length})</Text>
+            <Text style={styles.imageEngineTag}>Floria Image Engine</Text>
+          </View>
+          <Text style={styles.photoHelperText}>
+            Capture photos directly with camera or select from device gallery.
+          </Text>
+
+          <MobileProductImageUploader
+            images={images}
+            onChange={setImages}
+            maxImages={5}
+          />
         </View>
 
         {/* ── Form Card: Seller Editable Listing Data ── */}
@@ -292,7 +354,7 @@ export default function EditProductScreen() {
 
           {/* Nursery Specific Notes */}
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Nursery Specific Notes</Text>
+            <Text style={styles.inputLabel}>Nursery Specific Notes & Care</Text>
             <TextInput
               value={notes}
               onChangeText={setNotes}
@@ -319,14 +381,12 @@ export default function EditProductScreen() {
       {/* ── Fixed Bottom Save Bar ── */}
       <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 16) }]}>
         <Button
-          label="Save Changes"
-          variant="primary"
-          size="lg"
-          loading={saving}
+          label={saving ? "Saving Changes..." : "Save Changes"}
           onPress={handleSave}
+          loading={saving}
         />
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -337,28 +397,41 @@ const styles = StyleSheet.create({
   },
   centerScreen: {
     flex: 1,
+    backgroundColor: Colors.page,
     alignItems: "center",
     justifyContent: "center",
+    padding: Spacing.xl,
+  },
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: Spacing.md,
+    paddingBottom: Spacing.sm,
+    backgroundColor: Colors.linen,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+    gap: 12,
+  },
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: Colors.page,
-    padding: Spacing.lg,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
-  loadingText: {
-    fontSize: Typography.fontSizes.sm,
-    color: Colors.inkMuted,
-    marginTop: Spacing.sm,
-  },
-  notFoundText: {
-    fontSize: Typography.fontSizes.base,
+  pageTitle: {
+    fontSize: Typography.fontSizes.lg,
     fontWeight: "bold",
-    color: Colors.ink,
-    marginTop: Spacing.sm,
+    fontFamily: "Georgia",
+    color: Colors.forest,
   },
   scrollContent: {
     padding: Spacing.md,
   },
   specimenCard: {
-    flexDirection: "row",
-    alignItems: "center",
     backgroundColor: Colors.linen,
     borderRadius: BorderRadius.xl,
     padding: Spacing.md,
@@ -366,32 +439,24 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     marginBottom: Spacing.md,
   },
-  specimenImage: {
-    width: 64,
-    height: 64,
-    borderRadius: BorderRadius.lg,
-    backgroundColor: Colors.sand,
-    marginRight: Spacing.md,
-  },
   specimenInfo: {
-    flex: 1,
+    gap: 4,
   },
   specimenName: {
-    fontSize: Typography.fontSizes.md,
-    fontFamily: "Georgia",
+    fontSize: Typography.fontSizes.base,
     fontWeight: "bold",
+    fontFamily: "Georgia",
     color: Colors.ink,
   },
   botanicalName: {
-    fontSize: 11,
+    fontSize: Typography.fontSizes.xs,
     fontStyle: "italic",
     color: Colors.inkMuted,
-    marginTop: 2,
   },
   categoryName: {
-    fontSize: 10,
-    color: Colors.sage,
+    fontSize: Typography.fontSizes.xs,
     fontWeight: "600",
+    color: Colors.forest,
     marginTop: 2,
   },
   formCard: {
@@ -402,50 +467,69 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     marginBottom: Spacing.md,
   },
+  sectionHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
+  },
   formHeader: {
     fontSize: Typography.fontSizes.xs,
     fontWeight: "700",
-    color: Colors.inkMuted,
+    color: Colors.forest,
     textTransform: "uppercase",
     letterSpacing: 0.5,
-    marginBottom: Spacing.md,
+  },
+  imageEngineTag: {
+    fontSize: 9,
+    fontWeight: "700",
+    color: Colors.forest,
+    backgroundColor: "#DCFCE7",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  photoHelperText: {
+    fontSize: 11,
+    color: Colors.inkMuted,
+    lineHeight: 16,
+    marginBottom: Spacing.sm,
   },
   inputGroup: {
     marginBottom: Spacing.md,
   },
   inputLabel: {
     fontSize: Typography.fontSizes.xs,
-    fontWeight: "bold",
+    fontWeight: "600",
     color: Colors.ink,
-    marginBottom: 4,
+    marginBottom: 6,
   },
   textInput: {
     backgroundColor: Colors.page,
     borderWidth: 1,
     borderColor: Colors.border,
-    borderRadius: BorderRadius.md,
-    paddingHorizontal: Spacing.sm,
-    height: 44,
+    borderRadius: BorderRadius.lg,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 10,
     fontSize: Typography.fontSizes.sm,
     color: Colors.ink,
   },
   statusToggleRow: {
     flexDirection: "row",
-    gap: Spacing.xs,
-    marginTop: 4,
+    gap: Spacing.sm,
   },
   statusToggleBtn: {
     flex: 1,
     paddingVertical: 10,
     alignItems: "center",
-    borderRadius: BorderRadius.md,
-    backgroundColor: Colors.page,
+    borderRadius: BorderRadius.lg,
     borderWidth: 1,
     borderColor: Colors.border,
+    backgroundColor: Colors.page,
   },
   statusToggleBtnActive: {
     backgroundColor: Colors.forest,
-    borderColor: Colors.forestDark,
+    borderColor: Colors.forest,
   },
   statusToggleText: {
     fontSize: Typography.fontSizes.xs,
@@ -460,12 +544,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: Colors.errorBg,
-    borderRadius: BorderRadius.md,
+    gap: Spacing.xs,
     paddingVertical: 12,
+    borderRadius: BorderRadius.lg,
     borderWidth: 1,
-    borderColor: Colors.error,
-    gap: 6,
+    borderColor: "#FCA5A5",
+    backgroundColor: "#FEF2F2",
+    marginTop: Spacing.sm,
   },
   deleteButtonText: {
     fontSize: Typography.fontSizes.xs,
@@ -483,23 +568,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingTop: Spacing.sm,
   },
-  topBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-    backgroundColor: Colors.page,
-    gap: 12,
+  loadingText: {
+    fontSize: Typography.fontSizes.sm,
+    color: Colors.inkMuted,
+    marginTop: Spacing.md,
   },
-  backButton: {
-    padding: 4,
-  },
-  pageTitle: {
-    fontSize: Typography.fontSizes.lg,
-    fontFamily: "Georgia",
+  notFoundText: {
+    fontSize: Typography.fontSizes.md,
     fontWeight: "bold",
-    color: Colors.forest,
+    color: Colors.ink,
+    marginTop: Spacing.md,
   },
 });

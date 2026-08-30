@@ -15,6 +15,11 @@ router.post(
   mediaController.createUploadSession,
 );
 router.post(
+  "/upload-direct",
+  mediaUploadRateLimiter,
+  mediaController.uploadDirectMedia,
+);
+router.post(
   "/upload-session/:sessionId/complete",
   mediaUploadRateLimiter,
   mediaController.completeUploadSession,

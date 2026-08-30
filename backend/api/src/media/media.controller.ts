@@ -230,3 +230,17 @@ export async function updateNurseryBanner(
     next(err);
   }
 }
+
+export async function uploadDirectMedia(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    if (!req.user) return next(Errors.authRequired());
+    const result = await MediaService.uploadDirectMedia(req.user, req.body);
+    res.status(201).json({ success: true, data: result });
+  } catch (err) {
+    next(err);
+  }
+}

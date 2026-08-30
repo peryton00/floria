@@ -265,6 +265,12 @@ declare class FloriaApiClient {
     }): Promise<ApiResponse<any>>;
     completeMediaUploadSession(sessionId: string): Promise<ApiResponse<any>>;
     getMediaUploadSessionStatus(sessionId: string): Promise<ApiResponse<any>>;
+    uploadMediaDirect(params: {
+        filename?: string;
+        mimeType?: string;
+        base64Data: string;
+        profile?: string;
+    }): Promise<ApiResponse<any>>;
     attachProductImage(productId: string, params: {
         assetId: string;
         altText?: string;

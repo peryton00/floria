@@ -58,12 +58,20 @@ export default function RootLayout() {
               options={{ title: "Seller Partner Setup", headerShown: false }}
             />
             <Stack.Screen
+              name="account/details"
+              options={{ title: "Nursery Details", headerShown: false }}
+            />
+            <Stack.Screen
               name="account/hours"
               options={{ title: "Operating Hours" }}
             />
             <Stack.Screen
               name="account/settlements"
-              options={{ title: "Payments & Settlements" }}
+              options={{ title: "Settlement Account", headerShown: false }}
+            />
+            <Stack.Screen
+              name="account/transactions"
+              options={{ title: "Transaction History", headerShown: false }}
             />
             <Stack.Screen
               name="account/notifications"

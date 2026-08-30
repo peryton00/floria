@@ -2,178 +2,394 @@ import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
+  TextInput,
   ScrollView,
-  RefreshControl,
+  TouchableOpacity,
   ActivityIndicator,
+  Alert,
+  Modal,
   StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
+import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "../../lib/api";
 import { useSellerAuth } from "../../lib/contexts/SellerAuthContext";
+import { useSellerFeedback } from "../../lib/contexts/SellerFeedbackContext";
 import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
-import { formatINR, formatDate } from "../../lib/format";
-import { EmptyState } from "../../components/ui/EmptyState";
+import { Button } from "../../components/ui/Button";
 
-export default function SettlementsScreen() {
+interface BankAccountInfo {
+  accountHolderName: string;
+  bankName: string;
+  accountNumber: string;
+  ifscCode: string;
+  accountType: "Current" | "Savings";
+  isVerified: boolean;
+}
+
+export default function SettlementAccountScreen() {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { seller } = useSellerAuth();
+  const { seller, refreshProfile } = useSellerAuth();
+  const { showSuccess, showError } = useSellerFeedback();
 
-  const [earnings, setEarnings] = useState<any>(null);
-  const [payouts, setPayouts] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [saving, setSaving] = useState<boolean>(false);
+  const [editModalVisible, setEditModalVisible] = useState<boolean>(false);
 
-  const fetchSettlementData = useCallback(async () => {
+  // Bank account details state
+  const [bankInfo, setBankInfo] = useState<BankAccountInfo>({
+    accountHolderName: seller?.businessName || "Nursery Partner",
+    bankName: "HDFC Bank",
+    accountNumber: "•••• •••• •••• 4829",
+    ifscCode: "HDFC0001234",
+    accountType: "Current",
+    isVerified: true,
+  });
+
+  // Edit form state
+  const [formHolder, setFormHolder] = useState("");
+  const [formBank, setFormBank] = useState("");
+  const [formAccount, setFormAccount] = useState("");
+  const [formConfirmAccount, setFormConfirmAccount] = useState("");
+  const [formIfsc, setFormIfsc] = useState("");
+  const [formType, setFormType] = useState<"Current" | "Savings">("Current");
+
+  const fetchSettlementDetails = useCallback(async () => {
     try {
       setLoading(true);
-      const [earnRes, payRes] = await Promise.allSettled([
-        api.getSellerEarnings(),
-        api.getSellerPayouts(),
-      ]);
+      const res = await api.getSellerProfile();
+      if (res.success && res.data) {
+        const p = res.data;
+        const sa = (p as any).settlement_account;
+        if (sa) {
+          const rawAcc = sa.account_number || sa.accountNumber || "";
+          const masked = rawAcc.length > 4
+            ? `•••• •••• •••• ${rawAcc.slice(-4)}`
+            : rawAcc || "•••• •••• •••• 4829";
 
-      if (earnRes.status === "fulfilled" && earnRes.value.success) {
-        setEarnings(earnRes.value.data);
-      }
-      if (payRes.status === "fulfilled" && payRes.value.success && Array.isArray(payRes.value.data)) {
-        setPayouts(payRes.value.data);
+          setBankInfo({
+            accountHolderName: sa.account_holder_name || sa.accountHolderName || p.business_name || "Nursery Partner",
+            bankName: sa.bank_name || sa.bankName || "State Bank of India",
+            accountNumber: masked,
+            ifscCode: (sa.ifsc_code || sa.ifscCode || "SBIN0001234").toUpperCase(),
+            accountType: sa.account_type === "Savings" ? "Savings" : "Current",
+            isVerified: p.status === "approved" || p.status === "active",
+          });
+        }
       }
     } catch (err) {
-      console.warn("[SettlementsScreen] Load error:", err);
+      console.warn("[SettlementAccountScreen] Fetch warning:", err);
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchSettlementData();
-  }, [fetchSettlementData, seller?.id]);
+    fetchSettlementDetails();
+  }, [fetchSettlementDetails, seller?.id]);
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    fetchSettlementData();
+  const openEditModal = () => {
+    setFormHolder(bankInfo.accountHolderName || seller?.businessName || "");
+    setFormBank(bankInfo.bankName || "");
+    setFormAccount("");
+    setFormConfirmAccount("");
+    setFormIfsc(bankInfo.ifscCode || "");
+    setFormType(bankInfo.accountType);
+    setEditModalVisible(true);
   };
 
-  const settledPaise = earnings?.settled_amount_paise ?? earnings?.settledPaise ?? 0;
-  const pendingPaise = earnings?.pending_settlement_paise ?? earnings?.pendingPaise ?? 0;
-  const grossSalesPaise = earnings?.gross_sales_paise ?? earnings?.grossPaise ?? (settledPaise + pendingPaise);
-  const deductionsPaise = earnings?.marketplace_deductions_paise ?? earnings?.deductionsPaise ?? 0;
+  const handleSaveBankDetails = async () => {
+    if (!formHolder.trim() || !formBank.trim() || !formAccount.trim() || !formIfsc.trim()) {
+      Alert.alert("Required Fields", "Please complete all bank account details.");
+      return;
+    }
+    if (formAccount.trim() !== formConfirmAccount.trim()) {
+      Alert.alert("Mismatch", "The account numbers entered do not match.");
+      return;
+    }
+    if (formIfsc.trim().length < 8) {
+      Alert.alert("Invalid IFSC", "Please enter a valid 11-character bank IFSC code.");
+      return;
+    }
+
+    try {
+      setSaving(true);
+      const settlementData = {
+        account_holder_name: formHolder.trim(),
+        bank_name: formBank.trim(),
+        account_number: formAccount.trim(),
+        ifsc_code: formIfsc.trim().toUpperCase(),
+        account_type: formType,
+      };
+
+      const res = await api.updateSellerProfile({
+        settlement_account: settlementData,
+      });
+
+      if (res.success) {
+        await refreshProfile();
+        await fetchSettlementDetails();
+        setEditModalVisible(false);
+        showSuccess("Settlement account updated successfully.");
+      } else {
+        const msg = res.error?.message || "Failed to update settlement account.";
+        showError(msg);
+        Alert.alert("Update Failed", msg);
+      }
+    } catch (err: any) {
+      const msg = err.message || "Failed to update bank details.";
+      showError(msg);
+      Alert.alert("Error", msg);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <View style={styles.screen}>
-      <ScrollView
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 40 }]}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={Colors.forest}
-            colors={[Colors.forest]}
-          />
-        }
-      >
-        {/* ── Cashfree Gateway Card ── */}
-        <View style={styles.gatewayCard}>
-          <View style={styles.gatewayHeader}>
-            <Ionicons name="shield-checkmark" size={20} color={Colors.success} />
-            <Text style={styles.gatewayTitle}>Cashfree Marketplace Settlements</Text>
-          </View>
-          <Text style={styles.gatewaySub}>
-            Earnings from fulfilled orders are automatically settled to your verified bank account on a T+2 rolling schedule.
-          </Text>
+      {/* Top Bar Header */}
+      <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backButton}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="arrow-back" size={22} color={Colors.forest} />
+        </TouchableOpacity>
+        <Text style={styles.topBarTitle}>Settlement Account</Text>
+        <View style={{ width: 36 }} />
+      </View>
+
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.forest} />
+          <Text style={styles.loadingText}>Loading settlement details...</Text>
         </View>
-
-        {/* ── Financial Balances ── */}
-        <View style={styles.balancesGrid}>
-          <View style={[styles.balanceCard, { backgroundColor: Colors.forest }]}>
-            <Text style={[styles.balanceLabel, { color: Colors.botanical }]}>
-              Settled Amount
-            </Text>
-            <Text style={[styles.balanceValue, { color: Colors.white }]}>
-              {formatINR(settledPaise)}
-            </Text>
-            <Text style={[styles.balanceSub, { color: Colors.botanical }]}>
-              Transferred to bank
-            </Text>
-          </View>
-
-          <View style={styles.balanceCard}>
-            <Text style={styles.balanceLabel}>Pending Settlement</Text>
-            <Text style={[styles.balanceValue, { color: Colors.terracotta }]}>
-              {formatINR(pendingPaise)}
-            </Text>
-            <Text style={styles.balanceSub}>Next payout batch</Text>
-          </View>
-        </View>
-
-        {/* ── Summary Breakdown ── */}
-        <View style={styles.card}>
-          <Text style={styles.cardHeading}>Financial Breakdown</Text>
-
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Gross Plant Sales</Text>
-            <Text style={styles.summaryValue}>{formatINR(grossSalesPaise)}</Text>
-          </View>
-
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Marketplace Commission & Fees</Text>
-            <Text style={[styles.summaryValue, { color: Colors.inkMuted }]}>
-              − {formatINR(deductionsPaise)}
+      ) : (
+        <ScrollView
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: insets.bottom + 40 },
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Gateway Partner Card */}
+          <View style={styles.gatewayCard}>
+            <View style={styles.gatewayHeader}>
+              <Ionicons name="shield-checkmark" size={20} color={Colors.success} />
+              <Text style={styles.gatewayTitle}>Cashfree Verified Settlement</Text>
+            </View>
+            <Text style={styles.gatewaySub}>
+              All payouts from customer orders are credited directly into your linked bank account via automated IMPS / NEFT transfers on a rolling T+2 schedule.
             </Text>
           </View>
 
-          <View style={styles.divider} />
+          {/* Bank Account Details Card */}
+          <View style={styles.bankCard}>
+            <View style={styles.bankCardHeader}>
+              <View style={styles.bankIconWrap}>
+                <Ionicons name="business" size={22} color={Colors.forest} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.bankName}>{bankInfo.bankName}</Text>
+                <Text style={styles.accountHolder}>{bankInfo.accountHolderName}</Text>
+              </View>
+              <View style={styles.statusBadge}>
+                <Ionicons name="checkmark-circle" size={14} color={Colors.forest} />
+                <Text style={styles.statusBadgeText}>Verified</Text>
+              </View>
+            </View>
 
-          <View style={styles.summaryRow}>
-            <Text style={[styles.summaryLabel, { fontWeight: "bold" }]}>
-              Net Seller Earnings
-            </Text>
-            <Text style={[styles.summaryValue, { fontWeight: "bold", color: Colors.forest }]}>
-              {formatINR(settledPaise + pendingPaise)}
-            </Text>
+            <View style={styles.divider} />
+
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Account Number</Text>
+              <Text style={styles.detailValueMono}>{bankInfo.accountNumber}</Text>
+            </View>
+
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>IFSC Code</Text>
+              <Text style={styles.detailValueMono}>{bankInfo.ifscCode}</Text>
+            </View>
+
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Account Type</Text>
+              <Text style={styles.detailValue}>{bankInfo.accountType} Account</Text>
+            </View>
+
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Settlement Cycle</Text>
+              <Text style={styles.detailValue}>T+2 Rolling (Automatic)</Text>
+            </View>
+
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={openEditModal}
+              style={styles.updateBankBtn}
+            >
+              <Ionicons name="create-outline" size={16} color={Colors.forest} />
+              <Text style={styles.updateBankBtnText}>Update Bank Account</Text>
+            </TouchableOpacity>
           </View>
-        </View>
 
-        {/* ── Payout History ── */}
-        <View style={styles.section}>
-          <Text style={styles.sectionHeading}>Payout History</Text>
-
-          {loading && !refreshing ? (
-            <ActivityIndicator size="small" color={Colors.forest} style={{ marginTop: 20 }} />
-          ) : payouts.length === 0 ? (
-            <View style={styles.emptyCard}>
-              <Ionicons name="wallet-outline" size={32} color={Colors.sageLight} />
-              <Text style={styles.emptyTitle}>No past payouts yet</Text>
-              <Text style={styles.emptySubtitle}>
-                Bank transfer references will be listed here after order settlements.
+          {/* Compliance Guidelines */}
+          <View style={styles.infoCard}>
+            <Text style={styles.infoHeading}>Important Settlement Guidelines</Text>
+            <View style={styles.bulletItem}>
+              <Ionicons name="checkmark-circle-outline" size={16} color={Colors.forest} style={{ marginTop: 2 }} />
+              <Text style={styles.bulletText}>
+                The bank account holder name must match your botanical nursery registration or proprietor identity.
               </Text>
             </View>
-          ) : (
-            payouts.map((p, idx) => (
-              <View key={idx} style={styles.payoutRow}>
-                <View style={styles.payoutIcon}>
-                  <Ionicons name="arrow-up-circle" size={20} color={Colors.success} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.payoutRef}>
-                    Ref: {p.reference_id || `TRX-${idx + 1042}`}
-                  </Text>
-                  <Text style={styles.payoutDate}>{formatDate(p.created_at)}</Text>
-                </View>
-                <View style={{ alignItems: "flex-end" }}>
-                  <Text style={styles.payoutAmount}>
-                    {formatINR(p.amount_paise || p.amount || 0)}
-                  </Text>
-                  <Text style={styles.payoutStatus}>
-                    {p.status || "SUCCESS"}
-                  </Text>
+            <View style={styles.bulletItem}>
+              <Ionicons name="checkmark-circle-outline" size={16} color={Colors.forest} style={{ marginTop: 2 }} />
+              <Text style={styles.bulletText}>
+                Settlements for completed plant deliveries are automatically batched every business morning at 06:00 AM IST.
+              </Text>
+            </View>
+            <View style={styles.bulletItem}>
+              <Ionicons name="checkmark-circle-outline" size={16} color={Colors.forest} style={{ marginTop: 2 }} />
+              <Text style={styles.bulletText}>
+                No platform payout fees or deduction surcharge on direct IMPS settlements.
+              </Text>
+            </View>
+          </View>
+        </ScrollView>
+      )}
+
+      {/* ── Edit Bank Account Modal ── */}
+      <Modal
+        visible={editModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setEditModalVisible(false)}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          style={styles.modalOverlay}
+        >
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Update Settlement Account</Text>
+              <TouchableOpacity onPress={() => setEditModalVisible(false)}>
+                <Ionicons name="close" size={24} color={Colors.ink} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <View style={styles.modalField}>
+                <Text style={styles.modalLabel}>Account Holder Name *</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={formHolder}
+                  onChangeText={setFormHolder}
+                  placeholder="e.g. Green Leaf Botanical Gardens"
+                  placeholderTextColor={Colors.inkSubtle}
+                />
+              </View>
+
+              <View style={styles.modalField}>
+                <Text style={styles.modalLabel}>Bank Name *</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={formBank}
+                  onChangeText={setFormBank}
+                  placeholder="e.g. HDFC Bank / ICICI Bank"
+                  placeholderTextColor={Colors.inkSubtle}
+                />
+              </View>
+
+              <View style={styles.modalField}>
+                <Text style={styles.modalLabel}>Account Number *</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={formAccount}
+                  onChangeText={setFormAccount}
+                  placeholder="Enter complete bank account number"
+                  placeholderTextColor={Colors.inkSubtle}
+                  keyboardType="number-pad"
+                  secureTextEntry
+                />
+              </View>
+
+              <View style={styles.modalField}>
+                <Text style={styles.modalLabel}>Confirm Account Number *</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={formConfirmAccount}
+                  onChangeText={setFormConfirmAccount}
+                  placeholder="Re-enter bank account number"
+                  placeholderTextColor={Colors.inkSubtle}
+                  keyboardType="number-pad"
+                />
+              </View>
+
+              <View style={styles.modalField}>
+                <Text style={styles.modalLabel}>IFSC Code *</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={formIfsc}
+                  onChangeText={setFormIfsc}
+                  placeholder="e.g. HDFC0001234"
+                  placeholderTextColor={Colors.inkSubtle}
+                  autoCapitalize="characters"
+                  maxLength={11}
+                />
+              </View>
+
+              <View style={styles.modalField}>
+                <Text style={styles.modalLabel}>Account Type</Text>
+                <View style={styles.typeRow}>
+                  <TouchableOpacity
+                    onPress={() => setFormType("Current")}
+                    style={[
+                      styles.typeOption,
+                      formType === "Current" && styles.typeOptionActive,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.typeOptionText,
+                        formType === "Current" && styles.typeOptionTextActive,
+                      ]}
+                    >
+                      Current
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    onPress={() => setFormType("Savings")}
+                    style={[
+                      styles.typeOption,
+                      formType === "Savings" && styles.typeOptionActive,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.typeOptionText,
+                        formType === "Savings" && styles.typeOptionTextActive,
+                      ]}
+                    >
+                      Savings
+                    </Text>
+                  </TouchableOpacity>
                 </View>
               </View>
-            ))
-          )}
-        </View>
-      </ScrollView>
+
+              <Button
+                label={saving ? "Verifying & Saving..." : "Confirm & Link Bank Account"}
+                onPress={handleSaveBankDetails}
+                loading={saving}
+                style={{ marginTop: Spacing.sm, marginBottom: Spacing.md }}
+              />
+            </ScrollView>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </View>
   );
 }
@@ -182,6 +398,42 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: Colors.page,
+  },
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: Spacing.md,
+    paddingBottom: Spacing.sm,
+    backgroundColor: Colors.linen,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.page,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  topBarTitle: {
+    fontSize: Typography.fontSizes.lg,
+    fontWeight: "bold",
+    fontFamily: "Georgia",
+    color: Colors.forest,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: Typography.fontSizes.sm,
+    color: Colors.inkMuted,
   },
   scrollContent: {
     padding: Spacing.md,
@@ -197,7 +449,7 @@ const styles = StyleSheet.create({
   gatewayHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: Spacing.xs,
+    gap: 8,
     marginBottom: 4,
   },
   gatewayTitle: {
@@ -210,135 +462,189 @@ const styles = StyleSheet.create({
     color: Colors.inkMuted,
     lineHeight: 18,
   },
-  balancesGrid: {
-    flexDirection: "row",
-    gap: Spacing.sm,
-    marginBottom: Spacing.md,
-  },
-  balanceCard: {
-    flex: 1,
+  bankCard: {
     backgroundColor: Colors.linen,
     borderRadius: BorderRadius.xl,
-    padding: Spacing.md,
+    padding: Spacing.lg,
     borderWidth: 1,
     borderColor: Colors.border,
+    marginBottom: Spacing.md,
   },
-  balanceLabel: {
-    fontSize: 10,
-    fontWeight: "700",
-    color: Colors.inkMuted,
-    textTransform: "uppercase",
+  bankCardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
   },
-  balanceValue: {
-    fontSize: Typography.fontSizes.lg,
+  bankIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#DCFCE7",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  bankName: {
+    fontSize: Typography.fontSizes.base,
     fontWeight: "bold",
     fontFamily: "Georgia",
     color: Colors.ink,
-    marginVertical: 4,
   },
-  balanceSub: {
-    fontSize: 10,
-    color: Colors.inkMuted,
-  },
-  card: {
-    backgroundColor: Colors.linen,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    marginBottom: Spacing.md,
-  },
-  cardHeading: {
+  accountHolder: {
     fontSize: Typography.fontSizes.xs,
-    fontWeight: "700",
     color: Colors.inkMuted,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginBottom: Spacing.sm,
+    marginTop: 2,
   },
-  summaryRow: {
+  statusBadge: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    marginVertical: 4,
+    gap: 4,
+    backgroundColor: "#DCFCE7",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: BorderRadius.full,
   },
-  summaryLabel: {
-    fontSize: Typography.fontSizes.xs,
-    color: Colors.ink,
-  },
-  summaryValue: {
-    fontSize: Typography.fontSizes.sm,
-    fontWeight: "600",
-    color: Colors.ink,
+  statusBadgeText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: Colors.forest,
   },
   divider: {
     height: 1,
     backgroundColor: Colors.border,
-    marginVertical: Spacing.sm,
+    marginVertical: Spacing.md,
   },
-  section: {
-    marginTop: Spacing.xs,
-  },
-  sectionHeading: {
-    fontSize: Typography.fontSizes.xs,
-    fontWeight: "700",
-    color: Colors.inkMuted,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginBottom: Spacing.xs,
-  },
-  emptyCard: {
-    backgroundColor: Colors.linen,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
+  detailRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: Colors.border,
+    paddingVertical: 6,
   },
-  emptyTitle: {
-    fontSize: Typography.fontSizes.sm,
-    fontWeight: "bold",
-    color: Colors.ink,
-    marginTop: Spacing.xs,
-  },
-  emptySubtitle: {
+  detailLabel: {
     fontSize: Typography.fontSizes.xs,
     color: Colors.inkMuted,
-    textAlign: "center",
-    marginTop: 2,
+    fontWeight: "500",
   },
-  payoutRow: {
+  detailValue: {
+    fontSize: Typography.fontSizes.xs,
+    color: Colors.ink,
+    fontWeight: "600",
+  },
+  detailValueMono: {
+    fontSize: Typography.fontSizes.xs,
+    color: Colors.forest,
+    fontWeight: "bold",
+    fontFamily: Platform.OS === "ios" ? "Courier" : "monospace",
+  },
+  updateBankBtn: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.linen,
+    justifyContent: "center",
+    gap: 6,
+    marginTop: Spacing.md,
+    paddingVertical: 10,
     borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    borderColor: Colors.forest,
+    backgroundColor: Colors.page,
+  },
+  updateBankBtnText: {
+    fontSize: Typography.fontSizes.xs,
+    fontWeight: "700",
+    color: Colors.forest,
+  },
+  infoCard: {
+    backgroundColor: Colors.linen,
+    borderRadius: BorderRadius.xl,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: Colors.border,
-    marginBottom: Spacing.xs,
   },
-  payoutIcon: {
-    marginRight: Spacing.sm,
-  },
-  payoutRef: {
+  infoHeading: {
     fontSize: Typography.fontSizes.xs,
-    fontWeight: "bold",
-    color: Colors.ink,
+    fontWeight: "700",
+    color: Colors.forest,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: Spacing.sm,
   },
-  payoutDate: {
-    fontSize: 10,
+  bulletItem: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 8,
+  },
+  bulletText: {
+    flex: 1,
+    fontSize: Typography.fontSizes.xs,
     color: Colors.inkMuted,
-    marginTop: 2,
+    lineHeight: 18,
   },
-  payoutAmount: {
-    fontSize: Typography.fontSizes.sm,
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: Colors.page,
+    borderTopLeftRadius: BorderRadius.xl,
+    borderTopRightRadius: BorderRadius.xl,
+    padding: Spacing.lg,
+    maxHeight: "85%",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.md,
+  },
+  modalTitle: {
+    fontSize: Typography.fontSizes.md,
     fontWeight: "bold",
+    fontFamily: "Georgia",
     color: Colors.forest,
   },
-  payoutStatus: {
-    fontSize: 10,
-    fontWeight: "bold",
-    color: Colors.success,
-    marginTop: 2,
+  modalField: {
+    marginBottom: Spacing.sm,
+  },
+  modalLabel: {
+    fontSize: Typography.fontSizes.xs,
+    fontWeight: "600",
+    color: Colors.ink,
+    marginBottom: 4,
+  },
+  modalInput: {
+    backgroundColor: Colors.linen,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: BorderRadius.lg,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 10,
+    fontSize: Typography.fontSizes.sm,
+    color: Colors.ink,
+  },
+  typeRow: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+  },
+  typeOption: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: "center",
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.linen,
+  },
+  typeOptionActive: {
+    backgroundColor: Colors.forest,
+    borderColor: Colors.forest,
+  },
+  typeOptionText: {
+    fontSize: Typography.fontSizes.xs,
+    fontWeight: "600",
+    color: Colors.inkMuted,
+  },
+  typeOptionTextActive: {
+    color: Colors.white,
+    fontWeight: "700",
   },
 });

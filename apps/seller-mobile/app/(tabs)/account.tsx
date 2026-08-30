@@ -96,7 +96,7 @@ export default function SellerAccountScreen() {
           <View style={styles.menuGroup}>
             <TouchableOpacity
               activeOpacity={0.7}
-              onPress={() => router.push("/onboarding" as any)}
+              onPress={() => router.push("/account/details" as any)}
               style={styles.menuRow}
             >
               <View style={styles.iconWrap}>
@@ -147,7 +147,7 @@ export default function SellerAccountScreen() {
 
             <TouchableOpacity
               activeOpacity={0.7}
-              onPress={() => router.push("/account/settlements" as any)}
+              onPress={() => router.push("/account/transactions" as any)}
               style={[styles.menuRow, styles.lastRow]}
             >
               <View style={styles.iconWrap}>

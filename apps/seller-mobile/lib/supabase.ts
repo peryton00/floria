@@ -3,9 +3,11 @@ import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL =
   process.env.EXPO_PUBLIC_SUPABASE_URL ||
-  "https://floria-placeholder.supabase.co";
+  "https://flymwzdtsrkiiriqaswc.supabase.co";
 const SUPABASE_ANON_KEY =
-  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || "placeholder-anon-key";
+  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ||
+  process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+  "sb_publishable_RrZ1XlBXOQFW-A1Iwr1XeQ_ZxOK23gJ";
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {

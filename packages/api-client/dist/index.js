@@ -410,6 +410,12 @@ var FloriaApiClient = class {
   async getMediaUploadSessionStatus(sessionId) {
     return this.request(`/api/v1/media/upload-session/${sessionId}`);
   }
+  async uploadMediaDirect(params) {
+    return this.request("/api/v1/media/upload-direct", {
+      method: "POST",
+      body: JSON.stringify(params)
+    });
+  }
   async attachProductImage(productId, params) {
     return this.request(`/api/v1/seller/products/${productId}/images`, {
       method: "POST",

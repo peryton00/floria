@@ -3,3 +3,4 @@ export * from "./OrderActionCard";
 export * from "./InventoryStockRow";
 export * from "./ContactFloriaModal";
 export * from "./SellerPendingVerificationShield";
+export * from "./MobileProductImageUploader";

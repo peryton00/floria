@@ -740,6 +740,18 @@ export class FloriaApiClient {
     return this.request<any>(`/api/v1/media/upload-session/${sessionId}`);
   }
 
+  public async uploadMediaDirect(params: {
+    filename?: string;
+    mimeType?: string;
+    base64Data: string;
+    profile?: string;
+  }): Promise<ApiResponse<any>> {
+    return this.request<any>("/api/v1/media/upload-direct", {
+      method: "POST",
+      body: JSON.stringify(params),
+    });
+  }
+
   public async attachProductImage(
     productId: string,
     params: {
