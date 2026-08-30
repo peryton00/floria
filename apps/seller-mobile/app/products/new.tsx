@@ -156,11 +156,14 @@ export default function AddPlantScreen() {
     try {
       setSubmitting(true);
       const cleanImages = images
-        .filter((img) => img.status !== "FAILED")
+        .filter((img) => img.status !== "FAILED" && Boolean(img.url))
         .map((img) => ({
-          asset_id: img.assetId || undefined,
+          asset_id:
+            img.assetId && img.assetId.trim().length > 10
+              ? img.assetId.trim()
+              : undefined,
           url: img.url,
-          is_primary: img.isPrimary,
+          is_primary: Boolean(img.isPrimary),
         }));
 
       const primaryUrl =
@@ -171,7 +174,7 @@ export default function AddPlantScreen() {
       const payload = {
         name: productName.trim(),
         botanical_name: botanicalName.trim() || undefined,
-        category_id: selectedCategoryId || (categories[0]?.id ?? undefined),
+        category_id: selectedCategoryId || (categories.length > 0 ? categories[0].id : undefined),
         price_paise: Math.round(priceNum * 100),
         stock_quantity: stockNum,
         low_stock_threshold: parseInt(lowStockThreshold, 10) || 5,

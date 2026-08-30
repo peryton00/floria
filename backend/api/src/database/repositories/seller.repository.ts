@@ -308,10 +308,20 @@ export class SellerRepository {
     const db = getAdminDb();
     const now = new Date().toISOString();
 
+    let finalCategoryId = productData.category_id;
+    if (!finalCategoryId || finalCategoryId === "" || typeof finalCategoryId !== "string") {
+      const { data: firstCat } = await db
+        .from("categories")
+        .select("id")
+        .limit(1)
+        .maybeSingle();
+      finalCategoryId = firstCat?.id || null;
+    }
+
+    const cleanName = (productData.name || "Botanical Plant").trim();
     const slug =
-      (productData.name || "plant")
+      cleanName
         .toLowerCase()
-        .trim()
         .replace(/[^a-z0-9\s-]/g, "")
         .replace(/\s+/g, "-") + `-${Date.now().toString().slice(-4)}`;
 
@@ -319,8 +329,8 @@ export class SellerRepository {
       .from("products")
       .insert({
         seller_id: sellerId,
-        category_id: productData.category_id,
-        name: productData.name.trim(),
+        category_id: finalCategoryId,
+        name: cleanName,
         slug,
         description: productData.description?.trim() || null,
         care_instructions: productData.care_instructions?.trim() || null,
@@ -331,8 +341,10 @@ export class SellerRepository {
       .select()
       .single();
 
-    if (prodErr || !prod)
-      throw prodErr || new Error("Failed to create product");
+    if (prodErr || !prod) {
+      console.error("[SellerRepository] createProduct DB error:", prodErr?.message || prodErr);
+      throw prodErr || new Error("Failed to create product record in database");
+    }
 
     // Auto-generate permanent unique SKU if not provided
     const autoSku =
@@ -340,21 +352,34 @@ export class SellerRepository {
       `FLR-${prod.id.replace(/-/g, "").slice(0, 8).toUpperCase()}`;
 
     // Inventory
-    await db.from("inventory").insert({
+    const { error: invErr } = await db.from("inventory").insert({
       product_id: prod.id,
       seller_id: sellerId,
-      price_paise: Math.max(0, productData.price_paise || 0),
-      stock_quantity: Math.max(0, productData.stock_quantity || 0),
-      low_stock_threshold: Math.max(0, productData.low_stock_threshold ?? 5),
+      price_paise: Math.max(0, Number(productData.price_paise) || 0),
+      stock_quantity: Math.max(0, Number(productData.stock_quantity) || 0),
+      low_stock_threshold: Math.max(0, Number(productData.low_stock_threshold) ?? 5),
       sku: autoSku,
       updated_at: now,
     });
+
+    if (invErr) {
+      console.warn("[SellerRepository] Inventory insert notice:", invErr.message);
+    }
+
+    // Helper to safely sanitize asset IDs so empty strings never cause PostgreSQL UUID syntax errors
+    const sanitizeAssetId = (val: any): string | null => {
+      if (typeof val === "string" && val.trim().length > 10 && val.includes("-")) {
+        return val.trim();
+      }
+      return null;
+    };
 
     // Primary & Additional Images Support
     const supabaseUrl =
       process.env.SUPABASE_URL ||
       process.env.NEXT_PUBLIC_SUPABASE_URL ||
       "https://supabase.co";
+
     const resolveSanitizedUrl = (
       aId: string | null,
       rUrl: string | null,
@@ -371,10 +396,12 @@ export class SellerRepository {
     if (Array.isArray(productData.images) && productData.images.length > 0) {
       for (let i = 0; i < productData.images.length; i++) {
         const imgObj = productData.images[i];
-        const assetId =
+        const rawAssetId =
           typeof imgObj === "string"
             ? imgObj
             : imgObj.asset_id || imgObj.assetId || null;
+        const assetId = sanitizeAssetId(rawAssetId);
+
         const rawUrl =
           typeof imgObj === "string"
             ? imgObj
@@ -395,12 +422,12 @@ export class SellerRepository {
         });
       }
     } else if (productData.asset_id || productData.image_url) {
-      const aId = productData.asset_id || null;
+      const assetId = sanitizeAssetId(productData.asset_id);
       const rUrl = productData.image_url || "/floria-logo.png";
       await db.from("product_images").insert({
         product_id: prod.id,
-        asset_id: aId,
-        url: resolveSanitizedUrl(aId, rUrl),
+        asset_id: assetId,
+        url: resolveSanitizedUrl(assetId, rUrl),
         alt_text: prod.name,
         display_order: 1,
         is_primary: true,
