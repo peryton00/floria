@@ -194,7 +194,7 @@ export default function BecomeASellerPage() {
     <div className="min-h-screen bg-[#FAF8F5] flex items-center justify-center px-4 py-12 font-sans">
       <div className="w-full max-w-xl">
         {/* Brand Header */}
-        <div className="flex flex-col items-center mb-8">
+        <div className="flex flex-col items-center mb-6">
           <Link href="/" className="flex items-center gap-2.5 mb-2 group">
             <Image
               src="/floria-logo.png"
@@ -209,6 +209,22 @@ export default function BecomeASellerPage() {
           <span className="text-[11px] font-bold uppercase tracking-widest text-[#2D5A3C] bg-[#EAF2EC] px-3 py-1 rounded-full border border-[#D0E2D4]">
             Become a Seller
           </span>
+        </div>
+
+        {/* Tab Switcher: Login vs Become a Seller */}
+        <div className="flex bg-[#EFECE6] p-1 rounded-xl mb-6 text-xs font-bold">
+          <Link
+            href="/login"
+            className="flex-1 text-center py-2.5 rounded-lg text-[#6B7280] hover:text-[#1A2E22] tracking-wider uppercase transition-all"
+          >
+            Sign In
+          </Link>
+          <Link
+            href="/register"
+            className="flex-1 text-center py-2.5 rounded-lg bg-white text-[#1A2E22] shadow-sm tracking-wider uppercase transition-all"
+          >
+            Become a Seller
+          </Link>
         </div>
 
         <div className="bg-white rounded-2xl border border-[#E8E4DC] p-8 shadow-sm space-y-6">

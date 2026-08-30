@@ -195,7 +195,9 @@ export default function SellerOnboardingScreen() {
             <Ionicons name="arrow-back" size={22} color={Colors.forest} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Become a Seller</Text>
-          <View style={{ width: 32 }} />
+          <TouchableOpacity onPress={() => router.replace("/(auth)/login" as any)}>
+            <Text style={styles.topLoginText}>Sign In</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Stepper */}
@@ -512,6 +514,13 @@ const styles = StyleSheet.create({
     fontSize: Typography.fontSizes.base,
     fontWeight: "bold",
     color: "#1A2E22",
+  },
+  topLoginText: {
+    fontSize: Typography.fontSizes.xs,
+    fontWeight: "700",
+    color: "#2D5A3C",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   stepperWrap: {
     paddingHorizontal: Spacing.lg,
