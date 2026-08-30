@@ -225,9 +225,35 @@ export class SellerAuthService {
     // If not verified via seller_credentials, attempt Supabase Auth directly
     if (!isValid) {
       try {
+        const db = getAdminDb();
+        let targetEmail = cleanId;
+
+        if (!cleanId.includes("@")) {
+          // Resolve username or public seller ID to user email
+          const { data: matchedUser } = await db
+            .from("user_profiles")
+            .select("email")
+            .ilike("username", cleanId)
+            .maybeSingle();
+
+          if (matchedUser?.email) {
+            targetEmail = matchedUser.email;
+          } else {
+            const { data: matchedSeller } = await db
+              .from("seller_profiles")
+              .select("contact_email")
+              .or(`username.ilike.${cleanId},public_seller_id.ilike.${cleanId}`)
+              .maybeSingle();
+
+            if (matchedSeller?.contact_email) {
+              targetEmail = matchedSeller.contact_email;
+            }
+          }
+        }
+
         const anonDb = getAnonDb();
         const { data: authData, error: authErr } = await anonDb.auth.signInWithPassword({
-          email: cleanId,
+          email: targetEmail,
           password: pass,
         });
 
@@ -238,7 +264,6 @@ export class SellerAuthService {
 
           // Find profile by user_id or contact_email
           if (!profile) {
-            const db = getAdminDb();
             const { data: foundProfile } = await db
               .from("seller_profiles")
               .select("*")

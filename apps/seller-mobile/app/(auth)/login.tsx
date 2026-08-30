@@ -34,7 +34,7 @@ export default function SellerLoginScreen() {
     if (!identifier.trim() || !password) {
       Alert.alert(
         "Required Fields",
-        "Please enter your Gmail address or Seller ID and password.",
+        "Please enter your username or Gmail address and password.",
       );
       return;
     }
@@ -138,10 +138,10 @@ export default function SellerLoginScreen() {
         {/* Form Container */}
         <View style={styles.form}>
           <View style={styles.field}>
-            <Text style={styles.label}>Gmail or Seller ID</Text>
+            <Text style={styles.label}>Username or Gmail Address</Text>
             <TextInput
               style={styles.input}
-              placeholder="hello@yournursery.in or FLR-SLR-XXXX"
+              placeholder="username or you@gmail.com"
               placeholderTextColor={Colors.inkSubtle}
               autoCapitalize="none"
               autoCorrect={false}

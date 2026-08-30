@@ -24,7 +24,7 @@ export default function SellerForgotPasswordScreen() {
 
   const handleSubmit = async () => {
     if (!identifier.trim()) {
-      Alert.alert("Required", "Please enter your Gmail address or Seller ID.");
+      Alert.alert("Required", "Please enter your username or Gmail address.");
       return;
     }
 
@@ -63,10 +63,10 @@ export default function SellerForgotPasswordScreen() {
           {!isSubmitted ? (
             <>
               <View style={styles.field}>
-                <Text style={styles.label}>Gmail or Seller ID</Text>
+                <Text style={styles.label}>Username or Gmail Address</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="hello@yournursery.in or FLR-SLR-XXXX"
+                  placeholder="username or you@gmail.com"
                   placeholderTextColor={Colors.inkSubtle}
                   autoCapitalize="none"
                   autoCorrect={false}
