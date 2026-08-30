@@ -5,12 +5,9 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
-import * as WebBrowser from "expo-web-browser";
-import { makeRedirectUri } from "expo-auth-session";
 import { supabase } from "../supabase";
 import { api } from "../api";
-
-WebBrowser.maybeCompleteAuthSession();
+import type { SellerStatus } from "@floria/types";
 
 export type SellerOnboardingStatus =
   | "incomplete"
@@ -24,6 +21,8 @@ export type SellerOnboardingStatus =
 export interface SellerProfileData {
   id: string;
   userId: string;
+  publicSellerId?: string;
+  username?: string;
   businessName: string;
   businessDescription?: string;
   email: string;
@@ -32,10 +31,12 @@ export interface SellerProfileData {
   city?: string;
   state?: string;
   postalCode?: string;
+  gstNumber?: string;
   logoUrl?: string;
-  status: "pending" | "approved" | "suspended" | "rejected";
+  status: SellerStatus;
   onboardingStatus: SellerOnboardingStatus;
   correctionReason?: string;
+  statusMessage?: string;
   role: string;
   isActive: boolean;
   productCount?: number;
@@ -46,8 +47,8 @@ export interface SellerAuthContextType {
   isAuthenticated: boolean;
   isAuthorizedSeller: boolean;
   isLoading: boolean;
-  signIn: (email: string, pass: string) => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
+  statusMessage: string | null;
+  signIn: (identifier: string, pass: string) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -56,118 +57,103 @@ const SellerAuthContext = createContext<SellerAuthContextType | undefined>(
   undefined,
 );
 
+let memorySellerToken: string | null = null;
+
+export function getSellerMobileToken(): string | null {
+  return memorySellerToken;
+}
+
+export function setSellerMobileToken(token: string | null) {
+  memorySellerToken = token;
+}
+
 export function SellerAuthProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const [seller, setSeller] = useState<SellerProfileData | null>(null);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const refreshProfile = useCallback(async () => {
     try {
       setIsLoading(true);
+      const token = getSellerMobileToken();
       const {
         data: { session },
       } = await supabase.auth.getSession();
 
-      if (!session?.user) {
+      if (!token && !session?.user) {
         setSeller(null);
         return;
       }
 
-      // 1. Fetch user role
-      const profileRes = await api.getProfile();
-      let role = "customer";
-      let fullName = session.user.user_metadata?.full_name || "Nursery Partner";
-
-      if (profileRes.success && profileRes.data) {
-        const u = profileRes.data.user || {};
-        const p = profileRes.data.profile || {};
-        role = p.role || u.role || "customer";
-        fullName = p.full_name || u.full_name || fullName;
-      }
-
-      // 2. Fetch seller dashboard profile & application status
-      const [dashboardRes, appRes, productsRes] = await Promise.allSettled([
-        api.getSellerDashboard(),
-        api.getSellerApplication(),
+      // Fetch seller profile & application status from API
+      const [profileRes, appRes, productsRes] = await Promise.allSettled([
+        api.getSellerProfile(),
+        api.getSellerApplicationStatus(),
         api.getSellerProducts({ limit: 1 }),
       ]);
 
-      let onboardingStatus: SellerOnboardingStatus = "incomplete";
-      let status: "pending" | "approved" | "suspended" | "rejected" = "pending";
-      let sellerData: any = null;
-      let correctionReason = "";
-      let productCount = 0;
+      if (profileRes.status === "fulfilled" && profileRes.value.success && profileRes.value.data) {
+        const p = profileRes.value.data;
+        const status: SellerStatus = p.status || "under_review";
+        let onboardingStatus: SellerOnboardingStatus = "under_review";
+        let correctionReason = "";
 
-      if (productsRes.status === "fulfilled" && productsRes.value.success) {
-        productCount = Array.isArray(productsRes.value.data)
-          ? productsRes.value.data.length
-          : 0;
-      }
-
-      if (dashboardRes.status === "fulfilled" && dashboardRes.value.success && dashboardRes.value.data?.profile) {
-        const p = dashboardRes.value.data.profile;
-        sellerData = p;
-        status = p.status || "approved";
-
-        if (status === "approved") {
+        if (status === "approved" || status === "active") {
           onboardingStatus = "approved";
-        } else if (status === "suspended") {
+        } else if (status === "suspended" || status === "deactivated") {
           onboardingStatus = "suspended";
         } else if (status === "rejected") {
           onboardingStatus = "rejected";
+        } else if (status === "needs_correction") {
+          onboardingStatus = "needs_correction";
         } else {
           onboardingStatus = "under_review";
         }
-      }
 
-      if (appRes.status === "fulfilled" && appRes.value.success && appRes.value.data) {
-        const app = appRes.value.data;
-        if (!sellerData) sellerData = app;
-
-        if (app.status === "needs_correction") {
-          onboardingStatus = "needs_correction";
-          correctionReason = app.rejection_reason || "Additional verification documents required.";
-        } else if (app.status === "pending" || app.status === "submitted") {
-          onboardingStatus = "under_review";
-        } else if (app.is_complete === false) {
-          onboardingStatus = "incomplete";
+        if (appRes.status === "fulfilled" && appRes.value.success && appRes.value.data) {
+          const app = appRes.value.data;
+          if (app.status === "needs_correction") {
+            onboardingStatus = "needs_correction";
+            correctionReason = app.correction_reason || "Additional verification documents required.";
+          }
         }
-      }
 
-      // Check if business has at least minimum operational details
-      if (
-        !sellerData?.business_name ||
-        sellerData.business_name === "Nursery Partner" ||
-        sellerData.business_name === "New Nursery" ||
-        !sellerData?.contact_phone
-      ) {
-        if (onboardingStatus !== "needs_correction" && onboardingStatus !== "under_review") {
-          onboardingStatus = "incomplete";
+        let productCount = 0;
+        if (productsRes.status === "fulfilled" && productsRes.value.success && Array.isArray(productsRes.value.data)) {
+          productCount = productsRes.value.data.length;
         }
-      }
 
-      setSeller({
-        id: sellerData?.id || session.user.id,
-        userId: session.user.id,
-        businessName: sellerData?.business_name || fullName,
-        businessDescription: sellerData?.business_description,
-        email: sellerData?.contact_email || session.user.email || "",
-        phone: sellerData?.contact_phone,
-        address: sellerData?.address,
-        city: sellerData?.city,
-        state: sellerData?.state,
-        postalCode: sellerData?.postal_code || sellerData?.pincode,
-        logoUrl: sellerData?.logo_url,
-        status,
-        onboardingStatus,
-        correctionReason,
-        role,
-        isActive: status === "approved",
-        productCount,
-      });
+        const isApproved = status === "approved" || status === "active";
+
+        setSeller({
+          id: p.id,
+          userId: p.user_id || p.id,
+          publicSellerId: p.public_seller_id,
+          username: p.username,
+          businessName: p.business_name || "Nursery Partner",
+          businessDescription: p.business_description,
+          email: p.contact_email || "",
+          phone: p.contact_phone,
+          address: p.address,
+          city: p.city,
+          state: p.state,
+          postalCode: p.pincode || p.postal_code,
+          gstNumber: p.gst_number,
+          logoUrl: p.logo_url,
+          status,
+          onboardingStatus,
+          correctionReason,
+          role: "seller",
+          isActive: isApproved,
+          productCount,
+        });
+      } else {
+        setSeller(null);
+      }
     } catch (err) {
       console.warn("[SellerAuthContext] Profile load warning:", err);
       setSeller(null);
@@ -183,7 +169,7 @@ export function SellerAuthProvider({
     } = supabase.auth.onAuthStateChange(async (_event: any, session: any) => {
       if (session?.user) {
         await refreshProfile();
-      } else {
+      } else if (!getSellerMobileToken()) {
         setSeller(null);
         setIsLoading(false);
       }
@@ -194,17 +180,48 @@ export function SellerAuthProvider({
     };
   }, [refreshProfile]);
 
-  const signIn = async (email: string, pass: string) => {
+  const signIn = async (
+    identifier: string,
+    pass: string,
+  ): Promise<{ success: boolean; error?: string }> => {
     setIsLoading(true);
+    setStatusMessage(null);
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password: pass,
-      });
-      if (error || !data.user) {
-        throw new Error(error?.message || "Invalid nursery credentials");
+      const res = await api.loginSeller(identifier.trim(), pass);
+
+      if (res.success && res.data) {
+        const { token, seller: profile } = res.data;
+        if (token) {
+          setSellerMobileToken(token);
+        }
+        await refreshProfile();
+        return { success: true };
       }
-      await refreshProfile();
+
+      const errCode = res.error?.code;
+      const errMsg = res.error?.message || "Invalid nursery credentials.";
+
+      if (errCode === "SELLER_UNDER_REVIEW") {
+        setStatusMessage("Your seller application is still under review.");
+        return { success: false, error: "Your seller application is still under review." };
+      }
+      if (errCode === "SELLER_NEEDS_CORRECTION") {
+        const reason = (res.error as any)?.data?.reason || "Please update your nursery application details.";
+        setStatusMessage(`Your application requires correction: ${reason}`);
+        return { success: false, error: `Your application requires correction: ${reason}` };
+      }
+      if (errCode === "SELLER_REJECTED") {
+        setStatusMessage("Your seller application was not approved.");
+        return { success: false, error: "Your seller application was not approved." };
+      }
+      if (errCode === "SELLER_SUSPENDED") {
+        setStatusMessage("Your seller account is currently unavailable.");
+        return { success: false, error: "Your seller account is currently unavailable." };
+      }
+
+      return { success: false, error: errMsg };
+    } catch (e: any) {
+      return { success: false, error: e.message || "Failed to sign in." };
     } finally {
       setIsLoading(false);
     }
@@ -212,50 +229,29 @@ export function SellerAuthProvider({
 
   const signOut = async () => {
     try {
+      setSellerMobileToken(null);
       await supabase.auth.signOut();
     } finally {
       setSeller(null);
-    }
-  };
-
-  const signInWithGoogle = async () => {
-    const redirectTo = makeRedirectUri({ scheme: "floria-seller", path: "auth/callback" });
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo, skipBrowserRedirect: true },
-    });
-    if (error || !data.url) throw new Error(error?.message || "Google sign-in failed");
-    const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
-    if (result.type === "success" && result.url) {
-      const url = new URL(result.url);
-      const accessToken = url.searchParams.get("access_token");
-      const refreshToken = url.searchParams.get("refresh_token");
-      if (accessToken && refreshToken) {
-        await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
-      } else {
-        const code = url.searchParams.get("code");
-        if (code) await supabase.auth.exchangeCodeForSession(code);
-      }
-      await refreshProfile();
+      setStatusMessage(null);
     }
   };
 
   const isAuthorizedSeller = Boolean(
     seller &&
-    (seller.role === "seller" ||
-      seller.role === "admin" ||
-      seller.role === "super_admin"),
+    seller.isActive &&
+    (seller.status === "approved" || seller.status === "active"),
   );
 
   return (
     <SellerAuthContext.Provider
       value={{
         seller,
-        isAuthenticated: !!seller,
+        isAuthenticated: !!seller && isAuthorizedSeller,
         isAuthorizedSeller,
         isLoading,
+        statusMessage,
         signIn,
-        signInWithGoogle,
         signOut,
         refreshProfile,
       }}

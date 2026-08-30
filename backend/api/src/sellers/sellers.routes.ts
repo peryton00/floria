@@ -10,7 +10,14 @@ import { sellerFulfillmentRateLimiter } from "../middleware/rateLimit.js";
 
 const router = Router();
 
-// Profile & Onboarding (Accessible to seller role even if pending/suspended)
+// Dedicated Seller Auth & Lifecycle Routes (Public & Unauthenticated)
+router.post("/auth/login", sellerFulfillmentRateLimiter, sellersController.login);
+router.post("/auth/register", sellerFulfillmentRateLimiter, sellersController.apply);
+router.post("/auth/apply", sellerFulfillmentRateLimiter, sellersController.apply);
+router.post("/auth/forgot-password", sellerFulfillmentRateLimiter, sellersController.forgotPassword);
+router.post("/auth/reset-password", sellerFulfillmentRateLimiter, sellersController.resetPassword);
+
+// Profile & Onboarding
 router.get(
   "/profile",
   authenticateToken,
@@ -26,9 +33,7 @@ router.patch(
 );
 router.post(
   "/applications",
-  authenticateToken,
   sellerFulfillmentRateLimiter,
-  requireRole("seller", "customer", "admin"),
   sellersController.submitApplication,
 );
 router.get(
@@ -42,6 +47,17 @@ router.get(
   authenticateToken,
   requireRole("seller", "customer", "admin"),
   sellersController.getApplication,
+);
+router.get(
+  "/application/status",
+  authenticateToken,
+  sellersController.getApplicationStatus,
+);
+router.post(
+  "/application/resubmit",
+  authenticateToken,
+  sellerFulfillmentRateLimiter,
+  sellersController.resubmitApplication,
 );
 
 // Seller Dashboard KPIs

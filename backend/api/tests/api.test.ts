@@ -1083,7 +1083,14 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
                 }),
               }),
             }),
-            update: () => ({ eq: async () => ({ error: null }) }),
+            update: () => ({
+              eq: () => ({
+                error: null,
+                select: () => ({
+                  maybeSingle: async () => ({ data: { id: "seller-100", status: "approved" }, error: null }),
+                }),
+              }),
+            }),
           };
         }
         if (table === "notifications") {
@@ -1107,6 +1114,33 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
                   };
                 },
               }),
+            }),
+          };
+        }
+        if (table === "seller_applications") {
+          return {
+            select: () => ({
+              eq: () => ({
+                order: () => ({
+                  limit: () => ({
+                    maybeSingle: async () => ({ data: null, error: null }),
+                  }),
+                }),
+              }),
+            }),
+            update: () => ({
+              eq: () => ({
+                select: () => ({
+                  maybeSingle: async () => ({ data: null, error: null }),
+                }),
+              }),
+            }),
+          };
+        }
+        if (table === "user_profiles") {
+          return {
+            update: () => ({
+              eq: async () => ({ error: null }),
             }),
           };
         }
@@ -1176,14 +1210,28 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
         return {};
       });
 
-      const session = await paymentsService.createPaymentSession(
-        "user-cf-1",
-        "00000000-0000-0000-0000-000000000101",
-      );
-      expect(session.orderId).toBe("00000000-0000-0000-0000-000000000101");
-      expect(session.amountPaise).toBe(49900);
-      expect(session.currency).toBe("INR");
-      expect(session.paymentSessionId).toBeDefined();
+      const originalFetch = global.fetch;
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          payment_session_id: "cf_sess_mock_123",
+          order_status: "ACTIVE",
+          cf_order_id: "cf_order_mock_123",
+        }),
+      }) as any;
+
+      try {
+        const session = await paymentsService.createPaymentSession(
+          "user-cf-1",
+          "00000000-0000-0000-0000-000000000101",
+        );
+        expect(session.orderId).toBe("00000000-0000-0000-0000-000000000101");
+        expect(session.amountPaise).toBe(49900);
+        expect(session.currency).toBe("INR");
+        expect(session.paymentSessionId).toBe("cf_sess_mock_123");
+      } finally {
+        global.fetch = originalFetch;
+      }
     });
 
     it("Cashfree -> Webhook processing is idempotent and updates order & payment status", async () => {
@@ -1458,6 +1506,41 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(res.body.data.new_order_notifications).toBe(true);
+    });
+
+    it("Seller Auth -> POST /api/v1/auth/seller/login rejects missing credentials", async () => {
+      const res = await request(app)
+        .post("/api/v1/auth/seller/login")
+        .send({ identifier: "" });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    it("Seller Auth -> POST /api/v1/auth/seller/forgot-password returns safe generic confirmation", async () => {
+      mockFrom.mockImplementation((table: string) => {
+        if (table === "seller_credentials") {
+          return {
+            select: () => ({
+              or: () => ({
+                maybeSingle: async () => ({
+                  data: null,
+                  error: null,
+                }),
+              }),
+            }),
+          };
+        }
+        return {};
+      });
+
+      const res = await request(app)
+        .post("/api/v1/auth/seller/forgot-password")
+        .send({ identifier: "nonexistent@floria.in" });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.message).toContain("If an eligible seller account exists");
     });
   });
 });

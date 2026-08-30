@@ -12,11 +12,17 @@ export default function AdminSellersPage() {
   const { toast } = useToast();
   const [sellers, setSellers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"all" | "pending" | "approved" | "suspended" | "rejected">("all");
+  const [activeTab, setActiveTab] = useState<"all" | "under_review" | "needs_correction" | "approved" | "suspended" | "rejected">("all");
   const [selectedSeller, setSelectedSeller] = useState<any | null>(null);
   const [sellerDocs, setSellerDocs] = useState<any[]>([]);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Correction & Rejection input modal state
+  const [actionPrompt, setActionPrompt] = useState<{
+    type: "request_correction" | "reject" | "suspend";
+    reason: string;
+  } | null>(null);
 
   // Edit fields
   const [isEditing, setIsEditing] = useState(false);
@@ -25,7 +31,8 @@ export default function AdminSellersPage() {
   const [editEmail, setEditEmail] = useState("");
   const [editPhone, setEditPhone] = useState("");
   const [editAddress, setEditAddress] = useState("");
-  const [editStatus, setEditStatus] = useState("pending");
+  const [editGst, setEditGst] = useState("");
+  const [editStatus, setEditStatus] = useState("under_review");
 
   const fetchSellers = async (status?: string) => {
     try {
@@ -49,12 +56,14 @@ export default function AdminSellersPage() {
 
   const handleInspectSeller = async (seller: any) => {
     setSelectedSeller(seller);
+    setActionPrompt(null);
     setEditName(seller.business_name || "");
     setEditDesc(seller.business_description || "");
     setEditEmail(seller.contact_email || "");
     setEditPhone(seller.contact_phone || "");
     setEditAddress(seller.address || "");
-    setEditStatus(seller.status || "pending");
+    setEditGst(seller.gst_number || "");
+    setEditStatus(seller.status || "under_review");
     setIsEditing(false);
 
     try {
@@ -69,22 +78,33 @@ export default function AdminSellersPage() {
     }
   };
 
-  const handleStatusChange = async (action: "approve" | "reject" | "suspend" | "reactivate") => {
+  const handleStatusChange = async (
+    action: "approve" | "reject" | "request_correction" | "suspend" | "reactivate",
+    reason?: string,
+  ) => {
     if (!selectedSeller) return;
     try {
       setActionLoading(true);
       let res: any;
-      if (action === "approve") res = await api.approveSeller(selectedSeller.id);
-      else if (action === "reject") res = await api.rejectSeller(selectedSeller.id);
-      else if (action === "suspend") res = await api.suspendSeller(selectedSeller.id);
-      else if (action === "reactivate") res = await api.reactivateSeller(selectedSeller.id);
+      if (action === "approve") {
+        res = await api.approveSeller(selectedSeller.id);
+      } else if (action === "reject") {
+        res = await api.rejectSeller(selectedSeller.id, reason);
+      } else if (action === "request_correction") {
+        res = await api.requestSellerCorrection(selectedSeller.id, reason || "Please update your application details.");
+      } else if (action === "suspend") {
+        res = await api.suspendSeller(selectedSeller.id, reason);
+      } else if (action === "reactivate") {
+        res = await api.approveSeller(selectedSeller.id);
+      }
 
       if (res?.success) {
-        toast.success("Seller status updated", `Seller '${selectedSeller.business_name}' status updated to ${action}.`);
+        toast.success("Seller status updated", `Seller '${selectedSeller.business_name}' is now ${action.replace("_", " ")}.`);
         await fetchSellers(activeTab);
         setSelectedSeller(null);
+        setActionPrompt(null);
       } else {
-        toast.error("Action failed", res?.error?.message || `Failed to ${action} seller`);
+        toast.error("Action failed", res?.error?.message || `Failed to update seller`);
       }
     } catch (e: any) {
       toast.error("Action failed", e.message || "Error executing action");
@@ -103,201 +123,269 @@ export default function AdminSellersPage() {
         contact_email: editEmail,
         contact_phone: editPhone,
         address: editAddress,
+        gst_number: editGst,
         status: editStatus,
       });
+
       if (res.success) {
-        toast.success("Seller profile saved", "Seller details updated successfully.");
+        toast.success("Changes saved", "Seller details have been updated.");
         await fetchSellers(activeTab);
         setSelectedSeller(null);
       } else {
-        toast.error("Update failed", res.error?.message || "Failed to update seller details");
+        toast.error("Save failed", res.error?.message || "Failed to update seller");
       }
     } catch (e: any) {
-      toast.error("Update failed", e.message || "Error updating seller details");
+      toast.error("Save failed", e.message || "Error saving seller details");
     } finally {
       setActionLoading(false);
     }
   };
 
-  const tabs = [
-    { key: "all", label: "All Sellers" },
-    { key: "pending", label: "Pending Applications" },
-    { key: "approved", label: "Approved Nurseries" },
-    { key: "suspended", label: "Suspended Sellers" },
-    { key: "rejected", label: "Rejected" },
-  ];
-
   return (
     <AdminShell>
-      <div className="space-y-6">
+      <div className="p-8 space-y-8 font-sans">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded border border-[#E2E8F0] shadow-xs">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <h1 className="font-sans text-xl font-bold text-[#0F172A] tracking-tight">Nursery Verification & Partner Management</h1>
-            </div>
-            <p className="text-xs text-slate-500 mt-1">Audit botanical seller applications, review legal KYC certifications, and manage partnership status.</p>
+            <h1 className="text-2xl font-serif font-bold text-[#1A2E22]">Nursery Partner Management</h1>
+            <p className="text-xs text-[#6B7280] mt-1">
+              Review seller registrations, verify GST details, approve active partners, and handle onboarding lifecycle.
+            </p>
           </div>
-          <span className="font-mono text-xs font-bold text-slate-700 bg-slate-100 border border-[#E2E8F0] rounded px-3 py-1">
-            {sellers.length} Total Partners
-          </span>
+          <button
+            onClick={() => fetchSellers(activeTab)}
+            disabled={loading}
+            className="px-4 py-2 bg-[#2D5A3C] hover:bg-[#1E4D2B] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-colors disabled:opacity-50"
+          >
+            {loading ? "Refreshing..." : "Refresh"}
+          </button>
         </div>
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded p-4 text-xs font-semibold text-red-700">
-            {error}
-          </div>
-        )}
-
-        {/* Status Tabs */}
-        <div className="flex border-b border-[#E2E8F0] space-x-2 overflow-x-auto bg-white p-2 rounded border shadow-xs">
-          {tabs.map((tab) => (
+        {/* Status Filter Tabs */}
+        <div className="flex items-center gap-2 border-b border-[#E5E7EB] pb-3 overflow-x-auto text-xs font-bold">
+          {(["all", "under_review", "needs_correction", "approved", "suspended", "rejected"] as const).map((tab) => (
             <button
-              key={tab.key}
-              type="button"
-              onClick={() => setActiveTab(tab.key as any)}
-              className={[
-                "px-3.5 py-1.5 text-xs font-semibold tracking-wide transition-all rounded whitespace-nowrap",
-                activeTab === tab.key
-                  ? "bg-[#1B4D3E] text-white font-bold shadow-xs"
-                  : "text-slate-600 hover:text-[#0F172A] hover:bg-slate-100",
-              ].join(" ")}
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-3.5 py-1.5 rounded-lg uppercase tracking-wider transition-colors ${
+                activeTab === tab
+                  ? "bg-[#2D5A3C] text-white"
+                  : "text-[#6B7280] hover:bg-[#F3F4F6] hover:text-[#111827]"
+              }`}
             >
-              {tab.label}
+              {tab.replace("_", " ")}
             </button>
           ))}
         </div>
 
-        {/* Nursery Cards Grid */}
+        {/* Error state */}
+        {error && (
+          <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 font-medium">
+            {error}
+          </div>
+        )}
+
+        {/* Sellers Grid / Table */}
         {loading ? (
-          <NurseryGridSkeleton count={6} />
+          <NurseryGridSkeleton />
         ) : sellers.length === 0 ? (
-          <div className="p-12 text-center text-xs text-slate-500 bg-white rounded border border-[#E2E8F0]">
-            No seller profiles found in this category.
+          <div className="p-12 text-center bg-white rounded-2xl border border-[#E5E7EB] space-y-3">
+            <div className="w-12 h-12 bg-[#EAF2EC] text-[#2D5A3C] rounded-full flex items-center justify-center mx-auto text-xl">
+              <LeafIcon className="w-6 h-6 text-[#2D5A3C]" />
+            </div>
+            <h3 className="font-serif text-base font-bold text-[#1A2E22]">No Nurseries Found</h3>
+            <p className="text-xs text-[#6B7280]">
+              No partner records matching the active filter &apos;{activeTab.replace("_", " ")}&apos;.
+            </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {sellers.map((s) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {sellers.map((seller) => (
               <div
-                key={s.id}
-                className="bg-white rounded border border-[#E2E8F0] p-4 shadow-xs flex flex-col justify-between space-y-3 hover:border-slate-400 transition-all"
+                key={seller.id}
+                className="bg-white rounded-2xl border border-[#E8E4DC] p-6 shadow-sm hover:border-[#2D5A3C] transition-all space-y-4 flex flex-col justify-between"
               >
-                <div className="flex items-start justify-between min-w-0">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded bg-emerald-50 text-[#1B4D3E] flex items-center justify-center flex-shrink-0 border border-emerald-200">
-                      <LeafIcon size={18} />
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <span className="text-[10px] font-mono text-[#6B7280] uppercase tracking-wider">
+                        {seller.public_seller_id || `FLR-SLR-${seller.id.slice(0, 6).toUpperCase()}`}
+                      </span>
+                      <h3 className="font-serif text-base font-bold text-[#1A2E22]">{seller.business_name}</h3>
                     </div>
-                    <div className="min-w-0">
-                      <p className="font-bold text-[#0F172A] leading-tight truncate font-sans text-sm">{s.business_name || "Nursery Partner"}</p>
-                      <p className="text-[10px] text-slate-400 font-mono mt-0.5 truncate">{s.id}</p>
-                    </div>
+                    <SellerStatusBadge status={seller.status || "under_review"} />
                   </div>
-                  <SellerStatusBadge status={s.status || "pending"} />
+
+                  <p className="text-xs text-[#4B5563] line-clamp-2">
+                    {seller.business_description || "Botanical nursery partner specializing in healthy plants."}
+                  </p>
+
+                  <div className="space-y-1.5 pt-2 border-t border-[#F3F4F6] text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-[#6B7280]">Username:</span>
+                      <span className="font-mono text-[#111827]">{seller.username || "—"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[#6B7280]">Email:</span>
+                      <span className="font-mono text-[#111827] truncate max-w-[180px]">{seller.contact_email}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[#6B7280]">Location:</span>
+                      <span className="text-[#111827] font-medium">{seller.city || "—"}, {seller.state || "—"}</span>
+                    </div>
+                    {seller.gst_number && (
+                      <div className="flex justify-between">
+                        <span className="text-[#6B7280]">GSTIN:</span>
+                        <span className="font-mono text-[#2D5A3C] font-semibold">{seller.gst_number}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                <div className="space-y-1 text-xs bg-[#F8FAFC] p-2.5 rounded border border-[#E2E8F0]">
-                  <p className="text-slate-600 font-medium truncate">
-                    <span className="text-slate-400">Email:</span> {s.contact_email || "N/A"}
-                  </p>
-                  <p className="text-slate-600 font-medium truncate">
-                    <span className="text-slate-400">Phone:</span> <span className="font-mono text-slate-800 font-bold">{s.contact_phone || "N/A"}</span>
-                  </p>
-                  <p className="text-slate-500 text-[11px] truncate">
-                    <span className="text-slate-400">Location:</span> {s.address || "Raipur, Chhattisgarh"}
-                  </p>
-                </div>
-
-                <div className="pt-2 border-t border-[#E2E8F0] flex justify-end">
-                  <button
-                    type="button"
-                    onClick={() => handleInspectSeller(s)}
-                    className="px-3 py-1.5 rounded border border-[#E2E8F0] hover:bg-[#1B4D3E] hover:text-white text-[#0F172A] font-mono font-bold text-[10px] uppercase tracking-wider transition-colors shadow-xs"
-                  >
-                    Inspect &amp; Verify →
-                  </button>
-                </div>
+                <button
+                  onClick={() => handleInspectSeller(seller)}
+                  className="w-full py-2.5 bg-[#FAF8F5] hover:bg-[#EAF2EC] text-[#2D5A3C] font-bold text-xs uppercase tracking-wider rounded-xl border border-[#D0E2D4] transition-colors"
+                >
+                  Inspect & Review
+                </button>
               </div>
             ))}
           </div>
         )}
 
-        {/* Modal: Seller Inspector/Editor */}
+        {/* Inspect / Review Modal */}
         {selectedSeller && (
-          <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl border border-ink-100 p-6 max-w-xl w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between items-start">
+          <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-2xl w-full p-6 space-y-6 max-h-[90vh] overflow-y-auto border border-[#E5E7EB] shadow-xl">
+              <div className="flex items-center justify-between border-b border-[#F3F4F6] pb-4">
                 <div>
-                  <h3 className="font-serif text-lg font-bold text-ink-900">Manage Nursery Partner</h3>
-                  <p className="text-xs text-ink-400 font-mono mt-0.5">{selectedSeller.id}</p>
+                  <span className="text-[10px] font-mono text-[#6B7280] uppercase tracking-wider">
+                    {selectedSeller.public_seller_id || `FLR-SLR-${selectedSeller.id.slice(0, 6).toUpperCase()}`}
+                  </span>
+                  <h2 className="font-serif text-xl font-bold text-[#1A2E22]">
+                    {selectedSeller.business_name}
+                  </h2>
                 </div>
                 <button
-                  type="button"
-                  onClick={() => setSelectedSeller(null)}
-                  className="text-ink-400 hover:text-ink-900 font-bold text-sm"
+                  onClick={() => {
+                    setSelectedSeller(null);
+                    setActionPrompt(null);
+                  }}
+                  className="p-1 text-[#6B7280] hover:text-[#111827] text-lg font-bold"
                 >
                   ✕
                 </button>
               </div>
 
-              {/* View/Edit Navigation */}
-              <div className="flex border-b border-ink-100 gap-4 text-xs font-bold uppercase tracking-wider">
+              {/* Action reason modal prompt */}
+              {actionPrompt && (
+                <div className="p-4 bg-[#FEF8EC] border border-[#FBD38D] rounded-xl space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#8C5E06]">
+                    Provide Reason for {actionPrompt.type.replace("_", " ")}
+                  </h4>
+                  <textarea
+                    rows={2}
+                    value={actionPrompt.reason}
+                    onChange={(e) => setActionPrompt({ ...actionPrompt, reason: e.target.value })}
+                    placeholder="Enter reason or instructions for seller..."
+                    className="w-full p-2.5 text-xs rounded-lg border border-[#D1D5DB] focus:outline-none focus:ring-1 focus:ring-[#2D5A3C] bg-white"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      disabled={actionLoading}
+                      onClick={() => handleStatusChange(actionPrompt.type, actionPrompt.reason)}
+                      className="px-4 py-2 bg-[#2D5A3C] hover:bg-[#1E4D2B] text-white font-bold text-xs uppercase tracking-wider rounded-lg disabled:opacity-50"
+                    >
+                      Confirm Action
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActionPrompt(null)}
+                      className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-[#4B5563] text-xs font-bold rounded-lg"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Tabs inside modal */}
+              <div className="flex border-b border-[#F3F4F6] gap-4 text-xs font-bold">
                 <button
                   type="button"
                   onClick={() => setIsEditing(false)}
-                  className={`pb-2 border-b-2 transition-colors ${!isEditing ? "border-forest-700 text-forest-700" : "border-transparent text-ink-400"}`}
+                  className={`pb-2 border-b-2 transition-colors ${
+                    !isEditing ? "border-[#2D5A3C] text-[#2D5A3C]" : "border-transparent text-[#6B7280]"
+                  }`}
                 >
-                  Approve/Review
+                  Application Overview
                 </button>
                 <button
                   type="button"
                   onClick={() => setIsEditing(true)}
-                  className={`pb-2 border-b-2 transition-colors ${isEditing ? "border-forest-700 text-forest-700" : "border-transparent text-ink-400"}`}
+                  className={`pb-2 border-b-2 transition-colors ${
+                    isEditing ? "border-[#2D5A3C] text-[#2D5A3C]" : "border-transparent text-[#6B7280]"
+                  }`}
                 >
-                  Edit Details
+                  Edit Profile
                 </button>
               </div>
 
               {!isEditing ? (
-                <div className="space-y-4">
-                  <div className="bg-cream-50 rounded-xl p-4 space-y-2 text-xs">
+                <div className="space-y-4 text-xs">
+                  <div className="bg-[#FAF8F5] rounded-xl p-4 space-y-2 border border-[#E8E4DC]">
                     <div className="flex justify-between">
-                      <span className="text-ink-500 font-semibold">Current Status:</span>
-                      <SellerStatusBadge status={selectedSeller.status || "pending"} />
+                      <span className="text-[#6B7280] font-semibold">Account Status:</span>
+                      <SellerStatusBadge status={selectedSeller.status || "under_review"} />
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-ink-500 font-semibold">Email:</span>
-                      <span className="font-mono text-ink-900">{selectedSeller.contact_email || "N/A"}</span>
+                      <span className="text-[#6B7280] font-semibold">Username:</span>
+                      <span className="font-mono text-[#111827]">{selectedSeller.username || "—"}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-ink-500 font-semibold">Phone:</span>
-                      <span className="font-mono text-ink-900">{selectedSeller.contact_phone || "N/A"}</span>
+                      <span className="text-[#6B7280] font-semibold">Email:</span>
+                      <span className="font-mono text-[#111827]">{selectedSeller.contact_email || "—"}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-ink-500 font-semibold">Nursery Address:</span>
-                      <span className="text-ink-900 text-right">{selectedSeller.address || "N/A"}</span>
+                      <span className="text-[#6B7280] font-semibold">Phone:</span>
+                      <span className="font-mono text-[#111827]">{selectedSeller.contact_phone || "—"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[#6B7280] font-semibold">GSTIN:</span>
+                      <span className="font-mono text-[#2D5A3C] font-bold">{selectedSeller.gst_number || "Not provided"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[#6B7280] font-semibold">Physical Location:</span>
+                      <span className="text-[#111827] text-right max-w-xs">{selectedSeller.address || "—"}</span>
                     </div>
                   </div>
 
+                  {/* Verification Docs */}
                   <div className="space-y-2">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-ink-700">Uploaded Verification Documents</h4>
+                    <h4 className="font-bold uppercase tracking-wider text-[#374151]">
+                      Verification Documents & Records
+                    </h4>
                     {sellerDocs.length === 0 ? (
-                      <div className="p-3 bg-cream-50 rounded-xl text-[11px] text-ink-400 text-center">
-                        No document records submitted.
+                      <div className="p-3 bg-[#FAF8F5] rounded-xl text-[11px] text-[#6B7280] text-center">
+                        Standard nursery onboarding record.
                       </div>
                     ) : (
                       <div className="space-y-2">
                         {sellerDocs.map((doc, i) => (
-                          <div key={i} className="flex items-center justify-between p-3 border border-ink-100 rounded-xl text-xs">
+                          <div
+                            key={i}
+                            className="flex items-center justify-between p-3 border border-[#E5E7EB] rounded-xl"
+                          >
                             <div>
-                              <p className="font-bold text-ink-900 uppercase">{doc.type.replace("_", " ")}</p>
-                              <p className="text-[10px] text-forest-700 font-semibold uppercase">{doc.status}</p>
+                              <p className="font-bold text-[#111827] uppercase">{doc.type.replace("_", " ")}</p>
+                              <p className="text-[10px] text-[#2D5A3C] font-semibold uppercase">{doc.status}</p>
                             </div>
                             <a
                               href={doc.url}
                               target="_blank"
                               rel="noreferrer"
-                              className="px-2.5 py-1 rounded-lg bg-forest-50 text-forest-700 font-bold text-[10px] hover:bg-forest-100"
+                              className="px-2.5 py-1 rounded-lg bg-[#EAF2EC] text-[#2D5A3C] font-bold text-[10px] hover:bg-[#D0E2D4]"
                             >
                               View Document
                             </a>
@@ -307,36 +395,63 @@ export default function AdminSellersPage() {
                     )}
                   </div>
 
-                  <div className="pt-2 flex flex-wrap gap-2">
-                    {selectedSeller.status === "pending" && (
+                  {/* Action Review Buttons */}
+                  <div className="pt-4 flex flex-wrap gap-2 border-t border-[#F3F4F6]">
+                    {(selectedSeller.status === "under_review" ||
+                      selectedSeller.status === "pending" ||
+                      selectedSeller.status === "application_submitted" ||
+                      selectedSeller.status === "needs_correction") && (
                       <>
                         <button
                           type="button"
                           disabled={actionLoading}
                           onClick={() => handleStatusChange("approve")}
-                          className="flex-1 py-2.5 rounded-xl bg-forest-700 hover:bg-forest-800 text-white font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-50"
+                          className="flex-1 py-2.5 rounded-xl bg-[#2D5A3C] hover:bg-[#1E4D2B] text-white font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-50"
                         >
                           Approve Nursery
                         </button>
                         <button
                           type="button"
                           disabled={actionLoading}
-                          onClick={() => handleStatusChange("reject")}
-                          className="flex-1 py-2.5 rounded-xl bg-error-600 hover:bg-error-700 text-white font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-50"
+                          onClick={() =>
+                            setActionPrompt({
+                              type: "request_correction",
+                              reason: "Please update required business verification documents.",
+                            })
+                          }
+                          className="flex-1 py-2.5 rounded-xl bg-[#F59E0B] hover:bg-[#D97706] text-white font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-50"
                         >
-                          Reject Application
+                          Request Correction
+                        </button>
+                        <button
+                          type="button"
+                          disabled={actionLoading}
+                          onClick={() =>
+                            setActionPrompt({
+                              type: "reject",
+                              reason: "Application does not meet onboarding criteria.",
+                            })
+                          }
+                          className="flex-1 py-2.5 rounded-xl bg-[#DC2626] hover:bg-[#B91C1C] text-white font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-50"
+                        >
+                          Reject
                         </button>
                       </>
                     )}
 
-                    {selectedSeller.status === "approved" && (
+                    {(selectedSeller.status === "approved" || selectedSeller.status === "active") && (
                       <button
                         type="button"
                         disabled={actionLoading}
-                        onClick={() => handleStatusChange("suspend")}
-                        className="w-full py-2.5 rounded-xl bg-error-600 hover:bg-error-700 text-white font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-50"
+                        onClick={() =>
+                          setActionPrompt({
+                            type: "suspend",
+                            reason: "Account suspended by platform moderation.",
+                          })
+                        }
+                        className="w-full py-2.5 rounded-xl bg-[#DC2626] hover:bg-[#B91C1C] text-white font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-50"
                       >
-                        Suspend Seller Profile
+                        Suspend Seller Account
                       </button>
                     )}
 
@@ -345,106 +460,119 @@ export default function AdminSellersPage() {
                         type="button"
                         disabled={actionLoading}
                         onClick={() => handleStatusChange("reactivate")}
-                        className="w-full py-2.5 rounded-xl bg-forest-700 hover:bg-forest-800 text-white font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-50"
+                        className="w-full py-2.5 rounded-xl bg-[#2D5A3C] hover:bg-[#1E4D2B] text-white font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-50"
                       >
-                        Reactivate Seller Profile
+                        Reactivate Seller Account
                       </button>
                     )}
                   </div>
                 </div>
               ) : (
-                <form onSubmit={handleSaveDetails} className="space-y-4">
+                <form onSubmit={handleSaveDetails} className="space-y-4 text-xs">
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-ink-700 mb-1">
+                    <label className="block font-bold uppercase tracking-wider text-[#374151] mb-1">
                       Business Name
                     </label>
                     <input
                       type="text"
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
-                      className="w-full px-3 py-2 text-xs rounded-lg border border-ink-200 focus:outline-none focus:ring-1 focus:ring-forest-700 bg-white"
+                      className="w-full px-3 py-2 rounded-lg border border-[#D1D5DB] focus:outline-none focus:ring-1 focus:ring-[#2D5A3C] bg-white"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-ink-700 mb-1">
-                      Business Description
+                    <label className="block font-bold uppercase tracking-wider text-[#374151] mb-1">
+                      Description
                     </label>
                     <textarea
                       rows={2}
                       value={editDesc}
                       onChange={(e) => setEditDesc(e.target.value)}
-                      className="w-full p-3 rounded-lg border border-ink-200 text-xs focus:outline-none focus:ring-1 focus:ring-forest-700 bg-white"
+                      className="w-full p-2.5 rounded-lg border border-[#D1D5DB] focus:outline-none focus:ring-1 focus:ring-[#2D5A3C] bg-white"
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-ink-700 mb-1">
+                      <label className="block font-bold uppercase tracking-wider text-[#374151] mb-1">
                         Contact Email
                       </label>
                       <input
                         type="email"
                         value={editEmail}
                         onChange={(e) => setEditEmail(e.target.value)}
-                        className="w-full px-3 py-2 text-xs rounded-lg border border-ink-200 focus:outline-none focus:ring-1 focus:ring-forest-700 bg-white"
+                        className="w-full px-3 py-2 rounded-lg border border-[#D1D5DB] focus:outline-none focus:ring-1 focus:ring-[#2D5A3C] bg-white"
                         required
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-ink-700 mb-1">
+                      <label className="block font-bold uppercase tracking-wider text-[#374151] mb-1">
                         Contact Phone
                       </label>
                       <input
                         type="text"
                         value={editPhone}
                         onChange={(e) => setEditPhone(e.target.value)}
-                        className="w-full px-3 py-2 text-xs rounded-lg border border-ink-200 focus:outline-none focus:ring-1 focus:ring-forest-700 bg-white"
+                        className="w-full px-3 py-2 rounded-lg border border-[#D1D5DB] focus:outline-none focus:ring-1 focus:ring-[#2D5A3C] bg-white"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-ink-700 mb-1">
-                      Nursery Address
+                    <label className="block font-bold uppercase tracking-wider text-[#374151] mb-1">
+                      GST Number
+                    </label>
+                    <input
+                      type="text"
+                      value={editGst}
+                      onChange={(e) => setEditGst(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg border border-[#D1D5DB] focus:outline-none focus:ring-1 focus:ring-[#2D5A3C] bg-white font-mono uppercase"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold uppercase tracking-wider text-[#374151] mb-1">
+                      Address
                     </label>
                     <input
                       type="text"
                       value={editAddress}
                       onChange={(e) => setEditAddress(e.target.value)}
-                      className="w-full px-3 py-2 text-xs rounded-lg border border-ink-200 focus:outline-none focus:ring-1 focus:ring-forest-700 bg-white"
+                      className="w-full px-3 py-2 rounded-lg border border-[#D1D5DB] focus:outline-none focus:ring-1 focus:ring-[#2D5A3C] bg-white"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-ink-700 mb-1">
-                      Onboarding Status
+                    <label className="block font-bold uppercase tracking-wider text-[#374151] mb-1">
+                      Status
                     </label>
                     <select
                       value={editStatus}
                       onChange={(e) => setEditStatus(e.target.value)}
-                      className="w-full px-3 py-2 text-xs rounded-lg border border-ink-200 focus:outline-none focus:ring-1 focus:ring-forest-700 bg-white"
+                      className="w-full px-3 py-2 rounded-lg border border-[#D1D5DB] focus:outline-none focus:ring-1 focus:ring-[#2D5A3C] bg-white"
                     >
-                      <option value="pending">Pending Application</option>
-                      <option value="approved">Approved</option>
+                      <option value="under_review">Under Review</option>
+                      <option value="needs_correction">Needs Correction</option>
+                      <option value="approved">Approved / Active</option>
                       <option value="suspended">Suspended</option>
                       <option value="rejected">Rejected</option>
                     </select>
                   </div>
 
-                  <div className="flex gap-3 pt-2">
+                  <div className="flex gap-2 pt-2">
                     <button
                       type="submit"
                       disabled={actionLoading}
-                      className="flex-1 py-2.5 rounded-xl bg-forest-700 hover:bg-forest-800 text-white font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-50"
+                      className="flex-1 py-2.5 rounded-xl bg-[#2D5A3C] hover:bg-[#1E4D2B] text-white font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-50"
                     >
                       Save Changes
                     </button>
                     <button
                       type="button"
                       onClick={() => setSelectedSeller(null)}
-                      className="px-4 py-2.5 rounded-xl border border-ink-200 text-ink-600 font-bold text-xs uppercase tracking-wider hover:bg-cream-50"
+                      className="px-4 py-2.5 rounded-xl border border-[#D1D5DB] text-[#4B5563] font-bold text-xs uppercase tracking-wider hover:bg-gray-50"
                     >
                       Cancel
                     </button>

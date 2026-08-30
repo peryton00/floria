@@ -152,18 +152,21 @@ export class AdminService {
     return seller;
   }
 
+  async getSellerApplications(status?: string) {
+    const { sellerAuthRepository } = await import("../database/repositories/seller-auth.repository.js");
+    return sellerAuthRepository.findAllApplications(status);
+  }
+
   async updateSellerStatus(
     adminUserId: string,
     sellerId: string,
-    status: "approved" | "suspended" | "pending" | "rejected",
+    status: "approved" | "suspended" | "pending" | "rejected" | "needs_correction" | "active",
+    reason?: string,
   ) {
     const seller = await sellerRepository.findById(sellerId);
     if (!seller) throw Errors.notFound("Seller profile");
 
     const currentStatus = seller.status;
-    if (currentStatus === status) {
-      return { id: sellerId, status };
-    }
 
     if (currentStatus === "rejected" && status === "approved") {
       throw Errors.validation(
@@ -172,48 +175,94 @@ export class AdminService {
     }
 
     let action = "SELLER_UPDATED";
-    if (status === "approved") action = "SELLER_APPROVED";
+    if (status === "approved" || status === "active") action = "SELLER_APPROVED";
     else if (status === "rejected") action = "SELLER_REJECTED";
     else if (status === "suspended") action = "SELLER_SUSPENDED";
+    else if (status === "needs_correction") action = "SELLER_NEEDS_CORRECTION";
     else if (
       status === "pending" ||
-      (currentStatus === "suspended" && status === "approved")
+      (currentStatus === "suspended" && (status === "approved" || status === "active"))
     )
       action = "SELLER_REACTIVATED";
 
+    const targetStatus = status === "active" ? "approved" : status;
+    const isActive = targetStatus === "approved";
+
+    // 1. Update seller profile
     const success = await sellerRepository.updateStatus(
       sellerId,
-      status as any,
+      targetStatus as any,
     );
     if (!success) throw Errors.database("Failed to update seller status.");
 
+    await sellerRepository.updateProfile(sellerId, {
+      status: targetStatus as any,
+      is_active: isActive,
+    });
+
+    // 2. Update user_profiles role if approved
+    if (isActive && seller.user_id) {
+      try {
+        const db = (await import("../config/database.js")).getAdminDb();
+        await db.from("user_profiles").update({ role: "seller" }).eq("id", seller.user_id);
+      } catch {
+        // Continue
+      }
+    }
+
+    // 3. Update seller application record if present
+    const { sellerAuthRepository } = await import("../database/repositories/seller-auth.repository.js");
+    const app = await sellerAuthRepository.findApplicationBySellerId(sellerId);
+    if (app) {
+      await sellerAuthRepository.updateApplicationStatus(app.id, {
+        status: targetStatus as any,
+        reviewed_by: adminUserId,
+        reviewed_at: new Date().toISOString(),
+        rejection_reason: targetStatus === "rejected" ? reason || "Application rejected by administrator." : null,
+        correction_reason: targetStatus === "needs_correction" ? reason || "Application requires additional information." : null,
+      });
+    }
+
+    // 4. Log detailed audit record
     await auditRepository.log({
       actor_user_id: adminUserId,
       actor_role: "admin",
       action,
       resource_type: "seller_profile",
       resource_id: sellerId,
-      metadata: { from: currentStatus, to: status },
+      metadata: { from: currentStatus, to: targetStatus, reason: reason || null },
     });
 
-    // Trigger notification to seller user
+    // 5. Trigger notification to seller user
     if (seller.user_id) {
       try {
         const { notificationService } =
           await import("../notifications/notification.service.js");
+        
+        let message = "";
+        let title = "";
+        if (targetStatus === "approved") {
+          title = "Nursery Application Approved";
+          message = "Your Floria seller account has been approved. You can now log in and start selling.";
+        } else if (targetStatus === "rejected") {
+          title = "Nursery Application Update";
+          message = reason ? `Your Floria seller application was not approved: ${reason}` : "Your Floria seller application was not approved.";
+        } else if (targetStatus === "needs_correction") {
+          title = "Action Required on Seller Application";
+          message = reason ? `Your application requires correction: ${reason}` : "Please update your nursery application details.";
+        } else {
+          title = "Nursery Partner Account Update";
+          message = "Your Floria nursery seller account has been suspended.";
+        }
+
         await notificationService.createNotification({
           user_id: seller.user_id,
           role: "seller",
-          type: `SELLER_${status.toUpperCase()}`,
-          title: `Nursery Partner Status: ${status.toUpperCase()}`,
-          message:
-            status === "approved"
-              ? "Congratulations! Your Floria nursery seller application has been approved."
-              : status === "rejected"
-                ? "Your Floria nursery seller application was not approved."
-                : "Your Floria nursery seller account has been suspended.",
+          type: `SELLER_${targetStatus.toUpperCase()}`,
+          title,
+          message,
           source_type: "seller_profile",
-          source_id: `${sellerId}_${status}`,
+          source_id: `${sellerId}_${targetStatus}`,
           navigation: {
             entityType: "SELLER",
             entityId: sellerId,
@@ -228,7 +277,7 @@ export class AdminService {
       }
     }
 
-    return { id: sellerId, status };
+    return { id: sellerId, status: targetStatus, reason };
   }
 
   async getSellerDocuments(sellerId: string) {

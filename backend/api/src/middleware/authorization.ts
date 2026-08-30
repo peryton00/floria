@@ -105,12 +105,29 @@ export function requireApprovedSeller(
     return next(Errors.forbidden("No seller profile associated with account."));
   }
 
-  if (req.user.sellerStatus === "suspended") {
-    return next(Errors.forbidden("Your seller account has been suspended."));
+  if (req.user.sellerStatus === "suspended" || req.user.sellerStatus === "deactivated") {
+    return next(Errors.forbidden("Your seller account is currently unavailable."));
   }
 
-  if (req.user.sellerStatus === "pending") {
+  if (
+    req.user.sellerStatus === "pending" ||
+    req.user.sellerStatus === "under_review" ||
+    req.user.sellerStatus === "application_submitted" ||
+    req.user.sellerStatus === "application_incomplete"
+  ) {
     return next(Errors.forbidden("Your seller account is pending approval."));
+  }
+
+  if (req.user.sellerStatus === "needs_correction") {
+    return next(Errors.forbidden("Your seller application requires correction."));
+  }
+
+  if (req.user.sellerStatus === "rejected") {
+    return next(Errors.forbidden("Your seller application was not approved."));
+  }
+
+  if (req.user.sellerStatus !== "approved" && req.user.sellerStatus !== "active") {
+    return next(Errors.forbidden("Active seller approval required."));
   }
 
   next();

@@ -9,6 +9,10 @@ export const api = new FloriaApiClient({
   baseUrl: API_BASE_URL,
   getAccessToken: async () => {
     try {
+      if (typeof window !== "undefined") {
+        const localToken = localStorage.getItem("floria_seller_token");
+        if (localToken) return localToken;
+      }
       const supabase = getSupabaseBrowserClient();
       const {
         data: { session },

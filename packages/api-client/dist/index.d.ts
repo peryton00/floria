@@ -236,10 +236,21 @@ declare class FloriaApiClient {
     }): Promise<ApiResponse<any>>;
     getOrders(): Promise<ApiResponse<any[]>>;
     getOrderById(id: string): Promise<ApiResponse<any>>;
+    loginSeller(identifier: string, password: string): Promise<ApiResponse<any>>;
+    requestSellerPasswordReset(identifier: string): Promise<ApiResponse<{
+        success: boolean;
+        message: string;
+    }>>;
+    confirmSellerPasswordReset(token: string, password: string): Promise<ApiResponse<{
+        success: boolean;
+        message: string;
+    }>>;
     getSellerProfile(): Promise<ApiResponse<any>>;
     updateSellerProfile(data: any): Promise<ApiResponse<any>>;
     submitSellerApplication(data: any): Promise<ApiResponse<any>>;
     getSellerApplication(): Promise<ApiResponse<any>>;
+    getSellerApplicationStatus(sellerId?: string): Promise<ApiResponse<any>>;
+    resubmitSellerApplication(data: any): Promise<ApiResponse<any>>;
     getSellerProducts(params?: QueryParams): Promise<ApiResponse<any[]>>;
     getSellerProductById(id: string): Promise<ApiResponse<any>>;
     createSellerProduct(data: any): Promise<ApiResponse<any>>;
@@ -318,10 +329,12 @@ declare class FloriaApiClient {
     getAdminUserById(id: string): Promise<ApiResponse<any>>;
     updateAdminUserStatus(id: string, status: "active" | "suspended", rationale?: string): Promise<ApiResponse<any>>;
     getAdminSellers(params?: QueryParams): Promise<ApiResponse<any[]>>;
+    getAdminSellerApplications(status?: string): Promise<ApiResponse<any[]>>;
     getAdminSellerById(id: string): Promise<ApiResponse<any>>;
     approveSeller(id: string): Promise<ApiResponse<any>>;
-    rejectSeller(id: string): Promise<ApiResponse<any>>;
-    suspendSeller(id: string): Promise<ApiResponse<any>>;
+    rejectSeller(id: string, reason?: string): Promise<ApiResponse<any>>;
+    requestSellerCorrection(id: string, reason: string): Promise<ApiResponse<any>>;
+    suspendSeller(id: string, reason?: string): Promise<ApiResponse<any>>;
     reactivateSeller(id: string): Promise<ApiResponse<any>>;
     getAdminSellerDocuments(id: string): Promise<ApiResponse<any>>;
     getAdminProducts(params?: QueryParams): Promise<ApiResponse<any[]>>;

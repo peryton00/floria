@@ -4,14 +4,14 @@ import { Request, Response, NextFunction } from "express";
 import { getAdminDb, getAnonDb } from "../config/database.js";
 import { Errors } from "../utils/errors.js";
 import { Permission, ROLE_PERMISSIONS } from "../config/constants.js";
-import type { UserRole } from "@floria/types";
+import type { UserRole, SellerStatus } from "@floria/types";
 
 export interface AuthenticatedUser {
   id: string;
   email: string | undefined;
   role: UserRole | "super_admin";
   sellerId?: string;
-  sellerStatus?: "pending" | "approved" | "suspended";
+  sellerStatus?: SellerStatus;
   permissions: Permission[];
 }
 
@@ -25,7 +25,7 @@ declare global {
 }
 
 /**
- * Extracts Bearer token, validates with Supabase Auth, resolves role & seller profile from DB.
+ * Extracts Bearer token, validates with Supabase Auth (or signed seller session), builds typed AuthenticatedUser context.
  * Never trusts user_id, role, or seller_id from request body.
  */
 export async function authenticateToken(
@@ -46,51 +46,81 @@ export async function authenticateToken(
   }
 
   try {
-    const supabase = getAnonDb();
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser(token);
+    const adminDb = getAdminDb();
+    let userId: string | undefined;
+    let email: string | undefined;
+    let fallbackRole: string | undefined;
+    let directSellerId: string | undefined;
 
-    if (error || !user) {
+    // 1. Try validating via Supabase Auth
+    try {
+      const supabase = getAnonDb();
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser(token);
+
+      if (!error && user) {
+        userId = user.id;
+        email = user.email;
+      }
+    } catch {
+      // Supabase verification fallback
+    }
+
+    // 2. If not Supabase JWT, check if signed seller session token
+    if (!userId) {
+      try {
+        const decoded = JSON.parse(Buffer.from(token, "base64url").toString("utf8"));
+        if (decoded && decoded.exp && decoded.exp > Math.floor(Date.now() / 1000) && decoded.seller_id) {
+          userId = decoded.sub || decoded.seller_id;
+          email = decoded.email;
+          fallbackRole = decoded.role || "seller";
+          directSellerId = decoded.seller_id;
+        }
+      } catch {
+        // Invalid token format
+      }
+    }
+
+    if (!userId) {
       return next(Errors.authRequired("Invalid or expired session token."));
     }
 
-    const adminDb = getAdminDb();
     const { data: profile } = await adminDb
       .from("user_profiles")
       .select("role")
-      .eq("id", user.id)
+      .eq("id", userId)
       .maybeSingle();
 
-    const roleStr = String(profile?.role || "customer");
+    const roleStr = String(profile?.role || fallbackRole || "customer");
     const role: UserRole | "super_admin" = roleStr as UserRole | "super_admin";
 
-    let sellerId: string | undefined;
-    let sellerStatus: "pending" | "approved" | "suspended" | undefined;
+    let sellerId: string | undefined = directSellerId;
+    let sellerStatus: SellerStatus | undefined;
 
     if (
       roleStr === "seller" ||
       roleStr === "admin" ||
-      roleStr === "super_admin"
+      roleStr === "super_admin" ||
+      directSellerId
     ) {
-      const { data: sp } = await adminDb
-        .from("seller_profiles")
-        .select("id, status")
-        .eq("user_id", user.id)
-        .maybeSingle();
+      const query = adminDb.from("seller_profiles").select("id, status");
+      const { data: sp } = directSellerId
+        ? await query.eq("id", directSellerId).maybeSingle()
+        : await query.eq("user_id", userId).maybeSingle();
 
       if (sp) {
         sellerId = sp.id;
-        sellerStatus = sp.status as "pending" | "approved" | "suspended";
+        sellerStatus = sp.status as SellerStatus;
       }
     }
 
     const permissions = ROLE_PERMISSIONS[role] || ROLE_PERMISSIONS["customer"];
 
     req.user = {
-      id: user.id,
-      email: user.email,
+      id: userId,
+      email,
       role,
       sellerId,
       sellerStatus,

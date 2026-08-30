@@ -156,3 +156,94 @@ export const cashfreeWebhookBodySchema = z.object({
 });
 
 export type CashfreeWebhookBody = z.infer<typeof cashfreeWebhookBodySchema>;
+
+// ------------------------------------------------------------------
+// Seller Authentication & Onboarding
+// ------------------------------------------------------------------
+
+export const sellerLoginSchema = z.object({
+  identifier: z
+    .string()
+    .min(1, "Email or Seller ID is required")
+    .max(255),
+  password: z
+    .string()
+    .min(6, "Password must be at least 6 characters"),
+});
+
+export type SellerLoginInput = z.infer<typeof sellerLoginSchema>;
+
+export const sellerApplicationSchema = z.object({
+  username: z
+    .string()
+    .min(3, "Username must be at least 3 characters")
+    .max(50, "Username must be 50 characters or less")
+    .regex(/^[a-zA-Z0-9_-]+$/, "Username can only contain letters, numbers, hyphens, and underscores"),
+  email: z
+    .string()
+    .email("Valid email address is required")
+    .max(255),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .max(128, "Password must be 128 characters or less"),
+  business_name: z
+    .string()
+    .min(2, "Nursery / Business name must be at least 2 characters")
+    .max(200),
+  business_type: z.string().default("Botanical Nursery"),
+  business_description: z.string().max(2000).optional(),
+  contact_phone: z
+    .string()
+    .regex(/^[6-9]\d{9}$/, "Must be a valid 10-digit Indian phone number"),
+  address: z
+    .string()
+    .min(5, "Nursery location / address is required")
+    .max(500),
+  city: z.string().min(1, "City is required").max(100),
+  state: z.string().min(1, "State is required").max(100),
+  postal_code: z
+    .string()
+    .regex(/^\d{6}$/, "PIN code must be 6 digits"),
+  gst_number: z
+    .string()
+    .regex(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/, "Invalid GSTIN format")
+    .optional()
+    .or(z.literal("")),
+  settlement_account: z
+    .object({
+      bank_account_number: z.string().optional(),
+      ifsc_code: z.string().optional(),
+      account_holder_name: z.string().optional(),
+    })
+    .optional(),
+});
+
+export type SellerApplicationInput = z.infer<typeof sellerApplicationSchema>;
+
+export const sellerForgotPasswordSchema = z.object({
+  identifier: z
+    .string()
+    .min(1, "Email or Seller ID is required")
+    .max(255),
+});
+
+export type SellerForgotPasswordInput = z.infer<typeof sellerForgotPasswordSchema>;
+
+export const sellerResetPasswordSchema = z.object({
+  token: z.string().min(1, "Reset token is required"),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .max(128),
+});
+
+export type SellerResetPasswordInput = z.infer<typeof sellerResetPasswordSchema>;
+
+export const adminSellerReviewSchema = z.object({
+  action: z.enum(["approve", "reject", "request_correction"]),
+  reason: z.string().max(1000).optional(),
+});
+
+export type AdminSellerReviewInput = z.infer<typeof adminSellerReviewSchema>;
+

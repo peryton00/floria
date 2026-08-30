@@ -8,10 +8,16 @@ interface SellerStatusBadgeProps {
 }
 
 const CONFIG: Record<SellerStatus, { label: string; classes: string }> = {
-  approved:  { label: "Approved",       classes: "bg-emerald-50 text-emerald-800 border-emerald-200" },
-  pending:   { label: "Pending Review", classes: "bg-amber-50 text-amber-800 border-amber-200" },
-  suspended: { label: "Suspended",      classes: "bg-red-50 text-red-700 border-red-200" },
-  rejected:  { label: "Rejected",       classes: "bg-red-50 text-red-700 border-red-200" },
+  active:                 { label: "Active",              classes: "bg-emerald-50 text-emerald-800 border-emerald-200" },
+  approved:               { label: "Approved",            classes: "bg-emerald-50 text-emerald-800 border-emerald-200" },
+  under_review:           { label: "Under Review",        classes: "bg-amber-50 text-amber-800 border-amber-200" },
+  pending:                { label: "Pending Review",      classes: "bg-amber-50 text-amber-800 border-amber-200" },
+  needs_correction:       { label: "Needs Correction",    classes: "bg-yellow-50 text-yellow-800 border-yellow-200" },
+  application_submitted:  { label: "Submitted",           classes: "bg-blue-50 text-blue-800 border-blue-200" },
+  application_incomplete: { label: "Incomplete",          classes: "bg-gray-50 text-gray-700 border-gray-200" },
+  suspended:              { label: "Suspended",           classes: "bg-red-50 text-red-700 border-red-200" },
+  rejected:               { label: "Rejected",            classes: "bg-red-50 text-red-700 border-red-200" },
+  deactivated:            { label: "Deactivated",         classes: "bg-gray-50 text-gray-700 border-gray-200" },
 };
 
 export function SellerStatusBadge({ status, size = "sm" }: SellerStatusBadgeProps) {

@@ -284,7 +284,31 @@ var FloriaApiClient = class {
   async getOrderById(id) {
     return this.request(`/api/v1/customer/orders/${id}`);
   }
-  // Seller API (/api/v1/seller)
+  // Seller API (/api/v1/seller & /api/v1/auth/seller)
+  async loginSeller(identifier, password) {
+    return this.request("/api/v1/auth/seller/login", {
+      method: "POST",
+      body: JSON.stringify({ identifier, password })
+    });
+  }
+  async requestSellerPasswordReset(identifier) {
+    return this.request(
+      "/api/v1/auth/seller/forgot-password",
+      {
+        method: "POST",
+        body: JSON.stringify({ identifier })
+      }
+    );
+  }
+  async confirmSellerPasswordReset(token, password) {
+    return this.request(
+      "/api/v1/auth/seller/reset-password",
+      {
+        method: "POST",
+        body: JSON.stringify({ token, password })
+      }
+    );
+  }
   async getSellerProfile() {
     return this.request("/api/v1/seller/profile");
   }
@@ -302,6 +326,16 @@ var FloriaApiClient = class {
   }
   async getSellerApplication() {
     return this.request("/api/v1/seller/applications");
+  }
+  async getSellerApplicationStatus(sellerId) {
+    const qStr = sellerId ? `?sellerId=${encodeURIComponent(sellerId)}` : "";
+    return this.request(`/api/v1/seller/application/status${qStr}`);
+  }
+  async resubmitSellerApplication(data) {
+    return this.request("/api/v1/seller/application/resubmit", {
+      method: "POST",
+      body: JSON.stringify(data)
+    });
   }
   async getSellerProducts(params) {
     return this.request(
@@ -578,6 +612,10 @@ var FloriaApiClient = class {
       `/api/v1/admin/sellers${buildQueryString(params)}`
     );
   }
+  async getAdminSellerApplications(status) {
+    const qStr = status ? `?status=${encodeURIComponent(status)}` : "";
+    return this.request(`/api/v1/admin/seller-applications${qStr}`);
+  }
   async getAdminSellerById(id) {
     return this.request(`/api/v1/admin/sellers/${id}`);
   }
@@ -586,14 +624,22 @@ var FloriaApiClient = class {
       method: "POST"
     });
   }
-  async rejectSeller(id) {
+  async rejectSeller(id, reason) {
     return this.request(`/api/v1/admin/sellers/${id}/reject`, {
-      method: "POST"
+      method: "POST",
+      body: JSON.stringify({ reason })
     });
   }
-  async suspendSeller(id) {
+  async requestSellerCorrection(id, reason) {
+    return this.request(`/api/v1/admin/sellers/${id}/request-correction`, {
+      method: "POST",
+      body: JSON.stringify({ reason })
+    });
+  }
+  async suspendSeller(id, reason) {
     return this.request(`/api/v1/admin/sellers/${id}/suspend`, {
-      method: "POST"
+      method: "POST",
+      body: JSON.stringify({ reason })
     });
   }
   async reactivateSeller(id) {

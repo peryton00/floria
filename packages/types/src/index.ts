@@ -66,7 +66,17 @@ export interface CustomerProfile {
 // Seller (Nursery)
 // ------------------------------------------------------------------
 
-export type SellerStatus = "pending" | "approved" | "suspended" | "rejected";
+export type SellerStatus =
+  | "application_incomplete"
+  | "application_submitted"
+  | "under_review"
+  | "needs_correction"
+  | "rejected"
+  | "approved"
+  | "active"
+  | "suspended"
+  | "deactivated"
+  | "pending";
 
 export type BusinessType =
   | "nursery"
@@ -81,6 +91,8 @@ export type PreferredContactMethod = "phone" | "whatsapp" | "email";
 export interface SellerProfile {
   id: UUID;
   user_id: UUID;
+  public_seller_id?: string;
+  username?: string | null;
   business_name: string;
   business_description: string | null;
   contact_phone: string | null;
@@ -94,6 +106,8 @@ export interface SellerProfile {
   banner_variants?: Record<string, string>;
   status: SellerStatus;
   is_active: boolean;
+  gst_number?: string | null;
+  gst_status?: string | null;
 
   // Nursery Onboarding & Profile Attributes
   business_type?: BusinessType | string | null;
@@ -137,6 +151,71 @@ export interface SellerProfile {
 
   created_at: Timestamp;
   updated_at: Timestamp;
+}
+
+export interface SellerApplication {
+  id: UUID;
+  seller_id?: UUID | null;
+  user_id?: UUID | null;
+  username: string;
+  email: string;
+  business_name: string;
+  business_type?: string | null;
+  business_description?: string | null;
+  contact_phone: string;
+  address: string;
+  city: string;
+  state: string;
+  postal_code: string;
+  gst_number?: string | null;
+  gst_legal_name?: string | null;
+  gst_status?: string | null;
+  settlement_account?: {
+    bank_account_number?: string;
+    ifsc_code?: string;
+    account_holder_name?: string;
+  } | null;
+  submitted_documents?: Array<{
+    document_type: string;
+    file_name: string;
+    file_url: string;
+  }>;
+  status: SellerStatus;
+  rejection_reason?: string | null;
+  correction_reason?: string | null;
+  reviewed_at?: Timestamp | null;
+  reviewed_by?: UUID | null;
+  submitted_at: Timestamp;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+}
+
+export interface SellerCredential {
+  id: UUID;
+  seller_id: UUID;
+  user_id?: UUID | null;
+  public_seller_id: string;
+  username: string;
+  email: string;
+  failed_login_attempts: number;
+  locked_until?: Timestamp | null;
+  password_updated_at: Timestamp;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+}
+
+export interface SellerAuthResponse {
+  user: {
+    id: UUID;
+    email: string;
+    role: "seller" | "admin" | "super_admin";
+    sellerId: UUID;
+    publicSellerId: string;
+    username: string;
+    sellerStatus: SellerStatus;
+  };
+  seller: SellerProfile;
+  token: string;
 }
 
 export interface SellerDocument {

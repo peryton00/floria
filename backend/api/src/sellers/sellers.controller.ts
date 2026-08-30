@@ -1,8 +1,128 @@
 // Floria API — Sellers Controller
 import { Request, Response, NextFunction } from "express";
 import { sellersService } from "./sellers.service.js";
+import { sellerAuthService } from "./seller-auth.service.js";
 
 export class SellersController {
+  async login(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { identifier, password } = req.body;
+      if (!identifier || !password) {
+        res.status(400).json({
+          success: false,
+          error: { code: "VALIDATION_ERROR", message: "Email or Seller ID and password are required." },
+        });
+        return;
+      }
+      const result = await sellerAuthService.login(identifier, password);
+      res.json({
+        success: true,
+        data: result,
+      });
+    } catch (err: any) {
+      if (err.code && err.statusCode) {
+        res.status(err.statusCode).json({
+          success: false,
+          error: { code: err.code, message: err.message, data: err.data },
+        });
+        return;
+      }
+      next(err);
+    }
+  }
+
+  async apply(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const result = await sellerAuthService.submitApplication(req.body);
+      res.status(201).json({
+        success: true,
+        data: result,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async forgotPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { identifier } = req.body;
+      if (!identifier) {
+        res.status(400).json({
+          success: false,
+          error: { code: "VALIDATION_ERROR", message: "Email or Seller ID is required." },
+        });
+        return;
+      }
+      const result = await sellerAuthService.requestPasswordReset(identifier);
+      res.json({
+        success: true,
+        data: result,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async resetPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { token, password } = req.body;
+      if (!token || !password) {
+        res.status(400).json({
+          success: false,
+          error: { code: "VALIDATION_ERROR", message: "Reset token and new password are required." },
+        });
+        return;
+      }
+      const result = await sellerAuthService.resetPassword(token, password);
+      res.json({
+        success: true,
+        data: result,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async getApplicationStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const sellerId = req.user?.sellerId || (req.query.sellerId as string);
+      if (!sellerId) {
+        res.status(400).json({
+          success: false,
+          error: { code: "VALIDATION_ERROR", message: "Seller ID is required." },
+        });
+        return;
+      }
+      const application = await sellerAuthService.getApplicationStatus(sellerId);
+      res.json({
+        success: true,
+        data: application,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async resubmitApplication(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const sellerId = req.user?.sellerId || req.body.sellerId;
+      if (!sellerId) {
+        res.status(400).json({
+          success: false,
+          error: { code: "VALIDATION_ERROR", message: "Seller ID is required." },
+        });
+        return;
+      }
+      const result = await sellerAuthService.resubmitApplication(sellerId, req.body);
+      res.json({
+        success: true,
+        data: result,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
   async getProfile(
     req: Request,
     res: Response,
@@ -38,6 +158,13 @@ export class SellersController {
     next: NextFunction,
   ): Promise<void> {
     try {
+      // If user provided password & username, route to sellerAuthService
+      if (req.body.password && req.body.username) {
+        const result = await sellerAuthService.submitApplication(req.body);
+        res.status(201).json({ success: true, data: result });
+        return;
+      }
+
       const profile = await sellersService.submitApplication(
         req.user!.id,
         req.body,

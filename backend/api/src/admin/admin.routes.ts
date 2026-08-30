@@ -46,6 +46,7 @@ router.patch(
 
 // Seller Administration
 router.get("/sellers", adminController.getSellers);
+router.get("/seller-applications", adminController.getSellerApplications);
 router.get(
   "/sellers/:id",
   validateRequest(uuidParamSchema),
@@ -60,6 +61,11 @@ router.post(
   "/sellers/:id/reject",
   validateRequest(uuidParamSchema),
   adminController.rejectSeller,
+);
+router.post(
+  "/sellers/:id/request-correction",
+  validateRequest(uuidParamSchema),
+  adminController.requestCorrection,
 );
 router.post(
   "/sellers/:id/suspend",

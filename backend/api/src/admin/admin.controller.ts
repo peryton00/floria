@@ -253,6 +253,20 @@ export class AdminController {
     }
   }
 
+  async getSellerApplications(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      const status = req.query.status as string | undefined;
+      const applications = await adminService.getSellerApplications(status);
+      res.json({ success: true, data: applications });
+    } catch (err) {
+      next(err);
+    }
+  }
+
   async approveSeller(
     req: Request,
     res: Response,
@@ -280,6 +294,25 @@ export class AdminController {
         req.user!.id,
         req.params.id as string,
         "rejected",
+        req.body?.reason,
+      );
+      res.json({ success: true, data: result });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async requestCorrection(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      const result = await adminService.updateSellerStatus(
+        req.user!.id,
+        req.params.id as string,
+        "needs_correction",
+        req.body?.reason || "Please update your nursery application details.",
       );
       res.json({ success: true, data: result });
     } catch (err) {
@@ -297,6 +330,7 @@ export class AdminController {
         req.user!.id,
         req.params.id as string,
         "suspended",
+        req.body?.reason,
       );
       res.json({ success: true, data: result });
     } catch (err) {

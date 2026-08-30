@@ -590,7 +590,42 @@ export class FloriaApiClient {
     return this.request<any>(`/api/v1/customer/orders/${id}`);
   }
 
-  // Seller API (/api/v1/seller)
+  // Seller API (/api/v1/seller & /api/v1/auth/seller)
+  public async loginSeller(
+    identifier: string,
+    password: string,
+  ): Promise<ApiResponse<any>> {
+    return this.request<any>("/api/v1/auth/seller/login", {
+      method: "POST",
+      body: JSON.stringify({ identifier, password }),
+    });
+  }
+
+  public async requestSellerPasswordReset(
+    identifier: string,
+  ): Promise<ApiResponse<{ success: boolean; message: string }>> {
+    return this.request<{ success: boolean; message: string }>(
+      "/api/v1/auth/seller/forgot-password",
+      {
+        method: "POST",
+        body: JSON.stringify({ identifier }),
+      },
+    );
+  }
+
+  public async confirmSellerPasswordReset(
+    token: string,
+    password: string,
+  ): Promise<ApiResponse<{ success: boolean; message: string }>> {
+    return this.request<{ success: boolean; message: string }>(
+      "/api/v1/auth/seller/reset-password",
+      {
+        method: "POST",
+        body: JSON.stringify({ token, password }),
+      },
+    );
+  }
+
   public async getSellerProfile(): Promise<ApiResponse<any>> {
     return this.request<any>("/api/v1/seller/profile");
   }
@@ -611,6 +646,22 @@ export class FloriaApiClient {
 
   public async getSellerApplication(): Promise<ApiResponse<any>> {
     return this.request<any>("/api/v1/seller/applications");
+  }
+
+  public async getSellerApplicationStatus(
+    sellerId?: string,
+  ): Promise<ApiResponse<any>> {
+    const qStr = sellerId ? `?sellerId=${encodeURIComponent(sellerId)}` : "";
+    return this.request<any>(`/api/v1/seller/application/status${qStr}`);
+  }
+
+  public async resubmitSellerApplication(
+    data: any,
+  ): Promise<ApiResponse<any>> {
+    return this.request<any>("/api/v1/seller/application/resubmit", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
   }
 
   public async getSellerProducts(
@@ -1037,6 +1088,13 @@ export class FloriaApiClient {
     );
   }
 
+  public async getAdminSellerApplications(
+    status?: string,
+  ): Promise<ApiResponse<any[]>> {
+    const qStr = status ? `?status=${encodeURIComponent(status)}` : "";
+    return this.request<any[]>(`/api/v1/admin/seller-applications${qStr}`);
+  }
+
   public async getAdminSellerById(id: string): Promise<ApiResponse<any>> {
     return this.request<any>(`/api/v1/admin/sellers/${id}`);
   }
@@ -1047,15 +1105,24 @@ export class FloriaApiClient {
     });
   }
 
-  public async rejectSeller(id: string): Promise<ApiResponse<any>> {
+  public async rejectSeller(id: string, reason?: string): Promise<ApiResponse<any>> {
     return this.request<any>(`/api/v1/admin/sellers/${id}/reject`, {
       method: "POST",
+      body: JSON.stringify({ reason }),
     });
   }
 
-  public async suspendSeller(id: string): Promise<ApiResponse<any>> {
+  public async requestSellerCorrection(id: string, reason: string): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/v1/admin/sellers/${id}/request-correction`, {
+      method: "POST",
+      body: JSON.stringify({ reason }),
+    });
+  }
+
+  public async suspendSeller(id: string, reason?: string): Promise<ApiResponse<any>> {
     return this.request<any>(`/api/v1/admin/sellers/${id}/suspend`, {
       method: "POST",
+      body: JSON.stringify({ reason }),
     });
   }
 
