@@ -14,11 +14,19 @@ export function createCorsMiddleware() {
         return callback(null, true);
       }
 
+      const isLanOrLocal =
+        origin.startsWith("http://localhost:") ||
+        origin.startsWith("http://127.0.0.1:") ||
+        /^https?:\/\/192\.168\.\d{1,3}\.\d{1,3}(:\d+)?$/.test(origin) ||
+        /^https?:\/\/10\.\d{1,3}\.\d{1,3}\.\d{1,3}(:\d+)?$/.test(origin) ||
+        /^https?:\/\/172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}(:\d+)?$/.test(origin);
+
       if (
         env.CORS_ALLOWED_ORIGINS.includes(origin) ||
         env.CORS_ALLOWED_ORIGINS.includes("*") ||
         origin.endsWith(".vercel.app") ||
-        origin.startsWith("http://localhost:")
+        origin.endsWith(".onrender.com") ||
+        isLanOrLocal
       ) {
         return callback(null, true);
       }

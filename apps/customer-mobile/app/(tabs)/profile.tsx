@@ -8,24 +8,30 @@ import {
   ScrollView,
   Modal,
   Linking,
+  Switch,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "../../lib/api";
 import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
 import { useCustomerAuth } from "../../lib/contexts/CustomerAuthContext";
+import { useNotifications } from "../../lib/contexts/NotificationContext";
 import { useFeedback } from "../../lib/contexts/FloriaFeedbackContext";
 import { haptics } from "../../lib/haptics";
 import { Button } from "../../components/ui/Button";
+import { useActionLock } from "../../lib/hooks/useActionLock";
 
 export default function CustomerProfileScreen() {
   const router = useRouter();
   const { user, isAuthenticated, signOut, refreshProfile } = useCustomerAuth();
+  const { preferences, updatePreference } = useNotifications();
   const { showSuccess, showError, showConfirmSheet } = useFeedback();
+  const { isLocked, runExclusive } = useActionLock();
   const [policyModal, setPolicyModal] = useState<{ title: string; content: string } | null>(null);
 
   // Edit Profile Modal State
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [notificationModalVisible, setNotificationModalVisible] = useState(false);
   const [editFullName, setEditFullName] = useState("");
   const [editPhone, setEditPhone] = useState("");
   const [updatingProfile, setUpdatingProfile] = useState(false);
@@ -59,32 +65,34 @@ export default function CustomerProfileScreen() {
     setEditModalVisible(true);
   };
 
-  const handleSaveProfile = async () => {
+  const handleSaveProfile = () => {
     if (!editFullName.trim()) {
       showError("Please enter your full name.");
       return;
     }
-    try {
-      setUpdatingProfile(true);
-      const res = await api.updateProfile({
-        full_name: editFullName.trim(),
-        phone: editPhone.trim(),
-      });
-      if (res.success) {
-        await refreshProfile();
-        setEditModalVisible(false);
-        haptics.success();
-        showSuccess("Profile details saved");
-      } else {
+    runExclusive(async () => {
+      try {
+        setUpdatingProfile(true);
+        const res = await api.updateProfile({
+          full_name: editFullName.trim(),
+          phone: editPhone.trim(),
+        });
+        if (res.success) {
+          await refreshProfile();
+          setEditModalVisible(false);
+          haptics.success();
+          showSuccess("Profile details saved");
+        } else {
+          haptics.error();
+          showError(res.error?.message || "Failed to update profile.");
+        }
+      } catch (err: any) {
         haptics.error();
-        showError(res.error?.message || "Failed to update profile.");
+        showError(err.message || "Failed to update profile.");
+      } finally {
+        setUpdatingProfile(false);
       }
-    } catch (err: any) {
-      haptics.error();
-      showError(err.message || "Failed to update profile.");
-    } finally {
-      setUpdatingProfile(false);
-    }
+    });
   };
 
   const handleContactSupport = () => {
@@ -246,6 +254,19 @@ export default function CustomerProfileScreen() {
           <View style={styles.menuRowTextCol}>
             <Text style={styles.menuRowTitle}>Saved Delivery Addresses</Text>
             <Text style={styles.menuRowSub}>Manage residential & sanctuary destinations</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={16} color={Colors.inkMuted} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => setNotificationModalVisible(true)}
+          style={styles.menuRow}
+        >
+          <Ionicons name="notifications-outline" size={18} color={Colors.forest} style={styles.menuRowIcon} />
+          <View style={styles.menuRowTextCol}>
+            <Text style={styles.menuRowTitle}>Notification Preferences</Text>
+            <Text style={styles.menuRowSub}>Order alerts, restock updates & discovery</Text>
           </View>
           <Ionicons name="chevron-forward" size={16} color={Colors.inkMuted} />
         </TouchableOpacity>
@@ -415,6 +436,115 @@ export default function CustomerProfileScreen() {
                 style={{ flex: 1 }}
               />
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Notification Preferences Modal */}
+      <Modal
+        visible={notificationModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setNotificationModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <View>
+                <Text style={styles.modalTitle}>Notification Settings</Text>
+                <Text style={styles.modalSub}>Manage your Floria botanical alerts</Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setNotificationModalVisible(false)}
+                style={styles.closeBtn}
+              >
+                <Ionicons name="close" size={20} color={Colors.inkLight} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.preferenceList}>
+              <View style={styles.preferenceRow}>
+                <View style={styles.preferenceTextCol}>
+                  <Text style={styles.preferenceTitle}>Orders & Delivery</Text>
+                  <Text style={styles.preferenceSub}>
+                    Live dispatch updates, courier tracking, and delivery confirmations
+                  </Text>
+                </View>
+                <Switch
+                  value={preferences.ordersAndDelivery}
+                  onValueChange={(val) => updatePreference("ordersAndDelivery", val)}
+                  trackColor={{ false: Colors.sand, true: Colors.forest }}
+                  thumbColor={Colors.white}
+                />
+              </View>
+
+              <View style={styles.preferenceRow}>
+                <View style={styles.preferenceTextCol}>
+                  <Text style={styles.preferenceTitle}>Wishlist & Restock</Text>
+                  <Text style={styles.preferenceSub}>
+                    Alerts when saved botanical specimens return to stock
+                  </Text>
+                </View>
+                <Switch
+                  value={preferences.wishlistAndRestock}
+                  onValueChange={(val) => updatePreference("wishlistAndRestock", val)}
+                  trackColor={{ false: Colors.sand, true: Colors.forest }}
+                  thumbColor={Colors.white}
+                />
+              </View>
+
+              <View style={styles.preferenceRow}>
+                <View style={styles.preferenceTextCol}>
+                  <Text style={styles.preferenceTitle}>Plant Discovery</Text>
+                  <Text style={styles.preferenceSub}>
+                    Curated rare arrivals and seasonal gardening care advice
+                  </Text>
+                </View>
+                <Switch
+                  value={preferences.productDiscovery}
+                  onValueChange={(val) => updatePreference("productDiscovery", val)}
+                  trackColor={{ false: Colors.sand, true: Colors.forest }}
+                  thumbColor={Colors.white}
+                />
+              </View>
+
+              <View style={styles.preferenceRow}>
+                <View style={styles.preferenceTextCol}>
+                  <Text style={styles.preferenceTitle}>Seasonal Promotions</Text>
+                  <Text style={styles.preferenceSub}>
+                    Occasional nursery discounts and festival plant specials
+                  </Text>
+                </View>
+                <Switch
+                  value={preferences.promotionsAndOffers}
+                  onValueChange={(val) => updatePreference("promotionsAndOffers", val)}
+                  trackColor={{ false: Colors.sand, true: Colors.forest }}
+                  thumbColor={Colors.white}
+                />
+              </View>
+
+              <View style={[styles.preferenceRow, { borderBottomWidth: 0 }]}>
+                <View style={styles.preferenceTextCol}>
+                  <Text style={styles.preferenceTitle}>Account & Security</Text>
+                  <Text style={styles.preferenceSub}>
+                    Essential login alerts, payment receipts, and security notices (Always on)
+                  </Text>
+                </View>
+                <Switch
+                  value={true}
+                  disabled
+                  trackColor={{ false: Colors.sand, true: Colors.forest }}
+                  thumbColor={Colors.white}
+                />
+              </View>
+            </View>
+
+            <Button
+              label="Save & Close"
+              size="sm"
+              onPress={() => setNotificationModalVisible(false)}
+              style={{ marginTop: Spacing.md }}
+            />
           </View>
         </View>
       </Modal>
@@ -735,5 +865,37 @@ const styles = StyleSheet.create({
   editModalActions: {
     flexDirection: "row",
     marginTop: Spacing.sm,
+  },
+  modalSub: {
+    fontSize: Typography.fontSizes.xs,
+    color: Colors.inkLight,
+    marginTop: 2,
+  },
+  preferenceList: {
+    marginTop: Spacing.xs,
+  },
+  preferenceRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: Spacing.sm + 2,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+    gap: Spacing.sm,
+  },
+  preferenceTextCol: {
+    flex: 1,
+  },
+  preferenceTitle: {
+    fontSize: Typography.fontSizes.xs + 1,
+    fontWeight: "700",
+    color: Colors.ink,
+    fontFamily: "Georgia",
+  },
+  preferenceSub: {
+    fontSize: 10.5,
+    color: Colors.inkLight,
+    marginTop: 2,
+    lineHeight: 15,
   },
 });

@@ -20,6 +20,8 @@ import { CategoryGridSkeleton } from "../../components/ui/CategoryGridSkeleton";
 import { ProductGridSkeleton } from "../../components/ui/ProductCardSkeleton";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { ErrorState } from "../../components/ui/ErrorState";
+import { RecentlyViewedSection } from "../../components/customer/RecentlyViewedSection";
+import { StorageService } from "../../lib/storage";
 import { haptics } from "../../lib/haptics";
 
 const DEFAULT_CATEGORY_IMAGES: Record<string, string> = {
@@ -33,6 +35,15 @@ const DEFAULT_CATEGORY_IMAGES: Record<string, string> = {
   "tools-accessories": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=600&auto=format&fit=crop&q=80",
 };
 
+const POPULAR_SEARCH_SUGGESTIONS = [
+  "Monstera",
+  "Ficus",
+  "Bonsai",
+  "Snake Plant",
+  "Jade",
+  "Planters",
+];
+
 const FALLBACK_CATEGORY_IMAGE =
   "https://images.unsplash.com/photo-1545241047-6083a3684587?w=600&auto=format&fit=crop&q=80";
 
@@ -44,12 +55,21 @@ export default function CustomerExploreScreen() {
   );
   const [categories, setCategories] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [loadingProducts, setLoadingProducts] = useState(
     Boolean(params.category && params.category !== "all") || Boolean(params.search),
   );
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Load recent searches on mount
+  useEffect(() => {
+    StorageService.getRecentSearches().then((list) => {
+      setRecentSearches(list);
+    });
+  }, []);
 
   // Sync params when navigated with query params
   useEffect(() => {
@@ -83,6 +103,29 @@ export default function CustomerExploreScreen() {
     }
   };
 
+  const handleSearchSubmit = () => {
+    if (searchQuery.trim().length >= 2) {
+      StorageService.addRecentSearch(searchQuery.trim()).then((updated) => {
+        setRecentSearches(updated);
+      });
+    }
+  };
+
+  const handleSelectSearchPill = (query: string) => {
+    haptics.selection();
+    setSearchQuery(query);
+    setProducts([]);
+    setLoadingProducts(true);
+    StorageService.addRecentSearch(query).then((updated) => {
+      setRecentSearches(updated);
+    });
+  };
+
+  const handleClearRecentSearches = async () => {
+    await StorageService.clearRecentSearches();
+    setRecentSearches([]);
+  };
+
   const fetchCatalog = useCallback(async () => {
     try {
       setError(null);
@@ -92,7 +135,6 @@ export default function CustomerExploreScreen() {
         setLoadingProducts(true);
       }
 
-      // Always ensure categories are fetched
       const catRes = await api.getCategories();
       let loadedCategories = categories;
       if (catRes.success && catRes.data) {
@@ -117,7 +159,6 @@ export default function CustomerExploreScreen() {
         });
 
         if (prodRes.success && Array.isArray(prodRes.data)) {
-          // Extra client guard to guarantee only category products are shown
           const strictProducts =
             selectedCategory !== "all" && catObj
               ? prodRes.data.filter((p: any) => {
@@ -163,7 +204,6 @@ export default function CustomerExploreScreen() {
 
   return (
     <View style={styles.container}>
-      {/* 1. Search Bar */}
       <View style={styles.searchContainer}>
         <Ionicons
           name="search-outline"
@@ -177,6 +217,9 @@ export default function CustomerExploreScreen() {
           placeholderTextColor={Colors.inkSubtle}
           value={searchQuery}
           onChangeText={handleSearchChange}
+          onSubmitEditing={handleSearchSubmit}
+          onFocus={() => setIsSearchFocused(true)}
+          onBlur={() => setIsSearchFocused(false)}
           returnKeyType="search"
         />
         {searchQuery.length > 0 && (
@@ -184,6 +227,7 @@ export default function CustomerExploreScreen() {
             onPress={() => {
               setSearchQuery("");
             }}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             style={styles.clearBtn}
           >
             <Ionicons name="close-circle" size={18} color={Colors.inkMuted} />
@@ -191,11 +235,37 @@ export default function CustomerExploreScreen() {
         )}
       </View>
 
-      {/* 2. Main Body: Categories Card Grid OR Products of Selected Category */}
+      {recentSearches.length > 0 && !searchQuery && (
+        <View style={styles.recentSearchesBar}>
+          <View style={styles.recentSearchesHeader}>
+            <Text style={styles.recentSearchesLabel}>Recent Searches</Text>
+            <TouchableOpacity onPress={handleClearRecentSearches}>
+              <Text style={styles.clearRecentText}>Clear</Text>
+            </TouchableOpacity>
+          </View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.recentPillsScroll}
+          >
+            {recentSearches.map((q, idx) => (
+              <TouchableOpacity
+                key={idx}
+                activeOpacity={0.75}
+                onPress={() => handleSelectSearchPill(q)}
+                style={styles.recentPill}
+              >
+                <Ionicons name="time-outline" size={11} color={Colors.forest} style={{ marginRight: 3 }} />
+                <Text style={styles.recentPillText}>{q}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
+
       {error && !loadingCategories && categories.length === 0 ? (
         <ErrorState message={error} onRetry={fetchCatalog} />
       ) : !isShowingProducts ? (
-        /* --- CATEGORIES VIEW ONLY --- */
         <ScrollView
           contentContainerStyle={styles.categoryGridContainer}
           showsVerticalScrollIndicator={false}
@@ -219,33 +289,22 @@ export default function CustomerExploreScreen() {
           ) : (
             <View style={styles.categoriesGrid}>
               {categories.map((cat) => {
-                const imageUri =
+                const bgImage =
                   cat.image_url ||
-                  cat.banner_url ||
                   DEFAULT_CATEGORY_IMAGES[cat.slug] ||
                   FALLBACK_CATEGORY_IMAGE;
 
                 return (
                   <TouchableOpacity
                     key={cat.id || cat.slug}
-                    activeOpacity={0.85}
+                    activeOpacity={0.88}
                     onPress={() => handleSelectCategory(cat.slug)}
                     style={styles.categoryCard}
                   >
-                    <Image
-                      source={{ uri: imageUri }}
-                      style={styles.categoryCardImage}
-                      resizeMode="cover"
-                    />
-                    <View style={styles.categoryCardOverlay}>
-                      <View style={styles.categoryNameRow}>
-                        <Text style={styles.categoryCardTitle} numberOfLines={1}>
-                          {cat.name}
-                        </Text>
-                        <View style={styles.arrowIconBox}>
-                          <Ionicons name="chevron-forward" size={13} color={Colors.white} />
-                        </View>
-                      </View>
+                    <Image source={{ uri: bgImage }} style={styles.categoryCardImage} />
+                    <View style={styles.categoryCardOverlay} />
+                    <View style={styles.categoryCardContent}>
+                      <Text style={styles.categoryCardName}>{cat.name}</Text>
                       {cat.description ? (
                         <Text style={styles.categoryCardDesc} numberOfLines={2}>
                           {cat.description}
@@ -257,11 +316,10 @@ export default function CustomerExploreScreen() {
               })}
             </View>
           )}
+          <RecentlyViewedSection title="Recently Explored Specimens" />
         </ScrollView>
       ) : (
-        /* --- PRODUCTS VIEW OF SELECTED CATEGORY / SEARCH --- */
         <View style={{ flex: 1 }}>
-          {/* Active Category Header Bar & Filter Chips */}
           <View style={styles.activeFilterBar}>
             <TouchableOpacity
               activeOpacity={0.7}
@@ -350,6 +408,18 @@ export default function CustomerExploreScreen() {
                 const primaryImage =
                   prod.images?.find((img: any) => img.is_primary)?.url ||
                   prod.images?.[0]?.url;
+                const stockQty =
+                  item.inventory?.stock_quantity ??
+                  (Array.isArray(item.inventory) ? item.inventory[0]?.stock_quantity : undefined) ??
+                  (Array.isArray(prod.inventory) ? prod.inventory[0]?.stock_quantity : undefined) ??
+                  prod.inventory?.stock_quantity ??
+                  item.stock_quantity ??
+                  prod.stock_quantity;
+                const isOutOfStock =
+                  typeof stockQty === "number"
+                    ? stockQty <= 0
+                    : Boolean(item.is_out_of_stock ?? prod.is_out_of_stock ?? false);
+
                 return (
                   <View style={styles.gridItem}>
                     <ProductCard
@@ -363,9 +433,12 @@ export default function CustomerExploreScreen() {
                         item.seller_name || item.nursery_name || "Floria Nursery"
                       }
                       imageUrl={primaryImage}
-                      careLevel={prod.care_level || "EASY"}
+                      careLevel={prod.care_level}
                       isVerified={true}
-                      rating={prod.rating || 4.8}
+                      isOutOfStock={isOutOfStock}
+                      rating={prod.rating_summary?.avg_rating ?? prod.rating}
+                      reviewCount={prod.rating_summary?.review_count ?? prod.review_count}
+                      isFreeDelivery={Boolean(prod.pricing?.isFreeDelivery ?? prod.is_free_delivery ?? prod.isFreeDelivery)}
                     />
                   </View>
                 );
@@ -403,6 +476,50 @@ const styles = StyleSheet.create({
   },
   clearBtn: {
     padding: 4,
+  },
+  recentSearchesBar: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 6,
+    backgroundColor: Colors.page,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  recentSearchesHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  recentSearchesLabel: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: Colors.inkMuted,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  clearRecentText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: Colors.terracotta,
+  },
+  recentPillsScroll: {
+    gap: 6,
+    paddingVertical: 2,
+  },
+  recentPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.linen,
+    borderRadius: BorderRadius.full,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  recentPillText: {
+    fontSize: Typography.fontSizes.xs,
+    color: Colors.ink,
+    fontWeight: "500",
   },
   categoryGridContainer: {
     padding: Spacing.md,
@@ -450,36 +567,29 @@ const styles = StyleSheet.create({
   },
   categoryCardOverlay: {
     position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(18, 43, 37, 0.45)",
+  },
+  categoryCardContent: {
+    position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: "rgba(18, 43, 37, 0.78)",
     padding: Spacing.sm,
+    backgroundColor: "rgba(18, 43, 37, 0.72)",
   },
-  categoryNameRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  categoryCardTitle: {
+  categoryCardName: {
     fontSize: Typography.fontSizes.sm,
     fontWeight: "bold",
     color: Colors.white,
     fontFamily: "Georgia",
-    flex: 1,
-    marginRight: 4,
-  },
-  arrowIconBox: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: "rgba(255, 255, 255, 0.22)",
-    alignItems: "center",
-    justifyContent: "center",
   },
   categoryCardDesc: {
     fontSize: 10,
-    color: "rgba(255, 255, 255, 0.8)",
+    color: "rgba(255, 255, 255, 0.82)",
     marginTop: 2,
     lineHeight: 13,
   },

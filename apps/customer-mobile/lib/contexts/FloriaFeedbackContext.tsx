@@ -15,6 +15,7 @@ import {
   Modal,
   ActivityIndicator,
   BackHandler,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -227,6 +228,7 @@ export function FloriaFeedbackProvider({
 
   // Android Back button handler for confirm sheet
   useEffect(() => {
+    if (Platform.OS !== "android") return;
     const onBackPress = () => {
       if (confirmSheet) {
         hideConfirmSheet();

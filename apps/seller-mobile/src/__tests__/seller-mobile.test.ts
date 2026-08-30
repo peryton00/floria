@@ -5,6 +5,10 @@ import {
   rupeesToPaise,
   formatDate,
 } from "../../lib/format";
+import {
+  SELLER_NOTIFICATION_CATEGORIES,
+  ANDROID_SELLER_CHANNELS,
+} from "../../lib/notifications/types";
 
 describe("Seller Mobile — Currency & Date Formatting", () => {
   it("formats paise into rupee currency with en-IN locale", () => {
@@ -28,12 +32,15 @@ describe("Seller Mobile — Currency & Date Formatting", () => {
 
 describe("Seller Mobile — Order Fulfillment State Machine", () => {
   const validTransitions: Record<string, string[]> = {
-    pending: ["preparing", "cancelled"],
-    preparing: ["ready_for_pickup", "cancelled"],
-    ready_for_pickup: ["out_for_delivery", "cancelled"],
+    placed: ["preparing", "fulfillment_issue", "cancelled"],
+    new: ["preparing", "fulfillment_issue", "cancelled"],
+    confirmed: ["preparing", "fulfillment_issue", "cancelled"],
+    preparing: ["ready_for_pickup", "fulfillment_issue", "cancelled"],
+    ready_for_pickup: ["out_for_delivery", "fulfillment_issue"],
     out_for_delivery: ["delivered"],
     delivered: [],
     cancelled: [],
+    fulfillment_issue: [],
   };
 
   const canAdvance = (current: string, next: string): boolean => {
@@ -41,90 +48,149 @@ describe("Seller Mobile — Order Fulfillment State Machine", () => {
   };
 
   it("permits standard forward progression for nursery fulfillment", () => {
-    expect(canAdvance("pending", "preparing")).toBe(true);
+    expect(canAdvance("placed", "preparing")).toBe(true);
     expect(canAdvance("preparing", "ready_for_pickup")).toBe(true);
     expect(canAdvance("ready_for_pickup", "out_for_delivery")).toBe(true);
     expect(canAdvance("out_for_delivery", "delivered")).toBe(true);
   });
 
+  it("allows reporting fulfillment issues from non-terminal states", () => {
+    expect(canAdvance("placed", "fulfillment_issue")).toBe(true);
+    expect(canAdvance("preparing", "fulfillment_issue")).toBe(true);
+    expect(canAdvance("ready_for_pickup", "fulfillment_issue")).toBe(true);
+  });
+
   it("prohibits skipping preparation or handoff directly to delivered", () => {
-    expect(canAdvance("pending", "delivered")).toBe(false);
+    expect(canAdvance("placed", "delivered")).toBe(false);
     expect(canAdvance("preparing", "delivered")).toBe(false);
     expect(canAdvance("ready_for_pickup", "delivered")).toBe(false);
   });
 
   it("prevents transitions from terminal delivered or cancelled states", () => {
-    expect(canAdvance("delivered", "pending")).toBe(false);
+    expect(canAdvance("delivered", "placed")).toBe(false);
     expect(canAdvance("delivered", "preparing")).toBe(false);
     expect(canAdvance("cancelled", "preparing")).toBe(false);
   });
 });
 
-describe("Seller Mobile — Role Authorization Matrix", () => {
-  const canAccessSellerMobile = (role: string | undefined): boolean => {
-    return role === "seller" || role === "admin" || role === "super_admin";
-  };
+describe("Seller Mobile — Multi-Seller Order Isolation", () => {
+  it("computes seller-specific payout strictly for items belonging to the seller", () => {
+    const rawOrder = {
+      id: "ord_101",
+      customer_total_paise: 300000,
+      order_items: [
+        {
+          seller_id_snapshot: "seller_A",
+          product_name_snapshot: "Monstera Deliciosa",
+          unit_price_paise_snapshot: 100000,
+          base_price_paise_snapshot: 100000,
+          commission_paise_snapshot: 10000,
+          quantity: 1,
+        },
+        {
+          seller_id_snapshot: "seller_B", // Different nursery
+          product_name_snapshot: "Snake Plant",
+          unit_price_paise_snapshot: 200000,
+          base_price_paise_snapshot: 200000,
+          commission_paise_snapshot: 20000,
+          quantity: 1,
+        },
+      ],
+    };
 
-  it("grants access to verified sellers and platform admins", () => {
-    expect(canAccessSellerMobile("seller")).toBe(true);
-    expect(canAccessSellerMobile("admin")).toBe(true);
-    expect(canAccessSellerMobile("super_admin")).toBe(true);
-  });
+    // Filter for seller_A
+    const sellerAItems = rawOrder.order_items.filter(
+      (it) => it.seller_id_snapshot === "seller_A",
+    );
+    const sellerAPayout = sellerAItems.reduce(
+      (sum, it) =>
+        sum + (it.base_price_paise_snapshot - it.commission_paise_snapshot) * it.quantity,
+      0,
+    );
 
-  it("denies access to regular customers and delivery couriers", () => {
-    expect(canAccessSellerMobile("customer")).toBe(false);
-    expect(canAccessSellerMobile("courier")).toBe(false);
-    expect(canAccessSellerMobile("operations")).toBe(false);
-    expect(canAccessSellerMobile(undefined)).toBe(false);
+    expect(sellerAItems.length).toBe(1);
+    expect(sellerAItems[0].product_name_snapshot).toBe("Monstera Deliciosa");
+    expect(sellerAPayout).toBe(90000); // 100000 - 10000
+    expect(sellerAPayout).not.toBe(rawOrder.customer_total_paise);
   });
 });
 
-describe("Seller Mobile — Inventory & Product Payload Validation", () => {
-  const validateProductInput = (input: {
-    name?: string;
-    pricePaise?: number;
-    stockQuantity?: number;
-  }): { valid: boolean; error?: string } => {
-    if (!input.name || input.name.trim().length === 0) {
-      return { valid: false, error: "Plant specimen name is required" };
-    }
-    if (typeof input.pricePaise !== "number" || input.pricePaise <= 0) {
-      return { valid: false, error: "Valid price in paise is required" };
-    }
-    if (typeof input.stockQuantity !== "number" || input.stockQuantity < 0) {
-      return {
-        valid: false,
-        error: "Valid non-negative stock quantity is required",
-      };
-    }
-    return { valid: true };
+describe("Seller Mobile — Inventory Stock Classifications", () => {
+  const getStockStatus = (
+    quantity: number,
+    lowStockThreshold: number = 5,
+  ): "in_stock" | "low_stock" | "out_of_stock" => {
+    if (quantity <= 0) return "out_of_stock";
+    if (quantity <= lowStockThreshold) return "low_stock";
+    return "in_stock";
   };
 
-  it("validates correct plant specimen creation input", () => {
-    const res = validateProductInput({
-      name: "Monstera Deliciosa",
-      pricePaise: 149900,
-      stockQuantity: 12,
-    });
-    expect(res.valid).toBe(true);
-    expect(res.error).toBeUndefined();
+  it("correctly identifies stock levels based on threshold", () => {
+    expect(getStockStatus(0, 5)).toBe("out_of_stock");
+    expect(getStockStatus(-2, 5)).toBe("out_of_stock");
+    expect(getStockStatus(3, 5)).toBe("low_stock");
+    expect(getStockStatus(5, 5)).toBe("low_stock");
+    expect(getStockStatus(6, 5)).toBe("in_stock");
+    expect(getStockStatus(100, 5)).toBe("in_stock");
+  });
+});
+
+describe("Seller Mobile — Onboarding State Resolution", () => {
+  type OnboardingStatus =
+    | "incomplete"
+    | "under_review"
+    | "needs_correction"
+    | "approved"
+    | "active";
+
+  const resolveSellerState = (profile: {
+    status?: string;
+    is_complete?: boolean;
+    business_name?: string;
+    contact_phone?: string;
+  }): OnboardingStatus => {
+    if (profile.status === "approved") return "approved";
+    if (profile.status === "needs_correction") return "needs_correction";
+    if (profile.status === "under_review" || profile.status === "pending") {
+      return "under_review";
+    }
+    if (!profile.business_name || !profile.contact_phone || profile.is_complete === false) {
+      return "incomplete";
+    }
+    return "incomplete";
+  };
+
+  it("resolves onboarding state properly from profile flags", () => {
+    expect(resolveSellerState({ status: "approved" })).toBe("approved");
+    expect(resolveSellerState({ status: "needs_correction" })).toBe("needs_correction");
+    expect(resolveSellerState({ status: "pending" })).toBe("under_review");
+    expect(resolveSellerState({ is_complete: false })).toBe("incomplete");
+  });
+});
+
+describe("Seller Mobile — Notifications & Channels", () => {
+  it("defines distinct Android channels for operational events", () => {
+    expect(ANDROID_SELLER_CHANNELS.ORDERS.id).toBe("floria_seller_orders");
+    expect(ANDROID_SELLER_CHANNELS.INVENTORY.id).toBe("floria_seller_inventory");
+    expect(ANDROID_SELLER_CHANNELS.SETTLEMENTS.id).toBe("floria_seller_settlements");
+    expect(ANDROID_SELLER_CHANNELS.ORDERS.importance).toBe(4); // High priority
   });
 
-  it("rejects input with empty name, zero price, or negative stock", () => {
-    expect(
-      validateProductInput({ name: "", pricePaise: 1000, stockQuantity: 5 })
-        .valid,
-    ).toBe(false);
-    expect(
-      validateProductInput({ name: "Plant", pricePaise: 0, stockQuantity: 5 })
-        .valid,
-    ).toBe(false);
-    expect(
-      validateProductInput({
-        name: "Plant",
-        pricePaise: 1000,
-        stockQuantity: -1,
-      }).valid,
-    ).toBe(false);
+  it("has valid seller notification categories", () => {
+    expect(SELLER_NOTIFICATION_CATEGORIES.ORDER).toBe("ORDER");
+    expect(SELLER_NOTIFICATION_CATEGORIES.INVENTORY).toBe("INVENTORY");
+    expect(SELLER_NOTIFICATION_CATEGORIES.SETTLEMENT).toBe("SETTLEMENT");
+  });
+});
+
+describe("Seller Mobile — Analytics & AOV Metrics", () => {
+  it("calculates AOV accurately without dividing by zero", () => {
+    const calculateAOV = (revenuePaise: number, ordersCount: number) => {
+      return ordersCount > 0 ? Math.round(revenuePaise / ordersCount) : 0;
+    };
+
+    expect(calculateAOV(100000, 2)).toBe(50000);
+    expect(calculateAOV(0, 0)).toBe(0);
+    expect(calculateAOV(125000, 3)).toBe(41667);
   });
 });

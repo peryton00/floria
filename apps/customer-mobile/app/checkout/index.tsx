@@ -17,13 +17,23 @@ import { useFeedback } from "../../lib/contexts/FloriaFeedbackContext";
 import { haptics } from "../../lib/haptics";
 import { Button } from "../../components/ui/Button";
 import { ListSkeleton } from "../../components/ui/ListSkeleton";
+import { EmptyState } from "../../components/ui/EmptyState";
+import { useActionLock } from "../../lib/hooks/useActionLock";
 
 export default function CustomerCheckoutScreen() {
   const router = useRouter();
-  const { items, subtotalPaise, deliveryFeePaise, totalPaise, clearCart } =
-    useCart();
+  const {
+    items,
+    subtotalPaise,
+    deliveryFeePaise,
+    maintenanceFeePaise,
+    totalPaise,
+    isFreeDelivery,
+    clearCart,
+  } = useCart();
   const { user } = useCustomerAuth();
   const { showSuccess, showError, showConfirmSheet } = useFeedback();
+  const { isLocked, runExclusive } = useActionLock();
 
   const [addresses, setAddresses] = useState<any[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
@@ -56,7 +66,12 @@ export default function CustomerCheckoutScreen() {
     fetchAddresses();
   }, [fetchAddresses]);
 
-  const handlePlaceOrder = async () => {
+  const handlePlaceOrder = () => {
+    if (items.length === 0) {
+      showError("Your cart is empty. Please add specimens before checking out.");
+      return;
+    }
+
     if (!selectedAddressId && addresses.length === 0) {
       showConfirmSheet({
         title: "Delivery Address Required",
@@ -69,67 +84,123 @@ export default function CustomerCheckoutScreen() {
       return;
     }
 
-    try {
-      setProcessing(true);
-      // 1. Create order on backend
-      const checkoutRes = await api.createCheckout({
-        addressId: selectedAddressId || addresses[0]?.id,
-        paymentMethod,
-      });
+    runExclusive(async () => {
+      try {
+        setProcessing(true);
 
-      if (!checkoutRes.success || !checkoutRes.data?.orderId) {
-        throw new Error(
-          checkoutRes.error?.message || "Failed to initialize order checkout.",
+        // 0. Pre-checkout database validation: Check live inventory & status
+        const validationChecks = await Promise.allSettled(
+          items.map((i) => api.getProductBySlug(i.productId)),
         );
-      }
 
-      const orderId = checkoutRes.data.orderId;
+        for (let idx = 0; idx < items.length; idx++) {
+          const item = items[idx];
+          const check = validationChecks[idx];
+          if (check.status === "fulfilled" && check.value?.success && check.value.data) {
+            const pData = check.value.data as any;
+            const liveStock =
+              pData.inventory?.stock_quantity ??
+              (Array.isArray(pData.inventory) ? pData.inventory[0]?.stock_quantity : undefined) ??
+              pData.stock_quantity ??
+              0;
 
-      if (paymentMethod === "online") {
-        // 2. Initialize Cashfree PG session
-        const sessionRes = await api.createPaymentSession(orderId);
-        if (!sessionRes.success || !sessionRes.data) {
+            if (liveStock <= 0) {
+              throw new Error(`"${item.name}" is currently out of stock. Please update your bag.`);
+            }
+            if (liveStock < item.quantity) {
+              throw new Error(`Only ${liveStock} units of "${item.name}" are available in stock.`);
+            }
+          }
+        }
+
+        // 1. Ensure client-side cart items are synced to backend DB cart table
+        if (items.length > 0) {
+          const syncItems = items
+            .filter((i) => Boolean(i.productId))
+            .map((item) => ({
+              productId: item.productId,
+              quantity: item.quantity,
+            }));
+          try {
+            await api.mergeCart(syncItems);
+          } catch (mergeErr) {
+            console.warn("Cart sync before checkout notice:", mergeErr);
+          }
+        }
+
+        // 2. Create order on backend
+        const checkoutRes = await api.createCheckout({
+          addressId: selectedAddressId || addresses[0]?.id,
+          paymentMethod,
+        });
+
+        if (!checkoutRes.success || !checkoutRes.data?.orderId) {
           throw new Error(
-            sessionRes.error?.message ||
-              "Failed to generate Cashfree payment session.",
+            checkoutRes.error?.message || "Failed to initialize order checkout.",
           );
         }
 
-        // Cashfree authorization bottom sheet
-        showConfirmSheet({
-          title: "Authorize Payment",
-          message: `Authorize payment of ${formatINR(totalPaise)} via Cashfree PG to finalize your botanical order?`,
-          icon: "shield-checkmark-outline",
-          confirmLabel: "Authorize Payment",
-          cancelLabel: "Cancel",
-          onConfirm: () => {
-            clearCart();
-            haptics.success();
-            showSuccess("Order confirmed successfully");
-            router.replace({
-              pathname: "/orders/[id]",
-              params: { id: orderId },
-            } as any);
-          },
-          onCancel: () => setProcessing(false),
-        });
-      } else {
-        // Cash on Delivery
-        clearCart();
-        haptics.success();
-        showSuccess("Order placed successfully (Cash on Delivery)");
-        router.replace({
-          pathname: "/orders/[id]",
-          params: { id: orderId },
-        } as any);
+        const orderId = checkoutRes.data.orderId;
+
+        if (paymentMethod === "online") {
+          // 3. Initialize Cashfree PG session
+          const sessionRes = await api.createPaymentSession(orderId);
+          if (!sessionRes.success || !sessionRes.data) {
+            throw new Error(
+              sessionRes.error?.message ||
+                "Failed to generate Cashfree payment session.",
+            );
+          }
+
+          // Cashfree authorization bottom sheet
+          showConfirmSheet({
+            title: "Authorize Payment",
+            message: `Authorize payment of ${formatINR(totalPaise)} via Cashfree PG to finalize your botanical order?`,
+            icon: "shield-checkmark-outline",
+            confirmLabel: "Authorize Payment",
+            cancelLabel: "Cancel",
+            onConfirm: () => {
+              clearCart();
+              haptics.success();
+              showSuccess("Order confirmed successfully");
+              router.replace({
+                pathname: "/orders/[id]",
+                params: { id: orderId },
+              } as any);
+            },
+            onCancel: () => setProcessing(false),
+          });
+        } else {
+          // Cash on Delivery
+          clearCart();
+          haptics.success();
+          showSuccess("Order placed successfully (Cash on Delivery)");
+          router.replace({
+            pathname: "/orders/[id]",
+            params: { id: orderId },
+          } as any);
+        }
+      } catch (err: any) {
+        haptics.error();
+        showError(err.message || "Failed to process order.");
+      } finally {
+        setProcessing(false);
       }
-    } catch (err: any) {
-      haptics.error();
-      showError(err.message || "Failed to process order.");
-    } finally {
-      setProcessing(false);
-    }
+    });
   };
+
+  if (items.length === 0) {
+    return (
+      <View style={styles.container}>
+        <EmptyState
+          title="Your Bag is Empty"
+          message="Select living botanical specimens to proceed through secure checkout."
+          actionLabel="Explore Plants"
+          onAction={() => router.push("/(tabs)/explore" as any)}
+        />
+      </View>
+    );
+  }
 
   if (loading && addresses.length === 0) {
     return (
@@ -213,7 +284,12 @@ export default function CustomerCheckoutScreen() {
         <View style={styles.paymentOptions}>
           <TouchableOpacity
             activeOpacity={0.8}
-            onPress={() => setPaymentMethod("online")}
+            onPress={() => {
+              if (paymentMethod !== "online") {
+                haptics.selection();
+                setPaymentMethod("online");
+              }
+            }}
             style={[
               styles.paymentOption,
               paymentMethod === "online" && styles.paymentOptionSelected,
@@ -234,7 +310,12 @@ export default function CustomerCheckoutScreen() {
 
           <TouchableOpacity
             activeOpacity={0.8}
-            onPress={() => setPaymentMethod("cod")}
+            onPress={() => {
+              if (paymentMethod !== "cod") {
+                haptics.selection();
+                setPaymentMethod("cod");
+              }
+            }}
             style={[
               styles.paymentOption,
               paymentMethod === "cod" && styles.paymentOptionSelected,
@@ -276,15 +357,21 @@ export default function CustomerCheckoutScreen() {
 
         <View style={styles.breakdown}>
           <View style={styles.breakdownRow}>
-            <Text style={styles.breakdownLabel}>Subtotal</Text>
+            <Text style={styles.breakdownLabel}>Items Subtotal</Text>
             <Text style={styles.breakdownVal}>{formatINR(subtotalPaise)}</Text>
           </View>
           <View style={styles.breakdownRow}>
-            <Text style={styles.breakdownLabel}>Hyperlocal Courier</Text>
-            <Text style={styles.breakdownVal}>
-              {formatINR(deliveryFeePaise)}
+            <Text style={styles.breakdownLabel}>Hyperlocal Courier Delivery</Text>
+            <Text style={[styles.breakdownVal, deliveryFeePaise === 0 && styles.freeDeliveryText]}>
+              {deliveryFeePaise === 0 ? "FREE" : formatINR(deliveryFeePaise)}
             </Text>
           </View>
+          {maintenanceFeePaise > 0 && (
+            <View style={styles.breakdownRow}>
+              <Text style={styles.breakdownLabel}>Platform Maintenance Fee</Text>
+              <Text style={styles.breakdownVal}>{formatINR(maintenanceFeePaise)}</Text>
+            </View>
+          )}
           <View style={[styles.breakdownRow, styles.breakdownTotal]}>
             <Text style={styles.totalLabel}>Grand Total</Text>
             <Text style={styles.totalVal}>{formatINR(totalPaise)}</Text>
@@ -481,6 +568,10 @@ const styles = StyleSheet.create({
     fontSize: Typography.fontSizes.xs,
     color: Colors.ink,
     fontWeight: "600",
+  },
+  freeDeliveryText: {
+    color: "#15803D",
+    fontWeight: "700",
   },
   breakdownTotal: {
     borderTopWidth: 1,

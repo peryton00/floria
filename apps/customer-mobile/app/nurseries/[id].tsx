@@ -167,6 +167,18 @@ export default function NurseryDetailScreen() {
               const primaryImage =
                 prod.images?.find((img: any) => img.is_primary)?.url ||
                 prod.images?.[0]?.url;
+              const stockQty =
+                p.inventory?.stock_quantity ??
+                (Array.isArray(p.inventory) ? p.inventory[0]?.stock_quantity : undefined) ??
+                (Array.isArray(prod.inventory) ? prod.inventory[0]?.stock_quantity : undefined) ??
+                prod.inventory?.stock_quantity ??
+                p.stock_quantity ??
+                prod.stock_quantity;
+              const isOutOfStock =
+                typeof stockQty === "number"
+                  ? stockQty <= 0
+                  : Boolean(p.is_out_of_stock ?? prod.is_out_of_stock ?? false);
+
               return (
                 <View key={prod.id} style={styles.gridItem}>
                   <ProductCard
@@ -179,6 +191,7 @@ export default function NurseryDetailScreen() {
                     nurseryName={nursery.business_name || nursery.name}
                     imageUrl={primaryImage}
                     careLevel={prod.care_level || "EASY"}
+                    isOutOfStock={isOutOfStock}
                   />
                 </View>
               );

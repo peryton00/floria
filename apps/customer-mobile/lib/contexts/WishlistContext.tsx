@@ -1,4 +1,13 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+} from "react";
+import { StorageService } from "../storage";
+
+const WISHLIST_STORAGE_KEY = "@floria:wishlist_v1";
 
 export interface WishlistItem {
   productId: string;
@@ -21,6 +30,26 @@ const WishlistContext = createContext<WishlistContextType | undefined>(
 
 export function WishlistProvider({ children }: { children: React.ReactNode }) {
   const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // 1. Hydrate wishlist from storage
+  useEffect(() => {
+    StorageService.getItem<WishlistItem[]>(WISHLIST_STORAGE_KEY, []).then(
+      (saved) => {
+        if (Array.isArray(saved) && saved.length > 0) {
+          setWishlist(saved);
+        }
+        setIsHydrated(true);
+      },
+    );
+  }, []);
+
+  // 2. Persist wishlist changes
+  useEffect(() => {
+    if (isHydrated) {
+      StorageService.setItem(WISHLIST_STORAGE_KEY, wishlist);
+    }
+  }, [wishlist, isHydrated]);
 
   const isInWishlist = useCallback(
     (productId: string) => wishlist.some((i) => i.productId === productId),

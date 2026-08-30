@@ -3,154 +3,213 @@ import {
   View,
   Text,
   FlatList,
-  StyleSheet,
+  TextInput,
   TouchableOpacity,
   RefreshControl,
-  Alert,
+  StyleSheet,
 } from "react-native";
+import { useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 import { api } from "../../lib/api";
-import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
-import { OrderActionCard } from "../../components/seller/OrderActionCard";
-import { LoadingState } from "../../components/ui/LoadingState";
+import { useSellerAuth } from "../../lib/contexts/SellerAuthContext";
+import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
+import { formatINR, formatDate } from "../../lib/format";
+import { OrderListSkeleton } from "../../components/ui/Skeletons";
+import { StatusBadge } from "../../components/ui/StatusBadge";
 import { EmptyState } from "../../components/ui/EmptyState";
-import { ErrorState } from "../../components/ui/ErrorState";
 
-const TABS = [
-  { key: "all", label: "All Orders" },
-  { key: "new", label: "New (Action)" },
+const STATUS_TABS = [
+  { key: "all", label: "All" },
+  { key: "new", label: "New" },
   { key: "preparing", label: "Preparing" },
-  { key: "ready_for_pickup", label: "Ready" },
-  { key: "delivered", label: "Delivered" },
+  { key: "ready", label: "Ready" },
+  { key: "completed", label: "Completed" },
 ];
 
-export default function SellerOrdersQueueScreen() {
-  const [activeTab, setActiveTab] = useState("all");
+export default function SellerOrdersScreen() {
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { seller } = useSellerAuth();
+
+  const [activeTab, setActiveTab] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [orders, setOrders] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [advancingId, setAdvancingId] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
 
   const fetchOrders = useCallback(async () => {
     try {
-      setError(null);
+      setLoading(true);
+      let statusFilter: string | undefined = undefined;
+      if (activeTab === "new") statusFilter = "placed";
+      else if (activeTab === "preparing") statusFilter = "preparing";
+      else if (activeTab === "ready") statusFilter = "ready_for_pickup";
+      else if (activeTab === "completed") statusFilter = "delivered";
+
       const res = await api.getSellerOrders({
-        status: activeTab !== "all" ? activeTab : undefined,
+        status: statusFilter,
+        search: searchQuery.trim() || undefined,
       });
 
-      if (res.success && res.data) {
+      if (res.success && Array.isArray(res.data)) {
         setOrders(res.data);
       } else {
-        setError(res.error?.message || "Failed to load orders.");
+        setOrders([]);
       }
-    } catch (err: any) {
-      setError(err.message || "Failed to fetch nursery orders queue.");
+    } catch (err) {
+      console.warn("[SellerOrders] Load error:", err);
+      setOrders([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [activeTab]);
+  }, [activeTab, searchQuery]);
 
   useEffect(() => {
     fetchOrders();
-  }, [fetchOrders]);
+  }, [fetchOrders, seller?.id]);
 
   const onRefresh = () => {
     setRefreshing(true);
     fetchOrders();
   };
 
-  const handleAdvanceStatus = async (orderId: string, nextStatus: string) => {
-    try {
-      setAdvancingId(orderId);
-      const res = await api.updateFulfillmentStatus(orderId, nextStatus);
-      if (res.success) {
-        await fetchOrders();
-      } else {
-        Alert.alert(
-          "Status Update Failed",
-          res.error?.message || "Could not transition order status.",
-        );
-      }
-    } catch (e: any) {
-      Alert.alert(
-        "Status Update Error",
-        e.message || "Order transition error.",
-      );
-    } finally {
-      setAdvancingId(null);
-    }
+  const renderOrderItem = ({ item }: { item: any }) => {
+    const orderId = item.masterOrderId || item.id || "";
+    const shortId = orderId.substring(0, 8).toUpperCase();
+    const items = item.items || [];
+    const sellerAmount = item.seller_payout_paise ?? item.totalPaise ?? item.subtotalPaise ?? 0;
+    const createdAt = item.createdAt || item.created_at;
+
+    return (
+      <TouchableOpacity
+        activeOpacity={0.85}
+        onPress={() => router.push(`/orders/${orderId}` as any)}
+        style={styles.orderCard}
+      >
+        <View style={styles.cardHeader}>
+          <View>
+            <Text style={styles.orderIdText}>#FL-{shortId}</Text>
+            <Text style={styles.orderDate}>{formatDate(createdAt)}</Text>
+          </View>
+          <StatusBadge status={item.status || "PLACED"} />
+        </View>
+
+        {/* Multi-Seller Isolated Items List */}
+        <View style={styles.itemsBox}>
+          {items.map((lineItem: any, idx: number) => {
+            const plantName =
+              lineItem.product?.name || lineItem.product_name || "Botanical Specimen";
+            return (
+              <View key={idx} style={styles.itemLine}>
+                <Ionicons name="leaf-outline" size={12} color={Colors.forest} style={{ marginTop: 2 }} />
+                <Text style={styles.itemLineText} numberOfLines={1}>
+                  {lineItem.quantity} × {plantName}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+
+        {/* Footer: Seller Payout Amount & Navigation */}
+        <View style={styles.cardFooter}>
+          <View>
+            <Text style={styles.amountLabel}>Your Payout</Text>
+            <Text style={styles.amountValue}>{formatINR(sellerAmount)}</Text>
+          </View>
+
+          <View style={styles.detailsButton}>
+            <Text style={styles.detailsButtonText}>
+              {item.status?.toLowerCase() === "preparing"
+                ? "Manage Fulfillment"
+                : "View Order"}
+            </Text>
+            <Ionicons name="chevron-forward" size={14} color={Colors.forest} />
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
   };
 
   return (
-    <View style={styles.container}>
-      {/* Horizontal Filter Tabs */}
-      <View style={styles.tabBar}>
-        <FlatList
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          data={TABS}
-          keyExtractor={(item) => item.key}
-          contentContainerStyle={styles.tabsScroll}
-          renderItem={({ item }) => {
-            const isSelected = activeTab === item.key;
-            return (
-              <TouchableOpacity
-                activeOpacity={0.8}
-                onPress={() => setActiveTab(item.key)}
-                style={[styles.tabChip, isSelected && styles.tabChipSelected]}
-              >
-                <Text
-                  style={[styles.tabText, isSelected && styles.tabTextSelected]}
-                >
-                  {item.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          }}
-        />
+    <View style={[styles.screen, { paddingTop: insets.top }]}>
+      {/* ── Screen Header ── */}
+      <View style={styles.topBar}>
+        <Text style={styles.pageTitle}>Orders</Text>
       </View>
 
-      {/* Orders List */}
+      {/* ── Search Bar ── */}
+      <View style={styles.searchContainer}>
+        <View style={styles.searchInputWrap}>
+          <Ionicons name="search-outline" size={18} color={Colors.inkMuted} />
+          <TextInput
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Search by order # or customer..."
+            placeholderTextColor={Colors.inkSubtle}
+            style={styles.searchInput}
+            returnKeyType="search"
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery("")}>
+              <Ionicons name="close-circle" size={16} color={Colors.inkMuted} />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
+      {/* ── Status Tabs ── */}
+      <View style={styles.tabsContainer}>
+        {STATUS_TABS.map((tab) => {
+          const isActive = activeTab === tab.key;
+          return (
+            <TouchableOpacity
+              key={tab.key}
+              activeOpacity={0.8}
+              onPress={() => setActiveTab(tab.key)}
+              style={[styles.tabButton, isActive && styles.activeTabButton]}
+            >
+              <Text style={[styles.tabButtonText, isActive && styles.activeTabText]}>
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      {/* ── Orders List / Loading / Empty ── */}
       {loading && !refreshing ? (
-        <LoadingState message="Retrieving orders queue..." />
-      ) : error ? (
-        <ErrorState message={error} onRetry={fetchOrders} />
-      ) : orders.length === 0 ? (
-        <EmptyState
-          title="No Orders in this Status"
-          message="Incoming plant orders from local customers will arrive here in real-time."
-          actionLabel="Refresh Queue"
-          onAction={fetchOrders}
-        />
+        <OrderListSkeleton />
       ) : (
         <FlatList
           data={orders}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.list}
+          keyExtractor={(item) => item.masterOrderId || item.id}
+          renderItem={renderOrderItem}
+          contentContainerStyle={styles.listContent}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
+              tintColor={Colors.forest}
               colors={[Colors.forest]}
             />
           }
-          renderItem={({ item }) => (
-            <OrderActionCard
-              id={item.id}
-              orderNumber={item.order_number || item.id.substring(0, 8)}
-              createdAt={item.created_at}
-              status={item.status || "pending"}
-              items={
-                item.items || [{ name: "Botanical Specimen", quantity: 1 }]
+          ListEmptyComponent={
+            <EmptyState
+              icon="receipt-outline"
+              title="No orders yet"
+              description={
+                searchQuery
+                  ? "No orders match your search query."
+                  : activeTab !== "all"
+                    ? `No orders currently in "${STATUS_TABS.find((t) => t.key === activeTab)?.label}" status.`
+                    : "New customer orders will appear here as they are placed."
               }
-              totalPaise={item.total_amount_paise || item.total_paise || 129900}
-              advancing={advancingId === item.id}
-              onAdvanceStatus={(nextStatus) =>
-                handleAdvanceStatus(item.id, nextStatus)
-              }
+              actionLabel={searchQuery ? "Clear Search" : undefined}
+              onAction={searchQuery ? () => setSearchQuery("") : undefined}
             />
-          )}
+          }
         />
       )}
     </View>
@@ -158,44 +217,153 @@ export default function SellerOrdersQueueScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
     backgroundColor: Colors.page,
   },
-  tabBar: {
-    backgroundColor: Colors.linen,
+  topBar: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
+    backgroundColor: Colors.page,
+  },
+  pageTitle: {
+    fontSize: Typography.fontSizes.lg,
+    fontFamily: "Georgia",
+    fontWeight: "bold",
+    color: Colors.forest,
+  },
+  searchContainer: {
+    paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
+    backgroundColor: Colors.page,
   },
-  tabsScroll: {
-    paddingHorizontal: Spacing.md,
-    gap: Spacing.xs,
+  searchInputWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.linen,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.sm,
+    height: 40,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    gap: 6,
   },
-  tabChip: {
+  searchInput: {
+    flex: 1,
+    fontSize: Typography.fontSizes.sm,
+    color: Colors.ink,
+  },
+  tabsContainer: {
+    flexDirection: "row",
     paddingHorizontal: Spacing.md,
-    paddingVertical: 8,
+    paddingVertical: 6,
+    backgroundColor: Colors.page,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+    gap: 6,
+  },
+  tabButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: BorderRadius.full,
-    backgroundColor: Colors.sand,
+    backgroundColor: Colors.linen,
     borderWidth: 1,
     borderColor: Colors.border,
   },
-  tabChipSelected: {
+  activeTabButton: {
     backgroundColor: Colors.forest,
     borderColor: Colors.forestDark,
   },
-  tabText: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: Colors.ink,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
+  tabButtonText: {
+    fontSize: Typography.fontSizes.xs,
+    fontWeight: "600",
+    color: Colors.inkMuted,
   },
-  tabTextSelected: {
+  activeTabText: {
     color: Colors.white,
+    fontWeight: "700",
   },
-  list: {
+  listContent: {
     padding: Spacing.md,
     paddingBottom: Spacing.xxl,
+  },
+  orderCard: {
+    backgroundColor: Colors.linen,
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    marginBottom: Spacing.sm,
+  },
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: Spacing.xs,
+  },
+  orderIdText: {
+    fontSize: Typography.fontSizes.sm,
+    fontWeight: "bold",
+    fontFamily: "Georgia",
+    color: Colors.ink,
+  },
+  orderDate: {
+    fontSize: 10,
+    color: Colors.inkMuted,
+    marginTop: 2,
+  },
+  itemsBox: {
+    backgroundColor: Colors.page,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.sm,
+    marginVertical: Spacing.xs,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  itemLine: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 6,
+    marginVertical: 2,
+  },
+  itemLineText: {
+    flex: 1,
+    fontSize: Typography.fontSizes.xs,
+    color: Colors.ink,
+    fontWeight: "500",
+  },
+  cardFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: Spacing.xs,
+    paddingTop: Spacing.xs,
+  },
+  amountLabel: {
+    fontSize: 9,
+    fontWeight: "700",
+    color: Colors.inkMuted,
+    textTransform: "uppercase",
+  },
+  amountValue: {
+    fontSize: Typography.fontSizes.base,
+    fontWeight: "bold",
+    color: Colors.forest,
+  },
+  detailsButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    backgroundColor: Colors.botanical,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: BorderRadius.sm,
+  },
+  detailsButtonText: {
+    fontSize: Typography.fontSizes.xs,
+    fontWeight: "700",
+    color: Colors.forestDark,
   },
 });

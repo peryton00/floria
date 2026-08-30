@@ -15,6 +15,7 @@ import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
 import { ProductCard } from "../../components/customer/ProductCard";
 import { NurseryCard } from "../../components/customer/NurseryCard";
 import { CategoryChip } from "../../components/customer/CategoryChip";
+import { RecentlyViewedSection } from "../../components/customer/RecentlyViewedSection";
 import { ProductGridSkeleton } from "../../components/ui/ProductCardSkeleton";
 import { FloriaSkeleton } from "../../components/ui/FloriaSkeleton";
 import { ErrorState } from "../../components/ui/ErrorState";
@@ -238,6 +239,18 @@ export default function CustomerHomeScreen() {
               const primaryImage =
                 prod.images?.find((img: any) => img.is_primary)?.url ||
                 prod.images?.[0]?.url;
+              const stockQty =
+                p.inventory?.stock_quantity ??
+                (Array.isArray(p.inventory) ? p.inventory[0]?.stock_quantity : undefined) ??
+                (Array.isArray(prod.inventory) ? prod.inventory[0]?.stock_quantity : undefined) ??
+                prod.inventory?.stock_quantity ??
+                p.stock_quantity ??
+                prod.stock_quantity;
+              const isOutOfStock =
+                typeof stockQty === "number"
+                  ? stockQty <= 0
+                  : Boolean(p.is_out_of_stock ?? prod.is_out_of_stock ?? false);
+
               return (
                 <View key={prod.id || p.id} style={styles.gridItem}>
                   <ProductCard
@@ -247,9 +260,11 @@ export default function CustomerHomeScreen() {
                     nurseryId={p.seller_id || prod.seller_id || "nursery-1"}
                     nurseryName={p.seller_name || p.nursery_name || "Floria Nursery"}
                     imageUrl={primaryImage}
-                    careLevel={prod.care_level || "EASY"}
-                    rating={p.rating}
-                    reviewCount={p.review_count}
+                    careLevel={prod.care_level}
+                    isOutOfStock={isOutOfStock}
+                    rating={p.rating_summary?.avg_rating ?? p.rating}
+                    reviewCount={p.rating_summary?.review_count ?? p.review_count}
+                    isFreeDelivery={Boolean(p.pricing?.isFreeDelivery ?? p.is_free_delivery ?? p.isFreeDelivery)}
                   />
                 </View>
               );
@@ -258,7 +273,10 @@ export default function CustomerHomeScreen() {
         )}
       </View>
 
-      {/* 6. Curated Growers (Editorial Discovery Section) */}
+      {/* 6. Recently Explored Specimens */}
+      <RecentlyViewedSection title="Recently Explored by You" />
+
+      {/* 7. Curated Growers (Editorial Discovery Section) */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <View>
@@ -282,7 +300,7 @@ export default function CustomerHomeScreen() {
               name={n.business_name || n.name}
               city={n.city || "Raipur"}
               story={n.story || n.business_description || n.description}
-              rating={n.rating || 4.9}
+              rating={n.rating}
               plantCount={n.product_count || 16}
             />
           ))

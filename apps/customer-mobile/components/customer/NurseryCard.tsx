@@ -18,8 +18,8 @@ export function NurseryCard({
   name,
   city = "Raipur",
   story,
-  rating = 4.9,
-  plantCount = 18,
+  rating,
+  plantCount,
 }: NurseryCardProps) {
   const router = useRouter();
 
@@ -49,15 +49,17 @@ export function NurseryCard({
             <Text style={styles.location}>{city}</Text>
           </View>
         </View>
-        <View style={styles.ratingBadge}>
-          <Ionicons
-            name="star"
-            size={11}
-            color={Colors.forest}
-            style={{ marginRight: 3 }}
-          />
-          <Text style={styles.ratingText}>{rating.toFixed(1)}</Text>
-        </View>
+        {typeof rating === "number" && rating > 0 ? (
+          <View style={styles.ratingBadge}>
+            <Ionicons
+              name="star"
+              size={11}
+              color={Colors.forest}
+              style={{ marginRight: 3 }}
+            />
+            <Text style={styles.ratingText}>{rating.toFixed(1)}</Text>
+          </View>
+        ) : null}
       </View>
 
       {story ? (

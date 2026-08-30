@@ -3,132 +3,241 @@ import {
   View,
   Text,
   FlatList,
-  StyleSheet,
+  TextInput,
   TouchableOpacity,
+  Image,
   RefreshControl,
+  StyleSheet,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 import { api } from "../../lib/api";
-import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
+import { useSellerAuth } from "../../lib/contexts/SellerAuthContext";
+import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
 import { formatINR } from "../../lib/format";
+import { ProductListSkeleton } from "../../components/ui/Skeletons";
 import { StatusBadge } from "../../components/ui/StatusBadge";
-import { Button } from "../../components/ui/Button";
-import { LoadingState } from "../../components/ui/LoadingState";
 import { EmptyState } from "../../components/ui/EmptyState";
-import { ErrorState } from "../../components/ui/ErrorState";
+
+const PRODUCT_FILTERS = [
+  { key: "all", label: "All" },
+  { key: "active", label: "Active" },
+  { key: "low", label: "Low Stock" },
+  { key: "out", label: "Out of Stock" },
+];
 
 export default function SellerProductsScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { seller } = useSellerAuth();
+
+  const [activeFilter, setActiveFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [products, setProducts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
 
   const fetchProducts = useCallback(async () => {
     try {
-      setError(null);
-      const res = await api.getSellerProducts();
-      if (res.success && res.data) {
+      setLoading(true);
+      let statusParam: string | undefined = undefined;
+      let stockParam: string | undefined = undefined;
+
+      if (activeFilter === "active") statusParam = "active";
+      else if (activeFilter === "low") stockParam = "low";
+      else if (activeFilter === "out") stockParam = "out";
+
+      const res = await api.getSellerProducts({
+        status: statusParam,
+        stock: stockParam,
+        search: searchQuery.trim() || undefined,
+      });
+
+      if (res.success && Array.isArray(res.data)) {
         setProducts(res.data);
       } else {
-        setError(res.error?.message || "Failed to load products.");
+        setProducts([]);
       }
-    } catch (err: any) {
-      setError(err.message || "Failed to connect to catalog.");
+    } catch (err) {
+      console.warn("[SellerProducts] Load error:", err);
+      setProducts([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [activeFilter, searchQuery]);
 
   useEffect(() => {
     fetchProducts();
-  }, [fetchProducts]);
+  }, [fetchProducts, seller?.id]);
 
   const onRefresh = () => {
     setRefreshing(true);
     fetchProducts();
   };
 
-  return (
-    <View style={styles.container}>
-      <View style={styles.topBar}>
-        <Text style={styles.title}>Plant Catalog ({products.length})</Text>
-        <Button
-          label="+ New Specimen"
-          size="sm"
-          onPress={() => router.push("/products/new" as any)}
+  const renderProductItem = ({ item }: { item: any }) => {
+    const productId = item.id;
+    const name = item.name || "Botanical Specimen";
+    const pricePaise =
+      item.price_paise ??
+      item.inventory?.[0]?.price_paise ??
+      item.inventory?.price_paise ??
+      0;
+    const stockQuantity =
+      item.stock_quantity ??
+      item.inventory?.[0]?.stock_quantity ??
+      item.inventory?.stock_quantity ??
+      0;
+    const lowStockThreshold =
+      item.low_stock_threshold ??
+      item.inventory?.[0]?.low_stock_threshold ??
+      item.inventory?.low_stock_threshold ??
+      5;
+    const isLowStock = stockQuantity > 0 && stockQuantity <= lowStockThreshold;
+    const isOutOfStock = stockQuantity <= 0;
+    const imageUrl =
+      item.primary_image_url ||
+      item.image_url ||
+      item.images?.[0]?.url ||
+      "/floria-logo.png";
+
+    return (
+      <TouchableOpacity
+        activeOpacity={0.85}
+        onPress={() => router.push(`/products/${productId}` as any)}
+        style={styles.productCard}
+      >
+        <Image
+          source={{
+            uri: imageUrl.startsWith("http")
+              ? imageUrl
+              : "https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=200",
+          }}
+          style={styles.productImage}
+          resizeMode="cover"
         />
+
+        <View style={styles.productDetails}>
+          <Text style={styles.productName} numberOfLines={1}>
+            {name}
+          </Text>
+
+          <Text style={styles.productPrice}>{formatINR(pricePaise)}</Text>
+
+          <View style={styles.stockRow}>
+            {isOutOfStock ? (
+              <View style={[styles.stockTag, styles.outOfStockTag]}>
+                <Text style={styles.outOfStockTagText}>Out of stock</Text>
+              </View>
+            ) : isLowStock ? (
+              <View style={[styles.stockTag, styles.lowStockTag]}>
+                <Text style={styles.lowStockTagText}>
+                  Stock: {stockQuantity} (Low)
+                </Text>
+              </View>
+            ) : (
+              <Text style={styles.stockText}>Stock: {stockQuantity}</Text>
+            )}
+
+            <StatusBadge status={item.status || "active"} />
+          </View>
+        </View>
+
+        <Ionicons name="chevron-forward" size={18} color={Colors.inkMuted} style={styles.chevron} />
+      </TouchableOpacity>
+    );
+  };
+
+  return (
+    <View style={[styles.screen, { paddingTop: insets.top }]}>
+      {/* ── Top Bar with Add Plant CTA ── */}
+      <View style={styles.topBar}>
+        <Text style={styles.pageTitle}>Products</Text>
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={() => router.push("/products/new" as any)}
+          style={styles.addPlantButton}
+        >
+          <Ionicons name="add" size={18} color={Colors.white} />
+          <Text style={styles.addPlantButtonText}>Add Plant</Text>
+        </TouchableOpacity>
       </View>
 
+      {/* ── Search Bar ── */}
+      <View style={styles.searchContainer}>
+        <View style={styles.searchInputWrap}>
+          <Ionicons name="search-outline" size={18} color={Colors.inkMuted} />
+          <TextInput
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Search your products..."
+            placeholderTextColor={Colors.inkSubtle}
+            style={styles.searchInput}
+            returnKeyType="search"
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery("")}>
+              <Ionicons name="close-circle" size={16} color={Colors.inkMuted} />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
+      {/* ── Filter Tabs ── */}
+      <View style={styles.tabsContainer}>
+        {PRODUCT_FILTERS.map((tab) => {
+          const isActive = activeFilter === tab.key;
+          return (
+            <TouchableOpacity
+              key={tab.key}
+              activeOpacity={0.8}
+              onPress={() => setActiveFilter(tab.key)}
+              style={[styles.tabButton, isActive && styles.activeTabButton]}
+            >
+              <Text style={[styles.tabButtonText, isActive && styles.activeTabText]}>
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      {/* ── Products List / Skeleton / Empty ── */}
       {loading && !refreshing ? (
-        <LoadingState message="Loading botanical catalog..." />
-      ) : error ? (
-        <ErrorState message={error} onRetry={fetchProducts} />
-      ) : products.length === 0 ? (
-        <EmptyState
-          title="No Products in Catalog"
-          message="Publish living plants, rare aroids, bonsai, and planters to the Floria marketplace."
-          actionLabel="+ Create First Plant"
-          onAction={() => router.push("/products/new" as any)}
-        />
+        <ProductListSkeleton />
       ) : (
         <FlatList
           data={products}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.list}
+          renderItem={renderProductItem}
+          contentContainerStyle={styles.listContent}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
+              tintColor={Colors.forest}
               colors={[Colors.forest]}
             />
           }
-          renderItem={({ item }) => {
-            const inventory = item.inventory || {};
-            return (
-              <TouchableOpacity
-                activeOpacity={0.85}
-                onPress={() =>
-                  router.push({
-                    pathname: "/products/[id]",
-                    params: { id: item.id },
-                  } as any)
-                }
-                style={styles.card}
-              >
-                <View style={styles.cardHeader}>
-                  <View style={styles.cardInfo}>
-                    <Text style={styles.productName} numberOfLines={1}>
-                      {item.name}
-                    </Text>
-                    {item.botanical_name ? (
-                      <Text style={styles.botanicalName}>
-                        {item.botanical_name}
-                      </Text>
-                    ) : null}
-                  </View>
-                  <StatusBadge status={item.status || "published"} />
-                </View>
-
-                <View style={styles.cardFooter}>
-                  <View>
-                    <Text style={styles.price}>
-                      {formatINR(
-                        inventory.price_paise || item.price_paise || 129900,
-                      )}
-                    </Text>
-                    <Text style={styles.stock}>
-                      Stock:{" "}
-                      {inventory.stock_quantity ?? item.stock_quantity ?? 0}{" "}
-                      available
-                    </Text>
-                  </View>
-                  <Text style={styles.editLink}>Edit Specimen →</Text>
-                </View>
-              </TouchableOpacity>
-            );
-          }}
+          ListEmptyComponent={
+            <EmptyState
+              icon="leaf-outline"
+              title="Your catalog is empty"
+              description={
+                searchQuery
+                  ? "No products match your search query."
+                  : activeFilter !== "all"
+                    ? `No products currently in "${PRODUCT_FILTERS.find((f) => f.key === activeFilter)?.label}" filter.`
+                    : "Add your first botanical specimen from the canonical catalog to start selling."
+              }
+              actionLabel={searchQuery ? "Clear Search" : "+ Add Plant"}
+              onAction={() =>
+                searchQuery ? setSearchQuery("") : router.push("/products/new" as any)
+              }
+            />
+          }
         />
       )}
     </View>
@@ -136,7 +245,7 @@ export default function SellerProductsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
     backgroundColor: Colors.page,
   },
@@ -144,72 +253,153 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: Spacing.md,
-    backgroundColor: Colors.linen,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
+    backgroundColor: Colors.page,
   },
-  title: {
-    fontSize: Typography.fontSizes.base,
-    fontWeight: "bold",
+  pageTitle: {
+    fontSize: Typography.fontSizes.lg,
     fontFamily: "Georgia",
+    fontWeight: "bold",
+    color: Colors.forest,
+  },
+  addPlantButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.forest,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: BorderRadius.md,
+    gap: 4,
+  },
+  addPlantButtonText: {
+    fontSize: Typography.fontSizes.xs,
+    fontWeight: "700",
+    color: Colors.white,
+  },
+  searchContainer: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    backgroundColor: Colors.page,
+  },
+  searchInputWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.linen,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.sm,
+    height: 40,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    gap: 6,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: Typography.fontSizes.sm,
     color: Colors.ink,
   },
-  list: {
+  tabsContainer: {
+    flexDirection: "row",
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 6,
+    backgroundColor: Colors.page,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+    gap: 6,
+  },
+  tabButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.linen,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  activeTabButton: {
+    backgroundColor: Colors.forest,
+    borderColor: Colors.forestDark,
+  },
+  tabButtonText: {
+    fontSize: Typography.fontSizes.xs,
+    fontWeight: "600",
+    color: Colors.inkMuted,
+  },
+  activeTabText: {
+    color: Colors.white,
+    fontWeight: "700",
+  },
+  listContent: {
     padding: Spacing.md,
     paddingBottom: Spacing.xxl,
   },
-  card: {
+  productCard: {
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: Colors.linen,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.sm,
     borderWidth: 1,
     borderColor: Colors.border,
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.xs,
   },
-  cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+  productImage: {
+    width: 64,
+    height: 64,
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.sand,
   },
-  cardInfo: {
+  productDetails: {
     flex: 1,
-    paddingRight: Spacing.sm,
+    marginLeft: Spacing.md,
+    paddingRight: Spacing.xs,
   },
   productName: {
     fontSize: Typography.fontSizes.sm,
     fontWeight: "bold",
     color: Colors.ink,
+    fontFamily: "Georgia",
   },
-  botanicalName: {
-    fontSize: 11,
-    fontStyle: "italic",
-    color: Colors.sage,
-    marginTop: 2,
-  },
-  cardFooter: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-end",
-    marginTop: Spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-    paddingTop: Spacing.xs,
-  },
-  price: {
+  productPrice: {
     fontSize: Typography.fontSizes.sm,
     fontWeight: "bold",
     color: Colors.forest,
+    marginTop: 2,
   },
-  stock: {
-    fontSize: 10,
-    color: Colors.inkMuted,
-    marginTop: 1,
+  stockRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+    marginTop: 4,
   },
-  editLink: {
+  stockText: {
     fontSize: 11,
-    fontWeight: "bold",
-    color: Colors.terracotta,
-    textTransform: "uppercase",
+    color: Colors.inkMuted,
+    fontWeight: "500",
+  },
+  stockTag: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: BorderRadius.sm,
+  },
+  lowStockTag: {
+    backgroundColor: Colors.warningBg,
+  },
+  lowStockTagText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: Colors.warning,
+  },
+  outOfStockTag: {
+    backgroundColor: Colors.errorBg,
+  },
+  outOfStockTagText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: Colors.error,
+  },
+  chevron: {
+    marginLeft: Spacing.xs,
   },
 });

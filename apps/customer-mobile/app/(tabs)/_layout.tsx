@@ -7,6 +7,7 @@ import { Colors } from "../../lib/theme";
 import { useCart } from "../../lib/contexts/CartContext";
 import { useWishlist } from "../../lib/contexts/WishlistContext";
 import { LocationSelector } from "../../components/customer/LocationSelector";
+import { NotificationBell } from "../../components/notifications/NotificationBell";
 import { haptics } from "../../lib/haptics";
 import { MotionTokens } from "../../lib/motion";
 
@@ -137,7 +138,8 @@ export default function TabLayout() {
           headerTitle: () => <HomeBrandHeader />,
           headerTitleAlign: "left",
           headerRight: () => (
-            <View style={styles.headerRightLocation}>
+            <View style={styles.headerRightActions}>
+              <NotificationBell />
               <LocationSelector compact />
             </View>
           ),
@@ -210,7 +212,10 @@ export default function TabLayout() {
 }
 
 const styles = StyleSheet.create({
-  headerRightLocation: {
+  headerRightActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
     marginRight: 14,
   },
   wordmark: {

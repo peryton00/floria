@@ -18,12 +18,14 @@ export interface PressableScaleProps extends Omit<PressableProps, "style"> {
   durationOut?: number;
 }
 
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
 /**
  * PressableScale
  *
  * Restrained micro-interaction wrapper for interactive elements.
  * Provides a subtle tactile press scale response (1.0 -> 0.985 -> 1.0)
- * without exaggerated bounce or slow animations.
+ * without breaking flexbox layout or adding extraneous wrapping views.
  */
 export function PressableScale({
   children,
@@ -82,17 +84,21 @@ export function PressableScale({
   };
 
   return (
-    <Animated.View style={[{ transform: [{ scale }], opacity }]}>
-      <Pressable
-        {...rest}
-        disabled={disabled}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        style={style}
-      >
-        {children}
-      </Pressable>
-    </Animated.View>
+    <AnimatedPressable
+      {...rest}
+      disabled={disabled}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      style={[
+        style,
+        {
+          transform: [{ scale }],
+          opacity,
+        },
+      ]}
+    >
+      {children}
+    </AnimatedPressable>
   );
 }
 

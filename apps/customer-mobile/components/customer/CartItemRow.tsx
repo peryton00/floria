@@ -53,6 +53,7 @@ export function CartItemRow({
           <PressableScale
             onPress={handleDecrement}
             targetScale={MotionTokens.scale.pressedCompact}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             style={styles.stepperButton}
           >
             <Text style={styles.stepperText}>−</Text>
@@ -61,6 +62,7 @@ export function CartItemRow({
           <PressableScale
             onPress={handleIncrement}
             targetScale={MotionTokens.scale.pressedCompact}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             style={styles.stepperButton}
           >
             <Text style={styles.stepperText}>+</Text>
@@ -70,6 +72,7 @@ export function CartItemRow({
         <PressableScale
           onPress={handleRemove}
           targetScale={MotionTokens.scale.pressedCompact}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           style={styles.removeButton}
         >
           <Ionicons name="trash-outline" size={18} color={Colors.inkMuted} />

@@ -16,7 +16,11 @@ export default function CustomerCartScreen() {
     items,
     subtotalPaise,
     deliveryFeePaise,
+    maintenanceFeePaise,
     totalPaise,
+    isFreeDelivery,
+    freeDeliveryThresholdPaise,
+    freeDeliveryRemainingPaise,
     updateQuantity,
     removeItem,
   } = useCart();
@@ -56,9 +60,32 @@ export default function CustomerCartScreen() {
   });
   const nurseryGroups = Array.from(nurseryGroupsMap.values());
 
+  const progressPct = Math.min(100, Math.round((subtotalPaise / freeDeliveryThresholdPaise) * 100));
+
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
+        {/* Free Delivery Benefit Banner */}
+        <View style={styles.deliveryBenefitBanner}>
+          <View style={styles.deliveryBenefitHeader}>
+            <Ionicons
+              name={isFreeDelivery ? "sparkles" : "bicycle-outline"}
+              size={16}
+              color={isFreeDelivery ? "#15803D" : Colors.forest}
+            />
+            <Text style={[styles.deliveryBenefitText, isFreeDelivery && styles.deliveryBenefitSuccess]}>
+              {isFreeDelivery
+                ? "You've unlocked FREE Hyperlocal Delivery!"
+                : `Add ${formatINR(freeDeliveryRemainingPaise)} more to unlock FREE Delivery`}
+            </Text>
+          </View>
+          {!isFreeDelivery && (
+            <View style={styles.progressBarTrack}>
+              <View style={[styles.progressBarFill, { width: `${progressPct}%` }]} />
+            </View>
+          )}
+        </View>
+
         {/* Nursery-Grouped Items */}
         {nurseryGroups.map((group) => (
           <View key={group.nurseryId} style={styles.nurseryGroupCard}>
@@ -106,11 +133,18 @@ export default function CustomerCartScreen() {
           </View>
 
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Courier Dispatch & Packaging</Text>
-            <Text style={styles.summaryValue}>
+            <Text style={styles.summaryLabel}>Hyperlocal Courier Delivery</Text>
+            <Text style={[styles.summaryValue, deliveryFeePaise === 0 && styles.freeDeliveryValue]}>
               {deliveryFeePaise === 0 ? "FREE" : formatINR(deliveryFeePaise)}
             </Text>
           </View>
+
+          {maintenanceFeePaise > 0 && (
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Platform Maintenance Fee</Text>
+              <Text style={styles.summaryValue}>{formatINR(maintenanceFeePaise)}</Text>
+            </View>
+          )}
 
           <View style={[styles.summaryRow, styles.totalRow]}>
             <Text style={styles.totalLabel}>Total Amount</Text>
@@ -146,6 +180,41 @@ const styles = StyleSheet.create({
   content: {
     padding: Spacing.md,
     paddingBottom: 110,
+  },
+  deliveryBenefitBanner: {
+    backgroundColor: "#F0F5F1",
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.sm + 2,
+    marginBottom: Spacing.md,
+    borderWidth: 1,
+    borderColor: "#D1E3D7",
+  },
+  deliveryBenefitHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  deliveryBenefitText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: Colors.forest,
+    flex: 1,
+  },
+  deliveryBenefitSuccess: {
+    color: "#15803D",
+    fontWeight: "700",
+  },
+  progressBarTrack: {
+    height: 4,
+    backgroundColor: "#DCEAE0",
+    borderRadius: 2,
+    marginTop: 8,
+    overflow: "hidden",
+  },
+  progressBarFill: {
+    height: "100%",
+    backgroundColor: Colors.forest,
+    borderRadius: 2,
   },
   nurseryGroupCard: {
     backgroundColor: Colors.linen,
@@ -234,6 +303,10 @@ const styles = StyleSheet.create({
     fontSize: Typography.fontSizes.sm,
     fontWeight: "600",
     color: Colors.ink,
+  },
+  freeDeliveryValue: {
+    color: "#15803D",
+    fontWeight: "700",
   },
   totalRow: {
     borderTopWidth: 1,

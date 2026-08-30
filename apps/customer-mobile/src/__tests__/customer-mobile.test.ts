@@ -27,47 +27,84 @@ describe("Customer Mobile — Currency & Date Formatting", () => {
   });
 });
 
-describe("Customer Mobile — Cart Math & Item Management", () => {
+describe("Customer Mobile — Server-Authoritative Delivery Fee Engine & Cart Math", () => {
   interface CartItem {
     productId: string;
     pricePaise: number;
     quantity: number;
+    isFreeDelivery?: boolean;
   }
 
-  const computeTotals = (items: CartItem[]) => {
+  const computeTotals = (
+    items: CartItem[],
+    config = {
+      deliveryEnabled: true,
+      baseDeliveryFeePaise: 4000,
+      freeDeliveryEnabled: true,
+      freeDeliveryThresholdPaise: 99900,
+      maintenanceFeePaise: 1000,
+    },
+  ) => {
+    if (items.length === 0) {
+      return { subtotal: 0, deliveryFee: 0, maintenanceFee: 0, total: 0, isFreeDelivery: false };
+    }
+
     const subtotal = items.reduce(
       (sum, i) => sum + i.pricePaise * i.quantity,
       0,
     );
-    const deliveryFee = items.length > 0 ? 4900 : 0;
-    const total = subtotal + deliveryFee;
-    return { subtotal, deliveryFee, total };
+
+    const allItemsFreeDelivery = items.every((i) => Boolean(i.isFreeDelivery));
+    const isFreeDelivery =
+      !config.deliveryEnabled ||
+      (config.freeDeliveryEnabled && allItemsFreeDelivery) ||
+      (config.freeDeliveryEnabled && subtotal >= config.freeDeliveryThresholdPaise);
+
+    const deliveryFee = isFreeDelivery ? 0 : config.baseDeliveryFeePaise;
+    const maintenanceFee = config.maintenanceFeePaise;
+    const total = subtotal + deliveryFee + maintenanceFee;
+
+    return { subtotal, deliveryFee, maintenanceFee, total, isFreeDelivery };
   };
 
-  it("calculates accurate subtotal, delivery fee, and grand total for single plant", () => {
-    const items = [{ productId: "p-1", pricePaise: 129900, quantity: 1 }];
+  it("applies free delivery when subtotal exceeds free delivery threshold (₹999)", () => {
+    const items = [{ productId: "p-1", pricePaise: 129900, quantity: 1 }]; // ₹1299.00
     const totals = computeTotals(items);
     expect(totals.subtotal).toBe(129900);
-    expect(totals.deliveryFee).toBe(4900);
-    expect(totals.total).toBe(134800);
+    expect(totals.deliveryFee).toBe(0); // Free delivery
+    expect(totals.maintenanceFee).toBe(1000); // ₹10.00
+    expect(totals.total).toBe(130900);
+    expect(totals.isFreeDelivery).toBe(true);
   });
 
-  it("calculates accurate total for multiple items and quantities", () => {
+  it("charges standard base delivery fee (₹40) when subtotal is below ₹999 threshold", () => {
+    const items = [{ productId: "p-2", pricePaise: 49900, quantity: 1 }]; // ₹499.00
+    const totals = computeTotals(items);
+    expect(totals.subtotal).toBe(49900);
+    expect(totals.deliveryFee).toBe(4000); // Standard ₹40 delivery fee
+    expect(totals.maintenanceFee).toBe(1000); // ₹10.00
+    expect(totals.total).toBe(54900); // 49900 + 4000 + 1000 = 54900
+    expect(totals.isFreeDelivery).toBe(false);
+  });
+
+  it("applies free delivery if all individual items are marked as free delivery eligible", () => {
     const items = [
-      { productId: "p-1", pricePaise: 129900, quantity: 2 }, // 259800
-      { productId: "p-2", pricePaise: 49900, quantity: 1 }, // 49900
+      { productId: "p-free-1", pricePaise: 29900, quantity: 1, isFreeDelivery: true },
     ];
     const totals = computeTotals(items);
-    expect(totals.subtotal).toBe(309700);
-    expect(totals.deliveryFee).toBe(4900);
-    expect(totals.total).toBe(314600);
+    expect(totals.subtotal).toBe(29900);
+    expect(totals.deliveryFee).toBe(0); // Free delivery because item is free delivery
+    expect(totals.total).toBe(30900);
+    expect(totals.isFreeDelivery).toBe(true);
   });
 
-  it("returns zero delivery fee and zero total when cart is empty", () => {
+  it("returns zero fees and zero total when cart is empty", () => {
     const totals = computeTotals([]);
     expect(totals.subtotal).toBe(0);
     expect(totals.deliveryFee).toBe(0);
+    expect(totals.maintenanceFee).toBe(0);
     expect(totals.total).toBe(0);
+    expect(totals.isFreeDelivery).toBe(false);
   });
 });
 
@@ -247,5 +284,173 @@ describe("Customer Mobile — Semantic Haptics Hierarchy", () => {
     expect(canTrigger(1070)).toBe(true);  // 70ms delta -> permitted
   });
 });
+
+describe("Customer Mobile — Motion Tokens & Micro-Interactions", () => {
+  const motionTokens = {
+    duration: {
+      instant: 100,
+      micro: 140,
+      short: 180,
+      standard: 240,
+      content: 300,
+    },
+    scale: {
+      pressed: 0.985,
+      pressedCompact: 0.96,
+      heartPulse: 1.10,
+      tabActive: 1.05,
+    },
+  };
+
+  it("maintains conservative button press scale (between 0.96 and 0.99)", () => {
+    expect(motionTokens.scale.pressed).toBeGreaterThanOrEqual(0.96);
+    expect(motionTokens.scale.pressed).toBeLessThanOrEqual(0.99);
+  });
+
+  it("maintains restrained wishlist heart pulse (<= 1.12)", () => {
+    expect(motionTokens.scale.heartPulse).toBeGreaterThan(1.0);
+    expect(motionTokens.scale.heartPulse).toBeLessThanOrEqual(1.12);
+  });
+
+  it("maintains fast micro-durations under 350ms to keep app responsive", () => {
+    expect(motionTokens.duration.instant).toBeLessThanOrEqual(150);
+    expect(motionTokens.duration.short).toBeLessThanOrEqual(200);
+    expect(motionTokens.duration.standard).toBeLessThanOrEqual(300);
+  });
+});
+
+describe("Customer Mobile — Duplicate Action Lock & In-Flight Protection", () => {
+  it("prevents duplicate concurrent in-flight async actions", async () => {
+    let activeLock = false;
+    let callCount = 0;
+
+    const runExclusive = async (fn: () => Promise<void>) => {
+      if (activeLock) return;
+      activeLock = true;
+      try {
+        await fn();
+      } finally {
+        activeLock = false;
+      }
+    };
+
+    const task = () =>
+      new Promise<void>((resolve) => {
+        callCount++;
+        setTimeout(resolve, 50);
+      });
+
+    // Simulate 3 rapid taps
+    const p1 = runExclusive(task);
+    const p2 = runExclusive(task);
+    const p3 = runExclusive(task);
+
+    await Promise.all([p1, p2, p3]);
+
+    expect(callCount).toBe(1); // Only 1 task executed, 2 ignored due to lock
+  });
+});
+
+describe("Customer Mobile — Recently Viewed & Recent Searches Persistence Logic", () => {
+  it("deduplicates and moves recently viewed specimen to the front with max 10 items", () => {
+    let list = [
+      { id: "p-1", name: "Monstera Deliciosa", viewedAt: 1000 },
+      { id: "p-2", name: "Fiddle Leaf Fig", viewedAt: 2000 },
+      { id: "p-3", name: "Snake Plant", viewedAt: 3000 },
+    ];
+
+    const addRecentlyViewed = (item: { id: string; name: string }) => {
+      const filtered = list.filter((i) => i.id !== item.id);
+      list = [{ ...item, viewedAt: Date.now() }, ...filtered].slice(0, 10);
+    };
+
+    // Re-viewing p-1 should move it to front
+    addRecentlyViewed({ id: "p-1", name: "Monstera Deliciosa" });
+    expect(list[0].id).toBe("p-1");
+    expect(list.length).toBe(3);
+
+    // Adding 9 more items caps list at 10 items
+    for (let i = 4; i <= 15; i++) {
+      addRecentlyViewed({ id: `p-${i}`, name: `Plant ${i}` });
+    }
+    expect(list.length).toBe(10);
+    expect(list[0].id).toBe("p-15");
+  });
+
+  it("manages recent search queries with deduplication and cap of 6", () => {
+    let recentSearches: string[] = ["Monstera", "Bonsai", "Ficus"];
+
+    const addSearch = (query: string) => {
+      const trimmed = query.trim();
+      if (!trimmed || trimmed.length < 2) return;
+      const filtered = recentSearches.filter(
+        (q) => q.toLowerCase() !== trimmed.toLowerCase(),
+      );
+      recentSearches = [trimmed, ...filtered].slice(0, 6);
+    };
+
+    addSearch("bonsai"); // Case-insensitive duplicate
+    expect(recentSearches[0]).toBe("bonsai");
+    expect(recentSearches.length).toBe(3);
+
+    addSearch("Snake Plant");
+    addSearch("ZZ Plant");
+    addSearch("Jade Plant");
+    addSearch("Rubber Tree");
+    expect(recentSearches.length).toBe(6);
+  });
+});
+
+describe("Customer Mobile — Out of Stock Product Button State", () => {
+  it("disables add to bag and buy now actions when product is out of stock", () => {
+    const stock = 0;
+    const isOutOfStock = stock <= 0;
+
+    let cartCount = 0;
+    const handleAddToCart = () => {
+      if (isOutOfStock) return;
+      cartCount++;
+    };
+
+    let buyNowTriggered = false;
+    const handleBuyNow = () => {
+      if (isOutOfStock) return;
+      buyNowTriggered = true;
+    };
+
+    handleAddToCart();
+    handleBuyNow();
+
+    expect(cartCount).toBe(0);
+    expect(buyNowTriggered).toBe(false);
+    expect(isOutOfStock).toBe(true);
+  });
+
+  it("permits adding to bag and buy now when product has available inventory", () => {
+    const stock = 5;
+    const isOutOfStock = stock <= 0;
+
+    let cartCount = 0;
+    const handleAddToCart = () => {
+      if (isOutOfStock) return;
+      cartCount++;
+    };
+
+    let buyNowTriggered = false;
+    const handleBuyNow = () => {
+      if (isOutOfStock) return;
+      buyNowTriggered = true;
+    };
+
+    handleAddToCart();
+    handleBuyNow();
+
+    expect(cartCount).toBe(1);
+    expect(buyNowTriggered).toBe(true);
+  });
+});
+
+
+
 
 

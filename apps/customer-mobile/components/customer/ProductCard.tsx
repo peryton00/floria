@@ -20,6 +20,7 @@ export interface ProductCardProps {
   imageUrl?: string;
   isOrganic?: boolean;
   isRare?: boolean;
+  isVerified?: boolean;
   isOutOfStock?: boolean;
   careLevel?: string;
   rating?: number;
@@ -37,11 +38,12 @@ export function ProductCard({
   imageUrl,
   isOrganic,
   isRare,
+  isVerified,
   isOutOfStock = false,
   careLevel,
-  rating = 4.8,
-  reviewCount = 24,
-  isFreeDelivery = true,
+  rating,
+  reviewCount = 0,
+  isFreeDelivery = false,
   discountPercent,
 }: ProductCardProps) {
   const router = useRouter();
@@ -97,6 +99,7 @@ export function ProductCard({
   };
 
   const handleAddPress = () => {
+    if (isOutOfStock) return;
     addItem({
       productId: id,
       nurseryId,
@@ -104,12 +107,15 @@ export function ProductCard({
       name,
       pricePaise,
       imageUrl,
+      isFreeDelivery,
     });
     setIsRecentlyAdded(true);
     setTimeout(() => {
       setIsRecentlyAdded(false);
     }, 2000);
   };
+
+  const hasValidRating = typeof rating === "number" && rating > 0;
 
   return (
     <TouchableOpacity
@@ -161,15 +167,23 @@ export function ProductCard({
         </TouchableOpacity>
 
         {/* Badges — Top-Left corner */}
-        {(isOutOfStock || (discountPercent && discountPercent > 0)) ? (
+        {(isOutOfStock || (discountPercent && discountPercent > 0) || isRare || isOrganic) ? (
           <View style={styles.badgeContainer}>
             {isOutOfStock ? (
               <View style={[styles.badge, styles.badgeDark]}>
                 <Text style={styles.badgeText}>Out of stock</Text>
               </View>
             ) : discountPercent && discountPercent > 0 ? (
-              <View style={[styles.badge, styles.badgeTerracotta]}>
+              <View style={[styles.badge, styles.badgeDiscount]}>
                 <Text style={styles.badgeText}>{discountPercent}% OFF</Text>
+              </View>
+            ) : isRare ? (
+              <View style={[styles.badge, styles.badgeRare]}>
+                <Text style={styles.badgeText}>Rare specimen</Text>
+              </View>
+            ) : isOrganic ? (
+              <View style={[styles.badge, styles.badgeOrganic]}>
+                <Text style={styles.badgeText}>Organic</Text>
               </View>
             ) : null}
           </View>
@@ -185,18 +199,20 @@ export function ProductCard({
 
         {/* Contextual Status / Metadata (Rating or Care level or New arrival) */}
         <View style={styles.metaRow}>
-          {reviewCount > 0 ? (
+          {hasValidRating ? (
             <View style={styles.ratingBox}>
               <Ionicons name="star" size={10} color={Colors.terracotta} style={{ marginRight: 2 }} />
-              <Text style={styles.ratingText}>{rating ? rating.toFixed(1) : "4.8"}</Text>
-              <Text style={styles.reviewCountText}>({reviewCount})</Text>
+              <Text style={styles.ratingText}>{rating.toFixed(1)}</Text>
+              {reviewCount > 0 ? (
+                <Text style={styles.reviewCountText}>({reviewCount})</Text>
+              ) : null}
             </View>
           ) : careLevel ? (
             <Text style={styles.careLevelText} numberOfLines={1}>
               {careLevel.toUpperCase()} CARE
             </Text>
           ) : (
-            <Text style={styles.newArrivalText}>New arrival</Text>
+            <Text style={styles.newArrivalText}>Living Flora</Text>
           )}
         </View>
 
@@ -223,7 +239,7 @@ export function ProductCard({
             <Ionicons
               name={isRecentlyAdded ? "checkmark" : "bag-handle-outline"}
               size={isRecentlyAdded ? 16 : 15}
-              color={isOutOfStock ? Colors.inkMuted : Colors.white}
+              color={isOutOfStock ? Colors.inkLight : Colors.white}
             />
           </PressableScale>
         </View>
@@ -306,6 +322,15 @@ const styles = StyleSheet.create({
   },
   badgeTerracotta: {
     backgroundColor: Colors.terracotta,
+  },
+  badgeDiscount: {
+    backgroundColor: Colors.terracotta,
+  },
+  badgeRare: {
+    backgroundColor: Colors.forestDark || "#12241B",
+  },
+  badgeOrganic: {
+    backgroundColor: Colors.forest,
   },
   badgeText: {
     color: Colors.white,
@@ -399,7 +424,12 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   addButtonDisabled: {
-    backgroundColor: Colors.sand,
+    backgroundColor: "#E5E3DF",
+    borderWidth: 1,
+    borderColor: "#D3CFCA",
+    opacity: 0.4,
+    elevation: 0,
+    shadowOpacity: 0,
   },
   addButtonSuccess: {
     backgroundColor: Colors.forest,

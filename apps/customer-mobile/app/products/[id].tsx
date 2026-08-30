@@ -7,23 +7,26 @@ import {
   StyleSheet,
   TouchableOpacity,
   Animated,
+  ActivityIndicator,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { api } from "../../lib/api";
 import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
-import { formatINR } from "../../lib/format";
+import { formatINR, formatDate } from "../../lib/format";
 import { useCart } from "../../lib/contexts/CartContext";
 import { useWishlist } from "../../lib/contexts/WishlistContext";
 import { haptics } from "../../lib/haptics";
 import { MotionTokens, useReducedMotion } from "../../lib/motion";
 import { PressableScale } from "../../components/ui/PressableScale";
 import { ProductCard } from "../../components/customer/ProductCard";
+import { RecentlyViewedSection } from "../../components/customer/RecentlyViewedSection";
 import { ProductDetailSkeleton } from "../../components/ui/ProductDetailSkeleton";
 import { ProductCardSkeleton } from "../../components/ui/ProductCardSkeleton";
 import { FloriaSkeleton } from "../../components/ui/FloriaSkeleton";
 import { ErrorState } from "../../components/ui/ErrorState";
+import { StorageService } from "../../lib/storage";
 
 export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -43,6 +46,11 @@ export default function ProductDetailScreen() {
   const [isAddedFeedback, setIsAddedFeedback] = useState(false);
   const heartScale = useRef(new Animated.Value(1)).current;
   const heroOpacity = useRef(new Animated.Value(0)).current;
+
+  // Reviews state
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviewsSummary, setReviewsSummary] = useState<any | null>(null);
+  const [loadingReviews, setLoadingReviews] = useState(false);
 
   const handleHeroImageLoad = () => {
     setHeroImageLoaded(true);
@@ -102,6 +110,25 @@ export default function ProductDetailScreen() {
     }
   }, []);
 
+  const fetchReviews = useCallback(async (productId: string) => {
+    if (!productId) return;
+    try {
+      setLoadingReviews(true);
+      const reviewRes = await api.getProductReviews(productId);
+      if (reviewRes.success && reviewRes.data) {
+        const revData = reviewRes.data as any;
+        setReviews(Array.isArray(revData) ? revData : revData.reviews || []);
+        if (revData.summary) {
+          setReviewsSummary(revData.summary);
+        }
+      }
+    } catch {
+      // Non-blocking
+    } finally {
+      setLoadingReviews(false);
+    }
+  }, []);
+
   const fetchProduct = useCallback(async () => {
     if (!id) return;
     try {
@@ -112,6 +139,40 @@ export default function ProductDetailScreen() {
         setProductData(res.data);
         const prod = res.data.product || res.data;
         fetchRecommendations(prod);
+        if (prod.id) {
+          fetchReviews(prod.id);
+          // Record specimen in recently viewed (capped at 10 items, deduplicated)
+          const primaryImg =
+            prod.images?.find((img: any) => img.is_primary)?.url ||
+            prod.images?.[0]?.url;
+          const pricePaise =
+            res.data.inventory?.price_paise || res.data.price_paise || 129900;
+          const itemStock =
+            res.data.inventory?.stock_quantity ??
+            res.data.stock_quantity ??
+            prod.inventory?.stock_quantity ??
+            prod.stock_quantity;
+          const isItemOutOfStock =
+            typeof itemStock === "number"
+              ? itemStock <= 0
+              : Boolean(res.data.is_out_of_stock ?? prod.is_out_of_stock ?? false);
+
+          StorageService.addRecentlyViewed({
+            id: prod.id,
+            name: prod.name,
+            pricePaise,
+            imageUrl: primaryImg,
+            careLevel: prod.care_level,
+            isOutOfStock: isItemOutOfStock,
+            rating: res.data.rating_summary?.avg_rating ?? prod.rating,
+            reviewCount: res.data.rating_summary?.review_count ?? prod.review_count,
+            isFreeDelivery: Boolean(
+              res.data.pricing?.isFreeDelivery ??
+                prod.pricing?.isFreeDelivery ??
+                prod.is_free_delivery,
+            ),
+          });
+        }
       } else {
         setError(res.error?.message || "Botanical specimen not found.");
       }
@@ -120,7 +181,7 @@ export default function ProductDetailScreen() {
     } finally {
       setLoading(false);
     }
-  }, [id, fetchRecommendations]);
+  }, [id, fetchRecommendations, fetchReviews]);
 
   useEffect(() => {
     fetchProduct();
@@ -151,10 +212,33 @@ export default function ProductDetailScreen() {
     prod.images?.find((img: any) => img.is_primary)?.url ||
     prod.images?.[0]?.url;
 
+  const isFreeDelivery = Boolean(
+    productData.pricing?.isFreeDelivery ??
+      prod.pricing?.isFreeDelivery ??
+      prod.is_free_delivery ??
+      prod.isFreeDelivery
+  );
+
+  const rating =
+    reviewsSummary?.avg_rating ??
+    prod.rating_summary?.avg_rating ??
+    prod.rating ??
+    productData.rating;
+
+  const reviewCount =
+    reviewsSummary?.review_count ??
+    prod.rating_summary?.review_count ??
+    prod.review_count ??
+    productData.review_count ??
+    reviews.length;
+
+  const hasRating = typeof rating === "number" && rating > 0;
+
   const isLiked = isInWishlist(prod.id);
   const bottomInset = Math.max(insets.bottom, 0);
 
   const handleAddToCart = () => {
+    if (stock <= 0) return;
     addItem(
       {
         productId: prod.id,
@@ -163,6 +247,7 @@ export default function ProductDetailScreen() {
         name: prod.name,
         pricePaise,
         imageUrl: primaryImage,
+        isFreeDelivery,
       },
       quantity,
     );
@@ -174,6 +259,7 @@ export default function ProductDetailScreen() {
   };
 
   const handleBuyNow = () => {
+    if (stock <= 0) return;
     addItem(
       {
         productId: prod.id,
@@ -182,6 +268,7 @@ export default function ProductDetailScreen() {
         name: prod.name,
         pricePaise,
         imageUrl: primaryImage,
+        isFreeDelivery,
       },
       quantity,
     );
@@ -270,7 +357,7 @@ export default function ProductDetailScreen() {
                 productId: prod.id,
                 name: prod.name,
                 pricePaise,
-                nurseryName: "Floria Nursery",
+                nurseryName: seller.business_name || "Floria Nursery",
                 imageUrl: primaryImage,
               });
             }}
@@ -315,15 +402,67 @@ export default function ProductDetailScreen() {
 
         {/* 3. Product Information Details Container */}
         <View style={styles.detailsContainer}>
+          {/* Category & Grower Badge Row */}
+          <View style={styles.metaRow}>
+            <View style={styles.categoryBadge}>
+              <Text style={styles.categoryBadgeText}>
+                {prod.category?.name || "Living Flora"}
+              </Text>
+            </View>
+            {seller?.business_name ? (
+              <View style={styles.growerBadge}>
+                <Ionicons name="shield-checkmark" size={11} color={Colors.forest} style={{ marginRight: 3 }} />
+                <Text style={styles.growerBadgeText} numberOfLines={1}>
+                  {seller.business_name}
+                </Text>
+              </View>
+            ) : null}
+          </View>
+
           {/* Product Title */}
           <Text style={styles.productName}>{prod.name}</Text>
           {prod.botanical_name ? (
             <Text style={styles.botanicalName}>{prod.botanical_name}</Text>
           ) : null}
 
-          {/* Price & Stock Row */}
+          {/* Rating Summary Row */}
+          <View style={styles.ratingSummaryRow}>
+            {hasRating ? (
+              <View style={styles.ratingStarsGroup}>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Ionicons
+                    key={star}
+                    name={star <= Math.round(rating) ? "star" : "star-outline"}
+                    size={13}
+                    color={star <= Math.round(rating) ? Colors.terracotta : Colors.border}
+                  />
+                ))}
+                <Text style={styles.ratingNumberText}>{rating.toFixed(1)}</Text>
+                <Text style={styles.reviewCountSubText}>
+                  ({reviewCount} customer review{reviewCount !== 1 ? "s" : ""})
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.noRatingGroup}>
+                <Ionicons name="sparkles-outline" size={13} color={Colors.forest} style={{ marginRight: 4 }} />
+                <Text style={styles.noReviewsText}>Fresh arrival — Direct from certified nursery</Text>
+              </View>
+            )}
+          </View>
+
+          {/* Price & Stock Row with Free Delivery Pill */}
           <View style={styles.priceRow}>
-            <Text style={styles.price}>{formatINR(pricePaise)}</Text>
+            <View style={styles.priceColumn}>
+              <View style={styles.priceHeaderRow}>
+                <Text style={styles.price}>{formatINR(pricePaise)}</Text>
+                {isFreeDelivery && (
+                  <View style={styles.freeDeliveryPill}>
+                    <Ionicons name="flash" size={10} color={Colors.white} style={{ marginRight: 2 }} />
+                    <Text style={styles.freeDeliveryPillText}>FREE DELIVERY</Text>
+                  </View>
+                )}
+              </View>
+            </View>
             <View
               style={[
                 styles.stockBadge,
@@ -337,6 +476,27 @@ export default function ProductDetailScreen() {
                   : stock <= 5
                     ? `Only ${stock} Left`
                     : "In Stock"}
+              </Text>
+            </View>
+          </View>
+
+          {/* Delivery Assurance Benefit Card */}
+          <View style={[styles.deliveryCard, isFreeDelivery && styles.deliveryCardFree]}>
+            <View style={[styles.deliveryIconCircle, isFreeDelivery && styles.deliveryIconCircleFree]}>
+              <Ionicons
+                name={isFreeDelivery ? "car-sport" : "cube-outline"}
+                size={16}
+                color={isFreeDelivery ? Colors.forest : Colors.inkLight}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.deliveryCardTitle, isFreeDelivery && styles.deliveryCardTitleFree]}>
+                {isFreeDelivery ? "Eligible for Free Delivery" : "Insulated Climate Courier"}
+              </Text>
+              <Text style={styles.deliveryCardDesc}>
+                {isFreeDelivery
+                  ? "Complimentary climate-controlled carrier with breathable protective root hydration."
+                  : "Dispatched direct from local nursery in climate-safe transit box."}
               </Text>
             </View>
           </View>
@@ -443,7 +603,96 @@ export default function ProductDetailScreen() {
           </View>
         </View>
 
-        {/* 8. Recommendations: More to Explore */}
+        {/* 8. Customer Botanical Reviews Section */}
+        <View style={styles.reviewsSection}>
+          <View style={styles.reviewsHeader}>
+            <View>
+              <Text style={styles.sectionHeading}>Customer Reviews</Text>
+              <Text style={styles.reviewsSubheading}>
+                {reviewCount > 0
+                  ? `${reviewCount} verified review${reviewCount !== 1 ? "s" : ""} from plant lovers`
+                  : "Verified feedback from plant enthusiasts"}
+              </Text>
+            </View>
+            {hasRating ? (
+              <View style={styles.overallRatingBadge}>
+                <Ionicons name="star" size={13} color={Colors.terracotta} style={{ marginRight: 3 }} />
+                <Text style={styles.overallRatingScore}>{rating.toFixed(1)}</Text>
+                <Text style={styles.overallRatingMax}>/ 5</Text>
+              </View>
+            ) : null}
+          </View>
+
+          {loadingReviews ? (
+            <View style={styles.reviewsLoading}>
+              <ActivityIndicator size="small" color={Colors.forest} />
+              <Text style={styles.reviewsLoadingText}>Loading customer reviews...</Text>
+            </View>
+          ) : reviews.length > 0 ? (
+            <View style={styles.reviewsList}>
+              {reviews.slice(0, 5).map((rev, index) => {
+                const revRating = Number(rev.rating) || 5;
+                const reviewerName =
+                  rev.customer_name ||
+                  rev.user_name ||
+                  rev.author_name ||
+                  rev.user?.full_name ||
+                  "Botanical Collector";
+                const revDate = rev.created_at ? formatDate(rev.created_at) : "";
+
+                return (
+                  <View key={rev.id || index} style={styles.reviewCard}>
+                    <View style={styles.reviewCardHeader}>
+                      <View style={styles.reviewerAvatar}>
+                        <Text style={styles.reviewerAvatarText}>
+                          {reviewerName.charAt(0).toUpperCase()}
+                        </Text>
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <View style={styles.reviewerNameRow}>
+                          <Text style={styles.reviewerName} numberOfLines={1}>
+                            {reviewerName}
+                          </Text>
+                          <View style={styles.verifiedBadge}>
+                            <Ionicons name="checkmark-circle" size={10} color={Colors.forest} />
+                            <Text style={styles.verifiedBadgeText}>Verified</Text>
+                          </View>
+                        </View>
+                        {revDate ? <Text style={styles.reviewDate}>{revDate}</Text> : null}
+                      </View>
+                      <View style={styles.reviewStarGroup}>
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <Ionicons
+                            key={s}
+                            name={s <= revRating ? "star" : "star-outline"}
+                            size={11}
+                            color={s <= revRating ? Colors.terracotta : Colors.border}
+                          />
+                        ))}
+                      </View>
+                    </View>
+                    {rev.title ? <Text style={styles.reviewTitle}>{rev.title}</Text> : null}
+                    {rev.body || rev.comment || rev.content ? (
+                      <Text style={styles.reviewBody}>
+                        {rev.body || rev.comment || rev.content}
+                      </Text>
+                    ) : null}
+                  </View>
+                );
+              })}
+            </View>
+          ) : (
+            <View style={styles.emptyReviewsCard}>
+              <Ionicons name="chatbubbles-outline" size={22} color={Colors.sage} />
+              <Text style={styles.emptyReviewsTitle}>No reviews yet</Text>
+              <Text style={styles.emptyReviewsSub}>
+                Be the first to review this specimen after receiving your live delivery!
+              </Text>
+            </View>
+          )}
+        </View>
+
+        {/* 9. Recommendations: More to Explore */}
         {(loadingRecs || recommendations.length > 0) && (
           <View style={styles.recommendationsSection}>
             <View style={styles.recHeader}>
@@ -489,6 +738,18 @@ export default function ProductDetailScreen() {
                   const primaryImg =
                     item.images?.find((img: any) => img.is_primary)?.url ||
                     item.images?.[0]?.url;
+                  const stockQty =
+                    rec.inventory?.stock_quantity ??
+                    (Array.isArray(rec.inventory) ? rec.inventory[0]?.stock_quantity : undefined) ??
+                    (Array.isArray(item.inventory) ? item.inventory[0]?.stock_quantity : undefined) ??
+                    item.inventory?.stock_quantity ??
+                    rec.stock_quantity ??
+                    item.stock_quantity;
+                  const isOutOfStock =
+                    typeof stockQty === "number"
+                      ? stockQty <= 0
+                      : Boolean(rec.is_out_of_stock ?? item.is_out_of_stock ?? false);
+
                   return (
                     <View key={item.id || rec.id} style={styles.recommendationCardWrapper}>
                       <ProductCard
@@ -496,9 +757,11 @@ export default function ProductDetailScreen() {
                         name={item.name}
                         pricePaise={rec.price_paise || rec.inventory?.price_paise || 129900}
                         imageUrl={primaryImg}
-                        careLevel={item.care_level || "EASY"}
-                        rating={rec.rating}
-                        reviewCount={rec.review_count}
+                        careLevel={item.care_level}
+                        isOutOfStock={isOutOfStock}
+                        rating={rec.rating_summary?.avg_rating ?? rec.rating}
+                        reviewCount={rec.rating_summary?.review_count ?? rec.review_count}
+                        isFreeDelivery={Boolean(rec.pricing?.isFreeDelivery ?? rec.is_free_delivery ?? rec.isFreeDelivery)}
                       />
                     </View>
                   );
@@ -507,6 +770,9 @@ export default function ProductDetailScreen() {
             )}
           </View>
         )}
+
+        {/* 10. Recently Viewed Specimens */}
+        <RecentlyViewedSection excludeId={prod.id} />
       </ScrollView>
 
       {/* 9. Sticky Bottom Purchase Bar */}
@@ -531,12 +797,19 @@ export default function ProductDetailScreen() {
           <Ionicons
             name={isAddedFeedback ? "checkmark-circle" : "bag-handle-outline"}
             size={16}
-            color={isAddedFeedback ? Colors.white : Colors.terracotta}
+            color={
+              stock <= 0
+                ? Colors.inkLight
+                : isAddedFeedback
+                  ? Colors.white
+                  : Colors.terracotta
+            }
           />
           <Text
             style={[
               styles.addToBagText,
               isAddedFeedback && styles.addToBagTextSuccess,
+              stock <= 0 && styles.btnDisabledText,
             ]}
           >
             {stock <= 0
@@ -551,10 +824,18 @@ export default function ProductDetailScreen() {
           disabled={stock <= 0}
           onPress={handleBuyNow}
           targetScale={MotionTokens.scale.pressed}
-          style={[styles.buyNowBtn, stock <= 0 && styles.btnDisabled]}
+          style={[styles.buyNowBtn, stock <= 0 && styles.buyNowBtnDisabled]}
         >
-          <Ionicons name="flash-outline" size={16} color={Colors.white} />
-          <Text style={styles.buyNowText}>Buy Now</Text>
+          <Ionicons
+            name="flash-outline"
+            size={16}
+            color={stock <= 0 ? Colors.inkLight : Colors.white}
+          />
+          <Text
+            style={[styles.buyNowText, stock <= 0 && styles.btnDisabledText]}
+          >
+            {stock <= 0 ? "Unavailable" : "Buy Now"}
+          </Text>
         </PressableScale>
       </View>
     </View>
@@ -658,6 +939,40 @@ const styles = StyleSheet.create({
   detailsContainer: {
     padding: Spacing.md,
   },
+  metaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+    marginBottom: Spacing.xs,
+  },
+  categoryBadge: {
+    backgroundColor: Colors.linen,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: BorderRadius.full,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  categoryBadgeText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: Colors.forest,
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
+  growerBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.botanical,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: BorderRadius.full,
+  },
+  growerBadgeText: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: Colors.forest,
+  },
   productName: {
     fontSize: Typography.fontSizes.xl,
     fontWeight: "bold",
@@ -672,20 +987,116 @@ const styles = StyleSheet.create({
     marginTop: 2,
     marginBottom: Spacing.xs,
   },
+  ratingSummaryRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 4,
+    marginBottom: Spacing.xs,
+  },
+  ratingStarsGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 2,
+  },
+  ratingNumberText: {
+    fontSize: Typography.fontSizes.xs,
+    fontWeight: "700",
+    color: Colors.ink,
+    marginLeft: 4,
+  },
+  reviewCountSubText: {
+    fontSize: Typography.fontSizes.xs,
+    color: Colors.inkLight,
+    marginLeft: 2,
+  },
+  noRatingGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  noReviewsText: {
+    fontSize: 11,
+    color: Colors.forest,
+    fontWeight: "500",
+  },
   priceRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginTop: Spacing.sm,
-    marginBottom: Spacing.md,
+    marginTop: Spacing.xs,
+    marginBottom: Spacing.sm,
     paddingBottom: Spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
+  },
+  priceColumn: {
+    flex: 1,
+  },
+  priceHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs + 2,
   },
   price: {
     fontSize: Typography.fontSizes.xxl,
     fontWeight: "bold",
     color: Colors.forest,
+  },
+  freeDeliveryPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.forest,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: BorderRadius.full,
+  },
+  freeDeliveryPillText: {
+    color: Colors.white,
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 0.4,
+  },
+  deliveryCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.linen,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: Spacing.sm + 2,
+    gap: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  deliveryCardFree: {
+    backgroundColor: "#F2F7F4",
+    borderColor: "#D2E4D9",
+  },
+  deliveryIconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.page,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  deliveryIconCircleFree: {
+    backgroundColor: "#E2EFE7",
+    borderColor: "#C5DEC0",
+  },
+  deliveryCardTitle: {
+    fontSize: Typography.fontSizes.xs + 1,
+    fontWeight: "700",
+    color: Colors.ink,
+  },
+  deliveryCardTitleFree: {
+    color: Colors.forest,
+  },
+  deliveryCardDesc: {
+    fontSize: 11,
+    color: Colors.inkMuted,
+    marginTop: 1,
+    lineHeight: 15,
   },
   stockBadge: {
     backgroundColor: Colors.botanical,
@@ -833,6 +1244,145 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: Colors.ink,
   },
+  // Customer Reviews Section
+  reviewsSection: {
+    paddingHorizontal: Spacing.md,
+    marginBottom: Spacing.md,
+    marginTop: Spacing.xs,
+  },
+  reviewsHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    marginBottom: Spacing.sm,
+  },
+  reviewsSubheading: {
+    fontSize: 11,
+    color: Colors.inkMuted,
+    marginTop: 1,
+  },
+  overallRatingBadge: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    backgroundColor: Colors.linen,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: BorderRadius.full,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  overallRatingScore: {
+    fontSize: Typography.fontSizes.xs + 1,
+    fontWeight: "800",
+    color: Colors.ink,
+  },
+  overallRatingMax: {
+    fontSize: 9,
+    fontWeight: "600",
+    color: Colors.inkLight,
+    marginLeft: 1,
+  },
+  reviewsLoading: {
+    paddingVertical: Spacing.md,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.xs,
+  },
+  reviewsLoadingText: {
+    fontSize: Typography.fontSizes.xs,
+    color: Colors.inkLight,
+  },
+  reviewsList: {
+    gap: Spacing.sm,
+  },
+  reviewCard: {
+    backgroundColor: Colors.linen,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: Spacing.sm + 2,
+  },
+  reviewCardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs + 2,
+    marginBottom: 6,
+  },
+  reviewerAvatar: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: Colors.botanical,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  reviewerAvatarText: {
+    fontSize: 11,
+    fontWeight: "bold",
+    color: Colors.forest,
+  },
+  reviewerNameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  reviewerName: {
+    fontSize: Typography.fontSizes.xs,
+    fontWeight: "700",
+    color: Colors.ink,
+  },
+  verifiedBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 2,
+  },
+  verifiedBadgeText: {
+    fontSize: 9,
+    fontWeight: "600",
+    color: Colors.forest,
+  },
+  reviewDate: {
+    fontSize: 9,
+    color: Colors.inkMuted,
+    marginTop: 1,
+  },
+  reviewStarGroup: {
+    flexDirection: "row",
+    gap: 1,
+  },
+  reviewTitle: {
+    fontSize: Typography.fontSizes.xs + 1,
+    fontWeight: "700",
+    color: Colors.ink,
+    marginBottom: 2,
+  },
+  reviewBody: {
+    fontSize: Typography.fontSizes.xs,
+    color: Colors.inkLight,
+    lineHeight: 16,
+  },
+  emptyReviewsCard: {
+    backgroundColor: Colors.linen,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: Spacing.md,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+  },
+  emptyReviewsTitle: {
+    fontSize: Typography.fontSizes.xs + 1,
+    fontWeight: "700",
+    color: Colors.ink,
+    marginTop: 2,
+  },
+  emptyReviewsSub: {
+    fontSize: 11,
+    color: Colors.inkMuted,
+    textAlign: "center",
+    lineHeight: 15,
+  },
   // Recommendations Section
   recommendationsSection: {
     marginTop: Spacing.sm,
@@ -939,7 +1489,22 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   btnDisabled: {
-    opacity: 0.5,
+    opacity: 0.45,
+    backgroundColor: "#F3F1ED",
+    borderColor: Colors.border,
+    elevation: 0,
+    shadowOpacity: 0,
+  },
+  buyNowBtnDisabled: {
+    opacity: 0.45,
+    backgroundColor: "#E5E3DF",
+    borderColor: Colors.border,
+    borderWidth: 1,
+    elevation: 0,
+    shadowOpacity: 0,
+  },
+  btnDisabledText: {
+    color: Colors.inkLight,
   },
   // Floating Toast
   floatingToast: {

@@ -6,7 +6,10 @@
     "orientation": "portrait",
     "scheme": "floria",
     "userInterfaceStyle": "automatic",
-    "platforms": ["ios", "android"],
+    "platforms": ["ios", "android", "web"],
+    "web": {
+      "bundler": "metro"
+    },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.floria.customer"
@@ -19,7 +22,16 @@
       "backgroundColor": "#FBF8F3",
       "translucent": false
     },
-    "plugins": ["expo-router"],
+    "plugins": [
+      "expo-router",
+      [
+        "expo-notifications",
+        {
+          "color": "#1C3524",
+          "sounds": ["./assets/sounds/floria_chime.wav"]
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": true
     }

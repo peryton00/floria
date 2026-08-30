@@ -14,6 +14,8 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
 import { Button } from "../../components/ui/Button";
+import { PressableScale } from "../../components/ui/PressableScale";
+import { MotionTokens } from "../../lib/motion";
 import { useCustomerAuth } from "../../lib/contexts/CustomerAuthContext";
 import { useFeedback } from "../../lib/contexts/FloriaFeedbackContext";
 
@@ -82,10 +84,11 @@ export default function CustomerSignupScreen() {
         {/* Form Card */}
         <View style={styles.card}>
           {/* 1. Google One-Tap */}
-          <TouchableOpacity
+          <PressableScale
             activeOpacity={0.82}
             onPress={handleGoogle}
             disabled={googleLoading || isLoading}
+            targetScale={MotionTokens.scale.pressed}
             style={[styles.googleButton, googleLoading && styles.buttonDisabled]}
           >
             {googleLoading ? (
@@ -98,7 +101,7 @@ export default function CustomerSignupScreen() {
             <Text style={styles.googleButtonText}>
               {googleLoading ? "Connecting to Google…" : "Continue with Google"}
             </Text>
-          </TouchableOpacity>
+          </PressableScale>
 
           {/* 2. Visual Divider */}
           <View style={styles.dividerRow}>

@@ -18,9 +18,11 @@ import { haptics } from "../../lib/haptics";
 import { Button } from "../../components/ui/Button";
 import { ListSkeleton } from "../../components/ui/ListSkeleton";
 import { EmptyState } from "../../components/ui/EmptyState";
+import { useActionLock } from "../../lib/hooks/useActionLock";
 
 export default function AddressManagementScreen() {
   const { showSuccess, showError, showWarning, showConfirmSheet } = useFeedback();
+  const { isLocked, runExclusive } = useActionLock();
   const [addresses, setAddresses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -219,7 +221,7 @@ export default function AddressManagementScreen() {
     setEditingAddressId(null);
   };
 
-  const handleSaveAddress = async () => {
+  const handleSaveAddress = () => {
     if (!name.trim()) {
       showError("Please enter recipient / residence name.");
       return;
@@ -245,50 +247,52 @@ export default function AddressManagementScreen() {
       return;
     }
 
-    try {
-      setSaving(true);
-      const payload = {
-        full_name: name.trim(),
-        phone: phone.trim(),
-        line1: street.trim(),
-        line2: "",
-        city: city.trim(),
-        state: state.trim(),
-        pincode: pincode.trim(),
-        is_default: editingAddressId
-          ? addresses.find((i) => i.id === editingAddressId)?.is_default || false
-          : addresses.length === 0,
-        label: name.trim(),
-      };
+    runExclusive(async () => {
+      try {
+        setSaving(true);
+        const payload = {
+          full_name: name.trim(),
+          phone: phone.trim(),
+          line1: street.trim(),
+          line2: "",
+          city: city.trim(),
+          state: state.trim(),
+          pincode: pincode.trim(),
+          is_default: editingAddressId
+            ? addresses.find((i) => i.id === editingAddressId)?.is_default || false
+            : addresses.length === 0,
+          label: name.trim(),
+        };
 
-      const res = editingAddressId
-        ? await api.updateAddress(editingAddressId, payload)
-        : await api.createAddress(payload);
+        const res = editingAddressId
+          ? await api.updateAddress(editingAddressId, payload)
+          : await api.createAddress(payload);
 
-      if (res.success) {
-        haptics.success();
-        showSuccess(
-          editingAddressId
-            ? "Address updated successfully"
-            : "Address saved to delivery destinations",
-        );
-        setShowAddForm(false);
-        setEditingAddressId(null);
-        setName("");
-        setStreet("");
-        setPincode("");
-        setPhone("");
-        await fetchAddresses();
-      } else {
+        if (res.success) {
+          haptics.success();
+          showSuccess(
+            editingAddressId
+              ? "Address updated successfully"
+              : "Address saved to delivery destinations",
+          );
+          setShowAddForm(false);
+          setEditingAddressId(null);
+          setName("");
+          setStreet("");
+          setPincode("");
+          setPhone("");
+          await fetchAddresses();
+        } else {
+          haptics.error();
+          showError(res.error?.message || "Failed to save address.");
+        }
+      } catch (e: any) {
         haptics.error();
-        showError(res.error?.message || "Failed to save address.");
+        showError(e.message || "Failed to save address.");
+      } finally {
+        setSaving(false);
       }
-    } catch (e: any) {
-      haptics.error();
-      showError(e.message || "Failed to save address.");
-    } finally {
-      setSaving(false);
-    }
+    });
   };
 
   const handleDelete = (id: string) => {

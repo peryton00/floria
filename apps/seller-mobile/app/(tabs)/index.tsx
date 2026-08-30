@@ -1,43 +1,73 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   View,
   Text,
   ScrollView,
-  StyleSheet,
   RefreshControl,
   TouchableOpacity,
+  StyleSheet,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "../../lib/api";
-import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
-import { formatINR } from "../../lib/format";
 import { useSellerAuth } from "../../lib/contexts/SellerAuthContext";
-import { SellerMetricCard } from "../../components/seller/SellerMetricCard";
-import { LoadingState } from "../../components/ui/LoadingState";
-import { ErrorState } from "../../components/ui/ErrorState";
+import { useSellerNotifications } from "../../lib/contexts/SellerNotificationContext";
+import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
+import { formatINR } from "../../lib/format";
+import { HomeSkeleton } from "../../components/ui/Skeletons";
+import { StatusBadge } from "../../components/ui/StatusBadge";
 import { Button } from "../../components/ui/Button";
 
-export default function SellerDashboardScreen() {
+export default function SellerHomeScreen() {
   const router = useRouter();
-  const { seller, isAuthenticated, isAuthorizedSeller } = useSellerAuth();
+  const insets = useSafeAreaInsets();
+  const { seller, isLoading: authLoading, refreshProfile } = useSellerAuth();
+  const { unreadCount, refreshNotifications } = useSellerNotifications();
 
-  const [dashboard, setDashboard] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [recentOrders, setRecentOrders] = useState<any[]>([]);
+  const [lowStockCount, setLowStockCount] = useState<number>(0);
+  const [toPrepareCount, setToPrepareCount] = useState<number>(0);
 
   const fetchDashboard = useCallback(async () => {
     try {
-      setError(null);
-      const res = await api.getSellerDashboard();
-      if (res.success && res.data) {
-        setDashboard(res.data);
-      } else {
-        setError(res.error?.message || "Failed to load nursery metrics.");
+      const [dashRes, ordersRes, inventoryRes] = await Promise.allSettled([
+        api.getSellerDashboard(),
+        api.getSellerOrders({ limit: 5 }),
+        api.getSellerInventory(),
+      ]);
+
+      if (dashRes.status === "fulfilled" && dashRes.value.success && dashRes.value.data) {
+        setDashboardData(dashRes.value.data);
       }
-    } catch (err: any) {
-      setError(err.message || "Connection to nursery gateway failed.");
+
+      let ordersList: any[] = [];
+      if (ordersRes.status === "fulfilled" && ordersRes.value.success && Array.isArray(ordersRes.value.data)) {
+        ordersList = ordersRes.value.data;
+        setRecentOrders(ordersList);
+        const prep = ordersList.filter(
+          (o) =>
+            o.status?.toLowerCase() === "preparing" ||
+            o.status?.toLowerCase() === "placed" ||
+            o.status?.toLowerCase() === "new" ||
+            o.status?.toLowerCase() === "order placed",
+        ).length;
+        setToPrepareCount(prep);
+      }
+
+      if (inventoryRes.status === "fulfilled" && inventoryRes.value.success && Array.isArray(inventoryRes.value.data)) {
+        const low = inventoryRes.value.data.filter((item: any) => {
+          const qty = item.stock_quantity ?? item.quantity ?? 0;
+          const thresh = item.low_stock_threshold ?? 5;
+          return qty > 0 && qty <= thresh;
+        }).length;
+        setLowStockCount(low);
+      }
+    } catch (err) {
+      console.warn("[SellerHome] Dashboard fetch error:", err);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -45,402 +75,602 @@ export default function SellerDashboardScreen() {
   }, []);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchDashboard();
-    } else {
-      setLoading(false);
-    }
-  }, [isAuthenticated, fetchDashboard]);
-
-  const onRefresh = () => {
-    setRefreshing(true);
     fetchDashboard();
+  }, [fetchDashboard, seller?.id]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([fetchDashboard(), refreshProfile(), refreshNotifications()]);
   };
 
-  if (!isAuthenticated) {
+  if (authLoading || (loading && !dashboardData && recentOrders.length === 0)) {
     return (
-      <View style={styles.unauthContainer}>
-        <Ionicons name="leaf-outline" size={48} color={Colors.forest} style={{ marginBottom: 12 }} />
-        <Text style={styles.unauthTitle}>Nursery Partner Portal</Text>
-        <Text style={styles.unauthSubtitle}>
-          Sign in to view real-time orders, manage live stock, and prepare plant
-          dispatch.
-        </Text>
-        <Button
-          label="Sign In to Nursery"
-          onPress={() => router.push("/(auth)/login" as any)}
-          style={styles.signInBtn}
-        />
+      <View style={[styles.screen, { paddingTop: insets.top }]}>
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.nurseryGreeting}>Good day,</Text>
+            <Text style={styles.nurseryName}>
+              {seller?.businessName || "Your Nursery"}
+            </Text>
+          </View>
+        </View>
+        <HomeSkeleton />
       </View>
     );
   }
 
-  if (loading && !refreshing) {
-    return <LoadingState message="Connecting to nursery radar..." />;
-  }
+  // Determine State
+  const onboardingStatus = seller?.onboardingStatus || "incomplete";
+  const isApproved = seller?.status === "approved";
+  const productCount = seller?.productCount ?? (dashboardData?.totalProducts || 0);
 
-  if (error && !dashboard) {
-    return <ErrorState message={error} onRetry={fetchDashboard} />;
-  }
-
-  const kpis = dashboard?.kpis || {
-    newOrders: 0,
-    preparingOrders: 0,
-    readyForPickupOrders: 0,
-    lowStockProducts: 0,
-    totalRevenuePaise: 0,
-    publishedProducts: 0,
-  };
-
-  const inventoryAlerts = dashboard?.inventoryAlerts || [];
-  const actionItems = dashboard?.actionRequired || [];
+  // Today's Stats
+  const todayOrders = dashboardData?.todayOrders ?? recentOrders.length;
+  const todaySalesPaise = dashboardData?.todaySalesPaise ?? dashboardData?.revenuePaise ?? 0;
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          colors={[Colors.forest]}
-        />
-      }
-    >
-      {/* Store Header Banner */}
-      <View style={styles.headerCard}>
-        <View style={styles.headerRow}>
-          <View style={styles.headerInfo}>
-            <Text style={styles.nurseryPre}>Active Nursery Partner</Text>
-            <Text style={styles.nurseryName}>
-              {seller?.businessName || "My Botanical Nursery"}
-            </Text>
-          </View>
-          <View style={styles.statusBadge}>
-            <Text style={styles.statusText}>STORE OPEN</Text>
-          </View>
-        </View>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-          <Ionicons name="flash-outline" size={13} color={Colors.forest} />
-          <Text style={styles.hyperlocalNote}>4-Hour Hyperlocal Courier Dispatch Enabled</Text>
-        </View>
-      </View>
-
-      {/* Operational Radar Metrics */}
-      <Text style={styles.sectionHeading}>Immediate Action Radar</Text>
-      <View style={styles.metricsGrid}>
-        <View style={styles.metricRow}>
-          <SellerMetricCard
-            title="New Orders"
-            value={kpis.newOrders}
-            subtitle={
-              kpis.newOrders > 0 ? "Requires Acceptance" : "All Caught Up"
-            }
-            variant={kpis.newOrders > 0 ? "alert" : "default"}
-            onPress={() => router.push("/(tabs)/orders" as any)}
-          />
-          <SellerMetricCard
-            title="Preparing"
-            value={kpis.preparingOrders}
-            subtitle="Inspection & Hydration"
-            variant={kpis.preparingOrders > 0 ? "default" : "default"}
-            onPress={() => router.push("/(tabs)/orders" as any)}
-          />
+    <View style={[styles.screen, { paddingTop: insets.top }]}>
+      {/* ── Compact Header ── */}
+      <View style={styles.header}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.nurseryGreeting}>Good morning,</Text>
+          <Text style={styles.nurseryName} numberOfLines={1}>
+            {seller?.businessName || "Your Nursery"}
+          </Text>
         </View>
 
-        <View style={styles.metricRow}>
-          <SellerMetricCard
-            title="Ready for Courier"
-            value={kpis.readyForPickupOrders}
-            subtitle="Awaiting Courier Pickup"
-            variant="success"
-            onPress={() => router.push("/(tabs)/orders" as any)}
-          />
-          <SellerMetricCard
-            title="Low Stock Alerts"
-            value={kpis.lowStockProducts}
-            subtitle={
-              kpis.lowStockProducts > 0
-                ? "Action Recommended"
-                : "Optimal Levels"
-            }
-            variant={kpis.lowStockProducts > 0 ? "alert" : "default"}
-            onPress={() => router.push("/(tabs)/inventory" as any)}
-          />
-        </View>
-      </View>
-
-      {/* Action Items List */}
-      {actionItems.length > 0 && (
-        <View style={styles.sectionCard}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-            <Ionicons name="warning-outline" size={15} color={Colors.terracotta} />
-            <Text style={styles.cardTitle}>Urgent Actions Required</Text>
-          </View>
-          {actionItems.map((act: any, idx: number) => (
-            <TouchableOpacity
-              key={idx}
-              onPress={() => router.push("/(tabs)/orders" as any)}
-              style={styles.actionRow}
-            >
-              <Ionicons name="alert-circle-outline" size={18} color={Colors.terracotta} />
-              <View style={styles.actionInfo}>
-                <Text style={styles.actionTitle}>{act.title}</Text>
-                <Text style={styles.actionCount}>
-                  {act.count} order(s) pending
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward-outline" size={16} color={Colors.inkMuted} />
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
-
-      {/* Stock Critical Alerts */}
-      {inventoryAlerts.length > 0 && (
-        <View style={styles.sectionCard}>
-          <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>
-              Critical Botanical Stock ({inventoryAlerts.length})
-            </Text>
-            <TouchableOpacity
-              onPress={() => router.push("/(tabs)/inventory" as any)}
-            >
-              <Text style={styles.manageLink}>Adjust →</Text>
-            </TouchableOpacity>
-          </View>
-          {inventoryAlerts.slice(0, 3).map((item: any) => (
-            <View key={item.id} style={styles.alertItem}>
-              <Text style={styles.alertName} numberOfLines={1}>
-                {item.name}
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => router.push("/notifications" as any)}
+          style={styles.bellButton}
+          accessibilityLabel="Notifications"
+        >
+          <Ionicons name="notifications-outline" size={22} color={Colors.forest} />
+          {unreadCount > 0 && (
+            <View style={styles.unreadBadge}>
+              <Text style={styles.unreadBadgeText}>
+                {unreadCount > 9 ? "9+" : unreadCount}
               </Text>
-              <View style={styles.alertStockBadge}>
-                <Text style={styles.alertStockText}>
-                  {item.stockQuantity <= 0
-                    ? "OUT OF STOCK"
-                    : `${item.stockQuantity} LEFT`}
-                </Text>
-              </View>
             </View>
-          ))}
-        </View>
-      )}
-
-      {/* Quick Revenue Summary */}
-      <View style={styles.revenueCard}>
-        <Text style={styles.revenuePre}>Settled & Pending Nursery Revenue</Text>
-        <Text style={styles.revenueAmount}>
-          {formatINR(kpis.totalRevenuePaise || 0)}
-        </Text>
-        <Text style={styles.revenueFoot}>
-          From {kpis.completedOrders || 0} completed plant deliveries
-        </Text>
+          )}
+        </TouchableOpacity>
       </View>
-    </ScrollView>
+
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={Colors.forest}
+            colors={[Colors.forest]}
+          />
+        }
+      >
+        {/* ── Account Lifecycle Banners ── */}
+        {onboardingStatus === "incomplete" && (
+          <View style={styles.stateBannerWarning}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <Ionicons name="alert-circle" size={20} color={Colors.warning} />
+              <Text style={styles.stateBannerTitle}>Complete your seller setup</Text>
+            </View>
+            <Text style={styles.stateBannerText}>
+              Finish registering your nursery location and settlement account to begin receiving orders.
+            </Text>
+            <Button
+              label="Complete Setup"
+              variant="terracotta"
+              size="sm"
+              onPress={() => router.push("/onboarding" as any)}
+              style={{ marginTop: Spacing.sm }}
+            />
+          </View>
+        )}
+
+        {onboardingStatus === "under_review" && (
+          <View style={styles.stateBannerInfo}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <Ionicons name="hourglass-outline" size={20} color={Colors.info} />
+              <Text style={styles.stateBannerTitle}>Your application is under review</Text>
+            </View>
+            <Text style={styles.stateBannerText}>
+              Our botanical partner team is verifying your nursery details. You will receive an alert once approved.
+            </Text>
+          </View>
+        )}
+
+        {onboardingStatus === "needs_correction" && (
+          <View style={styles.stateBannerError}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <Ionicons name="alert-circle" size={20} color={Colors.error} />
+              <Text style={styles.stateBannerTitle}>Action required</Text>
+            </View>
+            <Text style={styles.stateBannerText}>
+              {seller?.correctionReason ||
+                "We need additional information to verify your nursery. Please update your details."}
+            </Text>
+            <Button
+              label="Fix issue"
+              variant="terracotta"
+              size="sm"
+              onPress={() => router.push("/onboarding" as any)}
+              style={{ marginTop: Spacing.sm }}
+            />
+          </View>
+        )}
+
+        {isApproved && productCount === 0 && (
+          <View style={styles.stateBannerSuccess}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <Ionicons name="checkmark-circle" size={20} color={Colors.success} />
+              <Text style={styles.stateBannerTitle}>You're ready to sell</Text>
+            </View>
+            <Text style={styles.stateBannerText}>
+              Your nursery is approved. Add your first botanical listing from the Floria canonical catalog.
+            </Text>
+            <Button
+              label="+ Add your first plant"
+              variant="primary"
+              size="sm"
+              onPress={() => router.push("/products/new" as any)}
+              style={{ marginTop: Spacing.sm }}
+            />
+          </View>
+        )}
+
+        {/* ── Today's Overview (2x2 Grid) ── */}
+        <View style={styles.section}>
+          <Text style={styles.sectionHeading}>Today's overview</Text>
+          <View style={styles.overviewGrid}>
+            <View style={styles.overviewCard}>
+              <Text style={styles.overviewLabel}>Orders</Text>
+              <Text style={styles.overviewValue}>{todayOrders}</Text>
+              <Text style={styles.overviewTrend}>↑ Today's volume</Text>
+            </View>
+
+            <View style={styles.overviewCard}>
+              <Text style={styles.overviewLabel}>Sales</Text>
+              <Text style={styles.overviewValue}>{formatINR(todaySalesPaise)}</Text>
+              <Text style={styles.overviewTrend}>↑ Gross payout</Text>
+            </View>
+
+            <View style={styles.overviewCard}>
+              <Text style={styles.overviewLabel}>To prepare</Text>
+              <Text
+                style={[
+                  styles.overviewValue,
+                  toPrepareCount > 0 && { color: Colors.terracotta },
+                ]}
+              >
+                {toPrepareCount}
+              </Text>
+              <Text style={styles.overviewTrend}>Awaiting dispatch</Text>
+            </View>
+
+            <View style={styles.overviewCard}>
+              <Text style={styles.overviewLabel}>Low stock</Text>
+              <Text
+                style={[
+                  styles.overviewValue,
+                  lowStockCount > 0 && { color: Colors.warning },
+                ]}
+              >
+                {lowStockCount}
+              </Text>
+              <Text style={styles.overviewTrend}>Needs restock</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* ── Needs Your Attention ── */}
+        {(toPrepareCount > 0 || lowStockCount > 0) && (
+          <View style={styles.section}>
+            <Text style={styles.sectionHeading}>Needs your attention</Text>
+            <View style={styles.attentionContainer}>
+              {toPrepareCount > 0 && (
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={() => router.push("/(tabs)/orders" as any)}
+                  style={styles.attentionRow}
+                >
+                  <View style={styles.attentionIconWrap}>
+                    <Ionicons name="cube-outline" size={18} color={Colors.terracotta} />
+                  </View>
+                  <Text style={styles.attentionText}>
+                    {toPrepareCount} {toPrepareCount === 1 ? "order needs" : "orders need"} preparation
+                  </Text>
+                  <Ionicons name="chevron-forward" size={18} color={Colors.inkMuted} />
+                </TouchableOpacity>
+              )}
+
+              {lowStockCount > 0 && (
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={() => router.push("/inventory" as any)}
+                  style={styles.attentionRow}
+                >
+                  <View style={styles.attentionIconWrap}>
+                    <Ionicons name="alert-circle-outline" size={18} color={Colors.warning} />
+                  </View>
+                  <Text style={styles.attentionText}>
+                    {lowStockCount} {lowStockCount === 1 ? "plant is" : "plants are"} running low
+                  </Text>
+                  <Ionicons name="chevron-forward" size={18} color={Colors.inkMuted} />
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        )}
+
+        {/* ── Recent Orders ── */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionHeading}>Recent orders</Text>
+            <TouchableOpacity onPress={() => router.push("/(tabs)/orders" as any)}>
+              <Text style={styles.seeAllLink}>View all</Text>
+            </TouchableOpacity>
+          </View>
+
+          {recentOrders.length === 0 ? (
+            <View style={styles.emptyCard}>
+              <Ionicons name="receipt-outline" size={32} color={Colors.sageLight} />
+              <Text style={styles.emptyTitle}>No orders yet</Text>
+              <Text style={styles.emptySubtitle}>
+                New customer orders for your botanical specimens will appear here.
+              </Text>
+            </View>
+          ) : (
+            recentOrders.slice(0, 3).map((order) => {
+              const orderId = order.masterOrderId || order.id || "";
+              const shortId = orderId.substring(0, 8).toUpperCase();
+              const itemCount = order.items?.length || 1;
+              const subtotal = order.seller_payout_paise ?? order.totalPaise ?? order.subtotalPaise ?? 0;
+
+              return (
+                <TouchableOpacity
+                  key={orderId}
+                  activeOpacity={0.85}
+                  onPress={() => router.push(`/orders/${orderId}` as any)}
+                  style={styles.orderRow}
+                >
+                  <View style={styles.orderRowTop}>
+                    <Text style={styles.orderCode}>#FL-{shortId}</Text>
+                    <StatusBadge status={order.status || "PLACED"} />
+                  </View>
+
+                  <View style={styles.orderRowDetails}>
+                    <Text style={styles.orderItems}>
+                      {itemCount} {itemCount === 1 ? "item" : "items"}
+                    </Text>
+                    <Text style={styles.orderAmount}>{formatINR(subtotal)}</Text>
+                  </View>
+
+                  <View style={styles.orderRowFooter}>
+                    <Text style={styles.orderStatusText}>
+                      {order.status || "Preparing"}
+                    </Text>
+                    <Ionicons name="chevron-forward" size={16} color={Colors.inkMuted} />
+                  </View>
+                </TouchableOpacity>
+              );
+            })
+          )}
+        </View>
+
+        {/* ── Quick Actions ── */}
+        <View style={styles.section}>
+          <Text style={styles.sectionHeading}>Quick actions</Text>
+          <View style={styles.quickActionsContainer}>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => router.push("/products/new" as any)}
+              style={[styles.quickActionButton, styles.primaryQuickAction]}
+            >
+              <Ionicons name="add" size={18} color={Colors.white} />
+              <Text style={styles.primaryQuickActionText}>Add Plant</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => router.push("/inventory" as any)}
+              style={styles.quickActionButton}
+            >
+              <Ionicons name="file-tray-stacked-outline" size={18} color={Colors.forest} />
+              <Text style={styles.quickActionText}>Inventory</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => router.push("/(tabs)/orders" as any)}
+              style={styles.quickActionButton}
+            >
+              <Ionicons name="receipt-outline" size={18} color={Colors.forest} />
+              <Text style={styles.quickActionText}>Orders</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
     backgroundColor: Colors.page,
   },
-  content: {
-    padding: Spacing.md,
-    paddingBottom: Spacing.xxl,
-  },
-  unauthContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: Spacing.xl,
-    backgroundColor: Colors.page,
-  },
-  unauthEmoji: {
-    fontSize: 48,
-    marginBottom: Spacing.md,
-  },
-  unauthTitle: {
-    fontSize: Typography.fontSizes.xl,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
-    color: Colors.ink,
-    marginBottom: Spacing.xs,
-  },
-  unauthSubtitle: {
-    fontSize: Typography.fontSizes.sm,
-    color: Colors.inkMuted,
-    textAlign: "center",
-    lineHeight: 20,
-    marginBottom: Spacing.lg,
-  },
-  signInBtn: {
-    minWidth: 200,
-  },
-  headerCard: {
-    backgroundColor: Colors.forest,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.md,
-    marginBottom: Spacing.md,
-  },
-  headerRow: {
+  header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+    backgroundColor: Colors.page,
   },
-  headerInfo: {
-    flex: 1,
-  },
-  nurseryPre: {
-    fontSize: 10,
-    fontWeight: "700",
-    color: Colors.botanical,
+  nurseryGreeting: {
+    fontSize: Typography.fontSizes.xs,
+    color: Colors.inkMuted,
     textTransform: "uppercase",
     letterSpacing: 0.5,
+    fontWeight: "700",
   },
   nurseryName: {
     fontSize: Typography.fontSizes.lg,
-    fontWeight: "bold",
     fontFamily: "Georgia",
-    color: Colors.white,
-    marginTop: 2,
-  },
-  statusBadge: {
-    backgroundColor: Colors.success,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: BorderRadius.sm,
-  },
-  statusText: {
-    fontSize: 10,
     fontWeight: "bold",
-    color: Colors.white,
+    color: Colors.forest,
   },
-  hyperlocalNote: {
-    fontSize: 11,
-    color: Colors.botanical,
-    marginTop: Spacing.sm,
-    fontWeight: "500",
+  bellButton: {
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.linen,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: Colors.border,
+    position: "relative",
+  },
+  unreadBadge: {
+    position: "absolute",
+    top: 4,
+    right: 4,
+    backgroundColor: Colors.terracotta,
+    borderRadius: BorderRadius.full,
+    minWidth: 16,
+    height: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 3,
+  },
+  unreadBadgeText: {
+    color: Colors.white,
+    fontSize: 9,
+    fontWeight: "bold",
+  },
+  scrollContent: {
+    padding: Spacing.md,
+    paddingBottom: Spacing.xxl,
+  },
+  stateBannerWarning: {
+    backgroundColor: Colors.warningBg,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.warning,
+  },
+  stateBannerInfo: {
+    backgroundColor: Colors.infoBg,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.info,
+  },
+  stateBannerError: {
+    backgroundColor: Colors.errorBg,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.error,
+  },
+  stateBannerSuccess: {
+    backgroundColor: Colors.successBg,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.success,
+  },
+  stateBannerTitle: {
+    fontSize: Typography.fontSizes.sm,
+    fontWeight: "bold",
+    color: Colors.ink,
+  },
+  stateBannerText: {
+    fontSize: Typography.fontSizes.xs,
+    color: Colors.inkLight,
+    lineHeight: 18,
+    marginTop: 4,
+  },
+  section: {
+    marginBottom: Spacing.lg,
   },
   sectionHeading: {
     fontSize: Typography.fontSizes.sm,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
-    color: Colors.ink,
-    marginBottom: Spacing.xs,
+    fontWeight: "700",
+    color: Colors.inkMuted,
     textTransform: "uppercase",
     letterSpacing: 0.5,
+    marginBottom: Spacing.xs,
   },
-  metricsGrid: {
-    marginBottom: Spacing.md,
-  },
-  metricRow: {
-    flexDirection: "row",
-    marginHorizontal: -Spacing.xs,
-  },
-  sectionCard: {
-    backgroundColor: Colors.linen,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    marginBottom: Spacing.md,
-  },
-  cardHeader: {
+  sectionHeaderRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.xs,
   },
-  cardTitle: {
+  seeAllLink: {
+    fontSize: Typography.fontSizes.xs,
+    fontWeight: "700",
+    color: Colors.forest,
+  },
+  overviewGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.sm,
+  },
+  overviewCard: {
+    flexBasis: "48%",
+    flexGrow: 1,
+    backgroundColor: Colors.linen,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  overviewLabel: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: Colors.inkMuted,
+    textTransform: "uppercase",
+  },
+  overviewValue: {
+    fontSize: Typography.fontSizes.xl,
+    fontWeight: "bold",
+    fontFamily: "Georgia",
+    color: Colors.forest,
+    marginVertical: 4,
+  },
+  overviewTrend: {
+    fontSize: 10,
+    color: Colors.inkLight,
+  },
+  attentionContainer: {
+    backgroundColor: Colors.linen,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    overflow: "hidden",
+  },
+  attentionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  attentionIconWrap: {
+    marginRight: Spacing.sm,
+  },
+  attentionText: {
+    flex: 1,
+    fontSize: Typography.fontSizes.sm,
+    fontWeight: "600",
+    color: Colors.ink,
+  },
+  orderRow: {
+    backgroundColor: Colors.linen,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    marginBottom: Spacing.xs,
+  },
+  orderRowTop: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  orderCode: {
     fontSize: Typography.fontSizes.sm,
     fontWeight: "bold",
     fontFamily: "Georgia",
     color: Colors.ink,
   },
-  manageLink: {
-    fontSize: 11,
-    fontWeight: "bold",
-    color: Colors.terracotta,
-    textTransform: "uppercase",
-  },
-  actionRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: Spacing.xs,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-    marginTop: Spacing.xs,
-  },
-  actionIcon: {
-    fontSize: 16,
-    marginRight: Spacing.sm,
-  },
-  actionInfo: {
-    flex: 1,
-  },
-  actionTitle: {
-    fontSize: Typography.fontSizes.xs,
-    fontWeight: "bold",
-    color: Colors.ink,
-  },
-  actionCount: {
-    fontSize: 10,
-    color: Colors.terracotta,
-    fontWeight: "600",
-  },
-  actionArrow: {
-    fontSize: 14,
-    color: Colors.inkMuted,
-  },
-  alertItem: {
+  orderRowDetails: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 6,
+    marginVertical: 4,
+  },
+  orderItems: {
+    fontSize: Typography.fontSizes.xs,
+    color: Colors.inkLight,
+  },
+  orderAmount: {
+    fontSize: Typography.fontSizes.sm,
+    fontWeight: "bold",
+    color: Colors.forest,
+  },
+  orderRowFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 4,
+    paddingTop: 4,
     borderTopWidth: 1,
     borderTopColor: Colors.border,
   },
-  alertName: {
-    fontSize: Typography.fontSizes.xs,
-    color: Colors.ink,
-    flex: 1,
-    paddingRight: Spacing.sm,
+  orderStatusText: {
+    fontSize: 11,
+    color: Colors.inkMuted,
+    fontWeight: "500",
   },
-  alertStockBadge: {
-    backgroundColor: Colors.warningBg,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: BorderRadius.sm,
-  },
-  alertStockText: {
-    fontSize: 9,
-    fontWeight: "bold",
-    color: Colors.warning,
-  },
-  revenueCard: {
-    backgroundColor: Colors.sand,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.md,
+  emptyCard: {
+    backgroundColor: Colors.linen,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    alignItems: "center",
     borderWidth: 1,
     borderColor: Colors.border,
-    alignItems: "center",
   },
-  revenuePre: {
-    fontSize: 10,
-    fontWeight: "700",
-    color: Colors.sage,
-    textTransform: "uppercase",
-  },
-  revenueAmount: {
-    fontSize: Typography.fontSizes.xxl,
+  emptyTitle: {
+    fontSize: Typography.fontSizes.base,
     fontWeight: "bold",
     fontFamily: "Georgia",
-    color: Colors.forest,
-    marginVertical: 2,
+    color: Colors.ink,
+    marginTop: Spacing.xs,
   },
-  revenueFoot: {
-    fontSize: 11,
-    color: Colors.inkLight,
+  emptySubtitle: {
+    fontSize: Typography.fontSizes.xs,
+    color: Colors.inkMuted,
+    textAlign: "center",
+    marginTop: 4,
+  },
+  quickActionsContainer: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+  },
+  quickActionButton: {
+    flex: 1,
+    height: 48,
+    backgroundColor: Colors.linen,
+    borderRadius: BorderRadius.md,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  primaryQuickAction: {
+    backgroundColor: Colors.forest,
+    borderColor: Colors.forestDark,
+  },
+  primaryQuickActionText: {
+    fontSize: Typography.fontSizes.sm,
+    fontWeight: "bold",
+    color: Colors.white,
+  },
+  quickActionText: {
+    fontSize: Typography.fontSizes.sm,
+    fontWeight: "600",
+    color: Colors.forest,
   },
 });

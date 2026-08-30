@@ -12,13 +12,33 @@ import { api } from "../api";
 
 WebBrowser.maybeCompleteAuthSession();
 
+export type SellerOnboardingStatus =
+  | "incomplete"
+  | "under_review"
+  | "needs_correction"
+  | "approved"
+  | "active"
+  | "suspended"
+  | "rejected";
+
 export interface SellerProfileData {
   id: string;
+  userId: string;
   businessName: string;
+  businessDescription?: string;
   email: string;
   phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  logoUrl?: string;
   status: "pending" | "approved" | "suspended" | "rejected";
+  onboardingStatus: SellerOnboardingStatus;
+  correctionReason?: string;
   role: string;
+  isActive: boolean;
+  productCount?: number;
 }
 
 export interface SellerAuthContextType {
@@ -68,28 +88,88 @@ export function SellerAuthProvider({
         fullName = p.full_name || u.full_name || fullName;
       }
 
-      // 2. Fetch seller dashboard profile
-      const dashboardRes = await api.getSellerDashboard();
-      if (dashboardRes.success && dashboardRes.data?.profile) {
-        const p = dashboardRes.data.profile;
-        setSeller({
-          id: p.id || session.user.id,
-          businessName: p.business_name || fullName,
-          email: p.email || session.user.email || "",
-          phone: p.phone,
-          status: p.verification_status || p.status || "approved",
-          role,
-        });
-      } else {
-        setSeller({
-          id: session.user.id,
-          businessName: fullName,
-          email: session.user.email || "",
-          status: "approved",
-          role,
-        });
+      // 2. Fetch seller dashboard profile & application status
+      const [dashboardRes, appRes, productsRes] = await Promise.allSettled([
+        api.getSellerDashboard(),
+        api.getSellerApplication(),
+        api.getSellerProducts({ limit: 1 }),
+      ]);
+
+      let onboardingStatus: SellerOnboardingStatus = "incomplete";
+      let status: "pending" | "approved" | "suspended" | "rejected" = "pending";
+      let sellerData: any = null;
+      let correctionReason = "";
+      let productCount = 0;
+
+      if (productsRes.status === "fulfilled" && productsRes.value.success) {
+        productCount = Array.isArray(productsRes.value.data)
+          ? productsRes.value.data.length
+          : 0;
       }
-    } catch {
+
+      if (dashboardRes.status === "fulfilled" && dashboardRes.value.success && dashboardRes.value.data?.profile) {
+        const p = dashboardRes.value.data.profile;
+        sellerData = p;
+        status = p.status || "approved";
+
+        if (status === "approved") {
+          onboardingStatus = "approved";
+        } else if (status === "suspended") {
+          onboardingStatus = "suspended";
+        } else if (status === "rejected") {
+          onboardingStatus = "rejected";
+        } else {
+          onboardingStatus = "under_review";
+        }
+      }
+
+      if (appRes.status === "fulfilled" && appRes.value.success && appRes.value.data) {
+        const app = appRes.value.data;
+        if (!sellerData) sellerData = app;
+
+        if (app.status === "needs_correction") {
+          onboardingStatus = "needs_correction";
+          correctionReason = app.rejection_reason || "Additional verification documents required.";
+        } else if (app.status === "pending" || app.status === "submitted") {
+          onboardingStatus = "under_review";
+        } else if (app.is_complete === false) {
+          onboardingStatus = "incomplete";
+        }
+      }
+
+      // Check if business has at least minimum operational details
+      if (
+        !sellerData?.business_name ||
+        sellerData.business_name === "Nursery Partner" ||
+        sellerData.business_name === "New Nursery" ||
+        !sellerData?.contact_phone
+      ) {
+        if (onboardingStatus !== "needs_correction" && onboardingStatus !== "under_review") {
+          onboardingStatus = "incomplete";
+        }
+      }
+
+      setSeller({
+        id: sellerData?.id || session.user.id,
+        userId: session.user.id,
+        businessName: sellerData?.business_name || fullName,
+        businessDescription: sellerData?.business_description,
+        email: sellerData?.contact_email || session.user.email || "",
+        phone: sellerData?.contact_phone,
+        address: sellerData?.address,
+        city: sellerData?.city,
+        state: sellerData?.state,
+        postalCode: sellerData?.postal_code || sellerData?.pincode,
+        logoUrl: sellerData?.logo_url,
+        status,
+        onboardingStatus,
+        correctionReason,
+        role,
+        isActive: status === "approved",
+        productCount,
+      });
+    } catch (err) {
+      console.warn("[SellerAuthContext] Profile load warning:", err);
       setSeller(null);
     } finally {
       setIsLoading(false);
@@ -131,8 +211,11 @@ export function SellerAuthProvider({
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    setSeller(null);
+    try {
+      await supabase.auth.signOut();
+    } finally {
+      setSeller(null);
+    }
   };
 
   const signInWithGoogle = async () => {

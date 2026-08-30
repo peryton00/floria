@@ -5,23 +5,29 @@ import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
 import { Button } from "./Button";
 
 export function EmptyState({
+  icon = "leaf-outline",
   title,
   message,
+  description,
   actionLabel,
   onAction,
 }: {
+  icon?: any;
   title: string;
-  message: string;
+  message?: string;
+  description?: string;
   actionLabel?: string;
   onAction?: () => void;
 }) {
+  const displayText = description || message || "";
+
   return (
     <View style={styles.container}>
       <View style={styles.iconCircle}>
-        <Ionicons name="leaf-outline" size={28} color={Colors.forest} />
+        <Ionicons name={icon} size={28} color={Colors.forest} />
       </View>
       <Text style={styles.title}>{title}</Text>
-      <Text style={styles.message}>{message}</Text>
+      {displayText ? <Text style={styles.message}>{displayText}</Text> : null}
       {actionLabel && onAction && (
         <Button label={actionLabel} onPress={onAction} style={styles.button} />
       )}
@@ -31,7 +37,6 @@ export function EmptyState({
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     alignItems: "center",
     justifyContent: "center",
     padding: Spacing.xl,
@@ -45,9 +50,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: Spacing.md,
-  },
-  emoji: {
-    fontSize: 28,
   },
   title: {
     fontSize: Typography.fontSizes.lg,
