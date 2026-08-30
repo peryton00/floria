@@ -20,41 +20,70 @@ export default function AdminDashboardPage() {
   const [stats, setStats] = useState<any>(null);
   const [analytics, setAnalytics] = useState<any>(null);
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
+  const [pendingSellers, setPendingSellers] = useState<any[]>([]);
+  const [approvingId, setApprovingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState<string>("30d");
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function loadDashboard() {
-      try {
-        setLoading(true);
-        const [dashRes, ordersRes, analRes] = await Promise.all([
-          api.getAdminDashboard(),
-          api.getAdminOrders(),
-          api.getAdminAnalytics({ range: dateRange }),
-        ]);
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const [dashRes, ordersRes, analRes, sellersRes] = await Promise.all([
+        api.getAdminDashboard(),
+        api.getAdminOrders(),
+        api.getAdminAnalytics({ range: dateRange }),
+        api.getAdminSellers(),
+      ]);
 
-        if (dashRes.success && dashRes.data) {
-          setStats(dashRes.data);
-        } else {
-          setError(dashRes.error?.message || "Failed to load dashboard metrics");
-        }
-
-        if (ordersRes.success && ordersRes.data) {
-          setRecentOrders(ordersRes.data.slice(0, 5));
-        }
-
-        if (analRes.success && analRes.data) {
-          setAnalytics(analRes.data);
-        }
-      } catch (err: any) {
-        setError(err.message || "Failed to connect to backend API");
-      } finally {
-        setLoading(false);
+      if (dashRes.success && dashRes.data) {
+        setStats(dashRes.data);
+      } else {
+        setError(dashRes.error?.message || "Failed to load dashboard metrics");
       }
+
+      if (ordersRes.success && ordersRes.data) {
+        setRecentOrders(ordersRes.data.slice(0, 5));
+      }
+
+      if (analRes.success && analRes.data) {
+        setAnalytics(analRes.data);
+      }
+
+      if (sellersRes.success && Array.isArray(sellersRes.data)) {
+        const pending = sellersRes.data.filter(
+          (s: any) =>
+            s.status === "under_review" ||
+            s.status === "pending" ||
+            s.status === "application_submitted" ||
+            s.status === "needs_correction",
+        );
+        setPendingSellers(pending);
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to connect to backend API");
+    } finally {
+      setLoading(false);
     }
-    loadDashboard();
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
   }, [dateRange]);
+
+  const handleQuickApprove = async (sellerId: string) => {
+    try {
+      setApprovingId(sellerId);
+      const res = await api.approveSeller(sellerId);
+      if (res.success) {
+        await fetchDashboardData();
+      }
+    } catch {
+      // Handled
+    } finally {
+      setApprovingId(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -181,6 +210,98 @@ export default function AdminDashboardPage() {
                 <div className="pt-6 flex-1 flex items-center justify-center">
                   <DonutChart data={donutChartData} size={160} />
                 </div>
+              </div>
+            </div>
+
+            {/* Nursery Partner Applications Awaiting Approval Section */}
+            <div className="space-y-3 pt-2">
+              <div className="flex justify-between items-center px-1">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+                  <h2 className="font-sans text-sm font-bold uppercase tracking-wider text-[#0F172A]">
+                    Nursery Applications Awaiting Approval
+                  </h2>
+                  <span className="font-mono text-[10px] bg-amber-50 text-amber-800 font-bold px-2 py-0.5 rounded border border-amber-200">
+                    {pendingSellers.length} Pending Action
+                  </span>
+                </div>
+                <Link href="/admin/sellers" className="font-sans text-xs text-[#1B4D3E] font-bold hover:underline flex items-center gap-1">
+                  Manage All Nurseries →
+                </Link>
+              </div>
+
+              <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-xs overflow-hidden">
+                {pendingSellers.length === 0 ? (
+                  <div className="p-8 text-center text-xs text-slate-500">
+                    No pending nursery applications awaiting review. All partner accounts are active or up to date.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse text-left text-xs">
+                      <thead>
+                        <tr className="bg-slate-50 text-slate-600 font-mono text-[11px] font-bold uppercase tracking-wider border-b border-[#E2E8F0]">
+                          <th className="p-3.5">Seller ID & Username</th>
+                          <th className="p-3.5">Nursery / Business Name</th>
+                          <th className="p-3.5">Contact Email & Phone</th>
+                          <th className="p-3.5">Location</th>
+                          <th className="p-3.5">GSTIN</th>
+                          <th className="p-3.5">Status</th>
+                          <th className="p-3.5 text-right">Approval Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#E2E8F0]">
+                        {pendingSellers.map((seller) => (
+                          <tr key={seller.id} className="hover:bg-[#F8FAFC] transition-colors">
+                            <td className="p-3.5">
+                              <span className="font-mono font-bold text-[#0F172A] block">
+                                {seller.public_seller_id || `FLR-SLR-${seller.id.slice(0, 6).toUpperCase()}`}
+                              </span>
+                              <span className="font-mono text-[10px] text-slate-500">
+                                @{seller.username || "nursery"}
+                              </span>
+                            </td>
+                            <td className="p-3.5 font-bold text-[#1A2E22]">
+                              {seller.business_name}
+                            </td>
+                            <td className="p-3.5 text-slate-600">
+                              <div className="font-mono text-xs">{seller.contact_email}</div>
+                              <div className="font-mono text-[10px] text-slate-500">{seller.contact_phone || "—"}</div>
+                            </td>
+                            <td className="p-3.5 text-slate-700">
+                              {seller.city || "—"}, {seller.state || "—"}
+                            </td>
+                            <td className="p-3.5 font-mono text-xs font-semibold text-[#2D5A3C]">
+                              {seller.gst_number || <span className="text-slate-400 font-normal">N/A</span>}
+                            </td>
+                            <td className="p-3.5">
+                              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-amber-50 text-amber-800 border border-amber-200">
+                                {seller.status || "under_review"}
+                              </span>
+                            </td>
+                            <td className="p-3.5 text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                <button
+                                  type="button"
+                                  disabled={approvingId === seller.id}
+                                  onClick={() => handleQuickApprove(seller.id)}
+                                  className="px-3 py-1.5 bg-[#2D5A3C] hover:bg-[#1E4D2B] text-white font-bold text-xs uppercase tracking-wider rounded-lg shadow-xs transition-colors disabled:opacity-50"
+                                >
+                                  {approvingId === seller.id ? "Approving..." : "Approve"}
+                                </button>
+                                <Link
+                                  href="/admin/sellers"
+                                  className="px-3 py-1.5 bg-[#FAF8F5] hover:bg-[#EAF2EC] text-[#2D5A3C] font-bold text-xs uppercase tracking-wider rounded-lg border border-[#D0E2D4] transition-colors"
+                                >
+                                  Review
+                                </Link>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             </div>
 

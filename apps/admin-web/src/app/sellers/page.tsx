@@ -242,12 +242,106 @@ export default function AdminSellersPage() {
                   </div>
                 </div>
 
-                <button
-                  onClick={() => handleInspectSeller(seller)}
-                  className="w-full py-2.5 bg-[#FAF8F5] hover:bg-[#EAF2EC] text-[#2D5A3C] font-bold text-xs uppercase tracking-wider rounded-xl border border-[#D0E2D4] transition-colors"
-                >
-                  Inspect & Review
-                </button>
+                <div className="pt-3 border-t border-[#F3F4F6] space-y-2">
+                  {(seller.status === "under_review" ||
+                    seller.status === "pending" ||
+                    seller.status === "application_submitted" ||
+                    seller.status === "needs_correction") ? (
+                    <div className="space-y-1.5">
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          disabled={actionLoading}
+                          onClick={() => {
+                            setSelectedSeller(seller);
+                            handleStatusChange("approve");
+                          }}
+                          className="flex-1 py-2 bg-[#2D5A3C] hover:bg-[#1E4D2B] text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-xs transition-colors disabled:opacity-50"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleInspectSeller(seller)}
+                          className="flex-1 py-2 bg-[#FAF8F5] hover:bg-[#EAF2EC] text-[#2D5A3C] font-bold text-xs uppercase tracking-wider rounded-xl border border-[#D0E2D4] transition-colors"
+                        >
+                          Review
+                        </button>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedSeller(seller);
+                            setActionPrompt({
+                              type: "request_correction",
+                              reason: "Please update required business verification documents.",
+                            });
+                          }}
+                          className="flex-1 py-1.5 bg-[#FEF8EC] hover:bg-[#FDE68A] text-[#8C5E06] font-bold text-[11px] uppercase tracking-wider rounded-lg border border-[#FBD38D] transition-colors"
+                        >
+                          Correction
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedSeller(seller);
+                            setActionPrompt({
+                              type: "reject",
+                              reason: "Application does not meet onboarding criteria.",
+                            });
+                          }}
+                          className="flex-1 py-1.5 bg-[#FEF2F2] hover:bg-[#FECACA] text-[#991B1B] font-bold text-[11px] uppercase tracking-wider rounded-lg border border-[#FECACA] transition-colors"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    </div>
+                  ) : (seller.status === "approved" || seller.status === "active") ? (
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleInspectSeller(seller)}
+                        className="flex-1 py-2 bg-[#FAF8F5] hover:bg-[#EAF2EC] text-[#2D5A3C] font-bold text-xs uppercase tracking-wider rounded-xl border border-[#D0E2D4] transition-colors"
+                      >
+                        Inspect Details
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedSeller(seller);
+                          setActionPrompt({
+                            type: "suspend",
+                            reason: "Account suspended by platform moderation.",
+                          });
+                        }}
+                        className="py-2 px-3 bg-red-50 hover:bg-red-100 text-red-700 font-bold text-xs uppercase tracking-wider rounded-xl border border-red-200 transition-colors"
+                      >
+                        Suspend
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleInspectSeller(seller)}
+                        className="flex-1 py-2 bg-[#FAF8F5] hover:bg-[#EAF2EC] text-[#2D5A3C] font-bold text-xs uppercase tracking-wider rounded-xl border border-[#D0E2D4] transition-colors"
+                      >
+                        Inspect Details
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedSeller(seller);
+                          handleStatusChange("reactivate");
+                        }}
+                        className="py-2 px-3 bg-[#2D5A3C] hover:bg-[#1E4D2B] text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-colors"
+                      >
+                        Reactivate
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
           </div>
