@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ToastProvider } from "@/lib/contexts/ToastContext";
+import { SellerAuthProvider } from "@/lib/contexts/SellerAuthContext";
 import { SellerProvider } from "@/lib/contexts/SellerContext";
 import { SellerProductProvider } from "@/lib/contexts/SellerProductContext";
 import { SellerShell } from "@/components/seller/SellerShell";
@@ -28,11 +29,13 @@ export default function RootLayout({
       </head>
       <body className="bg-cream-100 text-ink-900 antialiased font-sans">
         <ToastProvider>
-          <SellerProvider>
-            <SellerProductProvider>
-              <SellerShell>{children}</SellerShell>
-            </SellerProductProvider>
-          </SellerProvider>
+          <SellerAuthProvider>
+            <SellerProvider>
+              <SellerProductProvider>
+                <SellerShell>{children}</SellerShell>
+              </SellerProductProvider>
+            </SellerProvider>
+          </SellerAuthProvider>
         </ToastProvider>
       </body>
     </html>

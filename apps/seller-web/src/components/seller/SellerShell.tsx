@@ -18,11 +18,17 @@ export function SellerShell({ children }: SellerShellProps) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const isAuthRoute = pathname === "/seller/register" || pathname === "/seller/login";
+  const isAuthRoute =
+    pathname === "/login" ||
+    pathname === "/register" ||
+    pathname === "/forgot-password" ||
+    pathname === "/reset-password" ||
+    pathname === "/seller/login" ||
+    pathname === "/seller/register";
 
   useEffect(() => {
     if (!isLoading && !isLoggedIn && !isAuthRoute) {
-      router.push("/seller/register?required=1");
+      router.push("/login");
     }
   }, [isLoading, isLoggedIn, isAuthRoute, router]);
 

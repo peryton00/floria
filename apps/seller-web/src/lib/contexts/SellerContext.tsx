@@ -1,9 +1,9 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext } from "react";
 import type { SellerProfile, SellerStatus } from "@floria/types";
 import { api } from "@/lib/api";
-import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { useSellerAuth } from "./SellerAuthContext";
 
 export interface SellerContextType {
   sellerProfile: SellerProfile | null;
@@ -23,95 +23,50 @@ export interface SellerContextType {
 const SellerContext = createContext<SellerContextType | undefined>(undefined);
 
 export function SellerProvider({ children }: { children: React.ReactNode }) {
-  const [sellerProfile, setSellerProfile] = useState<SellerProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const refreshProfile = useCallback(async () => {
-    try {
-      const supabase = getSupabaseBrowserClient();
-      const { data: { session } } = await supabase.auth.getSession();
-
-      if (session?.user) {
-        const res = await api.getSellerProfile();
-        if (res.success && res.data) {
-          setSellerProfile(res.data as SellerProfile);
-          return;
-        }
-      }
-      setSellerProfile(null);
-    } catch (e) {
-      console.warn("[SellerContext] refreshProfile error:", e);
-      setSellerProfile(null);
-    }
-  }, []);
-
-  useEffect(() => {
-    refreshProfile().then(() => setIsLoading(false));
-
-    const supabase = getSupabaseBrowserClient();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session?.user) {
-        await refreshProfile();
-      } else if (event === "SIGNED_OUT") {
-        setSellerProfile(null);
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [refreshProfile]);
-
-  const login = async () => {
-    await refreshProfile();
-  };
-
-  const logout = async () => {
-    const supabase = getSupabaseBrowserClient();
-    await supabase.auth.signOut();
-    setSellerProfile(null);
-  };
+  const auth = useSellerAuth();
 
   const updateProfile = async (updates: Partial<SellerProfile>) => {
     try {
       const res = await api.updateSellerProfile(updates);
       if (res.success && res.data) {
-        setSellerProfile(res.data as SellerProfile);
+        await auth.refreshProfile();
       }
     } catch (e) {
       console.error("[SellerContext] updateProfile failed:", e);
     }
   };
 
-  const sellerStatus = sellerProfile?.status ?? null;
-
   const isProfileCompleted = Boolean(
-    sellerProfile?.is_profile_completed ||
-    (sellerProfile &&
-      sellerProfile.business_name &&
-      sellerProfile.business_name !== "New Nursery" &&
-      sellerProfile.business_name !== "Nursery Partner" &&
-      sellerProfile.contact_phone &&
-      sellerProfile.contact_email &&
-      (sellerProfile.address_line1 || sellerProfile.address) &&
-      (sellerProfile.owner_name || sellerProfile.primary_contact_person))
+    auth.sellerProfile?.is_profile_completed ||
+    (auth.sellerProfile &&
+      auth.sellerProfile.business_name &&
+      auth.sellerProfile.business_name !== "New Nursery" &&
+      auth.sellerProfile.business_name !== "Nursery Partner" &&
+      auth.sellerProfile.contact_phone &&
+      auth.sellerProfile.contact_email &&
+      (auth.sellerProfile.address_line1 || auth.sellerProfile.address) &&
+      (auth.sellerProfile.owner_name || auth.sellerProfile.primary_contact_person))
   );
 
   return (
     <SellerContext.Provider
       value={{
-        sellerProfile,
-        sellerStatus,
-        isLoading,
-        isLoggedIn: !!sellerProfile,
-        isApproved: sellerStatus === "approved",
-        isPending: sellerStatus === "pending",
-        isSuspended: sellerStatus === "suspended",
+        sellerProfile: auth.sellerProfile,
+        sellerStatus: auth.sellerStatus,
+        isLoading: auth.isLoading,
+        isLoggedIn: auth.isAuthenticated,
+        isApproved: auth.isApproved,
+        isPending: auth.isPending,
+        isSuspended: auth.isSuspended,
         isProfileCompleted,
-        login,
-        logout,
+        login: async () => {
+          await auth.refreshProfile();
+        },
+        logout: async () => {
+          await auth.signOut();
+        },
         updateProfile,
-        refreshProfile,
+        refreshProfile: auth.refreshProfile,
       }}
     >
       {children}
