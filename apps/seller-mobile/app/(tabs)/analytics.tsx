@@ -15,6 +15,7 @@ import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
 import { formatINR } from "../../lib/format";
 import { AnalyticsSkeleton } from "../../components/ui/Skeletons";
 import { EmptyState } from "../../components/ui/EmptyState";
+import { SellerPendingVerificationShield } from "../../components/seller";
 
 const RANGES = [
   { key: "today", label: "Today" },
@@ -31,7 +32,13 @@ export default function SellerAnalyticsScreen() {
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
+  const isApproved = seller?.status === "approved" || seller?.status === "active";
+
   const fetchAnalytics = useCallback(async () => {
+    if (!isApproved) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       const res = await api.getSellerAnalytics({ range: activeRange });
@@ -47,11 +54,25 @@ export default function SellerAnalyticsScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [activeRange]);
+  }, [activeRange, isApproved]);
 
   useEffect(() => {
     fetchAnalytics();
   }, [fetchAnalytics, seller?.id]);
+
+  if (!isApproved) {
+    return (
+      <View style={[styles.screen, { paddingTop: insets.top }]}>
+        <View style={styles.topBar}>
+          <Text style={styles.pageTitle}>Analytics</Text>
+        </View>
+        <SellerPendingVerificationShield
+          seller={seller}
+          featureName="Business Analytics"
+        />
+      </View>
+    );
+  }
 
   const onRefresh = () => {
     setRefreshing(true);

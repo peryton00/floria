@@ -1,7 +1,9 @@
 import React from "react";
-import { Tabs } from "expo-router";
+import { View, ActivityIndicator } from "react-native";
+import { Tabs, Redirect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../../lib/theme";
+import { useSellerAuth } from "../../lib/contexts/SellerAuthContext";
 
 function TabIcon({ name, focused, color }: { name: string; focused: boolean; color?: any }) {
   switch (name) {
@@ -51,6 +53,20 @@ function TabIcon({ name, focused, color }: { name: string; focused: boolean; col
 }
 
 export default function TabLayout() {
+  const { seller, isAuthorizedSeller, isLoading } = useSellerAuth();
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: Colors.page, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color={Colors.forest} />
+      </View>
+    );
+  }
+
+  if (!seller || !isAuthorizedSeller) {
+    return <Redirect href="/(auth)/login" />;
+  }
+
   return (
     <Tabs
       screenOptions={{

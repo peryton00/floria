@@ -18,6 +18,7 @@ import { formatINR } from "../../lib/format";
 import { HomeSkeleton } from "../../components/ui/Skeletons";
 import { StatusBadge } from "../../components/ui/StatusBadge";
 import { Button } from "../../components/ui/Button";
+import { SellerPendingVerificationShield } from "../../components/seller";
 
 export default function SellerHomeScreen() {
   const router = useRouter();
@@ -101,7 +102,7 @@ export default function SellerHomeScreen() {
 
   // Determine State
   const onboardingStatus = seller?.onboardingStatus || "incomplete";
-  const isApproved = seller?.status === "approved";
+  const isApproved = seller?.status === "approved" || seller?.status === "active";
   const productCount = seller?.productCount ?? (dashboardData?.totalProducts || 0);
 
   // Today's Stats
@@ -147,36 +148,12 @@ export default function SellerHomeScreen() {
           />
         }
       >
-        {/* ── Account Lifecycle Banners ── */}
-        {onboardingStatus === "incomplete" && (
-          <View style={styles.stateBannerWarning}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-              <Ionicons name="alert-circle" size={20} color={Colors.warning} />
-              <Text style={styles.stateBannerTitle}>Complete your seller setup</Text>
-            </View>
-            <Text style={styles.stateBannerText}>
-              Finish registering your nursery location and settlement account to begin receiving orders.
-            </Text>
-            <Button
-              label="Complete Setup"
-              variant="terracotta"
-              size="sm"
-              onPress={() => router.push("/onboarding" as any)}
-              style={{ marginTop: Spacing.sm }}
-            />
-          </View>
-        )}
-
-        {onboardingStatus === "under_review" && (
-          <View style={styles.stateBannerInfo}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-              <Ionicons name="hourglass-outline" size={20} color={Colors.info} />
-              <Text style={styles.stateBannerTitle}>Your application is under review</Text>
-            </View>
-            <Text style={styles.stateBannerText}>
-              Our botanical partner team is verifying your nursery details. You will receive an alert once approved.
-            </Text>
-          </View>
+        {/* ── Verification Pending Banner ── */}
+        {!isApproved && (
+          <SellerPendingVerificationShield
+            seller={seller}
+            inline={true}
+          />
         )}
 
         {onboardingStatus === "needs_correction" && (

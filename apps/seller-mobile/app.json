@@ -12,11 +12,12 @@
       "bundleIdentifier": "com.floria.seller"
     },
     "android": {
-      "package": "com.floria.seller",
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      }
+      "package": "com.floria.seller"
+    },
+     "androidStatusBar": {
+      "barStyle": "dark-content",
+      "backgroundColor": "#FBF8F3",
+      "translucent": false
     },
     "plugins": ["expo-router"],
     "experiments": {

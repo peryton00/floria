@@ -19,17 +19,39 @@ import { useSellerFeedback } from "../../lib/contexts/SellerFeedbackContext";
 import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
 import { rupeesToPaise } from "../../lib/format";
 import { Button } from "../../components/ui/Button";
+import { useSellerAuth } from "../../lib/contexts/SellerAuthContext";
+import { SellerPendingVerificationShield } from "../../components/seller";
 
 export default function AddPlantScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { seller } = useSellerAuth();
   const { showSuccess, showError } = useSellerFeedback();
+
+  const isApproved = seller?.status === "approved" || seller?.status === "active";
 
   // Step 1: Catalog Search State
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [catalogResults, setCatalogResults] = useState<any[]>([]);
   const [searchLoading, setSearchLoading] = useState<boolean>(false);
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
+
+  if (!isApproved) {
+    return (
+      <View style={[styles.screen, { paddingTop: insets.top }]}>
+        <View style={styles.topBar}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={22} color={Colors.forest} />
+          </TouchableOpacity>
+          <Text style={styles.pageTitle}>Add Plant to Catalog</Text>
+        </View>
+        <SellerPendingVerificationShield
+          seller={seller}
+          featureName="Add Plant Listing"
+        />
+      </View>
+    );
+  }
 
   // Step 2: Listing Configuration State
   const [priceRupees, setPriceRupees] = useState<string>("");
@@ -744,5 +766,24 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: Spacing.sm,
     marginTop: Spacing.sm,
+  },
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+    backgroundColor: Colors.page,
+    gap: 12,
+  },
+  backButton: {
+    padding: 4,
+  },
+  pageTitle: {
+    fontSize: Typography.fontSizes.lg,
+    fontFamily: "Georgia",
+    fontWeight: "bold",
+    color: Colors.forest,
   },
 });

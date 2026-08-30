@@ -15,12 +15,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
 import { Button } from "../../components/ui/Button";
 import { useSellerAuth } from "../../lib/contexts/SellerAuthContext";
+import { ContactFloriaModal } from "../../components/seller/ContactFloriaModal";
 
 export default function SellerLoginScreen() {
   const router = useRouter();
   const { signIn, isLoading } = useSellerAuth();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
+  const [contactModalVisible, setContactModalVisible] = useState(false);
   const [statusNotice, setStatusNotice] = useState<{
     type: "info" | "warning" | "error";
     title: string;
@@ -41,11 +43,12 @@ export default function SellerLoginScreen() {
     if (result.success) {
       router.replace("/(tabs)");
     } else if (result.error) {
-      if (result.error.includes("under review")) {
+      if (result.error.includes("under review") || result.error.includes("SELLER_UNDER_REVIEW")) {
         setStatusNotice({
           type: "info",
-          title: "Application Under Review",
-          message: "Your seller application is currently being reviewed by our botanical onboarding team. You will be notified once approved.",
+          title: "Verification Pending",
+          message:
+            "Floria care will contact you soon. Your botanical nursery verification is currently being reviewed by our horticulture onboarding team.",
         });
       } else if (result.error.includes("correction")) {
         setStatusNotice({
@@ -57,7 +60,7 @@ export default function SellerLoginScreen() {
         setStatusNotice({
           type: "error",
           title: "Account Unavailable",
-          message: "Your seller account is currently unavailable. Please contact nursery support.",
+          message: "Your seller account is currently unavailable. Please contact Floria care.",
         });
       } else {
         Alert.alert("Authentication Failed", result.error);
@@ -71,16 +74,38 @@ export default function SellerLoginScreen() {
       style={styles.flex}
     >
       <ScrollView contentContainerStyle={styles.container}>
+        {/* Brand Header */}
         <View style={styles.header}>
           <View style={styles.logo}>
             <Ionicons name="leaf" size={28} color={Colors.white} />
           </View>
           <Text style={styles.title}>Floria Nursery Portal</Text>
           <Text style={styles.subtitle}>
-            Mobile operational control for partner growers
+            Mobile operational control for botanical partners
           </Text>
         </View>
 
+        {/* ── Top Dual Mode Option Switcher ── */}
+        <View style={styles.segmentContainer}>
+          <TouchableOpacity
+            activeOpacity={0.9}
+            style={[styles.segmentTab, styles.segmentTabActive]}
+          >
+            <Ionicons name="log-in-outline" size={16} color="#2D5A3C" />
+            <Text style={styles.segmentTextActive}>Sign In</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => router.push("/onboarding" as any)}
+            style={styles.segmentTab}
+          >
+            <Ionicons name="sparkles-outline" size={16} color="#64748B" />
+            <Text style={styles.segmentText}>Become a Seller</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Pending / Review Status Notification */}
         {statusNotice && (
           <View
             style={[
@@ -92,14 +117,25 @@ export default function SellerLoginScreen() {
                   : styles.noticeError,
             ]}
           >
-            <Text style={styles.noticeTitle}>
-              {statusNotice.type === "info" ? "⏳ " : statusNotice.type === "warning" ? "⚠️ " : "🚫 "}
-              {statusNotice.title}
-            </Text>
+            <View style={styles.noticeHeader}>
+              <Text style={styles.noticeTitle}>
+                {statusNotice.type === "info" ? "⏳ " : statusNotice.type === "warning" ? "⚠️ " : "🚫 "}
+                {statusNotice.title}
+              </Text>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                style={styles.noticeContactBtn}
+                onPress={() => setContactModalVisible(true)}
+              >
+                <Ionicons name="headset" size={13} color="#FFFFFF" />
+                <Text style={styles.noticeContactBtnText}>Contact Floria</Text>
+              </TouchableOpacity>
+            </View>
             <Text style={styles.noticeMessage}>{statusNotice.message}</Text>
           </View>
         )}
 
+        {/* Form Container */}
         <View style={styles.form}>
           <View style={styles.field}>
             <Text style={styles.label}>Gmail or Seller ID</Text>
@@ -138,19 +174,37 @@ export default function SellerLoginScreen() {
           </View>
 
           <Button
-            label="Login"
+            label="Sign In to Nursery"
             onPress={handleLogin}
             loading={isLoading}
             style={styles.button}
           />
 
-          <View style={styles.footerRow}>
-            <Text style={styles.footerText}>Want to sell on Floria? </Text>
-            <TouchableOpacity onPress={() => router.push("/onboarding" as any)}>
-              <Text style={styles.registerLink}>Become a Seller</Text>
+          {/* Become a Seller Action Card */}
+          <View style={styles.becomeSellerCard}>
+            <View style={styles.becomeSellerIconCircle}>
+              <Ionicons name="storefront" size={20} color="#2D5A3C" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.becomeSellerTitle}>New Botanical Partner?</Text>
+              <Text style={styles.becomeSellerSub}>
+                Join Floria as a verified nursery seller in 5 simple steps.
+              </Text>
+            </View>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              style={styles.becomeSellerButton}
+              onPress={() => router.push("/onboarding" as any)}
+            >
+              <Text style={styles.becomeSellerButtonText}>Apply Now</Text>
             </TouchableOpacity>
           </View>
         </View>
+
+        <ContactFloriaModal
+          visible={contactModalVisible}
+          onClose={() => setContactModalVisible(false)}
+        />
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -164,12 +218,12 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     backgroundColor: Colors.page,
-    padding: Spacing.xl,
+    padding: Spacing.lg,
     justifyContent: "center",
   },
   header: {
     alignItems: "center",
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.lg,
   },
   logo: {
     width: 56,
@@ -178,113 +232,185 @@ const styles = StyleSheet.create({
     backgroundColor: "#2D5A3C",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.sm,
   },
   title: {
     fontSize: Typography.fontSizes.xl,
     fontWeight: "bold",
     color: "#1A2E22",
     fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
-    marginBottom: Spacing.xs,
+    marginBottom: 4,
   },
   subtitle: {
-    fontSize: Typography.fontSizes.sm,
+    fontSize: Typography.fontSizes.xs,
     color: Colors.inkMuted,
     textAlign: "center",
   },
+
+  // Segment Switcher
+  segmentContainer: {
+    flexDirection: "row",
+    backgroundColor: "#E2E8F0",
+    borderRadius: BorderRadius.lg,
+    padding: 3,
+    marginBottom: Spacing.lg,
+  },
+  segmentTab: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: BorderRadius.md,
+  },
+  segmentTabActive: {
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  segmentText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#64748B",
+  },
+  segmentTextActive: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#2D5A3C",
+  },
+
+  // Notice Box
   noticeBox: {
     padding: Spacing.md,
     borderRadius: BorderRadius.lg,
     borderWidth: 1,
     marginBottom: Spacing.md,
   },
-  noticeInfo: {
-    backgroundColor: "#F0F7F3",
-    borderColor: "#B8DEC4",
+  noticeHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
   },
-  noticeWarning: {
+  noticeInfo: {
     backgroundColor: "#FEF8EC",
     borderColor: "#FBD38D",
+  },
+  noticeWarning: {
+    backgroundColor: "#FFF7ED",
+    borderColor: "#FDBA74",
   },
   noticeError: {
     backgroundColor: "#FEF2F2",
     borderColor: "#FECACA",
   },
   noticeTitle: {
-    fontSize: Typography.fontSizes.xs,
-    fontWeight: "700",
-    color: "#1E4D2B",
-    marginBottom: 4,
+    fontSize: 13,
+    fontWeight: "bold",
+    color: "#78350F",
   },
   noticeMessage: {
-    fontSize: Typography.fontSizes.xs,
-    color: "#374151",
+    fontSize: 12,
+    color: "#92400E",
     lineHeight: 18,
   },
+  noticeContactBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "#2D5A3C",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: BorderRadius.md,
+  },
+  noticeContactBtnText: {
+    color: "#FFFFFF",
+    fontSize: 10,
+    fontWeight: "bold",
+  },
+
+  // Form Fields
   form: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
+    gap: Spacing.md,
   },
   field: {
-    marginBottom: Spacing.md,
+    gap: Spacing.xs,
   },
   labelRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: Spacing.xs,
   },
   label: {
     fontSize: Typography.fontSizes.xs,
     fontWeight: "700",
-    color: Colors.inkLight,
+    color: Colors.ink,
     textTransform: "uppercase",
     letterSpacing: 0.5,
-    marginBottom: Spacing.xs,
+    fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
   },
   forgotLink: {
     fontSize: Typography.fontSizes.xs,
+    color: Colors.forest,
     fontWeight: "600",
-    color: "#2D5A3C",
   },
   input: {
-    backgroundColor: "#FAFAF9",
+    height: 48,
+    backgroundColor: Colors.white,
     borderWidth: 1,
     borderColor: Colors.border,
     borderRadius: BorderRadius.md,
     paddingHorizontal: Spacing.md,
-    paddingVertical: 12,
-    fontSize: Typography.fontSizes.base,
+    fontSize: Typography.fontSizes.sm,
     color: Colors.ink,
   },
   button: {
-    marginTop: Spacing.sm,
-    backgroundColor: "#2D5A3C",
+    marginTop: Spacing.xs,
   },
-  footerRow: {
+
+  // Become a seller card
+  becomeSellerCard: {
     flexDirection: "row",
-    justifyContent: "center",
     alignItems: "center",
-    marginTop: Spacing.lg,
-    paddingTop: Spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: "#F3F4F6",
+    backgroundColor: "#FAF8F5",
+    borderWidth: 1,
+    borderColor: "#DCE5DF",
+    borderRadius: BorderRadius.lg,
+    padding: 12,
+    marginTop: Spacing.sm,
+    gap: 10,
   },
-  footerText: {
-    fontSize: Typography.fontSizes.xs,
-    color: Colors.inkMuted,
+  becomeSellerIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#EAF2EC",
+    alignItems: "center",
+    justifyContent: "center",
   },
-  registerLink: {
-    fontSize: Typography.fontSizes.xs,
+  becomeSellerTitle: {
+    fontSize: 12,
     fontWeight: "700",
-    color: "#2D5A3C",
+    color: "#0F172A",
+  },
+  becomeSellerSub: {
+    fontSize: 10,
+    color: "#64748B",
+    marginTop: 1,
+  },
+  becomeSellerButton: {
+    backgroundColor: "#2D5A3C",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: BorderRadius.md,
+  },
+  becomeSellerButtonText: {
+    color: "#FFFFFF",
+    fontSize: 11,
+    fontWeight: "700",
   },
 });

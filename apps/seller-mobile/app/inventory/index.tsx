@@ -17,6 +17,7 @@ import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
 import { InventorySkeleton } from "../../components/ui/Skeletons";
 import { InventoryStockRow } from "../../components/seller/InventoryStockRow";
 import { EmptyState } from "../../components/ui/EmptyState";
+import { SellerPendingVerificationShield } from "../../components/seller";
 
 const FILTERS = [
   { key: "all", label: "All Stock" },
@@ -31,10 +32,29 @@ export default function InventoryManagementScreen() {
   const { seller } = useSellerAuth();
   const { showSuccess, showError } = useSellerFeedback();
 
+  const isApproved = seller?.status === "approved" || seller?.status === "active";
+
   const [activeFilter, setActiveFilter] = useState<string>("all");
   const [inventory, setInventory] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
+
+  if (!isApproved) {
+    return (
+      <View style={[styles.screen, { paddingTop: insets.top }]}>
+        <View style={styles.topBar}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={22} color={Colors.forest} />
+          </TouchableOpacity>
+          <Text style={styles.pageTitle}>Stock & Inventory</Text>
+        </View>
+        <SellerPendingVerificationShield
+          seller={seller}
+          featureName="Stock & Inventory"
+        />
+      </View>
+    );
+  }
 
   const fetchInventory = useCallback(async () => {
     try {
@@ -217,5 +237,24 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: Spacing.md,
+  },
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+    backgroundColor: Colors.page,
+    gap: 12,
+  },
+  backButton: {
+    padding: 4,
+  },
+  pageTitle: {
+    fontSize: Typography.fontSizes.lg,
+    fontFamily: "Georgia",
+    fontWeight: "bold",
+    color: Colors.forest,
   },
 });

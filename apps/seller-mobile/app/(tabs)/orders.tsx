@@ -18,6 +18,7 @@ import { formatINR, formatDate } from "../../lib/format";
 import { OrderListSkeleton } from "../../components/ui/Skeletons";
 import { StatusBadge } from "../../components/ui/StatusBadge";
 import { EmptyState } from "../../components/ui/EmptyState";
+import { SellerPendingVerificationShield } from "../../components/seller";
 
 const STATUS_TABS = [
   { key: "all", label: "All" },
@@ -38,7 +39,13 @@ export default function SellerOrdersScreen() {
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
+  const isApproved = seller?.status === "approved" || seller?.status === "active";
+
   const fetchOrders = useCallback(async () => {
+    if (!isApproved) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       let statusFilter: string | undefined = undefined;
@@ -64,11 +71,25 @@ export default function SellerOrdersScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [activeTab, searchQuery]);
+  }, [activeTab, searchQuery, isApproved]);
 
   useEffect(() => {
     fetchOrders();
   }, [fetchOrders, seller?.id]);
+
+  if (!isApproved) {
+    return (
+      <View style={[styles.screen, { paddingTop: insets.top }]}>
+        <View style={styles.topBar}>
+          <Text style={styles.pageTitle}>Orders</Text>
+        </View>
+        <SellerPendingVerificationShield
+          seller={seller}
+          featureName="Orders Management"
+        />
+      </View>
+    );
+  }
 
   const onRefresh = () => {
     setRefreshing(true);

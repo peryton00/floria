@@ -31,7 +31,7 @@ export default function RootLayout() {
             <Stack.Screen name="auth/callback" options={{ headerShown: false }} />
             <Stack.Screen
               name="(auth)/login"
-              options={{ title: "Nursery Partner Sign In", presentation: "modal" }}
+              options={{ title: "Nursery Partner Sign In", headerShown: false }}
             />
             <Stack.Screen
               name="orders/[id]"

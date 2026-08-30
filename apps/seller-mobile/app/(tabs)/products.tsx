@@ -19,6 +19,7 @@ import { formatINR } from "../../lib/format";
 import { ProductListSkeleton } from "../../components/ui/Skeletons";
 import { StatusBadge } from "../../components/ui/StatusBadge";
 import { EmptyState } from "../../components/ui/EmptyState";
+import { SellerPendingVerificationShield } from "../../components/seller";
 
 const PRODUCT_FILTERS = [
   { key: "all", label: "All" },
@@ -38,7 +39,13 @@ export default function SellerProductsScreen() {
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
+  const isApproved = seller?.status === "approved" || seller?.status === "active";
+
   const fetchProducts = useCallback(async () => {
+    if (!isApproved) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       let statusParam: string | undefined = undefined;
@@ -66,11 +73,25 @@ export default function SellerProductsScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [activeFilter, searchQuery]);
+  }, [activeFilter, searchQuery, isApproved]);
 
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts, seller?.id]);
+
+  if (!isApproved) {
+    return (
+      <View style={[styles.screen, { paddingTop: insets.top }]}>
+        <View style={styles.topBar}>
+          <Text style={styles.pageTitle}>Products</Text>
+        </View>
+        <SellerPendingVerificationShield
+          seller={seller}
+          featureName="Plant Catalog"
+        />
+      </View>
+    );
+  }
 
   const onRefresh = () => {
     setRefreshing(true);

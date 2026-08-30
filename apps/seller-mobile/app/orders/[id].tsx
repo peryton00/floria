@@ -20,6 +20,7 @@ import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
 import { formatINR, formatDate } from "../../lib/format";
 import { StatusBadge } from "../../components/ui/StatusBadge";
 import { Button } from "../../components/ui/Button";
+import { SellerPendingVerificationShield } from "../../components/seller";
 
 const TIMELINE_STEPS = [
   { key: "placed", label: "Order Placed" },
@@ -37,10 +38,29 @@ export default function SellerOrderDetailScreen() {
   const { seller } = useSellerAuth();
   const { showSuccess, showError } = useSellerFeedback();
 
+  const isApproved = seller?.status === "approved" || seller?.status === "active";
+
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [transitioning, setTransitioning] = useState<boolean>(false);
+
+  if (!isApproved) {
+    return (
+      <View style={[styles.screen, { paddingTop: insets.top }]}>
+        <View style={styles.topBar}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={22} color={Colors.forest} />
+          </TouchableOpacity>
+          <Text style={styles.pageTitle}>Order Fulfillment</Text>
+        </View>
+        <SellerPendingVerificationShield
+          seller={seller}
+          featureName="Order Fulfillment"
+        />
+      </View>
+    );
+  }
 
   // Fulfillment Issue Modal
   const [issueModalVisible, setIssueModalVisible] = useState<boolean>(false);
@@ -691,5 +711,24 @@ const styles = StyleSheet.create({
   modalActions: {
     flexDirection: "row",
     gap: Spacing.sm,
+  },
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+    backgroundColor: Colors.page,
+    gap: 12,
+  },
+  backButton: {
+    padding: 4,
+  },
+  pageTitle: {
+    fontSize: Typography.fontSizes.lg,
+    fontFamily: "Georgia",
+    fontWeight: "bold",
+    color: Colors.forest,
   },
 });

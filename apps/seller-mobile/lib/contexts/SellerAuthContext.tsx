@@ -7,6 +7,8 @@ import React, {
 } from "react";
 import { supabase } from "../supabase";
 import { api } from "../api";
+import { getSellerMobileToken, setSellerMobileToken } from "../token";
+export { getSellerMobileToken, setSellerMobileToken };
 import type { SellerStatus } from "@floria/types";
 
 export type SellerOnboardingStatus =
@@ -57,16 +59,6 @@ const SellerAuthContext = createContext<SellerAuthContextType | undefined>(
   undefined,
 );
 
-let memorySellerToken: string | null = null;
-
-export function getSellerMobileToken(): string | null {
-  return memorySellerToken;
-}
-
-export function setSellerMobileToken(token: string | null) {
-  memorySellerToken = token;
-}
-
 export function SellerAuthProvider({
   children,
 }: {
@@ -80,11 +72,8 @@ export function SellerAuthProvider({
     try {
       setIsLoading(true);
       const token = getSellerMobileToken();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
 
-      if (!token && !session?.user) {
+      if (!token) {
         setSeller(null);
         return;
       }
@@ -163,21 +152,13 @@ export function SellerAuthProvider({
   }, []);
 
   useEffect(() => {
-    refreshProfile();
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event: any, session: any) => {
-      if (session?.user) {
-        await refreshProfile();
-      } else if (!getSellerMobileToken()) {
-        setSeller(null);
-        setIsLoading(false);
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
+    const token = getSellerMobileToken();
+    if (token) {
+      refreshProfile();
+    } else {
+      setSeller(null);
+      setIsLoading(false);
+    }
   }, [refreshProfile]);
 
   const signIn = async (
@@ -217,6 +198,23 @@ export function SellerAuthProvider({
       if (errCode === "SELLER_SUSPENDED") {
         setStatusMessage("Your seller account is currently unavailable.");
         return { success: false, error: "Your seller account is currently unavailable." };
+      }
+
+      // Try client Supabase Auth directly if email was provided
+      if (identifier.includes("@")) {
+        try {
+          const { data: supaAuth, error: supaErr } = await supabase.auth.signInWithPassword({
+            email: identifier.trim(),
+            password: pass,
+          });
+          if (!supaErr && supaAuth?.session?.access_token) {
+            setSellerMobileToken(supaAuth.session.access_token);
+            await refreshProfile();
+            return { success: true };
+          }
+        } catch {
+          // fallback failed, continue to return error
+        }
       }
 
       return { success: false, error: errMsg };

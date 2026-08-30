@@ -15,6 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { api } from "../../lib/api";
 import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
 import { Button } from "../../components/ui/Button";
+import { ContactFloriaModal } from "../../components/seller/ContactFloriaModal";
 
 const ONBOARDING_STEPS = [
   { id: 1, title: "Account & Credentials" },
@@ -33,6 +34,7 @@ export default function SellerOnboardingScreen() {
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [assignedId, setAssignedId] = useState<string | null>(null);
+  const [contactModalVisible, setContactModalVisible] = useState<boolean>(false);
 
   // Form Fields
   const [username, setUsername] = useState<string>("");
@@ -144,20 +146,20 @@ export default function SellerOnboardingScreen() {
     }
   };
 
-  // ── UNDER REVIEW STATE ──
+  // ── UNDER REVIEW / PENDING STATE ──
   if (isSubmitted) {
     return (
-      <View style={[styles.screen, { paddingTop: insets.top, justifyContent: "center" }]}>
+      <View style={[styles.screen, { paddingTop: insets.top, justifyContent: "center", padding: Spacing.lg }]}>
         <View style={styles.reviewCard}>
           <View style={styles.reviewIconCircle}>
             <Ionicons name="hourglass" size={36} color="#2D5A3C" />
           </View>
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>● UNDER REVIEW</Text>
+            <Text style={styles.badgeText}>● VERIFICATION PENDING</Text>
           </View>
-          <Text style={styles.reviewTitle}>Application Submitted</Text>
+          <Text style={styles.reviewTitle}>Application Under Verification</Text>
           <Text style={styles.reviewText}>
-            We&apos;re reviewing your seller application. Our team will verify your nursery and documents.
+            Floria care will contact you soon. We are verifying your botanical nursery documents and trade details.
           </Text>
 
           {assignedId && (
@@ -169,16 +171,32 @@ export default function SellerOnboardingScreen() {
 
           <View style={styles.infoNotice}>
             <Text style={styles.infoNoticeText}>
-              Once approved, your account will become active and you can sign in using your credentials.
+              Need assistance or want to expedite your verification? Contact our dedicated Partner Care desk anytime.
             </Text>
           </View>
 
+          <TouchableOpacity
+            activeOpacity={0.85}
+            style={styles.contactDeskButton}
+            onPress={() => setContactModalVisible(true)}
+          >
+            <Ionicons name="headset" size={18} color="#FFFFFF" />
+            <Text style={styles.contactDeskButtonText}>Contact Floria Care</Text>
+          </TouchableOpacity>
+
           <Button
-            label="Back to Login"
+            label="Return to Sign In"
             onPress={() => router.replace("/(auth)/login")}
             style={styles.buttonPrimary}
           />
         </View>
+
+        <ContactFloriaModal
+          visible={contactModalVisible}
+          onClose={() => setContactModalVisible(false)}
+          sellerName={businessName}
+          sellerId={assignedId || undefined}
+        />
       </View>
     );
   }
@@ -197,6 +215,26 @@ export default function SellerOnboardingScreen() {
           <Text style={styles.headerTitle}>Become a Seller</Text>
           <TouchableOpacity onPress={() => router.replace("/(auth)/login" as any)}>
             <Text style={styles.topLoginText}>Sign In</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* ── Top Dual Mode Option Switcher ── */}
+        <View style={styles.topSegmentContainer}>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => router.replace("/(auth)/login" as any)}
+            style={styles.topSegmentTab}
+          >
+            <Ionicons name="log-in-outline" size={15} color="#64748B" />
+            <Text style={styles.topSegmentText}>Sign In</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.9}
+            style={[styles.topSegmentTab, styles.topSegmentTabActive]}
+          >
+            <Ionicons name="sparkles" size={15} color="#2D5A3C" />
+            <Text style={styles.topSegmentTextActive}>Become a Seller</Text>
           </TouchableOpacity>
         </View>
 
@@ -729,5 +767,62 @@ const styles = StyleSheet.create({
     fontSize: Typography.fontSizes.xs,
     color: "#8C5E06",
     lineHeight: 18,
+  },
+  contactDeskButton: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "#2D5A3C",
+    paddingVertical: 14,
+    borderRadius: BorderRadius.lg,
+    marginBottom: Spacing.sm,
+    shadowColor: "#2D5A3C",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  contactDeskButtonText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "bold",
+    letterSpacing: 0.5,
+  },
+  topSegmentContainer: {
+    flexDirection: "row",
+    backgroundColor: "#E2E8F0",
+    borderRadius: BorderRadius.lg,
+    padding: 3,
+    marginHorizontal: Spacing.lg,
+    marginBottom: Spacing.md,
+  },
+  topSegmentTab: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 9,
+    borderRadius: BorderRadius.md,
+  },
+  topSegmentTabActive: {
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  topSegmentText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#64748B",
+  },
+  topSegmentTextActive: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#2D5A3C",
   },
 });

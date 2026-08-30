@@ -18,6 +18,7 @@ import { useSellerFeedback } from "../../lib/contexts/SellerFeedbackContext";
 import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
 import { rupeesToPaise } from "../../lib/format";
 import { Button } from "../../components/ui/Button";
+import { SellerPendingVerificationShield } from "../../components/seller";
 
 export default function EditProductScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -26,9 +27,28 @@ export default function EditProductScreen() {
   const { seller } = useSellerAuth();
   const { showSuccess, showError, confirmAction } = useSellerFeedback();
 
+  const isApproved = seller?.status === "approved" || seller?.status === "active";
+
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
   const [product, setProduct] = useState<any>(null);
+
+  if (!isApproved) {
+    return (
+      <View style={[styles.screen, { paddingTop: insets.top }]}>
+        <View style={styles.topBar}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={22} color={Colors.forest} />
+          </TouchableOpacity>
+          <Text style={styles.pageTitle}>Edit Plant Listing</Text>
+        </View>
+        <SellerPendingVerificationShield
+          seller={seller}
+          featureName="Edit Plant Listing"
+        />
+      </View>
+    );
+  }
 
   // Form State
   const [priceRupees, setPriceRupees] = useState<string>("");
@@ -462,5 +482,24 @@ const styles = StyleSheet.create({
     borderTopColor: Colors.border,
     paddingHorizontal: Spacing.md,
     paddingTop: Spacing.sm,
+  },
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+    backgroundColor: Colors.page,
+    gap: 12,
+  },
+  backButton: {
+    padding: 4,
+  },
+  pageTitle: {
+    fontSize: Typography.fontSizes.lg,
+    fontFamily: "Georgia",
+    fontWeight: "bold",
+    color: Colors.forest,
   },
 });

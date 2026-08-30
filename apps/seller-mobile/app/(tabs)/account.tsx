@@ -13,14 +13,19 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSellerAuth } from "../../lib/contexts/SellerAuthContext";
 import { useSellerFeedback } from "../../lib/contexts/SellerFeedbackContext";
 import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
+import {
+  SellerPendingVerificationShield,
+  ContactFloriaModal,
+} from "../../components/seller";
 
 export default function SellerAccountScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { seller, signOut } = useSellerAuth();
   const { confirmAction } = useSellerFeedback();
+  const [contactModalVisible, setContactModalVisible] = useState(false);
 
-  const isVerified = seller?.status === "approved";
+  const isVerified = seller?.status === "approved" || seller?.status === "active";
   const logoUrl = seller?.logoUrl || "/floria-logo.png";
 
   const handleLogout = () => {
@@ -44,6 +49,14 @@ export default function SellerAccountScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* ── Verification Pending Banner ── */}
+        {!isVerified && (
+          <SellerPendingVerificationShield
+            seller={seller}
+            inline={true}
+          />
+        )}
+
         {/* ── Nursery Profile Card ── */}
         <View style={styles.profileCard}>
           <Image
@@ -56,7 +69,7 @@ export default function SellerAccountScreen() {
           />
           <View style={styles.profileInfo}>
             <Text style={styles.nurseryName} numberOfLines={1}>
-              {seller?.businessName || "Green Leaf Nursery"}
+              {seller?.businessName || "Nursery Partner"}
             </Text>
             <View style={styles.verificationBadge}>
               <Ionicons
@@ -176,30 +189,30 @@ export default function SellerAccountScreen() {
           <View style={styles.menuGroup}>
             <TouchableOpacity
               activeOpacity={0.7}
-              onPress={() => {}}
+              onPress={() => setContactModalVisible(true)}
               style={styles.menuRow}
             >
               <View style={styles.iconWrap}>
-                <Ionicons name="help-buoy-outline" size={20} color={Colors.forest} />
+                <Ionicons name="headset-outline" size={20} color={Colors.forest} />
               </View>
               <View style={styles.menuTextWrap}>
-                <Text style={styles.menuTitle}>Help Center</Text>
-                <Text style={styles.menuSubtitle}>Seller documentation & support contact</Text>
+                <Text style={styles.menuTitle}>Contact Floria Care</Text>
+                <Text style={styles.menuSubtitle}>Call, WhatsApp, or email partner desk</Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color={Colors.inkMuted} />
             </TouchableOpacity>
 
             <TouchableOpacity
               activeOpacity={0.7}
-              onPress={() => {}}
+              onPress={() => setContactModalVisible(true)}
               style={[styles.menuRow, styles.lastRow]}
             >
               <View style={styles.iconWrap}>
                 <Ionicons name="document-text-outline" size={20} color={Colors.forest} />
               </View>
               <View style={styles.menuTextWrap}>
-                <Text style={styles.menuTitle}>Terms & Policies</Text>
-                <Text style={styles.menuSubtitle}>Floria partner agreement & quality guidelines</Text>
+                <Text style={styles.menuTitle}>Partner Verification Desk</Text>
+                <Text style={styles.menuSubtitle}>Floria partner agreement & verification support</Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color={Colors.inkMuted} />
             </TouchableOpacity>
@@ -216,6 +229,13 @@ export default function SellerAccountScreen() {
           <Text style={styles.logoutText}>Sign Out of Nursery</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      <ContactFloriaModal
+        visible={contactModalVisible}
+        onClose={() => setContactModalVisible(false)}
+        sellerName={seller?.businessName}
+        sellerId={seller?.publicSellerId || seller?.id}
+      />
     </View>
   );
 }

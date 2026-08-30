@@ -4,7 +4,7 @@ import { promisify } from "node:util";
 import { sellerAuthRepository } from "../database/repositories/seller-auth.repository.js";
 import { sellerRepository } from "../database/repositories/seller.repository.js";
 import { auditRepository } from "../database/repositories/audit.repository.js";
-import { getAdminDb } from "../config/database.js";
+import { getAdminDb, getAnonDb } from "../config/database.js";
 import { Errors } from "../utils/errors.js";
 import type { SellerProfile, SellerApplication, SellerStatus } from "@floria/types";
 
@@ -207,42 +207,99 @@ export class SellerAuthService {
     seller: SellerProfile;
     token: string;
   }> {
-    const credResult = await sellerAuthRepository.findCredentialByIdentifier(identifier);
+    const cleanId = identifier.trim();
+    let credResult = await sellerAuthRepository.findCredentialByIdentifier(cleanId);
+    let credential = credResult?.credential;
+    let profile = credResult?.profile;
+    let supabaseToken: string | undefined;
 
-    // Generic error if account not found (avoids account enumeration)
-    if (!credResult || !credResult.credential) {
-      throw Errors.authRequired("Incorrect email/Seller ID or password.");
-    }
-
-    const { credential, profile } = credResult;
-
-    // Check account lockout
-    if (credential.locked_until && new Date(credential.locked_until).getTime() > Date.now()) {
-      throw Errors.forbidden("Too many failed login attempts. Please try again in 15 minutes.");
-    }
-
-    // Verify password securely
-    const isValid = await this.verifyPassword(pass, credential.password_hash, credential.password_salt);
-    if (!isValid) {
-      const failedAttempts = (credential.failed_login_attempts || 0) + 1;
-      const updates: any = { failed_login_attempts: failedAttempts };
-      if (failedAttempts >= 5) {
-        updates.locked_until = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+    let isValid = false;
+    if (credential) {
+      // Check account lockout
+      if (credential.locked_until && new Date(credential.locked_until).getTime() > Date.now()) {
+        throw Errors.forbidden("Too many failed login attempts. Please try again in 15 minutes.");
       }
-      await sellerAuthRepository.updateSellerCredential(credential.seller_id, updates);
+      isValid = await this.verifyPassword(pass, credential.password_hash, credential.password_salt);
+    }
+
+    // If not verified via seller_credentials, attempt Supabase Auth directly
+    if (!isValid) {
+      try {
+        const anonDb = getAnonDb();
+        const { data: authData, error: authErr } = await anonDb.auth.signInWithPassword({
+          email: cleanId,
+          password: pass,
+        });
+
+        if (!authErr && authData?.user && authData?.session) {
+          isValid = true;
+          supabaseToken = authData.session.access_token;
+          const authUser = authData.user;
+
+          // Find profile by user_id or contact_email
+          if (!profile) {
+            const db = getAdminDb();
+            const { data: foundProfile } = await db
+              .from("seller_profiles")
+              .select("*")
+              .or(`user_id.eq.${authUser.id},contact_email.ilike.${authUser.email}`)
+              .maybeSingle();
+
+            if (foundProfile) {
+              profile = foundProfile as SellerProfile;
+            }
+          }
+
+          // If profile found, create or update seller_credentials so future lookups succeed
+          if (profile) {
+            const { hash, salt } = await this.hashPassword(pass);
+            const publicSellerId = profile.public_seller_id || this.generatePublicSellerId();
+            const username = profile.username || (authUser.email ? authUser.email.split("@")[0] : `seller_${profile.id.slice(0, 8)}`);
+
+            if (credential) {
+              await sellerAuthRepository.updateSellerCredential(profile.id, {
+                password_hash: hash,
+                password_salt: salt,
+                user_id: authUser.id,
+                failed_login_attempts: 0,
+                locked_until: null,
+              });
+            } else {
+              await sellerAuthRepository.createSellerCredential({
+                seller_id: profile.id,
+                user_id: authUser.id,
+                public_seller_id: publicSellerId,
+                username,
+                email: authUser.email || profile.contact_email || cleanId,
+                password_hash: hash,
+                password_salt: salt,
+              }).catch(() => {});
+            }
+          }
+        }
+      } catch {
+        // Supabase sign-in fallback handled below
+      }
+    }
+
+    if (!isValid || !profile) {
+      if (credential) {
+        const failedAttempts = (credential.failed_login_attempts || 0) + 1;
+        const updates: any = { failed_login_attempts: failedAttempts };
+        if (failedAttempts >= 5) {
+          updates.locked_until = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+        }
+        await sellerAuthRepository.updateSellerCredential(credential.seller_id, updates);
+      }
       throw Errors.authRequired("Incorrect email/Seller ID or password.");
     }
 
     // Reset failed attempts on valid credentials
-    if (credential.failed_login_attempts > 0) {
+    if (credential && credential.failed_login_attempts > 0) {
       await sellerAuthRepository.updateSellerCredential(credential.seller_id, {
         failed_login_attempts: 0,
         locked_until: null,
       });
-    }
-
-    if (!profile) {
-      throw Errors.notFound("Seller profile not found.");
     }
 
     // Check Seller Account Lifecycle Status
@@ -290,27 +347,27 @@ export class SellerAuthService {
     }
 
     // Only APPROVED or ACTIVE sellers reach here
-    // Issue authentication token via Supabase Auth or signed token
-    let token = "";
-    try {
-      const db = getAdminDb();
-      const { data: sessionData, error: sessionErr } = await db.auth.signInWithPassword({
-        email: credential.email,
-        password: pass,
-      });
-      if (!sessionErr && sessionData?.session?.access_token) {
-        token = sessionData.session.access_token;
+    let token = supabaseToken || "";
+    if (!token) {
+      try {
+        const db = getAdminDb();
+        const { data: sessionData, error: sessionErr } = await db.auth.signInWithPassword({
+          email: profile.contact_email || (credential?.email ?? cleanId),
+          password: pass,
+        });
+        if (!sessionErr && sessionData?.session?.access_token) {
+          token = sessionData.session.access_token;
+        }
+      } catch {
+        // Fallback token generation
       }
-    } catch {
-      // Fallback token generation
     }
 
     if (!token) {
-      // Generate secure signed session token
       const sessionPayload = {
         sub: profile.user_id || profile.id,
         seller_id: profile.id,
-        email: credential.email,
+        email: profile.contact_email || credential?.email || cleanId,
         role: "seller",
         iat: Math.floor(Date.now() / 1000),
         exp: Math.floor(Date.now() / 1000) + 7 * 24 * 3600, // 7 days
@@ -321,11 +378,11 @@ export class SellerAuthService {
     return {
       user: {
         id: profile.user_id || profile.id,
-        email: credential.email,
+        email: profile.contact_email || credential?.email || cleanId,
         role: "seller",
         sellerId: profile.id,
-        publicSellerId: credential.public_seller_id,
-        username: credential.username,
+        publicSellerId: profile.public_seller_id || credential?.public_seller_id || "",
+        username: profile.username || credential?.username || "",
         sellerStatus: status,
       },
       seller: profile,
