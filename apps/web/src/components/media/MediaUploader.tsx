@@ -155,8 +155,9 @@ export function MediaUploader({
         finalVariants.thumbnail ||
         finalVariants.original;
 
-      if (!resolvedUrl || resolvedUrl.startsWith("blob:")) {
-        resolvedUrl = `${supabaseUrl}/storage/v1/object/public/media-staging/${stagingPath}`;
+      if (!resolvedUrl || resolvedUrl.startsWith("blob:") || resolvedUrl.includes("media-staging")) {
+        const cleanPath = stagingPath.replace(/^staging\//, "").replace(/\.tmp$/, ".webp");
+        resolvedUrl = `${supabaseUrl}/storage/v1/object/public/public-media/${cleanPath}`;
       }
 
       // Revoke temporary browser blob URL to free memory and prevent dead blob reference leaks

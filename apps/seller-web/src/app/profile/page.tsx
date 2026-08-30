@@ -233,6 +233,7 @@ export default function SellerProfilePage() {
   const [yearEstablished, setYearEstablished] = useState<string>("");
   const [businessDescription, setBusinessDescription] = useState("");
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [imgError, setImgError] = useState(false);
 
   const [primaryContactPerson, setPrimaryContactPerson] = useState("");
   const [contactPhone, setContactPhone] = useState("");
@@ -642,9 +643,14 @@ export default function SellerProfilePage() {
             <div className="p-5 space-y-3.5 text-xs">
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 rounded border border-[#E2E8F0] bg-[#F8FAFC] flex items-center justify-center overflow-hidden flex-shrink-0">
-                  {logoUrl ? (
+                  {logoUrl && !imgError && !logoUrl.endsWith(".tmp") && !logoUrl.includes("media-staging") ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                    <img
+                      src={logoUrl}
+                      alt="Logo"
+                      className="w-full h-full object-cover"
+                      onError={() => setImgError(true)}
+                    />
                   ) : (
                     <Store className="text-slate-400" size={20} />
                   )}
