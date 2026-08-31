@@ -4,7 +4,7 @@ import { sellersService } from "./sellers.service.js";
 import { sellerAuthService } from "./seller-auth.service.js";
 
 const getTargetSellerId = (req: Request): string =>
-  req.user?.id || req.user?.sellerId || "";
+  req.user?.sellerId || req.user?.id || "";
 
 export class SellersController {
   async login(req: Request, res: Response, next: NextFunction): Promise<void> {

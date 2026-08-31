@@ -98,46 +98,46 @@ export async function authenticateToken(
     let sellerId: string | undefined = directSellerId;
     let sellerStatus: SellerStatus | undefined;
 
-    if (
-      roleStr === "seller" ||
-      roleStr === "admin" ||
-      roleStr === "super_admin" ||
-      directSellerId
-    ) {
-      try {
-        let sp: { id: string; status: string } | null = null;
-        if (directSellerId) {
-          const { data } = await adminDb
-            .from("seller_profiles")
-            .select("id, status")
-            .eq("id", directSellerId)
-            .maybeSingle();
-          sp = data;
+    try {
+      let sp: { id: string; status: string } | null = null;
+      if (directSellerId) {
+        const { data } = await adminDb
+          .from("seller_profiles")
+          .select("id, status")
+          .eq("id", directSellerId)
+          .maybeSingle();
+        sp = data;
+      } else {
+        const { data: byUser } = await adminDb
+          .from("seller_profiles")
+          .select("id, status")
+          .eq("user_id", userId)
+          .maybeSingle();
+        if (byUser) {
+          sp = byUser;
         } else {
-          const { data: byUser } = await adminDb
+          const { data: byId } = await adminDb
             .from("seller_profiles")
             .select("id, status")
-            .eq("user_id", userId)
+            .eq("id", userId)
             .maybeSingle();
-          if (byUser) {
-            sp = byUser;
-          } else {
-            const { data: byId } = await adminDb
-              .from("seller_profiles")
-              .select("id, status")
-              .eq("id", userId)
-              .maybeSingle();
-            sp = byId;
-          }
+          sp = byId;
         }
-
-        if (sp) {
-          sellerId = sp.id;
-          sellerStatus = sp.status as SellerStatus;
-        }
-      } catch {
-        // Safe fallback for mocked test DB environments
       }
+
+      if (sp) {
+        sellerId = sp.id;
+        sellerStatus = sp.status as SellerStatus;
+        if (
+          (sellerStatus === "approved" || sellerStatus === "active") &&
+          roleStr !== "admin" &&
+          roleStr !== "super_admin"
+        ) {
+          roleStr = "seller";
+        }
+      }
+    } catch {
+      // Safe fallback for mocked test DB environments
     }
 
     const role: UserRole | "super_admin" = roleStr as UserRole | "super_admin";

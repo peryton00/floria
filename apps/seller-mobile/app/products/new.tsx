@@ -192,11 +192,13 @@ export default function AddPlantScreen() {
         showSuccess(`"${productName.trim()}" published to nursery catalog.`);
         router.back();
       } else {
+        console.warn("[AddPlant] Publication failed:", res.error);
         const msg = res.error?.message || "Failed to publish plant product.";
         showError(msg);
         Alert.alert("Publication Error", msg);
       }
     } catch (err: any) {
+      console.warn("[AddPlant] Unexpected submit error:", err);
       const msg = err.message || "Failed to submit product.";
       showError(msg);
       Alert.alert("Error", msg);

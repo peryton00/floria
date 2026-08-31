@@ -97,12 +97,16 @@ export function requireApprovedSeller(
     return next();
   }
 
-  if (req.user.role !== "seller") {
-    return next(Errors.forbidden("Seller role required."));
-  }
-
   if (!req.user.sellerId) {
     return next(Errors.forbidden("No seller profile associated with account."));
+  }
+
+  if (
+    req.user.role !== "seller" &&
+    req.user.sellerStatus !== "approved" &&
+    req.user.sellerStatus !== "active"
+  ) {
+    return next(Errors.forbidden("Seller role required."));
   }
 
   if (req.user.sellerStatus === "suspended" || req.user.sellerStatus === "deactivated") {
