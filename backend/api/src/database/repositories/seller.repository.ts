@@ -211,11 +211,30 @@ export class SellerRepository {
     const targetSellerId = sellerProf?.id || sellerId;
     const targetUserId = sellerProf?.user_id || sellerId;
 
+    // 1. Fetch all product IDs from seller's inventory records
+    const { data: invRows } = await db
+      .from("inventory")
+      .select("product_id, price_paise, stock_quantity, low_stock_threshold, sku, updated_at")
+      .eq("seller_id", targetSellerId);
+
+    const invProductIds = (invRows || []).map((r: any) => r.product_id).filter(Boolean);
+
+    // 2. Query products: either direct creator or listed via inventory
     let q = db.from("products").select(PRODUCT_LISTING_SELECT);
-    if (typeof q.or === "function") {
-      q = q.or(`seller_id.eq.${targetSellerId},seller_id.eq.${targetUserId}`);
+    if (invProductIds.length > 0) {
+      if (typeof q.or === "function") {
+        q = q.or(
+          `seller_id.eq.${targetSellerId},seller_id.eq.${targetUserId},id.in.(${invProductIds.join(",")})`,
+        );
+      } else {
+        q = q.in("id", invProductIds);
+      }
     } else {
-      q = q.eq("seller_id", targetSellerId);
+      if (typeof q.or === "function") {
+        q = q.or(`seller_id.eq.${targetSellerId},seller_id.eq.${targetUserId}`);
+      } else {
+        q = q.eq("seller_id", targetSellerId);
+      }
     }
 
     if (filters?.status && filters.status !== "all") {
@@ -233,8 +252,24 @@ export class SellerRepository {
       : q);
 
     let results = data || [];
-
     results = results.filter((p: any) => p.status !== "deleted");
+
+    // Attach seller-specific inventory record if multiple sellers list the same canonical product
+    const invMap = new Map<string, any>();
+    if (Array.isArray(invRows)) {
+      for (const inv of invRows) {
+        invMap.set(inv.product_id, inv);
+      }
+    }
+
+    results = results.map((p: any) => {
+      const sellerInv = invMap.get(p.id);
+      if (sellerInv) {
+        return { ...p, inventory: [sellerInv] };
+      }
+      return p;
+    });
+
     if (filters?.stock === "low") {
       results = results.filter((p: any) => {
         const qty =
@@ -283,17 +318,46 @@ export class SellerRepository {
     productId: string,
   ): Promise<any | null> {
     const db = getAdminDb();
-    const { data, error } = await db
+
+    const profQuery = db.from("seller_profiles").select("id, user_id");
+    const { data: sellerProf } = await (typeof profQuery.or === "function"
+      ? profQuery.or(`id.eq.${sellerId},user_id.eq.${sellerId}`).maybeSingle()
+      : profQuery.eq("id", sellerId).maybeSingle());
+
+    const targetSellerId = sellerProf?.id || sellerId;
+    const targetUserId = sellerProf?.user_id || sellerId;
+
+    // 1. Fetch product by ID
+    const { data: prodData, error } = await db
       .from("products")
       .select(PRODUCT_LISTING_SELECT)
       .eq("id", productId)
-      .eq("seller_id", sellerId)
       .neq("status", "deleted")
       .maybeSingle();
 
-    if (error || !data) return null;
+    if (error || !prodData) return null;
 
-    const [enriched] = await productRepo.enrichProductImages([data]);
+    // 2. Fetch seller-specific inventory record
+    const { data: invRow } = await db
+      .from("inventory")
+      .select("id, price_paise, stock_quantity, low_stock_threshold, sku, updated_at")
+      .eq("product_id", productId)
+      .eq("seller_id", targetSellerId)
+      .maybeSingle();
+
+    // Verify ownership: product creator OR inventory lister
+    const isOwner =
+      prodData.seller_id === targetSellerId ||
+      prodData.seller_id === targetUserId ||
+      Boolean(invRow);
+
+    if (!isOwner) return null;
+
+    const attachedProduct = invRow
+      ? { ...prodData, inventory: [invRow] }
+      : prodData;
+
+    const [enriched] = await productRepo.enrichProductImages([attachedProduct]);
     if (enriched && Array.isArray(enriched.images)) {
       const supabaseUrl =
         process.env.SUPABASE_URL ||
@@ -310,70 +374,19 @@ export class SellerRepository {
         }
       }
     }
-    return enriched || data;
+    return enriched || attachedProduct;
   }
 
   async createProduct(sellerId: string, productData: any): Promise<any> {
     const db = getAdminDb();
     const now = new Date().toISOString();
 
-    let finalCategoryId = productData.category_id;
-    if (!finalCategoryId || finalCategoryId === "" || typeof finalCategoryId !== "string") {
-      const { data: firstCat } = await db
-        .from("categories")
-        .select("id")
-        .limit(1)
-        .maybeSingle();
-      finalCategoryId = firstCat?.id || null;
-    }
+    const profQuery = db.from("seller_profiles").select("id, user_id");
+    const { data: sellerProf } = await (typeof profQuery.or === "function"
+      ? profQuery.or(`id.eq.${sellerId},user_id.eq.${sellerId}`).maybeSingle()
+      : profQuery.eq("id", sellerId).maybeSingle());
 
-    const cleanName = (productData.name || "Botanical Plant").trim();
-    const slug =
-      cleanName
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, "")
-        .replace(/\s+/g, "-") + `-${Date.now().toString().slice(-4)}`;
-
-    const { data: prod, error: prodErr } = await db
-      .from("products")
-      .insert({
-        seller_id: sellerId,
-        category_id: finalCategoryId,
-        name: cleanName,
-        slug,
-        description: productData.description?.trim() || null,
-        care_instructions: productData.care_instructions?.trim() || null,
-        status: productData.status || "active",
-        created_at: now,
-        updated_at: now,
-      })
-      .select()
-      .single();
-
-    if (prodErr || !prod) {
-      console.error("[SellerRepository] createProduct DB error:", prodErr?.message || prodErr);
-      throw prodErr || new Error("Failed to create product record in database");
-    }
-
-    // Auto-generate permanent unique SKU if not provided
-    const autoSku =
-      productData.sku?.trim() ||
-      `FLR-${prod.id.replace(/-/g, "").slice(0, 8).toUpperCase()}`;
-
-    // Inventory
-    const { error: invErr } = await db.from("inventory").insert({
-      product_id: prod.id,
-      seller_id: sellerId,
-      price_paise: Math.max(0, Number(productData.price_paise) || 0),
-      stock_quantity: Math.max(0, Number(productData.stock_quantity) || 0),
-      low_stock_threshold: Math.max(0, Number(productData.low_stock_threshold) ?? 5),
-      sku: autoSku,
-      updated_at: now,
-    });
-
-    if (invErr) {
-      console.warn("[SellerRepository] Inventory insert notice:", invErr.message);
-    }
+    const targetSellerId = sellerProf?.id || sellerId;
 
     // Helper to safely sanitize asset IDs so empty strings never cause PostgreSQL UUID syntax errors
     const sanitizeAssetId = (val: any): string | null => {
@@ -383,7 +396,6 @@ export class SellerRepository {
       return null;
     };
 
-    // Primary & Additional Images Support
     const supabaseUrl =
       process.env.SUPABASE_URL ||
       process.env.NEXT_PUBLIC_SUPABASE_URL ||
@@ -394,7 +406,7 @@ export class SellerRepository {
       rUrl: string | null,
     ): string => {
       if (aId) {
-        return `${supabaseUrl}/storage/v1/object/public/public-media/products/${sellerId}/${aId}/medium.webp`;
+        return `${supabaseUrl}/storage/v1/object/public/public-media/products/${targetSellerId}/${aId}/medium.webp`;
       }
       if (!rUrl || rUrl.includes("/media-staging/")) {
         return "/brand_logo.svg";
@@ -402,6 +414,129 @@ export class SellerRepository {
       return rUrl;
     };
 
+    let targetProductId = productData.product_id || productData.productId || null;
+    let targetProduct: any = null;
+
+    // ── CASE 1: Seller Selected An Existing Floria Catalog Product ─────────────
+    if (targetProductId) {
+      const { data: existingCatalogProd } = await db
+        .from("products")
+        .select("*")
+        .eq("id", targetProductId)
+        .neq("status", "deleted")
+        .maybeSingle();
+
+      if (existingCatalogProd) {
+        targetProduct = existingCatalogProd;
+      }
+    }
+
+    // ── CASE 2: No product_id, check if canonical product exists by name ───────
+    if (!targetProduct && productData.name) {
+      const cleanName = productData.name.trim();
+      const { data: matchByName } = await db
+        .from("products")
+        .select("*")
+        .ilike("name", cleanName)
+        .neq("status", "deleted")
+        .limit(1)
+        .maybeSingle();
+
+      if (matchByName) {
+        targetProduct = matchByName;
+        targetProductId = matchByName.id;
+      }
+    }
+
+    // ── CASE 3: Brand New Product in Catalog ────────────────────────────────────
+    if (!targetProduct) {
+      let finalCategoryId = productData.category_id;
+      if (!finalCategoryId || finalCategoryId === "" || typeof finalCategoryId !== "string") {
+        const { data: firstCat } = await db
+          .from("categories")
+          .select("id")
+          .limit(1)
+          .maybeSingle();
+        finalCategoryId = firstCat?.id || null;
+      }
+
+      const cleanName = (productData.name || "Botanical Plant").trim();
+      const slug =
+        cleanName
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, "")
+          .replace(/\s+/g, "-") + `-${Date.now().toString().slice(-4)}`;
+
+      const { data: newProd, error: prodErr } = await db
+        .from("products")
+        .insert({
+          seller_id: targetSellerId,
+          category_id: finalCategoryId,
+          name: cleanName,
+          slug,
+          description: productData.description?.trim() || null,
+          care_instructions: productData.care_instructions?.trim() || null,
+          status: productData.status || "active",
+          created_at: now,
+          updated_at: now,
+        })
+        .select()
+        .single();
+
+      if (prodErr || !newProd) {
+        console.error("[SellerRepository] createProduct DB error:", prodErr?.message || prodErr);
+        throw prodErr || new Error("Failed to create product record in database");
+      }
+
+      targetProduct = newProd;
+      targetProductId = newProd.id;
+    }
+
+    // ── INVENTORY: Upsert Seller-Specific Offering ──────────────────────────────
+    const autoSku =
+      productData.sku?.trim() ||
+      `FLR-${targetProductId.replace(/-/g, "").slice(0, 8).toUpperCase()}-${targetSellerId.slice(0, 4).toUpperCase()}`;
+
+    const pricePaise = Math.max(0, Number(productData.price_paise) || 0);
+    const stockQty = Math.max(0, Number(productData.stock_quantity) || 0);
+    const lowStockThreshold = Math.max(0, Number(productData.low_stock_threshold) ?? 5);
+
+    // Check existing inventory row for this seller & product
+    const { data: existingInv } = await db
+      .from("inventory")
+      .select("id")
+      .eq("product_id", targetProductId)
+      .eq("seller_id", targetSellerId)
+      .maybeSingle();
+
+    if (existingInv) {
+      await db
+        .from("inventory")
+        .update({
+          price_paise: pricePaise,
+          stock_quantity: stockQty,
+          low_stock_threshold: lowStockThreshold,
+          sku: autoSku,
+          updated_at: now,
+        })
+        .eq("id", existingInv.id);
+    } else {
+      const { error: invErr } = await db.from("inventory").insert({
+        product_id: targetProductId,
+        seller_id: targetSellerId,
+        price_paise: pricePaise,
+        stock_quantity: stockQty,
+        low_stock_threshold: lowStockThreshold,
+        sku: autoSku,
+        updated_at: now,
+      });
+
+      if (invErr) {
+        console.warn("[SellerRepository] Inventory insert notice:", invErr.message);
+      }
+    }
+
+    // ── IMAGES: Associate Processed Images with asset_id ────────────────────────
     if (Array.isArray(productData.images) && productData.images.length > 0) {
       for (let i = 0; i < productData.images.length; i++) {
         const imgObj = productData.images[i];
@@ -421,10 +556,10 @@ export class SellerRepository {
             : i === 0;
 
         await db.from("product_images").insert({
-          product_id: prod.id,
+          product_id: targetProductId,
           asset_id: assetId,
           url: resolveSanitizedUrl(assetId, rawUrl),
-          alt_text: prod.name,
+          alt_text: targetProduct.name,
           display_order: i + 1,
           is_primary: isPrimary,
           created_at: now,
@@ -434,18 +569,18 @@ export class SellerRepository {
       const assetId = sanitizeAssetId(productData.asset_id);
       const rUrl = productData.image_url || "/brand_logo.svg";
       await db.from("product_images").insert({
-        product_id: prod.id,
+        product_id: targetProductId,
         asset_id: assetId,
         url: resolveSanitizedUrl(assetId, rUrl),
-        alt_text: prod.name,
+        alt_text: targetProduct.name,
         display_order: 1,
         is_primary: true,
         created_at: now,
       });
     }
 
-    const finalProduct = await this.findSellerProductById(sellerId, prod.id);
-    return finalProduct || prod;
+    const finalProduct = await this.findSellerProductById(targetSellerId, targetProductId);
+    return finalProduct || targetProduct;
   }
 
   async updateProduct(

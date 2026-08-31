@@ -637,7 +637,17 @@ export class MediaService {
     const targetProfile: ImageProfileName = input.profile || "PRODUCT";
 
     // 1. Process with Sharp ImageEngine on backend
-    const engineResult = await ImageEngine.process(buffer, targetProfile);
+    let engineResult;
+    try {
+      engineResult = await ImageEngine.process(buffer, targetProfile);
+    } catch (err: any) {
+      console.error(
+        `[MediaService] ImageEngine processing failed for profile '${targetProfile}' (bytes: ${buffer.length}, filename: '${input.filename || "unnamed"}'): ${err?.message || err}`,
+      );
+      throw Errors.validation(
+        `Image processing error: ${err?.message || "Invalid or corrupt image format"}`,
+      );
+    }
 
     // 2. Identify seller if user is a seller
     let sellerId: string | null = null;

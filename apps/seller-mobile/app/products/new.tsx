@@ -37,8 +37,8 @@ export default function AddPlantScreen() {
   const rawStatus = String(seller?.status || (seller as any)?.sellerStatus || "").toLowerCase();
   const isApproved = rawStatus === "approved" || rawStatus === "active";
 
-  // Tab Mode: 'CUSTOM' (Create new plant product) vs 'CATALOG' (Quick-add from catalog)
-  const [creationMode, setCreationMode] = useState<"CUSTOM" | "CATALOG">("CUSTOM");
+  // Tab Mode: 'CATALOG' (Choose existing Floria product - Canonical Flow) vs 'CUSTOM' (Add new unlisted species)
+  const [creationMode, setCreationMode] = useState<"CUSTOM" | "CATALOG">("CATALOG");
 
   // Catalog Categories
   const [categories, setCategories] = useState<any[]>([]);
@@ -87,7 +87,7 @@ export default function AddPlantScreen() {
       setSearchLoading(true);
       const res = await api.getProducts({
         search: query.trim() || undefined,
-        limit: 20,
+        limit: 30,
       });
       if (res.success && Array.isArray(res.data)) {
         setCatalogResults(res.data);
@@ -144,12 +144,15 @@ export default function AddPlantScreen() {
 
     // Check if any image is still uploading or processing
     const isImageInProgress = images.some(
-      (img) => img.status === "UPLOADING" || img.status === "PROCESSING",
+      (img) =>
+        img.status === "UPLOADING" ||
+        img.status === "PROCESSING" ||
+        img.status === "OPTIMIZING",
     );
     if (isImageInProgress) {
       Alert.alert(
         "Image Processing",
-        "Please wait until your device photos finish processing through the image engine.",
+        "Please wait until your photos finish processing through the Floria Image Engine.",
       );
       return;
     }
@@ -183,7 +186,7 @@ export default function AddPlantScreen() {
         description: description.trim() || undefined,
         care_instructions: careInstructions.trim() || undefined,
         status,
-        images: cleanImages,
+        images: cleanImages.length > 0 ? cleanImages : undefined,
         image_url: primaryUrl,
       };
 
@@ -218,31 +221,71 @@ export default function AddPlantScreen() {
 
     setPriceRupees((existingPrice / 100).toFixed(0));
     setStockQuantity("10");
+    setImages([]);
   };
 
   const handlePublishCatalogListing = async () => {
     if (!selectedCatalogProduct) return;
     const priceNum = parseFloat(priceRupees);
     if (isNaN(priceNum) || priceNum <= 0) {
-      Alert.alert("Invalid Price", "Please specify a valid price.");
+      Alert.alert("Invalid Price", "Please specify a valid price in ₹.");
+      return;
+    }
+    const stockNum = parseInt(stockQuantity, 10);
+    if (isNaN(stockNum) || stockNum < 0) {
+      Alert.alert("Invalid Stock", "Please enter a valid stock quantity.");
+      return;
+    }
+
+    // Check if any image is still uploading or processing
+    const isImageInProgress = images.some(
+      (img) =>
+        img.status === "UPLOADING" ||
+        img.status === "PROCESSING" ||
+        img.status === "OPTIMIZING",
+    );
+    if (isImageInProgress) {
+      Alert.alert(
+        "Image Processing",
+        "Please wait until your specimen photos finish processing through the Floria Image Engine.",
+      );
       return;
     }
 
     try {
       setSubmitting(true);
+      const cleanImages = images
+        .filter((img) => img.status !== "FAILED" && Boolean(img.url))
+        .map((img) => ({
+          asset_id:
+            img.assetId && img.assetId.trim().length > 10
+              ? img.assetId.trim()
+              : undefined,
+          url: img.url,
+          is_primary: Boolean(img.isPrimary),
+        }));
+
+      const primaryUrl =
+        cleanImages.find((img) => img.is_primary)?.url ||
+        cleanImages[0]?.url ||
+        selectedCatalogProduct.image_url ||
+        selectedCatalogProduct.images?.[0]?.url;
+
       const res = await api.createSellerProduct({
         product_id: selectedCatalogProduct.id,
         name: selectedCatalogProduct.name,
         category_id: selectedCatalogProduct.category_id || selectedCatalogProduct.category?.id,
         price_paise: Math.round(priceNum * 100),
-        stock_quantity: parseInt(stockQuantity, 10) || 10,
+        stock_quantity: stockNum,
         low_stock_threshold: parseInt(lowStockThreshold, 10) || 5,
+        sku: sku.trim() || undefined,
         status,
-        image_url: selectedCatalogProduct.image_url || selectedCatalogProduct.images?.[0]?.url,
+        images: cleanImages.length > 0 ? cleanImages : undefined,
+        image_url: primaryUrl,
       });
 
       if (res.success) {
-        showSuccess(`"${selectedCatalogProduct.name}" added to inventory.`);
+        showSuccess(`"${selectedCatalogProduct.name}" added to your nursery inventory.`);
         router.back();
       } else {
         const msg = res.error?.message || "Failed to list plant.";
@@ -277,26 +320,6 @@ export default function AddPlantScreen() {
       {/* Mode Switcher Tabs */}
       <View style={styles.tabSwitcher}>
         <TouchableOpacity
-          onPress={() => setCreationMode("CUSTOM")}
-          style={[styles.tabBtn, creationMode === "CUSTOM" && styles.tabBtnActive]}
-          activeOpacity={0.8}
-        >
-          <Ionicons
-            name="sparkles"
-            size={16}
-            color={creationMode === "CUSTOM" ? Colors.white : Colors.inkMuted}
-          />
-          <Text
-            style={[
-              styles.tabBtnText,
-              creationMode === "CUSTOM" && styles.tabBtnTextActive,
-            ]}
-          >
-            Create New Product
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
           onPress={() => setCreationMode("CATALOG")}
           style={[styles.tabBtn, creationMode === "CATALOG" && styles.tabBtnActive]}
           activeOpacity={0.8}
@@ -312,7 +335,27 @@ export default function AddPlantScreen() {
               creationMode === "CATALOG" && styles.tabBtnTextActive,
             ]}
           >
-            Quick-Add Catalog
+            Choose from Catalog
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => setCreationMode("CUSTOM")}
+          style={[styles.tabBtn, creationMode === "CUSTOM" && styles.tabBtnActive]}
+          activeOpacity={0.8}
+        >
+          <Ionicons
+            name="sparkles"
+            size={16}
+            color={creationMode === "CUSTOM" ? Colors.white : Colors.inkMuted}
+          />
+          <Text
+            style={[
+              styles.tabBtnText,
+              creationMode === "CUSTOM" && styles.tabBtnTextActive,
+            ]}
+          >
+            New Custom Plant
           </Text>
         </TouchableOpacity>
       </View>
@@ -545,12 +588,19 @@ export default function AddPlantScreen() {
         </ScrollView>
       )}
 
-      {/* ── Mode 2: Quick-Add from Master Catalog ── */}
+      {/* ── Mode 1: Quick-Add from Master Floria Catalog (Canonical Model) ── */}
       {creationMode === "CATALOG" && (
         <View style={{ flex: 1 }}>
           {selectedCatalogProduct ? (
             /* Selected Catalog Item Configuration */
-            <ScrollView contentContainerStyle={styles.scrollContent}>
+            <ScrollView
+              contentContainerStyle={[
+                styles.scrollContent,
+                { paddingBottom: insets.bottom + 40 },
+              ]}
+              showsVerticalScrollIndicator={false}
+            >
+              {/* Selected Master Plant Banner */}
               <View style={styles.selectedProductCard}>
                 <Image
                   source={{
@@ -563,6 +613,11 @@ export default function AddPlantScreen() {
                 />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.selectedProductTitle}>{selectedCatalogProduct.name}</Text>
+                  {selectedCatalogProduct.botanical_name && (
+                    <Text style={[styles.selectedProductCat, { fontStyle: "italic", marginBottom: 2 }]}>
+                      {selectedCatalogProduct.botanical_name}
+                    </Text>
+                  )}
                   <Text style={styles.selectedProductCat}>
                     {selectedCatalogProduct.category?.name || "Botanical Species"}
                   </Text>
@@ -570,16 +625,17 @@ export default function AddPlantScreen() {
                     onPress={() => setSelectedCatalogProduct(null)}
                     style={{ marginTop: 6 }}
                   >
-                    <Text style={styles.changeSelectionText}>Change Selected Plant</Text>
+                    <Text style={styles.changeSelectionText}>← Change Selected Plant</Text>
                   </TouchableOpacity>
                 </View>
               </View>
 
+              {/* Pricing & Stock Card */}
               <View style={styles.sectionCard}>
                 <Text style={styles.sectionHeading}>Your Nursery Pricing & Stock</Text>
                 <View style={styles.rowFields}>
                   <View style={[styles.field, { flex: 1 }]}>
-                    <Text style={styles.label}>Selling Price (₹) *</Text>
+                    <Text style={styles.label}>Selling Base Price (₹) *</Text>
                     <TextInput
                       style={styles.input}
                       value={priceRupees}
@@ -600,10 +656,65 @@ export default function AddPlantScreen() {
                     />
                   </View>
                 </View>
+
+                {/* SKU & Low Stock Alert */}
+                <View style={styles.rowFields}>
+                  <View style={[styles.field, { flex: 1 }]}>
+                    <Text style={styles.label}>Nursery SKU (Optional)</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={sku}
+                      onChangeText={setSku}
+                      placeholder="e.g. NUR-MON-01"
+                      placeholderTextColor={Colors.inkSubtle}
+                    />
+                  </View>
+
+                  <View style={[styles.field, { flex: 1 }]}>
+                    <Text style={styles.label}>Low Stock Alert</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={lowStockThreshold}
+                      onChangeText={setLowStockThreshold}
+                      placeholder="5"
+                      keyboardType="number-pad"
+                    />
+                  </View>
+                </View>
+
+                {/* Payout Calculation Preview */}
+                {Boolean(priceRupees) && (
+                  <View style={styles.payoutCard}>
+                    <View style={styles.payoutRow}>
+                      <Text style={styles.payoutLabel}>Estimated Seller Payout (90%)</Text>
+                      <Text style={styles.payoutValue}>{formatINR(estimatedPayoutPaise)}</Text>
+                    </View>
+                    <Text style={styles.payoutNote}>
+                      Based on standard 10% platform commission fee.
+                    </Text>
+                  </View>
+                )}
               </View>
 
+              {/* Optional Nursery Specimen Photos via Floria Image Engine */}
+              <View style={styles.sectionCard}>
+                <View style={{ marginBottom: 8 }}>
+                  <Text style={styles.sectionHeading}>Your Nursery Specimen Photos</Text>
+                  <Text style={styles.sectionSub}>
+                    Upload real photos of the plant in your nursery. All images are processed through the Floria Image Engine into fast WebP variants (Optional).
+                  </Text>
+                </View>
+
+                <MobileProductImageUploader
+                  images={images}
+                  onChange={setImages}
+                  maxImages={5}
+                />
+              </View>
+
+              {/* Submit Listing Button */}
               <Button
-                label={submitting ? "Listing Plant..." : "Add to Nursery Inventory"}
+                label={submitting ? "Publishing Listing..." : "Publish to Nursery Marketplace"}
                 onPress={handlePublishCatalogListing}
                 loading={submitting}
                 style={styles.publishBtn}
@@ -841,14 +952,22 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontWeight: "700",
   },
+  sectionSub: {
+    fontSize: 11,
+    color: Colors.inkMuted,
+    lineHeight: 16,
+    marginTop: 2,
+  },
   payoutCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
     backgroundColor: "#DCFCE7",
     borderRadius: BorderRadius.lg,
     padding: Spacing.sm,
     marginBottom: Spacing.md,
+  },
+  payoutRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   payoutLabel: {
     fontSize: 10,
@@ -860,6 +979,11 @@ const styles = StyleSheet.create({
     fontSize: Typography.fontSizes.sm,
     fontWeight: "bold",
     color: Colors.forest,
+  },
+  payoutNote: {
+    fontSize: 9,
+    color: Colors.forestDark,
+    marginTop: 2,
   },
   statusToggleRow: {
     flexDirection: "row",

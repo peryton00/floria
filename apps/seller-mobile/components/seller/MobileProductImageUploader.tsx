@@ -22,8 +22,11 @@ export interface MobileProductImage {
   assetId?: string;
   url: string;
   isPrimary?: boolean;
-  status?: "READY" | "UPLOADING" | "PROCESSING" | "FAILED";
+  status?: "UPLOADING" | "PROCESSING" | "OPTIMIZING" | "COMPLETED" | "READY" | "FAILED";
   errorMessage?: string;
+  localUri?: string;
+  filename?: string;
+  mimeType?: string;
 }
 
 interface MobileProductImageUploaderProps {
@@ -79,6 +82,9 @@ export function MobileProductImageUploader({
     const tempItem: MobileProductImage = {
       assetId: "",
       url: localUri,
+      localUri,
+      filename,
+      mimeType,
       isPrimary: isFirst,
       status: "UPLOADING",
     };
@@ -87,7 +93,7 @@ export function MobileProductImageUploader({
     onChange([...currentImagesRef]);
 
     try {
-      // 1. Prepare Base64 payload
+      // 1. Prepare Base64 payload (State: UPLOADING)
       let base64Data = rawBase64 || "";
       if (!base64Data) {
         const response = await fetch(localUri);
@@ -106,11 +112,20 @@ export function MobileProductImageUploader({
         throw new Error("Unable to read image data from device.");
       }
 
+      // 2. Dispatch to Floria Image Engine (State: PROCESSING)
       tempItem.status = "PROCESSING";
       onChange([...currentImagesRef]);
 
-      // 2. Transcode & Upload via Floria Backend Image Engine (Sharp WebP Pipeline)
       const cleanFilename = filename || `plant_${Date.now()}.jpg`;
+
+      // Quick visual transition to OPTIMIZING state before response resolve
+      setTimeout(() => {
+        if (tempItem.status === "PROCESSING") {
+          tempItem.status = "OPTIMIZING";
+          onChange([...currentImagesRef]);
+        }
+      }, 300);
+
       const res = await api.uploadMediaDirect({
         filename: cleanFilename,
         mimeType: mimeType,
@@ -122,7 +137,7 @@ export function MobileProductImageUploader({
         throw new Error(res.error?.message || "Image engine processing failed on backend.");
       }
 
-      // 3. Attach authoritative backend WebP variant URL
+      // 3. Attach authoritative backend WebP variant URL (State: COMPLETED)
       const { assetId, variants, url } = res.data;
       const resolvedWebpUrl =
         url ||
@@ -133,14 +148,14 @@ export function MobileProductImageUploader({
 
       tempItem.assetId = assetId;
       tempItem.url = resolvedWebpUrl;
-      tempItem.status = "READY";
+      tempItem.status = "COMPLETED";
       onChange([...currentImagesRef]);
     } catch (err: any) {
-      console.warn("[MobileProductImageUploader] Upload error:", err);
+      console.warn("[MobileProductImageUploader] Upload error:", err?.message || err);
       tempItem.status = "FAILED";
       tempItem.errorMessage = err.message || "Upload failed";
       onChange([...currentImagesRef]);
-      Alert.alert("Upload Error", err.message || "Image processing error.");
+      Alert.alert("Upload Error", err.message || "Image processing failed on image engine.");
     }
   };
 
@@ -262,6 +277,24 @@ export function MobileProductImageUploader({
     onChange(filtered);
   };
 
+  const handleRetry = async (index: number) => {
+    const item = images[index];
+    if (!item || !item.localUri) return;
+
+    const listCopy = [...images];
+    listCopy.splice(index, 1);
+    onChange(listCopy);
+
+    await uploadSingleAsset(
+      item.localUri,
+      item.filename || "retry.jpg",
+      item.mimeType,
+      null,
+      listCopy,
+      index,
+    );
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView
@@ -271,41 +304,64 @@ export function MobileProductImageUploader({
       >
         {/* Uploaded Images List */}
         {images.map((item, index) => {
-          const isProcessing = item.status === "UPLOADING" || item.status === "PROCESSING";
+          const isUploading = item.status === "UPLOADING";
+          const isProcessing = item.status === "PROCESSING";
+          const isOptimizing = item.status === "OPTIMIZING";
+          const isInProgress = isUploading || isProcessing || isOptimizing;
+          const isCompleted = item.status === "COMPLETED" || item.status === "READY";
           const isFailed = item.status === "FAILED";
+
+          let statusLabel = "Uploading...";
+          if (isProcessing) statusLabel = "Processing...";
+          if (isOptimizing) statusLabel = "Optimizing...";
 
           return (
             <View key={index} style={styles.imageCard}>
               <Image source={{ uri: item.url }} style={styles.thumbnail} />
 
               {/* Cover Badge */}
-              {item.isPrimary && !isProcessing && (
+              {item.isPrimary && !isInProgress && (
                 <View style={styles.primaryBadge}>
                   <Ionicons name="star" size={10} color="#FFFFFF" />
                   <Text style={styles.primaryBadgeText}>Cover</Text>
                 </View>
               )}
 
-              {/* Uploading/Processing Overlay */}
-              {isProcessing && (
-                <View style={styles.overlay}>
-                  <ActivityIndicator size="small" color="#FFFFFF" />
-                  <Text style={styles.overlayText}>
-                    {item.status === "UPLOADING" ? "Uploading..." : "Converting WebP..."}
-                  </Text>
+              {/* WebP Ready Badge */}
+              {isCompleted && !item.isPrimary && (
+                <View style={styles.readyBadge}>
+                  <Ionicons name="checkmark-circle" size={10} color="#FFFFFF" />
+                  <Text style={styles.readyBadgeText}>WebP</Text>
                 </View>
               )}
 
-              {/* Failed Overlay */}
+              {/* In Progress Overlay (Uploading / Processing / Optimizing) */}
+              {isInProgress && (
+                <View style={styles.overlay}>
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                  <Text style={styles.overlayText}>{statusLabel}</Text>
+                </View>
+              )}
+
+              {/* Failed Overlay with Retry */}
               {isFailed && (
-                <View style={[styles.overlay, { backgroundColor: "rgba(220, 38, 38, 0.85)" }]}>
-                  <Ionicons name="alert-circle" size={20} color="#FFFFFF" />
+                <View style={[styles.overlay, { backgroundColor: "rgba(220, 38, 38, 0.88)" }]}>
+                  <Ionicons name="alert-circle" size={18} color="#FFFFFF" />
                   <Text style={styles.overlayText}>Failed</Text>
+                  {item.localUri && (
+                    <TouchableOpacity
+                      onPress={() => handleRetry(index)}
+                      style={styles.retryBtn}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={styles.retryBtnText}>Retry</Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
               )}
 
               {/* Action Buttons */}
-              {!isProcessing && (
+              {!isInProgress && (
                 <View style={styles.cardActions}>
                   {!item.isPrimary && !isFailed && (
                     <TouchableOpacity
@@ -456,6 +512,35 @@ const styles = StyleSheet.create({
   },
   primaryBadgeText: {
     color: "#FFFFFF",
+    fontSize: 9,
+    fontWeight: "700",
+  },
+  readyBadge: {
+    position: "absolute",
+    top: 5,
+    left: 5,
+    backgroundColor: "rgba(16, 185, 129, 0.9)",
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    borderRadius: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+  },
+  readyBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 8,
+    fontWeight: "700",
+  },
+  retryBtn: {
+    marginTop: 2,
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  retryBtnText: {
+    color: Colors.error,
     fontSize: 9,
     fontWeight: "700",
   },
