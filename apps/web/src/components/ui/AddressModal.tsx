@@ -13,6 +13,7 @@ export interface AddressItem {
   city: string;
   state: string;
   pincode: string;
+  label?: string;
   instructions?: string;
   is_default?: boolean;
 }

@@ -222,12 +222,12 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
         full_name: addr.full_name,
         phone: addr.phone,
         line1: addr.line1,
-        line2: addr.line2,
+        line2: addr.line2 || undefined,
         city: addr.city,
         state: addr.state,
         pincode: addr.pincode,
-        label: addr.instructions,
-        is_default: addr.is_default,
+        label: (addr.label || "Home").slice(0, 30),
+        is_default: Boolean(addr.is_default),
       };
 
       const isExisting = addr.id && !addr.id.startsWith("addr_");

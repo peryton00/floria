@@ -945,7 +945,7 @@ var FloriaApiClient = class {
   // ── DELIVERY FEE ENGINE & POLICY ─────────────────────────────────────────
   async getDeliverySettings() {
     return this.request(
-      "/api/v1/admin/settings/delivery"
+      "/api/v1/delivery/settings"
     );
   }
   async updateDeliverySettings(updates) {
@@ -969,7 +969,7 @@ var FloriaApiClient = class {
   // ── FINANCIAL SETTINGS & UNIFIED PRICING ENGINE ───────────────────────────
   async getFinancialSettings() {
     return this.request(
-      "/api/v1/seller/settings/financials"
+      "/api/v1/pricing/settings"
     );
   }
   async updateFinancialSettings(updates) {

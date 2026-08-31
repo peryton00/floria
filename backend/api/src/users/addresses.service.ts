@@ -35,13 +35,19 @@ export class AddressService {
       .select("id")
       .eq("id", userId)
       .maybeSingle();
+
     if (!profile) {
-      await db.from("user_profiles").insert({
-        id: userId,
-        role: "customer",
-        full_name: input.full_name,
-        phone: input.phone,
-      });
+      try {
+        await db.from("user_profiles").upsert({
+          id: userId,
+          role: "customer",
+          full_name: input.full_name || "Customer",
+          phone: input.phone || "",
+          updated_at: new Date().toISOString(),
+        });
+      } catch (profileErr: any) {
+        console.warn("[AddressService] user_profiles upsert warning:", profileErr?.message);
+      }
     }
 
     // Check if user has any addresses currently
@@ -67,6 +73,7 @@ export class AddressService {
         city: input.city,
         state: input.state,
         pincode: input.pincode,
+        country: "India",
         label: input.label || "Home",
         is_default: shouldBeDefault,
       })
@@ -74,8 +81,12 @@ export class AddressService {
       .single();
 
     if (error || !addr) {
-      console.error("[AddressService.createAddress] error:", error);
-      throw Errors.database("Failed to create address.");
+      console.error(
+        "[AddressService.createAddress] error:",
+        error?.message || error,
+        error?.details,
+      );
+      throw Errors.database(`Failed to create address: ${error?.message || "DB insert failed"}`);
     }
 
     return addr;

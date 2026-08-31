@@ -1620,7 +1620,7 @@ export class FloriaApiClient {
     ApiResponse<import("@floria/types").DeliverySettings>
   > {
     return this.request<import("@floria/types").DeliverySettings>(
-      "/api/v1/admin/settings/delivery",
+      "/api/v1/delivery/settings",
     );
   }
 
@@ -1654,7 +1654,7 @@ export class FloriaApiClient {
     ApiResponse<import("@floria/types").FinancialSettings>
   > {
     return this.request<import("@floria/types").FinancialSettings>(
-      "/api/v1/seller/settings/financials",
+      "/api/v1/pricing/settings",
     );
   }
 

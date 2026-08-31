@@ -104,6 +104,41 @@ export function createApp() {
   apiV1.use("/media", mediaRoutes);
   app.use("/api/v1", reviewsRoutes); // reviews routes self-contain full paths
 
+  // Public Platform Pricing & Delivery Rules (Accessible to storefront & checkout)
+  apiV1.get("/delivery/settings", async (_req, res, next) => {
+    try {
+      const { deliveryService } = await import("./delivery/delivery.service.js");
+      const settings = await deliveryService.getDeliverySettings();
+      res.json({ success: true, data: settings });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  apiV1.get("/pricing/settings", async (_req, res, next) => {
+    try {
+      const { pricingService } = await import("./pricing/pricing.service.js");
+      const settings = await pricingService.getFinancialSettings();
+      res.json({ success: true, data: settings });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  apiV1.get("/platform/policies", async (_req, res, next) => {
+    try {
+      const { deliveryService } = await import("./delivery/delivery.service.js");
+      const { pricingService } = await import("./pricing/pricing.service.js");
+      const [delivery, financials] = await Promise.all([
+        deliveryService.getDeliverySettings(),
+        pricingService.getFinancialSettings(),
+      ]);
+      res.json({ success: true, data: { delivery, financials } });
+    } catch (err) {
+      next(err);
+    }
+  });
+
   app.use("/api/v1", apiV1);
 
   // 5. 404 Route Handler

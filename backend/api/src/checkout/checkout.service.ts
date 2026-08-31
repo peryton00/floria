@@ -18,7 +18,7 @@ export class CheckoutService {
   ): Promise<{ orderId: string }> {
     const db = getAdminDb();
 
-    // 1. Resolve Delivery Address from DB (never trust browser address snapshot directly if addressId given)
+    // 1. Resolve Delivery Address from DB (never trust client-side address if addressId given)
     let deliveryAddress: Record<string, unknown> | null = null;
     if (input.addressId) {
       const { data: addr } = await db
