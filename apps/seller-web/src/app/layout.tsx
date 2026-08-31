@@ -11,9 +11,9 @@ export const metadata: Metadata = {
   description:
     "Floria Nursery Partner Portal — Manage catalog listings, orders queue, earnings ledger, and logistics fulfillment.",
   icons: {
-    icon: "/floria-logo.png",
-    shortcut: "/floria-logo.png",
-    apple: "/floria-logo.png",
+    icon: "/brand_logo.svg",
+    shortcut: "/brand_logo.svg",
+    apple: "/brand_logo.svg",
   },
 };
 
@@ -25,7 +25,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/floria-logo.png" type="image/png" />
+        <link rel="icon" href="/brand_logo.svg" type="image/svg+xml" />
       </head>
       <body className="bg-cream-100 text-ink-900 antialiased font-sans">
         <ToastProvider>

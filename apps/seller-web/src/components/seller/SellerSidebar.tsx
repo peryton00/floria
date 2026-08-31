@@ -67,11 +67,11 @@ export function SellerSidebar({ onClose }: SellerSidebarProps) {
         >
           <div className="w-8 h-8 rounded bg-[#274D39] border border-[#DDE7DD]/20 flex items-center justify-center p-1.5 flex-shrink-0 group-hover:bg-[#2e5942] transition-colors">
             <Image
-              src="/floria-logo.png"
+              src="/brand_logo.svg"
               alt="Floria Logo"
-              width={20}
-              height={20}
-              className="object-contain brightness-[5]"
+              width={6}
+              height={8}
+              className="w-auto h-5 object-contain brightness-0 invert"
             />
           </div>
           <div>

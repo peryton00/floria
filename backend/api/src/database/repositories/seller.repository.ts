@@ -397,7 +397,7 @@ export class SellerRepository {
         return `${supabaseUrl}/storage/v1/object/public/public-media/products/${sellerId}/${aId}/medium.webp`;
       }
       if (!rUrl || rUrl.includes("/media-staging/")) {
-        return "/floria-logo.png";
+        return "/brand_logo.svg";
       }
       return rUrl;
     };
@@ -414,7 +414,7 @@ export class SellerRepository {
         const rawUrl =
           typeof imgObj === "string"
             ? imgObj
-            : imgObj.url || productData.image_url || "/floria-logo.png";
+            : imgObj.url || productData.image_url || "/brand_logo.svg";
         const isPrimary =
           typeof imgObj === "object" && imgObj.is_primary !== undefined
             ? imgObj.is_primary
@@ -432,7 +432,7 @@ export class SellerRepository {
       }
     } else if (productData.asset_id || productData.image_url) {
       const assetId = sanitizeAssetId(productData.asset_id);
-      const rUrl = productData.image_url || "/floria-logo.png";
+      const rUrl = productData.image_url || "/brand_logo.svg";
       await db.from("product_images").insert({
         product_id: prod.id,
         asset_id: assetId,
@@ -516,11 +516,11 @@ export class SellerRepository {
         .maybeSingle();
 
       const aId = updates.asset_id || null;
-      const rawUrl = updates.image_url || "/floria-logo.png";
+      const rawUrl = updates.image_url || "/brand_logo.svg";
       const cleanUrl = aId
         ? `${supabaseUrl}/storage/v1/object/public/public-media/products/${sellerId}/${aId}/medium.webp`
         : rawUrl.includes("/media-staging/")
-          ? "/floria-logo.png"
+          ? "/brand_logo.svg"
           : rawUrl;
 
       if (primaryImg) {

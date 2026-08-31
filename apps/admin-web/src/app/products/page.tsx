@@ -530,7 +530,7 @@ export default function AdminProductsPage() {
                                 <div className="w-16 h-16 rounded-lg overflow-hidden border border-slate-300 bg-white shrink-0 relative">
                                   {/* eslint-disable-next-line @next/next/no-img-element */}
                                   <img
-                                    src={img.url || "/floria-logo.png"}
+                                    src={img.url || "/brand_logo.svg"}
                                     alt={asset.original_filename || `Image ${idx + 1}`}
                                     className="w-full h-full object-cover"
                                   />

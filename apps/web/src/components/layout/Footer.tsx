@@ -151,11 +151,11 @@ export function Footer() {
               >
                 <div className="w-8 h-8 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center p-1.5 shadow-2xs group-hover:bg-white/15 transition-colors">
                   <Image
-                    src="/floria-logo.png"
+                    src="/brand_logo.svg"
                     alt="Floria Logo"
-                    width={24}
-                    height={24}
-                    className="object-contain brightness-0 invert opacity-95"
+                    width={6}
+                    height={8}
+                    className="w-auto h-5 object-contain brightness-0 invert opacity-95"
                   />
                 </div>
                 <span className="font-serif text-xl font-bold tracking-tight text-white">

@@ -506,10 +506,14 @@ export default function CheckoutPage() {
                             <div className="flex items-center gap-3">
                               <div className="relative w-10 h-10 rounded bg-floria-natural-sand overflow-hidden flex-shrink-0 border border-floria-border">
                                 <Image
-                                  src={primary_image?.url || "/floria-logo.png"}
+                                  src={primary_image?.url || "/brand_logo.svg"}
                                   alt={product.name}
                                   fill
-                                  className="object-cover"
+                                  className={
+                                    primary_image?.url
+                                      ? "object-cover"
+                                      : "object-scale-down p-1 opacity-60"
+                                  }
                                 />
                               </div>
                               <div>
@@ -873,11 +877,15 @@ export default function CheckoutPage() {
                         >
                           <div className="relative w-12 h-12 rounded-lg bg-floria-natural-sand overflow-hidden flex-shrink-0 border border-floria-border">
                             <Image
-                              src={primary_image?.url || "/floria-logo.png"}
+                              src={primary_image?.url || "/brand_logo.svg"}
                               alt={product.name}
                               fill
                               sizes="48px"
-                              className="object-cover"
+                              className={
+                                primary_image?.url
+                                  ? "object-cover"
+                                  : "object-scale-down p-1 opacity-60"
+                              }
                             />
                           </div>
 

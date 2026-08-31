@@ -21,6 +21,11 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_IN",
   },
+  icons: {
+    icon: "/brand_logo.svg",
+    shortcut: "/brand_logo.svg",
+    apple: "/brand_logo.svg",
+  },
   robots: {
     index: true,
     follow: true,

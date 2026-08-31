@@ -26,7 +26,7 @@ export default function SellerAccountScreen() {
   const [contactModalVisible, setContactModalVisible] = useState(false);
 
   const isVerified = seller?.status === "approved" || seller?.status === "active";
-  const logoUrl = seller?.logoUrl || "/floria-logo.png";
+  const logoUrl = seller?.logoUrl || null;
 
   const handleLogout = () => {
     confirmAction({
@@ -60,11 +60,11 @@ export default function SellerAccountScreen() {
         {/* ── Nursery Profile Card ── */}
         <View style={styles.profileCard}>
           <Image
-            source={{
-              uri: logoUrl.startsWith("http")
-                ? logoUrl
-                : "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=200",
-            }}
+            source={
+              logoUrl
+                ? { uri: logoUrl }
+                : require("../../assets/images/floria_mark.png")
+            }
             style={styles.nurseryLogo}
           />
           <View style={styles.profileInfo}>

@@ -3,6 +3,12 @@
     "name": "Floria Seller",
     "slug": "floria-seller",
     "version": "1.0.0",
+    "icon": "./assets/images/icon.png",
+    "splash": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F9F8F3"
+    },
     "orientation": "portrait",
     "scheme": "floria-seller",
     "userInterfaceStyle": "automatic",
@@ -12,7 +18,11 @@
       "bundleIdentifier": "com.floria.seller"
     },
     "android": {
-      "package": "com.floria.seller"
+      "package": "com.floria.seller",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#F9F8F3"
+      }
     },
      "androidStatusBar": {
       "barStyle": "dark-content",

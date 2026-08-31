@@ -159,11 +159,11 @@ export function OperationsShell({ children }: OperationsShellProps) {
         <div className="p-5 border-b border-white/10 flex items-center justify-between">
           <Link href="/operations" className="flex items-center gap-2">
             <Image
-              src="/floria-logo.png"
+              src="/brand_logo.svg"
               alt="Floria Logo"
-              width={22}
-              height={22}
-              className="object-contain brightness-[5] opacity-90"
+              width={6}
+              height={8}
+              className="w-auto h-5 object-contain brightness-0 invert opacity-95"
             />
             <div>
               <span className="font-serif text-sm font-bold text-white tracking-tight block leading-tight">
@@ -228,11 +228,11 @@ export function OperationsShell({ children }: OperationsShellProps) {
             <div className="p-5 border-b border-white/10 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Image
-                  src="/floria-logo.png"
+                  src="/brand_logo.svg"
                   alt="Floria Logo"
-                  width={22}
-                  height={22}
-                  className="object-contain brightness-[5]"
+                  width={6}
+                  height={8}
+                  className="w-auto h-5 object-contain brightness-0 invert opacity-95"
                 />
                 <span className="font-serif text-sm font-bold text-white">
                   Floria Ops

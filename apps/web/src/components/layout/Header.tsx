@@ -80,10 +80,6 @@ export function Header() {
     isHome && !isScrolled ? "text-xl" : "text-lg",
   ].join(" ");
 
-  const logoImageSizeClass = [
-    "object-contain transition-all duration-300",
-    isHome && !isScrolled ? "w-8 h-8" : "w-7 h-7",
-  ].join(" ");
 
   const navLinkClass = [
     "font-medium text-ink-500 hover:text-ink-900 whitespace-nowrap transition-all duration-300 rounded-md hover:bg-floria-soft-sand flex items-center gap-1",
@@ -107,12 +103,13 @@ export function Header() {
           className="flex items-center gap-2 flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-800 rounded"
         >
           <Image
-            src="/floria-logo.png"
+            src="/brand_logo.svg"
             alt="Floria"
-            width={36}
-            height={36}
+            width={6}
+            height={8}
             priority
-            className={logoImageSizeClass}
+            style={{ height: "32px" }}
+            className="w-auto object-contain transition-all duration-300"
           />
           <span className={logoTextClass}>FLORIA</span>
         </Link>

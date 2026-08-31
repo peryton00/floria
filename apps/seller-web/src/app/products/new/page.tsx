@@ -90,7 +90,7 @@ export default function AddProductPage() {
         if (cleanUrl && cleanUrl.startsWith("blob:")) {
           cleanUrl = img.assetId
             ? `${supabaseUrl}/storage/v1/object/public/public-media/product/${img.assetId}.webp`
-            : "/floria-logo.png";
+            : "/brand_logo.svg";
         }
         return {
           asset_id: img.assetId || undefined,
@@ -110,7 +110,7 @@ export default function AddProductPage() {
         care_instructions: careInstructions.trim() || undefined,
         status,
         images: cleanImages,
-        image_url: cleanImages.find((img) => img.is_primary)?.url || cleanImages[0]?.url || "/floria-logo.png",
+        image_url: cleanImages.find((img) => img.is_primary)?.url || cleanImages[0]?.url || "/brand_logo.svg",
       };
 
       const res = await api.createSellerProduct(payload);

@@ -122,7 +122,7 @@ export default function SellerProductsScreen() {
       item.primary_image_url ||
       item.image_url ||
       item.images?.[0]?.url ||
-      "/floria-logo.png";
+      "/brand_logo.svg";
 
     return (
       <TouchableOpacity
@@ -131,13 +131,13 @@ export default function SellerProductsScreen() {
         style={styles.productCard}
       >
         <Image
-          source={{
-            uri: imageUrl.startsWith("http")
-              ? imageUrl
-              : "https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=200",
-          }}
+          source={
+            imageUrl.startsWith("http")
+              ? { uri: imageUrl }
+              : require("../../assets/images/floria_mark.png")
+          }
           style={styles.productImage}
-          resizeMode="cover"
+          resizeMode={imageUrl.startsWith("http") ? "cover" : "contain"}
         />
 
         <View style={styles.productDetails}>

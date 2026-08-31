@@ -62,11 +62,11 @@ export default function SellerResetPasswordPage() {
         <div className="flex flex-col items-center mb-8">
           <Link href="/" className="flex items-center gap-2.5 mb-2 group">
             <Image
-              src="/floria-logo.png"
+              src="/brand_logo.svg"
               alt="Floria"
-              width={36}
-              height={36}
-              className="object-contain"
+              width={6}
+              height={8}
+              className="w-auto h-9 object-contain"
               priority
             />
             <span className="font-serif text-3xl font-semibold text-[#1A2E22]">Floria</span>

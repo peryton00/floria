@@ -203,7 +203,7 @@ export default function OrdersPage() {
                                     <Image
                                       src={
                                         item.primary_image?.url ||
-                                        "/floria-logo.png"
+                                        "/brand_logo.svg"
                                       }
                                       alt={item.product.name}
                                       fill

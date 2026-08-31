@@ -102,7 +102,7 @@ function AdminLoginForm() {
       <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-8 max-w-md w-full shadow-2xl space-y-6">
         <div className="text-center space-y-2">
           <Link href="/" className="inline-flex items-center gap-2">
-            <Image src="/floria-logo.png" alt="Floria Logo" width={32} height={32} className="object-contain brightness-[5]" />
+            <Image src="/brand_logo.svg" alt="Floria Logo" width={6} height={8} className="w-auto h-8 object-contain brightness-0 invert" />
             <span className="font-serif text-xl font-bold text-white tracking-tight">Floria Admin</span>
           </Link>
           <p className="text-xs text-white/60">Enter your credentials to access the Platform Management Control Panel.</p>

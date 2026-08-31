@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { View, Text, StyleSheet, Animated } from "react-native";
+import { View, Text, Image, StyleSheet, Animated } from "react-native";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -15,9 +15,11 @@ import { MotionTokens } from "../../lib/motion";
 function HomeBrandHeader() {
   return (
     <View style={styles.wordmark}>
-      <View style={styles.logoBox}>
-        <Ionicons name="leaf" size={14} color="#ffffff" />
-      </View>
+      <Image
+        source={require("../../assets/images/floria_mark.png")}
+        style={styles.headerLogo}
+        resizeMode="contain"
+      />
       <Text style={styles.wordmarkTitle}>Floria</Text>
     </View>
   );
@@ -223,13 +225,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
   },
-  logoBox: {
-    width: 28,
-    height: 28,
-    borderRadius: 6,
-    backgroundColor: Colors.forest,
-    alignItems: "center",
-    justifyContent: "center",
+  headerLogo: {
+    width: 24,
+    height: 32,
   },
   wordmarkTitle: {
     fontSize: 17,

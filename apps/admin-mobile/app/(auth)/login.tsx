@@ -7,6 +7,7 @@ import {
   Alert,
   ScrollView,
   TouchableOpacity,
+  Image,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -56,7 +57,11 @@ export default function AdminLoginScreen() {
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.header}>
         <View style={styles.logo}>
-          <Ionicons name="shield-checkmark" size={28} color={Colors.white} />
+          <Image
+            source={require("../../assets/images/floria_mark_white.png")}
+            style={{ width: 24, height: 32 }}
+            resizeMode="contain"
+          />
         </View>
         <Text style={styles.title}>Floria Governance Command</Text>
         <Text style={styles.subtitle}>

@@ -9,6 +9,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -77,7 +78,11 @@ export default function SellerLoginScreen() {
         {/* Brand Header */}
         <View style={styles.header}>
           <View style={styles.logo}>
-            <Ionicons name="leaf" size={28} color={Colors.white} />
+            <Image
+              source={require("../../assets/images/floria_mark_white.png")}
+              style={{ width: 24, height: 32 }}
+              resizeMode="contain"
+            />
           </View>
           <Text style={styles.title}>Floria Nursery Portal</Text>
           <Text style={styles.subtitle}>

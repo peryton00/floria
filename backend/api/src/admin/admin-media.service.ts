@@ -151,7 +151,7 @@ export class AdminMediaService {
         variantsMap.banner ||
         (asset.original_path
           ? `${supabaseUrl}/storage/v1/object/public/${asset.storage_bucket}/${asset.original_path}`
-          : "/floria-logo.png");
+          : "/brand_logo.svg");
 
       if (primaryUrl && !seenUrls.has(primaryUrl)) {
         seenUrls.add(primaryUrl);

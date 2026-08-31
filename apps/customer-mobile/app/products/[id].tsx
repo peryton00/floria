@@ -43,6 +43,7 @@ export default function ProductDetailScreen() {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [heroImageLoaded, setHeroImageLoaded] = useState(false);
+  const [heroImageError, setHeroImageError] = useState(false);
   const [isAddedFeedback, setIsAddedFeedback] = useState(false);
   const heartScale = useRef(new Animated.Value(1)).current;
   const heroOpacity = useRef(new Animated.Value(0)).current;
@@ -313,13 +314,14 @@ export default function ProductDetailScreen() {
       >
         {/* 1. Large Hero Product Image Showcase */}
         <View style={styles.imageContainer}>
-          {primaryImage ? (
+          {primaryImage && !heroImageError ? (
             <>
               <Animated.Image
                 source={{ uri: primaryImage }}
                 style={[styles.image, { opacity: heroOpacity }]}
                 resizeMode="cover"
                 onLoadEnd={handleHeroImageLoad}
+                onError={() => setHeroImageError(true)}
               />
               {!heroImageLoaded && (
                 <View style={StyleSheet.absoluteFill}>
@@ -334,7 +336,11 @@ export default function ProductDetailScreen() {
             </>
           ) : (
             <View style={styles.placeholder}>
-              <Ionicons name="leaf-outline" size={64} color={Colors.sage} />
+              <Image
+                source={require("../../assets/images/floria_mark.png")}
+                style={styles.placeholderLogo}
+                resizeMode="contain"
+              />
             </View>
           )}
 
@@ -394,6 +400,8 @@ export default function ProductDetailScreen() {
                   if (activeImageIndex !== idx) {
                     haptics.selection();
                     setActiveImageIndex(idx);
+                    setHeroImageLoaded(false);
+                    setHeroImageError(false);
                   }
                 }}
                 style={[
@@ -899,6 +907,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: Colors.linen,
+  },
+  placeholderLogo: {
+    width: 60,
+    height: 80,
+    opacity: 0.35,
   },
   wishlistButton: {
     position: "absolute",

@@ -240,7 +240,7 @@ export default function SellerProductsPage() {
                   const thresh = inv?.low_stock_threshold ?? 5;
                   const pricePaise = inv?.base_price_paise ?? inv?.price_paise ?? 0;
                   const sellerNetPaise = inv?.seller_net_paise ?? pricePaise;
-                  const imgUrl = l.images?.[0]?.url || l.primary_image?.url || "/floria-logo.png";
+                  const imgUrl = l.images?.[0]?.url || l.primary_image?.url || "/brand_logo.svg";
                   const isEditingStock = editingStockId === l.id;
 
                   return (

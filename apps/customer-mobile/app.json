@@ -3,6 +3,12 @@
     "name": "Floria",
     "slug": "floria-customer",
     "version": "1.0.0",
+    "icon": "./assets/images/icon.png",
+    "splash": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F9F8F3"
+    },
     "orientation": "portrait",
     "scheme": "floria",
     "userInterfaceStyle": "automatic",
@@ -15,7 +21,11 @@
       "bundleIdentifier": "com.floria.customer"
     },
     "android": {
-      "package": "com.floria.customer"
+      "package": "com.floria.customer",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#F9F8F3"
+      }
     },
     "androidStatusBar": {
       "barStyle": "dark-content",

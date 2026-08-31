@@ -9,6 +9,7 @@ import {
   Platform,
   ScrollView,
   TouchableOpacity,
+  Image,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -78,14 +79,20 @@ export default function CourierLoginScreen() {
       >
         {/* Floria Brand Card */}
         <View style={styles.brandCard}>
-          {/* Botanical Badge */}
-          <View style={styles.badge}>
-            <MaterialIcons
-              name="local-shipping"
-              size={14}
-              color={theme.colors.forest}
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: theme.spacing.md }}>
+            <View style={[styles.badge, { marginBottom: 0 }]}>
+              <MaterialIcons
+                name="local-shipping"
+                size={14}
+                color={theme.colors.forest}
+              />
+              <Text style={styles.badgeText}>FLORIA LOGISTICS</Text>
+            </View>
+            <Image
+              source={require("../../assets/images/floria_mark.png")}
+              style={{ width: 21, height: 28 }}
+              resizeMode="contain"
             />
-            <Text style={styles.badgeText}>FLORIA LOGISTICS</Text>
           </View>
 
           <Text style={styles.title}>Field Dispatch</Text>

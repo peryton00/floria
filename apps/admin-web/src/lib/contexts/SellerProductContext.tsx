@@ -232,7 +232,7 @@ export function SellerProductProvider({ children }: { children: React.ReactNode 
     const newImg: ProductImage = {
       id: `img-${id}`,
       product_id: id,
-      url: input.image_url ?? "/floria-logo.png",
+      url: input.image_url ?? "/brand_logo.svg",
       alt_text: input.name,
       display_order: 1,
       is_primary: true,

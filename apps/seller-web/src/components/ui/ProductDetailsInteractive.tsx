@@ -230,12 +230,12 @@ export function ProductDetailsInteractive({
             })
           ) : (
             <Image
-              src="/floria-logo.png"
+              src="/brand_logo.svg"
               alt={product.name}
               fill
               sizes="(max-width: 768px) 100vw, 50vw"
               priority
-              className="object-cover transition-all duration-500 ease-in-out group-hover:scale-105"
+              className="object-scale-down p-12 transition-all duration-500 ease-in-out opacity-60"
             />
           )}
 

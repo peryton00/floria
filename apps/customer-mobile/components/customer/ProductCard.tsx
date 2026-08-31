@@ -51,6 +51,7 @@ export function ProductCard({
   const { addItem } = useCart();
   const isLiked = isInWishlist(id);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const [isRecentlyAdded, setIsRecentlyAdded] = useState(false);
   const heartScale = useRef(new Animated.Value(1)).current;
   const imageOpacity = useRef(new Animated.Value(0)).current;
@@ -125,13 +126,14 @@ export function ProductCard({
     >
       {/* 1. Product Image Area */}
       <View style={styles.imageContainer}>
-        {imageUrl ? (
+        {imageUrl && !imageError ? (
           <>
             <Animated.Image
               source={{ uri: imageUrl }}
               style={[styles.image, { opacity: imageOpacity }]}
               resizeMode="cover"
               onLoadEnd={handleImageLoad}
+              onError={() => setImageError(true)}
             />
             {!imageLoaded && (
               <View style={StyleSheet.absoluteFill}>
@@ -146,7 +148,11 @@ export function ProductCard({
           </>
         ) : (
           <View style={styles.placeholder}>
-            <Ionicons name="leaf-outline" size={32} color={Colors.sage} />
+            <Image
+              source={require("../../assets/images/floria_mark.png")}
+              style={styles.placeholderLogo}
+              resizeMode="contain"
+            />
           </View>
         )}
 
@@ -282,6 +288,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: Colors.linen,
+  },
+  placeholderLogo: {
+    width: 36,
+    height: 48,
+    opacity: 0.35,
   },
   // Floating Wishlist Heart Button in Top-Right
   wishlistButton: {

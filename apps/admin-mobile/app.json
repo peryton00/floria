@@ -3,6 +3,12 @@
     "name": "Floria Admin",
     "slug": "floria-admin",
     "version": "1.0.0",
+    "icon": "./assets/images/icon.png",
+    "splash": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F9F8F3"
+    },
     "orientation": "portrait",
     "scheme": "floria-admin",
     "userInterfaceStyle": "automatic",
@@ -14,8 +20,8 @@
     "android": {
       "package": "com.floria.admin",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#F9F8F3"
       }
     },
     "plugins": ["expo-router"],

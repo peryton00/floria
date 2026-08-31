@@ -463,12 +463,16 @@ export default function OrderDetailPage({ params }: Props) {
                             <div className="relative w-full h-full rounded-xl overflow-hidden">
                               <Image
                                 src={
-                                  item.primary_image?.url || "/floria-logo.png"
+                                  item.primary_image?.url || "/brand_logo.svg"
                                 }
                                 alt={item.product.name}
                                 fill
                                 sizes="64px"
-                                className="object-cover"
+                                className={
+                                  item.primary_image?.url
+                                    ? "object-cover"
+                                    : "object-scale-down p-2 opacity-60"
+                                }
                               />
                             </div>
                             {item.quantity > 1 && (

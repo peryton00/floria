@@ -173,7 +173,7 @@ export function AdminShell({ children }: AdminShellProps) {
         <div className="p-5 border-b border-white/10 flex items-center justify-between flex-shrink-0">
           <Link href="/" className="flex items-center gap-2.5" aria-label="Admin dashboard home">
             <div className="w-8 h-8 rounded bg-[#274D39] border border-[#DDE7DD]/20 flex items-center justify-center p-1.5 flex-shrink-0">
-              <Image src="/floria-logo.png" alt="Floria Logo" width={20} height={20} className="object-contain brightness-[5]" />
+              <Image src="/brand_logo.svg" alt="Floria Logo" width={6} height={8} className="w-auto h-5 object-contain brightness-0 invert" />
             </div>
             <div>
               <span className="font-sans text-sm font-bold text-white tracking-tight block leading-tight">Floria Console</span>
@@ -228,7 +228,7 @@ export function AdminShell({ children }: AdminShellProps) {
             <div className="p-5 border-b border-white/10 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded bg-[#274D39] border border-[#DDE7DD]/20 flex items-center justify-center p-1.5">
-                  <Image src="/floria-logo.png" alt="Floria Logo" width={20} height={20} className="object-contain brightness-[5]" />
+                  <Image src="/brand_logo.svg" alt="Floria Logo" width={6} height={8} className="w-auto h-5 object-contain brightness-0 invert" />
                 </div>
                 <div>
                   <span className="font-sans text-sm font-bold text-white">Floria Console</span>

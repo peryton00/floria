@@ -58,11 +58,11 @@ export default function OperationsLoginPage() {
         <div className="text-center space-y-2">
           <Link href="/" className="inline-flex items-center gap-2">
             <Image
-              src="/floria-logo.png"
+              src="/brand_logo.svg"
               alt="Floria Logo"
-              width={32}
-              height={32}
-              className="object-contain brightness-[5]"
+              width={6}
+              height={8}
+              className="w-auto h-8 object-contain brightness-0 invert"
             />
             <span className="font-serif text-xl font-bold text-white tracking-tight">
               Floria Ops

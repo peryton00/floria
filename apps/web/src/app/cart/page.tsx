@@ -222,11 +222,15 @@ export default function CartPage() {
                       >
                         <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-floria-natural-sand border border-floria-border">
                           <Image
-                            src={primary_image?.url || "/floria-logo.png"}
+                            src={primary_image?.url || "/brand_logo.svg"}
                             alt={primary_image?.alt_text || product.name}
                             fill
                             sizes="96px"
-                            className="object-cover"
+                            className={
+                              primary_image?.url
+                                ? "object-cover"
+                                : "object-scale-down p-2 opacity-60"
+                            }
                           />
                           {isOOS && (
                             <div className="absolute inset-0 bg-white/70 flex items-center justify-center">

@@ -1,6 +1,7 @@
 // Floria — ProductCard (Phase 3.18.3 Customer Pricing & Value Presentation System)
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import type { ProductListing } from "@floria/types";
@@ -79,6 +80,9 @@ export function ProductCard({
     });
   }
 
+  const [imgError, setImgError] = useState(false);
+  const isFallback = !primary_image?.url || imgError;
+
   return (
     <div className="group relative flex flex-col bg-white rounded-xl overflow-hidden border border-floria-border/80 shadow-2xs hover:shadow-md hover:-translate-y-0.5 hover:border-forest-500/50 transition-all duration-300 ease-out focus-within:ring-2 focus-within:ring-forest-800">
       {/* Image Container */}
@@ -91,11 +95,16 @@ export function ProductCard({
           style={{ paddingBottom: "100%" }}
         >
           <Image
-            src={primary_image?.url || "/floria-logo.png"}
+            src={isFallback ? "/brand_logo.svg" : primary_image!.url}
             alt={primary_image?.alt_text || product.name}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out p-1.5 rounded-lg"
+            onError={() => setImgError(true)}
+            className={
+              isFallback
+                ? "object-scale-down p-6 opacity-60 transition-transform duration-500 ease-out"
+                : "object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+            }
           />
           {/* Subtle hover overlay */}
           <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />

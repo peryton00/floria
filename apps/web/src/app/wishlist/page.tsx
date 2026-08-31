@@ -170,11 +170,15 @@ export default function WishlistPage() {
                 {/* Image Section */}
                 <div className="relative aspect-square w-full bg-floria-natural-sand overflow-hidden border-b border-floria-border">
                   <Image
-                    src={primary_image?.url || "/floria-logo.png"}
+                    src={primary_image?.url || "/brand_logo.svg"}
                     alt={primary_image?.alt_text || product.name}
                     fill
                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                    className="object-cover group-hover:scale-108 transition-transform duration-500 ease-out"
+                    className={
+                      primary_image?.url
+                        ? "object-cover group-hover:scale-108 transition-transform duration-500 ease-out"
+                        : "object-scale-down p-8 opacity-60 transition-transform duration-500 ease-out"
+                    }
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none" />
 
