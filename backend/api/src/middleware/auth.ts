@@ -63,6 +63,7 @@ export async function authenticateToken(
       if (!error && user) {
         userId = user.id;
         email = user.email;
+        fallbackRole = (user.app_metadata?.role as string) || (user.user_metadata?.role as string);
       }
     } catch {
       // Supabase verification fallback
@@ -94,6 +95,30 @@ export async function authenticateToken(
       .maybeSingle();
 
     let roleStr = String(profile?.role || fallbackRole || "customer");
+
+    // Check configured admin emails from environment variables
+    const adminEmails = (process.env.ADMIN_EMAILS || "")
+      .split(",")
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean);
+    const superAdminEmails = (process.env.SUPER_ADMIN_EMAILS || "")
+      .split(",")
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean);
+
+    if (email) {
+      const lowerEmail = email.toLowerCase();
+      if (superAdminEmails.includes(lowerEmail)) {
+        roleStr = "super_admin";
+      } else if (adminEmails.includes(lowerEmail) && roleStr !== "super_admin") {
+        roleStr = "admin";
+      }
+    }
+
+    // If granted admin or super_admin via metadata/env and profile differs, sync profile
+    if ((roleStr === "admin" || roleStr === "super_admin") && profile && profile.role !== roleStr) {
+      void adminDb.from("user_profiles").update({ role: roleStr }).eq("id", userId);
+    }
 
     let sellerId: string | undefined = directSellerId;
     let sellerStatus: SellerStatus | undefined;
