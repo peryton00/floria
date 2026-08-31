@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import type { CSSProperties, MouseEventHandler } from "react";
 import * as PhosphorIcons from "@phosphor-icons/react";
 import {
   BaseFloriaIconProps,
@@ -15,8 +15,8 @@ import {
 export interface FloriaWebIconProps extends Omit<BaseFloriaIconProps, "name"> {
   name: FloriaIconName;
   className?: string;
-  style?: React.CSSProperties;
-  onClick?: React.MouseEventHandler<SVGSVGElement>;
+  style?: CSSProperties;
+  onClick?: MouseEventHandler<SVGSVGElement>;
 }
 
 /**

@@ -11,7 +11,8 @@
     "./native": "./src/native/index.ts"
   },
   "dependencies": {
-    "@phosphor-icons/react": "^2.1.10"
+    "@phosphor-icons/react": "^2.1.10",
+    "@types/react": "^19"
   },
   "peerDependencies": {
     "react": ">=18.0.0"
