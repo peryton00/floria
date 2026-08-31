@@ -9,7 +9,7 @@ export class CartController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const cart = await cartService.getCart(req.user!.id);
+      const cart = await cartService.getCart(req.user!.id, req.token);
       res.json({ success: true, data: cart });
     } catch (err) {
       next(err);
@@ -27,6 +27,7 @@ export class CartController {
         req.user!.id,
         productId,
         quantity || 1,
+        req.token,
       );
       res.json({ success: true, data: cart });
     } catch (err) {
@@ -46,6 +47,7 @@ export class CartController {
         req.user!.id,
         String(productId),
         quantity,
+        req.token,
       );
       res.json({ success: true, data: cart });
     } catch (err) {
@@ -63,6 +65,7 @@ export class CartController {
       const cart = await cartService.removeItem(
         req.user!.id,
         String(productId),
+        req.token,
       );
       res.json({ success: true, data: cart });
     } catch (err) {
@@ -76,7 +79,7 @@ export class CartController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const cart = await cartService.clearCart(req.user!.id);
+      const cart = await cartService.clearCart(req.user!.id, req.token);
       res.json({ success: true, data: cart });
     } catch (err) {
       next(err);
@@ -90,7 +93,7 @@ export class CartController {
   ): Promise<void> {
     try {
       const { items } = req.body;
-      const cart = await cartService.mergeCart(req.user!.id, items || []);
+      const cart = await cartService.mergeCart(req.user!.id, items || [], req.token);
       res.json({ success: true, data: cart });
     } catch (err) {
       next(err);

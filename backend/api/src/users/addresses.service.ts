@@ -1,5 +1,5 @@
 // Floria API — Customer Address Service
-import { getAdminDb } from "../config/database.js";
+import { getAdminDb, getDbForUser } from "../config/database.js";
 import { Errors } from "../utils/errors.js";
 
 export interface AddressInput {
@@ -15,8 +15,8 @@ export interface AddressInput {
 }
 
 export class AddressService {
-  async getAddresses(userId: string) {
-    const db = getAdminDb();
+  async getAddresses(userId: string, token?: string) {
+    const db = getDbForUser(token);
     const { data: addresses } = await db
       .from("addresses")
       .select("*")
@@ -26,8 +26,8 @@ export class AddressService {
     return addresses || [];
   }
 
-  async createAddress(userId: string, input: AddressInput) {
-    const db = getAdminDb();
+  async createAddress(userId: string, input: AddressInput, token?: string) {
+    const db = getDbForUser(token);
 
     // Ensure user_profiles row exists for foreign key constraint
     const { data: profile } = await db
@@ -51,7 +51,7 @@ export class AddressService {
     }
 
     // Check if user has any addresses currently
-    const existing = await this.getAddresses(userId);
+    const existing = await this.getAddresses(userId, token);
     const shouldBeDefault = existing.length === 0 || input.is_default === true;
 
     if (shouldBeDefault && existing.length > 0) {
@@ -92,10 +92,10 @@ export class AddressService {
     return addr;
   }
 
-  async updateAddress(userId: string, addressId: string, input: AddressInput) {
-    const db = getAdminDb();
+  async updateAddress(userId: string, addressId: string, input: AddressInput, token?: string) {
+    const db = getDbForUser(token);
 
-    const existing = await this.getAddresses(userId);
+    const existing = await this.getAddresses(userId, token);
     const target = existing.find((a) => a.id === addressId);
 
     if (!target) throw Errors.notFound("Address");
@@ -134,8 +134,8 @@ export class AddressService {
     return addr;
   }
 
-  async setDefaultAddress(userId: string, addressId: string) {
-    const db = getAdminDb();
+  async setDefaultAddress(userId: string, addressId: string, token?: string) {
+    const db = getDbForUser(token);
 
     // Verify address exists & belongs to user
     const { data: target } = await db
@@ -153,13 +153,13 @@ export class AddressService {
       .eq("user_id", userId);
     await db.from("addresses").update({ is_default: true }).eq("id", addressId);
 
-    return this.getAddresses(userId);
+    return this.getAddresses(userId, token);
   }
 
-  async deleteAddress(userId: string, addressId: string) {
-    const db = getAdminDb();
+  async deleteAddress(userId: string, addressId: string, token?: string) {
+    const db = getDbForUser(token);
 
-    const existing = await this.getAddresses(userId);
+    const existing = await this.getAddresses(userId, token);
     const target = existing.find((a) => a.id === addressId);
 
     if (!target) throw Errors.notFound("Address");
@@ -181,7 +181,7 @@ export class AddressService {
       }
     }
 
-    return this.getAddresses(userId);
+    return this.getAddresses(userId, token);
   }
 }
 

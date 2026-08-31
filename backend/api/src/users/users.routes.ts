@@ -13,7 +13,7 @@ router.use(authenticateToken);
 // User Profile
 router.get("/me", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const profile = await userRepository.findById(req.user!.id);
+    const profile = await userRepository.findById(req.user!.id, req.token);
     res.json({ success: true, data: { user: req.user, profile } });
   } catch (err) {
     next(err);
@@ -23,10 +23,14 @@ router.get("/me", async (req: Request, res: Response, next: NextFunction) => {
 router.patch("/me", async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { name, full_name, phone } = req.body || {};
-    const updated = await userRepository.updateProfile(req.user!.id, {
-      full_name: full_name || name,
-      phone,
-    });
+    const updated = await userRepository.updateProfile(
+      req.user!.id,
+      {
+        full_name: full_name || name,
+        phone,
+      },
+      req.token,
+    );
     res.json({ success: true, data: updated });
   } catch (err) {
     next(err);
@@ -73,7 +77,7 @@ router.get(
   "/addresses",
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const addresses = await addressService.getAddresses(req.user!.id);
+      const addresses = await addressService.getAddresses(req.user!.id, req.token);
       res.json({ success: true, data: addresses });
     } catch (err) {
       next(err);
@@ -89,6 +93,7 @@ router.post(
       const address = await addressService.createAddress(
         req.user!.id,
         req.body,
+        req.token,
       );
       res.json({ success: true, data: address });
     } catch (err) {
@@ -106,6 +111,7 @@ router.patch(
         req.user!.id,
         String(req.params.id),
         req.body,
+        req.token,
       );
       res.json({ success: true, data: address });
     } catch (err) {
@@ -121,6 +127,7 @@ router.patch(
       const addresses = await addressService.setDefaultAddress(
         req.user!.id,
         String(req.params.id),
+        req.token,
       );
       res.json({ success: true, data: addresses });
     } catch (err) {
@@ -136,6 +143,7 @@ router.delete(
       const addresses = await addressService.deleteAddress(
         req.user!.id,
         String(req.params.id),
+        req.token,
       );
       res.json({ success: true, data: addresses });
     } catch (err) {

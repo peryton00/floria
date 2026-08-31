@@ -9,7 +9,7 @@ export class WishlistController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const wishlist = await wishlistService.getWishlist(req.user!.id);
+      const wishlist = await wishlistService.getWishlist(req.user!.id, req.token);
       res.json({ success: true, data: wishlist });
     } catch (err) {
       next(err);
@@ -23,7 +23,7 @@ export class WishlistController {
   ): Promise<void> {
     try {
       const { productId } = req.body;
-      const wishlist = await wishlistService.addItem(req.user!.id, productId);
+      const wishlist = await wishlistService.addItem(req.user!.id, productId, req.token);
       res.json({ success: true, data: wishlist });
     } catch (err) {
       next(err);
@@ -40,6 +40,7 @@ export class WishlistController {
       const wishlist = await wishlistService.removeItem(
         req.user!.id,
         String(productId),
+        req.token,
       );
       res.json({ success: true, data: wishlist });
     } catch (err) {
@@ -57,6 +58,7 @@ export class WishlistController {
       const wishlist = await wishlistService.mergeWishlist(
         req.user!.id,
         productIds || [],
+        req.token,
       );
       res.json({ success: true, data: wishlist });
     } catch (err) {

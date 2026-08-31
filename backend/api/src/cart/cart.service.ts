@@ -1,12 +1,12 @@
 // Floria API — Cart Service
-import { getAdminDb } from "../config/database.js";
+import { getAdminDb, getDbForUser } from "../config/database.js";
 import { Errors } from "../utils/errors.js";
 import { productsService } from "../products/products.service.js";
 import { pricingService } from "../pricing/pricing.service.js";
 
 export class CartService {
-  async getCart(userId: string) {
-    const db = getAdminDb();
+  async getCart(userId: string, token?: string) {
+    const db = getDbForUser(token);
     const { data: cart } = await db
       .from("carts")
       .select(
@@ -47,8 +47,8 @@ export class CartService {
     return cart;
   }
 
-  async addItem(userId: string, productId: string, quantity: number) {
-    const db = getAdminDb();
+  async addItem(userId: string, productId: string, quantity: number, token?: string) {
+    const db = getDbForUser(token);
 
     const { data: product } = await db
       .from("products")
@@ -82,7 +82,10 @@ export class CartService {
         .insert({ user_id: userId })
         .select("id")
         .single();
-      if (cartErr) throw Errors.database("Failed to create cart.");
+      if (cartErr) {
+        console.error("[CartService.addItem] cart creation error:", cartErr);
+        throw Errors.database("Failed to create cart.");
+      }
       cart = newCart;
     }
 
@@ -103,13 +106,16 @@ export class CartService {
         { onConflict: "cart_id,product_id" },
       );
 
-    if (itemErr) throw Errors.database("Failed to update cart item.");
+    if (itemErr) {
+      console.error("[CartService.addItem] item upsert error:", itemErr);
+      throw Errors.database("Failed to update cart item.");
+    }
 
-    return this.getCart(userId);
+    return this.getCart(userId, token);
   }
 
-  async updateQuantity(userId: string, productId: string, quantity: number) {
-    const db = getAdminDb();
+  async updateQuantity(userId: string, productId: string, quantity: number, token?: string) {
+    const db = getDbForUser(token);
 
     const { data: cart } = await db
       .from("carts")
@@ -120,7 +126,7 @@ export class CartService {
     if (!cart) throw Errors.notFound("Cart");
 
     if (quantity <= 0) {
-      return this.removeItem(userId, productId);
+      return this.removeItem(userId, productId, token);
     }
 
     const { error } = await db
@@ -131,11 +137,11 @@ export class CartService {
 
     if (error) throw Errors.database("Failed to update item quantity.");
 
-    return this.getCart(userId);
+    return this.getCart(userId, token);
   }
 
-  async removeItem(userId: string, productId: string) {
-    const db = getAdminDb();
+  async removeItem(userId: string, productId: string, token?: string) {
+    const db = getDbForUser(token);
 
     const { data: cart } = await db
       .from("carts")
@@ -143,7 +149,7 @@ export class CartService {
       .eq("user_id", userId)
       .maybeSingle();
 
-    if (!cart) return this.getCart(userId);
+    if (!cart) return this.getCart(userId, token);
 
     await db
       .from("cart_items")
@@ -151,11 +157,11 @@ export class CartService {
       .eq("cart_id", cart.id)
       .eq("product_id", productId);
 
-    return this.getCart(userId);
+    return this.getCart(userId, token);
   }
 
-  async clearCart(userId: string) {
-    const db = getAdminDb();
+  async clearCart(userId: string, token?: string) {
+    const db = getDbForUser(token);
 
     const { data: cart } = await db
       .from("carts")
@@ -167,21 +173,22 @@ export class CartService {
       await db.from("cart_items").delete().eq("cart_id", cart.id);
     }
 
-    return this.getCart(userId);
+    return this.getCart(userId, token);
   }
 
   async mergeCart(
     userId: string,
     items: Array<{ productId: string; quantity: number }>,
+    token?: string,
   ) {
     for (const item of items) {
       try {
-        await this.addItem(userId, item.productId, item.quantity);
+        await this.addItem(userId, item.productId, item.quantity, token);
       } catch (e) {
         // Skip items that are out of stock or inactive
       }
     }
-    return this.getCart(userId);
+    return this.getCart(userId, token);
   }
 }
 

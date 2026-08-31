@@ -68,3 +68,19 @@ export function getAnonDb(): SupabaseClient {
   }
   return anonClient;
 }
+
+/**
+ * Returns user-scoped Supabase client when a valid user JWT is provided,
+ * otherwise falls back to trusted admin client.
+ */
+export function getDbForUser(userAccessToken?: string): SupabaseClient {
+  if (userAccessToken && userAccessToken.length > 10) {
+    try {
+      return getUserDb(userAccessToken);
+    } catch {
+      return getAdminDb();
+    }
+  }
+  return getAdminDb();
+}
+

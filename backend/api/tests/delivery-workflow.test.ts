@@ -17,6 +17,9 @@ vi.mock("../src/config/database.js", () => {
       },
     }),
     getUserDb: () => ({}),
+    getDbForUser: () => ({
+      from: mockFrom,
+    }),
   };
 });
 

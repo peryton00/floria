@@ -6,6 +6,8 @@ import type { AuthenticatedUser } from "../src/middleware/auth.js";
 vi.mock("../src/config/database.js", () => {
   return {
     getAdminDb: vi.fn(),
+    getUserDb: vi.fn(),
+    getDbForUser: vi.fn(),
   };
 });
 

@@ -37,7 +37,191 @@ function createMockQueryBuilder(
   return builder;
 }
 
-// Mock Supabase Auth & Admin DB
+const { mockGetAdminDb } = vi.hoisted(() => {
+  const createMockBuilder = (resolvedData: any = null, resolvedError: any = null) => {
+    const builder: any = {
+      select: vi.fn(() => builder),
+      insert: vi.fn(() => builder),
+      update: vi.fn(() => builder),
+      delete: vi.fn(() => builder),
+      upsert: vi.fn(() => builder),
+      eq: vi.fn(() => builder),
+      in: vi.fn(() => builder),
+      order: vi.fn(() => builder),
+      limit: vi.fn(() => builder),
+      range: vi.fn(() => builder),
+      single: vi.fn(async () => ({ data: resolvedData, error: resolvedError })),
+      maybeSingle: vi.fn(async () => ({
+        data: resolvedData,
+        error: resolvedError,
+      })),
+      then: (resolve: any) =>
+        resolve({ data: resolvedData, error: resolvedError }),
+    };
+    return builder;
+  };
+
+  const getAdminDbFn = vi.fn(() => {
+    const mockJpeg = Buffer.from("FAKE_JPEG_IMAGE_HEADER_BINARY");
+
+    return {
+      from: vi.fn((table: string) => {
+        if (table === "user_profiles") {
+          const builder = createMockBuilder();
+          builder.eq = vi.fn((col: string, val: string) => {
+            let role = "customer";
+            if (val === "user-seller-1") role = "seller";
+            if (val === "user-admin-1") role = "admin";
+            return createMockBuilder({ role });
+          });
+          return builder;
+        }
+
+        if (table === "seller_profiles") {
+          const builder = createMockBuilder();
+          builder.eq = vi.fn((col: string, val: string) => {
+            if (val === "user-seller-1" || val === "seller-1") {
+              return createMockBuilder({
+                id: "seller-1",
+                status: "approved",
+              });
+            }
+            return createMockBuilder(null);
+          });
+          return builder;
+        }
+
+        if (table === "media_assets") {
+          const builder = createMockBuilder();
+          builder.eq = vi.fn((col: string, val: string) => {
+            if (val === "asset-1" || val === "asset-completed") {
+              return createMockBuilder({
+                id: val,
+                owner_type: "SELLER",
+                owner_id: "seller-1",
+                purpose: "PRODUCT_IMAGE",
+                status: "READY",
+                variants: [
+                  {
+                    variant_name: "ORIGINAL",
+                    storage_path: "products/seller-1/test.jpg",
+                  },
+                ],
+              });
+            }
+            if (val === "asset-admin-1") {
+              return createMockBuilder({
+                id: "asset-admin-1",
+                owner_type: "SYSTEM",
+                owner_id: "system",
+                purpose: "HERO_BANNER",
+                status: "READY",
+                variants: [],
+              });
+            }
+            return createMockBuilder(null);
+          });
+          return builder;
+        }
+
+        if (table === "media_upload_sessions") {
+          const builder = createMockBuilder();
+          builder.eq = vi.fn((col: string, val: string) => {
+            if (val === "sess-1" || val === "sess-valid") {
+              return createMockBuilder({
+                id: "sess-valid",
+                seller_id: "seller-1",
+                uploaded_by_user_id: "user-seller-1",
+                status: "CREATED",
+                expected_profile: "PRODUCT",
+                bucket_name: "media-staging",
+                temp_storage_path: "staging/seller-1/sess-valid/asset-1.tmp",
+                expires_at: new Date(Date.now() + 600000).toISOString(),
+              });
+            }
+            if (val === "sess-completed") {
+              return createMockBuilder({
+                id: "sess-completed",
+                seller_id: "seller-1",
+                uploaded_by_user_id: "user-seller-1",
+                status: "COMPLETED",
+                expected_profile: "PRODUCT",
+                resolved_asset_id: "asset-completed",
+                created_at: new Date().toISOString(),
+                completed_at: new Date().toISOString(),
+              });
+            }
+            if (val === "sess-expired") {
+              return createMockBuilder({
+                id: "sess-expired",
+                seller_id: "seller-1",
+                uploaded_by_user_id: "user-seller-1",
+                status: "CREATED",
+                expires_at: new Date(Date.now() - 600000).toISOString(), // Expired
+              });
+            }
+            return createMockBuilder(null);
+          });
+          return builder;
+        }
+
+        if (table === "products") {
+          const builder = createMockBuilder();
+          builder.eq = vi.fn((col: string, val: string) => {
+            if (val === "prod-1") {
+              return createMockBuilder({
+                id: "prod-1",
+                seller_id: "seller-1",
+                name: "Monstera Deliciosa",
+              });
+            }
+            return createMockBuilder(null);
+          });
+          return builder;
+        }
+
+        if (table === "product_images") {
+          const builder = createMockBuilder();
+          builder.eq = vi.fn((col: string, val: string) => {
+            if (val === "img-1") {
+              return createMockBuilder({
+                id: "img-1",
+                product_id: "prod-1",
+                media_asset_id: "asset-1",
+              });
+            }
+            return createMockBuilder(null);
+          });
+          return builder;
+        }
+
+        if (table === "audit_logs" || table === "media_variants") {
+          return createMockBuilder();
+        }
+
+        return createMockBuilder();
+      }),
+      storage: {
+        from: vi.fn((bucket: string) => ({
+          createSignedUploadUrl: vi.fn().mockResolvedValue({
+            data: { signedUrl: "https://supabase.co/storage/v1/upload/sign" },
+            error: null,
+          }),
+          download: vi.fn().mockImplementation(async () => {
+            return {
+              data: { arrayBuffer: async () => mockJpeg.buffer },
+              error: null,
+            };
+          }),
+          remove: vi.fn().mockResolvedValue({ data: [], error: null }),
+        })),
+      },
+    };
+  });
+
+  return { mockGetAdminDb: getAdminDbFn };
+});
+
 vi.mock("../src/config/database.js", () => {
   return {
     getAnonDb: vi.fn(() => ({
@@ -53,7 +237,7 @@ vi.mock("../src/config/database.js", () => {
           }
           if (token === "token-customer") {
             return {
-              data: { user: { id: "user-cust-1", email: "cust@floria.test" } },
+              data: { user: { id: "user-cust-1", email: "customer@floria.test" } },
               error: null,
             };
           }
@@ -69,130 +253,9 @@ vi.mock("../src/config/database.js", () => {
         }),
       },
     })),
-    getAdminDb: vi.fn(() => {
-      const mockJpeg = Buffer.from("FAKE_JPEG_IMAGE_HEADER_BINARY");
-
-      return {
-        from: vi.fn((table: string) => {
-          if (table === "user_profiles") {
-            const builder = createMockQueryBuilder();
-            builder.eq = vi.fn((col: string, val: string) => {
-              let role = "customer";
-              if (val === "user-seller-1") role = "seller";
-              if (val === "user-admin-1") role = "admin";
-              return createMockQueryBuilder({ role });
-            });
-            return builder;
-          }
-
-          if (table === "seller_profiles") {
-            const builder = createMockQueryBuilder();
-            builder.eq = vi.fn((col: string, val: string) => {
-              if (val === "user-seller-1") {
-                return createMockQueryBuilder({
-                  id: "seller-1",
-                  status: "approved",
-                });
-              }
-              return createMockQueryBuilder(null);
-            });
-            return builder;
-          }
-
-          if (table === "media_upload_sessions") {
-            const builder = createMockQueryBuilder();
-            builder.eq = vi.fn((col: string, val: string) => {
-              if (val === "sess-valid") {
-                return createMockQueryBuilder({
-                  id: "sess-valid",
-                  seller_id: "seller-1",
-                  uploaded_by_user_id: "user-seller-1",
-                  status: "CREATED",
-                  expected_profile: "PRODUCT",
-                  expected_mime: "image/jpeg",
-                  expected_size_bytes: 1024,
-                  original_filename: "ficus.jpg",
-                  staging_bucket: "media-staging",
-                  staging_path: "staging/seller-1/sess-valid/asset-1.tmp",
-                  expires_at: new Date(Date.now() + 600000).toISOString(),
-                  created_at: new Date().toISOString(),
-                });
-              }
-              if (val === "sess-completed") {
-                return createMockQueryBuilder({
-                  id: "sess-completed",
-                  seller_id: "seller-1",
-                  uploaded_by_user_id: "user-seller-1",
-                  status: "COMPLETED",
-                  expected_profile: "PRODUCT",
-                  resolved_asset_id: "asset-completed",
-                  created_at: new Date().toISOString(),
-                  completed_at: new Date().toISOString(),
-                });
-              }
-              if (val === "sess-expired") {
-                return createMockQueryBuilder({
-                  id: "sess-expired",
-                  seller_id: "seller-1",
-                  uploaded_by_user_id: "user-seller-1",
-                  status: "CREATED",
-                  expires_at: new Date(Date.now() - 600000).toISOString(), // Expired
-                });
-              }
-              return createMockQueryBuilder(null);
-            });
-            return builder;
-          }
-
-          if (table === "media_assets") {
-            const builder = createMockQueryBuilder();
-            builder.eq = vi.fn((col: string, val: string) => {
-              if (val === "asset-completed") {
-                return createMockQueryBuilder({
-                  id: "asset-completed",
-                  status: "READY",
-                  failure_message: null,
-                });
-              }
-              return createMockQueryBuilder(null);
-            });
-            return builder;
-          }
-
-          if (table === "media_variants") {
-            return createMockQueryBuilder([
-              {
-                variant_name: "thumbnail",
-                storage_bucket: "public-media",
-                storage_path: "products/seller-1/a1/thumbnail.webp",
-              },
-              {
-                variant_name: "medium",
-                storage_bucket: "public-media",
-                storage_path: "products/seller-1/a1/medium.webp",
-              },
-            ]);
-          }
-
-          return createMockQueryBuilder();
-        }),
-        storage: {
-          from: vi.fn((bucket: string) => ({
-            createSignedUploadUrl: vi.fn().mockResolvedValue({
-              data: { signedUrl: "https://supabase.co/storage/v1/upload/sign" },
-              error: null,
-            }),
-            download: vi.fn().mockImplementation(async () => {
-              return {
-                data: { arrayBuffer: async () => mockJpeg.buffer },
-                error: null,
-              };
-            }),
-            remove: vi.fn().mockResolvedValue({ data: [], error: null }),
-          })),
-        },
-      };
-    }),
+    getAdminDb: mockGetAdminDb,
+    getUserDb: mockGetAdminDb,
+    getDbForUser: mockGetAdminDb,
   };
 });
 

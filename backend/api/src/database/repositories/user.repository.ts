@@ -1,10 +1,10 @@
 // Floria API — User Profile Repository
-import { getAdminDb } from "../../config/database.js";
+import { getAdminDb, getDbForUser } from "../../config/database.js";
 import type { UserProfile, UserRole } from "@floria/types";
 
 export class UserRepository {
-  async findById(userId: string): Promise<UserProfile | null> {
-    const db = getAdminDb();
+  async findById(userId: string, token?: string): Promise<UserProfile | null> {
+    const db = getDbForUser(token);
     const { data, error } = await db
       .from("user_profiles")
       .select("*")
@@ -40,15 +40,17 @@ export class UserRepository {
   async updateProfile(
     userId: string,
     updates: { full_name?: string; phone?: string },
+    token?: string,
   ): Promise<UserProfile | null> {
-    return this.updateUser(userId, updates);
+    return this.updateUser(userId, updates, token);
   }
 
   async updateUser(
     userId: string,
     updates: { full_name?: string; phone?: string; role?: UserRole },
+    token?: string,
   ): Promise<UserProfile | null> {
-    const db = getAdminDb();
+    const db = getDbForUser(token);
     const payload: Record<string, any> = {
       updated_at: new Date().toISOString(),
     };

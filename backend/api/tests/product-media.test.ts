@@ -5,6 +5,8 @@ import { ProductMediaService } from "../src/products/product-media.service.js";
 vi.mock("../src/config/database.js", () => {
   return {
     getAdminDb: vi.fn(),
+    getUserDb: vi.fn(),
+    getDbForUser: vi.fn(),
   };
 });
 

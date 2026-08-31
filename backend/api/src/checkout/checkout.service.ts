@@ -1,5 +1,5 @@
 // Floria API — Checkout Service
-import { getAdminDb } from "../config/database.js";
+import { getAdminDb, getDbForUser } from "../config/database.js";
 import { orderRepository } from "../database/repositories/order.repository.js";
 import { auditRepository } from "../database/repositories/audit.repository.js";
 import { Errors } from "../utils/errors.js";
@@ -10,18 +10,20 @@ export interface CreateCheckoutInput {
   addressId?: string;
   address?: Record<string, unknown>;
   paymentMethod: "online" | "cod";
+  token?: string;
 }
 
 export class CheckoutService {
   async processCheckout(
     input: CreateCheckoutInput,
   ): Promise<{ orderId: string }> {
+    const userDb = getDbForUser(input.token);
     const db = getAdminDb();
 
     // 1. Resolve Delivery Address from DB (never trust client-side address if addressId given)
     let deliveryAddress: Record<string, unknown> | null = null;
     if (input.addressId) {
-      const { data: addr } = await db
+      const { data: addr } = await userDb
         .from("addresses")
         .select("*")
         .eq("id", input.addressId)
@@ -44,7 +46,7 @@ export class CheckoutService {
     }
 
     // 2. Fetch cart items from DB
-    const { data: cartRow } = await db
+    const { data: cartRow } = await userDb
       .from("carts")
       .select("id")
       .eq("user_id", input.userId)
@@ -52,7 +54,7 @@ export class CheckoutService {
 
     if (!cartRow) throw Errors.validation("Your cart is empty.");
 
-    const { data: cartItems } = await db
+    const { data: cartItems } = await userDb
       .from("cart_items")
       .select("product_id, quantity")
       .eq("cart_id", cartRow.id);
@@ -349,7 +351,7 @@ export class CheckoutService {
 
     // 6. Clear Cart — only for COD (cart is cleared for online after webhook payment confirmation)
     if (input.paymentMethod === "cod") {
-      await db.from("cart_items").delete().eq("cart_id", cartRow.id);
+      await userDb.from("cart_items").delete().eq("cart_id", cartRow.id);
     }
 
     // 7. Audit Log

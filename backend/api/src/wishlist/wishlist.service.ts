@@ -1,11 +1,11 @@
-import { getAdminDb } from "../config/database.js";
+import { getDbForUser } from "../config/database.js";
 import { productsService } from "../products/products.service.js";
 import { pricingService } from "../pricing/pricing.service.js";
 import { Errors } from "../utils/errors.js";
 
 export class WishlistService {
-  async getWishlist(userId: string) {
-    const db = getAdminDb();
+  async getWishlist(userId: string, token?: string) {
+    const db = getDbForUser(token);
     const { data: wishlist } = await db
       .from("wishlists")
       .select(
@@ -46,8 +46,8 @@ export class WishlistService {
     return wishlist;
   }
 
-  async addItem(userId: string, productId: string) {
-    const db = getAdminDb();
+  async addItem(userId: string, productId: string, token?: string) {
+    const db = getDbForUser(token);
 
     let { data: wishlist } = await db
       .from("wishlists")
@@ -74,11 +74,11 @@ export class WishlistService {
 
     if (error) throw Errors.database("Failed to add item to wishlist.");
 
-    return this.getWishlist(userId);
+    return this.getWishlist(userId, token);
   }
 
-  async removeItem(userId: string, productId: string) {
-    const db = getAdminDb();
+  async removeItem(userId: string, productId: string, token?: string) {
+    const db = getDbForUser(token);
 
     const { data: wishlist } = await db
       .from("wishlists")
@@ -94,18 +94,18 @@ export class WishlistService {
         .eq("product_id", productId);
     }
 
-    return this.getWishlist(userId);
+    return this.getWishlist(userId, token);
   }
 
-  async mergeWishlist(userId: string, productIds: string[]) {
+  async mergeWishlist(userId: string, productIds: string[], token?: string) {
     for (const pid of productIds) {
       try {
-        await this.addItem(userId, pid);
+        await this.addItem(userId, pid, token);
       } catch (e) {
-        // Ignore errors
+        // Skip invalid products
       }
     }
-    return this.getWishlist(userId);
+    return this.getWishlist(userId, token);
   }
 }
 

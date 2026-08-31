@@ -15,6 +15,7 @@ export class CheckoutController {
         addressId,
         address,
         paymentMethod: paymentMethod || "online",
+        token: req.token,
       });
       res.json({ success: true, data: result });
     } catch (err) {
