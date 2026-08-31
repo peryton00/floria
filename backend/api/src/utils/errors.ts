@@ -18,6 +18,7 @@ export class ApiError extends Error {
 
   constructor(code: ApiErrorCode, message: string, statusCode = 400) {
     super(message);
+    Object.setPrototypeOf(this, new.target.prototype);
     this.name = "ApiError";
     this.code = code;
     this.statusCode = statusCode;

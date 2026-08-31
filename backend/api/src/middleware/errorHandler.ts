@@ -4,17 +4,27 @@ import { ApiError } from "../utils/errors.js";
 import { logger } from "../utils/logger.js";
 
 export function errorHandler(
-  err: Error | ApiError,
+  err: Error | ApiError | any,
   _req: Request,
   res: Response,
   _next: NextFunction,
 ): void {
-  if (err instanceof ApiError) {
-    res.status(err.statusCode).json({
+  const statusCode =
+    typeof err?.statusCode === "number" && err.statusCode >= 400 && err.statusCode < 600
+      ? err.statusCode
+      : err instanceof ApiError
+        ? err.statusCode
+        : 500;
+
+  const code =
+    err?.code || (err instanceof ApiError ? err.code : "INTERNAL_ERROR");
+
+  if (statusCode < 500 || err instanceof ApiError || (err?.code && err?.code !== "INTERNAL_ERROR")) {
+    res.status(statusCode).json({
       success: false,
       error: {
-        code: err.code,
-        message: err.message,
+        code,
+        message: err.message || "An error occurred processing your request.",
       },
     });
     return;
