@@ -720,6 +720,20 @@ export class SellerRepository {
   ): Promise<any[]> {
     const db = getAdminDb();
 
+    const displayStatusMap: Record<string, string> = {
+      pending_payment: "Order Placed",
+      seller_pending: "Order Placed",
+      order_placed: "Order Placed",
+      nursery_confirmed: "Nursery Confirmed",
+      preparing: "Preparing",
+      ready_for_pickup: "Ready for Pickup",
+      picked_up: "Picked Up",
+      packing: "Packing",
+      out_for_delivery: "Out for Delivery",
+      delivered: "Delivered",
+      cancelled: "Cancelled",
+    };
+
     // Retrieve seller profile to get both seller profile ID and user_id
     const profQuery = db
       .from("seller_profiles")
@@ -732,7 +746,7 @@ export class SellerRepository {
     const targetUserId = sellerProf?.user_id || sellerId;
     const sellerName = sellerProf?.business_name || "Nursery";
 
-    // 1. Fetch order_items where seller_id_snapshot matches seller profile ID OR user ID
+    // 1. Fetch order_items where seller_id_snapshot or product.seller_id matches
     const itemsQuery = db
       .from("order_items")
       .select("*, order:orders(*), product:products(name,slug,seller_id)");
@@ -752,95 +766,96 @@ export class SellerRepository {
         )
       : ordersQuery.eq("seller_id", sellerId));
 
+    // 3. Fetch fulfillments for this seller to catch multi-vendor split orders
+    const fulQuery = db.from("seller_order_fulfillments").select("*, order:orders(*, order_items(*, product:products(name,slug,seller_id)))");
+    const { data: fulfillments } = await (typeof fulQuery.or === "function"
+      ? fulQuery.or(
+          `seller_id.eq.${targetSellerId},seller_id.eq.${targetUserId}`,
+        )
+      : fulQuery.eq("seller_id", sellerId));
+
     const orderMap = new Map<string, any>();
 
-    // Process master orders first — exclude unconfirmed pending_payment orders
-    (masterOrders || [])
-      .filter(
-        (order: any) =>
-          order &&
-          order.status !== "pending_payment" &&
-          order.status !== "cancelled",
-      )
-      .forEach((order: any) => {
-        const lineItems = (order.order_items || []).map((item: any) => {
-          const pricePaise = item.unit_price_paise_snapshot || 0;
-          const basePrice =
-            item.base_price_paise_snapshot ?? item.unit_price_paise_snapshot ?? 0;
-          const commRate =
-            item.commission_rate_snapshot ?? order.commission_rate ?? 0;
-          const commPaise =
-            item.commission_paise_snapshot ?? Math.round(basePrice * commRate);
-          const sellerNetPaise = basePrice - commPaise;
+    // Process master orders
+    (masterOrders || []).forEach((order: any) => {
+      if (!order) return;
+      const rawStatus = (order.status || "").toLowerCase().replace(/ /g, "_");
+      const mappedStatus = displayStatusMap[rawStatus] || order.status || "Order Placed";
 
-          return {
-            product: {
-              id: item.product_id,
-              name: item.product_name_snapshot || item.product?.name || "Plant",
-              slug: item.product?.slug || "plant",
-            },
-            quantity: item.quantity,
-            pricePaise,
-            base_price_paise: basePrice,
-            seller_net_paise: sellerNetPaise,
-            commission_paise: commPaise,
-          };
-        });
+      const lineItems = (order.order_items || []).map((item: any) => {
+        const pricePaise = item.unit_price_paise_snapshot || 0;
+        const basePrice =
+          item.base_price_paise_snapshot ?? item.unit_price_paise_snapshot ?? 0;
+        const commRate =
+          item.commission_rate_snapshot ?? order.commission_rate ?? 0;
+        const commPaise =
+          item.commission_paise_snapshot ?? Math.round(basePrice * commRate);
+        const sellerNetPaise = basePrice - commPaise;
 
-        const subtotalPaise =
-          lineItems.reduce(
-            (sum: number, it: any) => sum + it.pricePaise * it.quantity,
-            0,
-          ) ||
-          order.subtotal_paise ||
-          0;
-        const sellerPayoutPaise = lineItems.reduce(
-          (sum: number, it: any) => sum + it.seller_net_paise * it.quantity,
-          0,
-        );
-
-        orderMap.set(order.id, {
-          masterOrderId: order.id,
-          sellerId: targetSellerId,
-          sellerName,
-          customer: {
-            name: order.delivery_address_snapshot?.full_name || "Customer",
-            phone: order.delivery_address_snapshot?.phone || "",
-            address: order.delivery_address_snapshot || {},
+        return {
+          product: {
+            id: item.product_id,
+            name: item.product_name_snapshot || item.product?.name || "Plant",
+            slug: item.product?.slug || "plant",
           },
-          items: lineItems,
-          subtotalPaise,
-          seller_payout_paise: sellerPayoutPaise,
-          discountPaise: 0,
-          totalPaise: subtotalPaise,
-          status: order.status === "preparing" ? "Preparing" : "Order Placed",
-          masterStatus: order.status,
-          paymentMethod: order.notes?.includes("COD")
-            ? "Cash on Delivery"
-            : "Online Payment",
-          createdAt: new Date(order.created_at || Date.now()).toLocaleDateString(
-            "en-IN",
-            {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            },
-          ),
-          createdAtTimestamp: new Date(order.created_at || Date.now()).getTime(),
-        });
+          quantity: item.quantity,
+          pricePaise,
+          base_price_paise: basePrice,
+          seller_net_paise: sellerNetPaise,
+          commission_paise: commPaise,
+        };
       });
 
-    // Process order items to catch any items assigned to this seller across split orders — exclude pending_payment
-    (items || [])
-      .filter(
-        (item: any) =>
-          item.order &&
-          item.order.status !== "pending_payment" &&
-          item.order.status !== "cancelled",
-      )
-      .forEach((item: any) => {
+      const subtotalPaise =
+        lineItems.reduce(
+          (sum: number, it: any) => sum + it.pricePaise * it.quantity,
+          0,
+        ) ||
+        order.subtotal_paise ||
+        0;
+      const sellerPayoutPaise = lineItems.reduce(
+        (sum: number, it: any) => sum + it.seller_net_paise * it.quantity,
+        0,
+      );
+
+      orderMap.set(order.id, {
+        masterOrderId: order.id,
+        sellerId: targetSellerId,
+        sellerName,
+        customer: {
+          name: order.delivery_address_snapshot?.full_name || "Customer",
+          phone: order.delivery_address_snapshot?.phone || "",
+          address: order.delivery_address_snapshot || {},
+        },
+        items: lineItems,
+        subtotalPaise,
+        seller_payout_paise: sellerPayoutPaise,
+        discountPaise: 0,
+        totalPaise: subtotalPaise,
+        status: mappedStatus,
+        masterStatus: order.status,
+        paymentMethod: order.notes?.includes("COD")
+          ? "Cash on Delivery"
+          : "Online Payment",
+        createdAt: new Date(order.created_at || Date.now()).toLocaleDateString(
+          "en-IN",
+          {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          },
+        ),
+        createdAtTimestamp: new Date(order.created_at || Date.now()).getTime(),
+      });
+    });
+
+    // Process order items to catch any items assigned to this seller across split orders
+    (items || []).forEach((item: any) => {
       const order = item.order;
       if (!order) return;
+
+      const rawStatus = (order.status || "").toLowerCase().replace(/ /g, "_");
+      const mappedStatus = displayStatusMap[rawStatus] || order.status || "Order Placed";
 
       if (!orderMap.has(order.id)) {
         orderMap.set(order.id, {
@@ -856,7 +871,7 @@ export class SellerRepository {
           subtotalPaise: 0,
           discountPaise: 0,
           totalPaise: 0,
-          status: order.status === "preparing" ? "Preparing" : "Order Placed",
+          status: mappedStatus,
           masterStatus: order.status,
           paymentMethod: order.notes?.includes("COD")
             ? "Cash on Delivery"
@@ -907,17 +922,54 @@ export class SellerRepository {
       }
     });
 
-    // Apply status overrides from seller_order_fulfillments table
-    const fulQuery = db.from("seller_order_fulfillments").select("*");
-    const { data: fulfillments } = await (typeof fulQuery.or === "function"
-      ? fulQuery.or(
-          `seller_id.eq.${targetSellerId},seller_id.eq.${targetUserId}`,
-        )
-      : fulQuery.eq("seller_id", sellerId));
+    // Also include any fulfillment-tracked orders that might have been missed
+    (fulfillments || []).forEach((f: any) => {
+      if (f.order && !orderMap.has(f.order_id)) {
+        const order = f.order;
+        const rawStatus = (order.status || "").toLowerCase().replace(/ /g, "_");
+        const mappedStatus = displayStatusMap[rawStatus] || order.status || "Order Placed";
 
+        orderMap.set(order.id, {
+          masterOrderId: order.id,
+          sellerId: targetSellerId,
+          sellerName,
+          customer: {
+            name: order.delivery_address_snapshot?.full_name || "Customer",
+            phone: order.delivery_address_snapshot?.phone || "",
+            address: order.delivery_address_snapshot || {},
+          },
+          items: [],
+          subtotalPaise: order.subtotal_paise || 0,
+          discountPaise: 0,
+          totalPaise: order.total_paise || 0,
+          status: mappedStatus,
+          masterStatus: order.status,
+          paymentMethod: order.notes?.includes("COD")
+            ? "Cash on Delivery"
+            : "Online Payment",
+          createdAt: new Date(
+            order.created_at || Date.now(),
+          ).toLocaleDateString("en-IN", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          }),
+          createdAtTimestamp: new Date(
+            order.created_at || Date.now(),
+          ).getTime(),
+        });
+      }
+    });
+
+    // Apply status overrides from seller_order_fulfillments table
     if (fulfillments) {
       const fulMap = new Map<string, string>();
-      fulfillments.forEach((f: any) => fulMap.set(f.order_id, f.status));
+      fulfillments.forEach((f: any) => {
+        if (f.order_id && f.status) {
+          const mapped = displayStatusMap[f.status.toLowerCase().replace(/ /g, "_")] || f.status;
+          fulMap.set(f.order_id, mapped);
+        }
+      });
       orderMap.forEach((view, orderId) => {
         if (fulMap.has(orderId)) {
           view.status = fulMap.get(orderId)!;
@@ -925,13 +977,13 @@ export class SellerRepository {
       });
     }
 
-    // ponytail: fallback intentionally removed — sellers with no orders see an empty list (correct tenant isolation)
-
     let results = Array.from(orderMap.values());
     if (filters?.status && filters.status !== "all") {
-      results = results.filter(
-        (o) => o.status.toLowerCase() === filters.status!.toLowerCase(),
-      );
+      const filterLower = filters.status.toLowerCase().replace(/ /g, "_");
+      results = results.filter((o) => {
+        const oStatusLower = (o.status || "").toLowerCase().replace(/ /g, "_");
+        return oStatusLower === filterLower || oStatusLower === filters.status!.toLowerCase();
+      });
     }
 
     if (filters?.search) {
@@ -970,11 +1022,7 @@ export class SellerRepository {
       .eq("id", orderId)
       .maybeSingle();
 
-    if (
-      !order ||
-      order.status === "pending_payment" ||
-      order.status === "cancelled"
-    ) {
+    if (!order) {
       return null;
     }
 
@@ -1203,23 +1251,28 @@ export class SellerRepository {
     let totalRevenuePaise = 0;
 
     orders.forEach((o: any) => {
-      const s = o.status;
+      const s = (o.status || "").toLowerCase().replace(/ /g, "_");
       if (
-        s === "Order Placed" ||
         s === "order_placed" ||
-        s === "seller_pending"
-      )
+        s === "seller_pending" ||
+        s === "pending_payment"
+      ) {
         newOrders++;
-      else if (
-        s === "Nursery Confirmed" ||
-        s === "Preparing" ||
+      } else if (
+        s === "nursery_confirmed" ||
         s === "preparing"
-      )
+      ) {
         preparingOrders++;
-      else if (s === "Ready for Pickup" || s === "ready_for_pickup")
+      } else if (s === "ready_for_pickup") {
         readyForPickupOrders++;
-      else if (s === "Picked Up" || s === "Delivered" || s === "delivered")
+      } else if (
+        s === "picked_up" ||
+        s === "packing" ||
+        s === "out_for_delivery" ||
+        s === "delivered"
+      ) {
         completedOrders++;
+      }
 
       totalRevenuePaise += o.totalPaise || 0;
     });

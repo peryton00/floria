@@ -103,15 +103,28 @@ function OrdersContent() {
 
   const filteredOrders = useMemo(() => {
     return orders.filter((o) => {
-      if (statusParam !== "all" && o.status.toLowerCase() !== statusParam.toLowerCase()) {
-        return false;
+      if (statusParam !== "all") {
+        const pLower = statusParam.toLowerCase();
+        const oLower = (o.status || "").toLowerCase();
+        if (pLower === "picked up" || pLower === "completed") {
+          if (
+            oLower !== "picked up" &&
+            oLower !== "delivered" &&
+            oLower !== "packing" &&
+            oLower !== "out for delivery"
+          ) {
+            return false;
+          }
+        } else if (oLower !== pLower) {
+          return false;
+        }
       }
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
         const matchesId = o.masterOrderId?.toLowerCase().includes(q);
         const matchesCustomer = o.customer?.name?.toLowerCase().includes(q);
         const matchesProduct = o.items?.some((item: any) =>
-          item.product?.name?.toLowerCase().includes(q)
+          item.product?.name?.toLowerCase().includes(q),
         );
         if (!matchesId && !matchesCustomer && !matchesProduct) return false;
       }
@@ -145,7 +158,15 @@ function OrdersContent() {
     { key: "Nursery Confirmed", label: "Confirmed", count: orders.filter((o) => o.status === "Nursery Confirmed").length },
     { key: "Preparing", label: "Preparing", count: orders.filter((o) => o.status === "Preparing").length },
     { key: "Ready for Pickup", label: "Ready", count: orders.filter((o) => o.status === "Ready for Pickup").length },
-    { key: "Picked Up", label: "Completed", count: orders.filter((o) => o.status === "Picked Up" || o.status === "Delivered").length },
+    {
+      key: "Picked Up",
+      label: "Completed",
+      count: orders.filter((o) => {
+        const s = (o.status || "").toLowerCase();
+        return s === "picked up" || s === "delivered" || s === "packing" || s === "out for delivery";
+      }).length,
+    },
+    { key: "Cancelled", label: "Cancelled", count: orders.filter((o) => o.status === "Cancelled").length },
   ];
 
   return (
