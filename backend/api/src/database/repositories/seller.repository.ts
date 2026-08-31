@@ -32,13 +32,11 @@ export class SellerRepository {
 
   async findById(sellerId: string): Promise<SellerProfile | null> {
     const db = getAdminDb();
-    const { data, error } = await db
-      .from("seller_profiles")
-      .select("*")
-      .eq("id", sellerId)
-      .maybeSingle();
+    const q = db.from("seller_profiles").select("*");
+    const { data } = await (typeof q.or === "function"
+      ? q.or(`id.eq.${sellerId},user_id.eq.${sellerId}`).maybeSingle()
+      : q.eq("id", sellerId).maybeSingle());
 
-    if (error || !data) return null;
     return data as SellerProfile;
   }
 
@@ -267,6 +265,14 @@ export class SellerRepository {
       const sellerInv = invMap.get(p.id);
       if (sellerInv) {
         return { ...p, inventory: [sellerInv] };
+      }
+      if (Array.isArray(p.inventory)) {
+        const filteredInv = p.inventory.filter(
+          (inv: any) =>
+            inv.seller_id === targetSellerId ||
+            inv.seller_id === targetUserId,
+        );
+        return { ...p, inventory: filteredInv };
       }
       return p;
     });
@@ -782,36 +788,45 @@ export class SellerRepository {
       const rawStatus = (order.status || "").toLowerCase().replace(/ /g, "_");
       const mappedStatus = displayStatusMap[rawStatus] || order.status || "Order Placed";
 
-      const lineItems = (order.order_items || []).map((item: any) => {
-        const pricePaise = item.unit_price_paise_snapshot || 0;
-        const basePrice =
-          item.base_price_paise_snapshot ?? item.unit_price_paise_snapshot ?? 0;
-        const commRate =
-          item.commission_rate_snapshot ?? order.commission_rate ?? 0;
-        const commPaise =
-          item.commission_paise_snapshot ?? Math.round(basePrice * commRate);
-        const sellerNetPaise = basePrice - commPaise;
+      const lineItems = (order.order_items || [])
+        .filter((item: any) => {
+          const itemSeller = item.seller_id_snapshot || item.product?.seller_id;
+          if (itemSeller) {
+            return itemSeller === targetSellerId || itemSeller === targetUserId;
+          }
+          return order.seller_id === targetSellerId || order.seller_id === targetUserId;
+        })
+        .map((item: any) => {
+          const pricePaise = item.unit_price_paise_snapshot || 0;
+          const basePrice =
+            item.base_price_paise_snapshot ?? item.unit_price_paise_snapshot ?? 0;
+          const commRate =
+            item.commission_rate_snapshot ?? order.commission_rate ?? 0;
+          const commPaise =
+            item.commission_paise_snapshot ?? Math.round(basePrice * commRate);
+          const sellerNetPaise = basePrice - commPaise;
 
-        return {
-          product: {
-            id: item.product_id,
-            name: item.product_name_snapshot || item.product?.name || "Plant",
-            slug: item.product?.slug || "plant",
-          },
-          quantity: item.quantity,
-          pricePaise,
-          base_price_paise: basePrice,
-          seller_net_paise: sellerNetPaise,
-          commission_paise: commPaise,
-        };
-      });
+          return {
+            product: {
+              id: item.product_id,
+              name: item.product_name_snapshot || item.product?.name || "Plant",
+              slug: item.product?.slug || "plant",
+            },
+            quantity: item.quantity,
+            pricePaise,
+            base_price_paise: basePrice,
+            seller_net_paise: sellerNetPaise,
+            commission_paise: commPaise,
+          };
+        });
+
+      if (lineItems.length === 0) return;
 
       const subtotalPaise =
         lineItems.reduce(
           (sum: number, it: any) => sum + it.pricePaise * it.quantity,
           0,
         ) ||
-        order.subtotal_paise ||
         0;
       const sellerPayoutPaise = lineItems.reduce(
         (sum: number, it: any) => sum + it.seller_net_paise * it.quantity,
@@ -853,6 +868,11 @@ export class SellerRepository {
     (items || []).forEach((item: any) => {
       const order = item.order;
       if (!order) return;
+
+      const itemSeller = item.seller_id_snapshot || item.product?.seller_id;
+      if (itemSeller && itemSeller !== targetSellerId && itemSeller !== targetUserId) {
+        return;
+      }
 
       const rawStatus = (order.status || "").toLowerCase().replace(/ /g, "_");
       const mappedStatus = displayStatusMap[rawStatus] || order.status || "Order Placed";
@@ -929,6 +949,47 @@ export class SellerRepository {
         const rawStatus = (order.status || "").toLowerCase().replace(/ /g, "_");
         const mappedStatus = displayStatusMap[rawStatus] || order.status || "Order Placed";
 
+        const lineItems = (order.order_items || [])
+          .filter((item: any) => {
+            const itemSeller = item.seller_id_snapshot || item.product?.seller_id;
+            return itemSeller === targetSellerId || itemSeller === targetUserId;
+          })
+          .map((item: any) => {
+            const pricePaise = item.unit_price_paise_snapshot || 0;
+            const basePrice =
+              item.base_price_paise_snapshot ?? item.unit_price_paise_snapshot ?? 0;
+            const commRate =
+              item.commission_rate_snapshot ?? order.commission_rate ?? 0;
+            const commPaise =
+              item.commission_paise_snapshot ?? Math.round(basePrice * commRate);
+            const sellerNetPaise = basePrice - commPaise;
+
+            return {
+              product: {
+                id: item.product_id,
+                name: item.product_name_snapshot || item.product?.name || "Plant",
+                slug: item.product?.slug || "plant",
+              },
+              quantity: item.quantity,
+              pricePaise,
+              base_price_paise: basePrice,
+              seller_net_paise: sellerNetPaise,
+              commission_paise: commPaise,
+            };
+          });
+
+        if (lineItems.length === 0) return;
+
+        const subtotalPaise =
+          lineItems.reduce(
+            (sum: number, it: any) => sum + it.pricePaise * it.quantity,
+            0,
+          ) || 0;
+        const sellerPayoutPaise = lineItems.reduce(
+          (sum: number, it: any) => sum + it.seller_net_paise * it.quantity,
+          0,
+        );
+
         orderMap.set(order.id, {
           masterOrderId: order.id,
           sellerId: targetSellerId,
@@ -938,10 +999,11 @@ export class SellerRepository {
             phone: order.delivery_address_snapshot?.phone || "",
             address: order.delivery_address_snapshot || {},
           },
-          items: [],
-          subtotalPaise: order.subtotal_paise || 0,
+          items: lineItems,
+          subtotalPaise,
+          seller_payout_paise: sellerPayoutPaise,
           discountPaise: 0,
-          totalPaise: order.total_paise || 0,
+          totalPaise: subtotalPaise,
           status: mappedStatus,
           masterStatus: order.status,
           paymentMethod: order.notes?.includes("COD")
