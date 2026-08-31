@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
+import { FloriaIcon } from "@floria/icons";
 import { api } from "../../lib/api";
 import { useSellerAuth } from "../../lib/contexts/SellerAuthContext";
 import { useSellerFeedback } from "../../lib/contexts/SellerFeedbackContext";
@@ -44,7 +44,7 @@ export default function InventoryManagementScreen() {
       <View style={[styles.screen, { paddingTop: insets.top }]}>
         <View style={styles.topBar}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={22} color={Colors.forest} />
+            <FloriaIcon name="arrow_left" size={20} color={Colors.forest} />
           </TouchableOpacity>
           <Text style={styles.pageTitle}>Stock & Inventory</Text>
         </View>
@@ -179,14 +179,14 @@ export default function InventoryManagementScreen() {
           }}
           ListEmptyComponent={
             <EmptyState
-              icon="file-tray-stacked-outline"
+              icon="package"
               title="No items in this stock view"
               description={
                 activeFilter !== "all"
                   ? `No plants match the "${FILTERS.find((f) => f.key === activeFilter)?.label}" filter.`
                   : "Add plants to your nursery catalog to manage their stock levels."
               }
-              actionLabel={activeFilter === "all" ? "+ Add Plant" : undefined}
+              actionLabel={activeFilter === "all" ? "+ List Product" : undefined}
               onAction={
                 activeFilter === "all"
                   ? () => router.push("/products/new" as any)

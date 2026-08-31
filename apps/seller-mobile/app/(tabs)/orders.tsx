@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
+import { FloriaIcon } from "@floria/icons";
 import { api } from "../../lib/api";
 import { useSellerAuth } from "../../lib/contexts/SellerAuthContext";
 import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
@@ -165,7 +165,7 @@ export default function SellerOrdersScreen() {
               lineItem.product?.name || lineItem.product_name || "Botanical Specimen";
             return (
               <View key={idx} style={styles.itemLine}>
-                <Ionicons name="leaf-outline" size={12} color={Colors.forest} style={{ marginTop: 2 }} />
+                <FloriaIcon name="leaf" size={12} color={Colors.forest} style={{ marginTop: 2 }} />
                 <Text style={styles.itemLineText} numberOfLines={1}>
                   {lineItem.quantity} × {plantName}
                 </Text>
@@ -187,7 +187,7 @@ export default function SellerOrdersScreen() {
                 ? "Manage Fulfillment"
                 : "View Order"}
             </Text>
-            <Ionicons name="chevron-forward" size={14} color={Colors.forest} />
+            <FloriaIcon name="chevron_right" size={14} color={Colors.forest} />
           </View>
         </View>
       </TouchableOpacity>
@@ -204,7 +204,7 @@ export default function SellerOrdersScreen() {
       {/* ── Search Bar ── */}
       <View style={styles.searchContainer}>
         <View style={styles.searchInputWrap}>
-          <Ionicons name="search-outline" size={18} color={Colors.inkMuted} />
+          <FloriaIcon name="search" size={18} color={Colors.inkMuted} />
           <TextInput
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -215,7 +215,7 @@ export default function SellerOrdersScreen() {
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={() => setSearchQuery("")}>
-              <Ionicons name="close-circle" size={16} color={Colors.inkMuted} />
+              <FloriaIcon name="close" size={16} color={Colors.inkMuted} />
             </TouchableOpacity>
           )}
         </View>
@@ -271,7 +271,7 @@ export default function SellerOrdersScreen() {
           }
           ListEmptyComponent={
             <EmptyState
-              icon="receipt-outline"
+              icon="orders"
               title="No orders found"
               description={
                 searchQuery

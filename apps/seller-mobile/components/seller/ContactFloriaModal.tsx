@@ -9,7 +9,7 @@ import {
   Platform,
   Alert,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { FloriaIcon } from "@floria/icons";
 import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
 
 interface ContactFloriaModalProps {
@@ -75,7 +75,7 @@ export function ContactFloriaModal({
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.iconCircle}>
-              <Ionicons name="headset" size={24} color="#2D5A3C" />
+              <FloriaIcon name="phone" size={24} color={Colors.forest} />
             </View>
             <Text style={styles.title}>Floria Partner Care</Text>
             <Text style={styles.subtitle}>
@@ -92,13 +92,13 @@ export function ContactFloriaModal({
               onPress={handleCall}
             >
               <View style={[styles.actionIconCircle, { backgroundColor: "#EAF2EC" }]}>
-                <Ionicons name="call" size={20} color="#2D5A3C" />
+                <FloriaIcon name="phone" size={20} color={Colors.forest} />
               </View>
               <View style={styles.actionTextContainer}>
                 <Text style={styles.actionTitle}>Call Partner Desk</Text>
                 <Text style={styles.actionSub}>+91 800 123 4567 • Mon-Sat, 9am - 7pm</Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
+              <FloriaIcon name="chevron_right" size={16} color={Colors.inkMuted} />
             </TouchableOpacity>
 
             {/* WhatsApp */}
@@ -108,13 +108,13 @@ export function ContactFloriaModal({
               onPress={handleWhatsApp}
             >
               <View style={[styles.actionIconCircle, { backgroundColor: "#E6F7ED" }]}>
-                <Ionicons name="logo-whatsapp" size={20} color="#16A34A" />
+                <FloriaIcon name="phone" size={20} color={Colors.success} />
               </View>
               <View style={styles.actionTextContainer}>
                 <Text style={styles.actionTitle}>Chat on WhatsApp</Text>
                 <Text style={styles.actionSub}>Instant support & document assistance</Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
+              <FloriaIcon name="chevron_right" size={16} color={Colors.inkMuted} />
             </TouchableOpacity>
 
             {/* Email */}
@@ -124,13 +124,13 @@ export function ContactFloriaModal({
               onPress={handleEmail}
             >
               <View style={[styles.actionIconCircle, { backgroundColor: "#F1F5F9" }]}>
-                <Ionicons name="mail" size={20} color="#475569" />
+                <FloriaIcon name="mail" size={20} color={Colors.inkMuted} />
               </View>
               <View style={styles.actionTextContainer}>
                 <Text style={styles.actionTitle}>Email Partner Support</Text>
                 <Text style={styles.actionSub}>care@floria.in • Response in 2-4 hrs</Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
+              <FloriaIcon name="chevron_right" size={16} color={Colors.inkMuted} />
             </TouchableOpacity>
           </View>
 

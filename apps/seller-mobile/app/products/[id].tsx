@@ -11,9 +11,9 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
+import { FloriaIcon } from "@floria/icons";
 import { api } from "../../lib/api";
 import { useSellerAuth } from "../../lib/contexts/SellerAuthContext";
 import { useSellerFeedback } from "../../lib/contexts/SellerFeedbackContext";
@@ -116,7 +116,7 @@ export default function EditProductScreen() {
       <View style={[styles.screen, { paddingTop: insets.top }]}>
         <View style={styles.topBar}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={22} color={Colors.forest} />
+            <FloriaIcon name="arrow_left" size={20} color={Colors.forest} />
           </TouchableOpacity>
           <Text style={styles.pageTitle}>Edit Plant Listing</Text>
         </View>
@@ -226,7 +226,7 @@ export default function EditProductScreen() {
   if (!product) {
     return (
       <View style={[styles.centerScreen, { paddingTop: insets.top }]}>
-        <Ionicons name="alert-circle-outline" size={48} color={Colors.inkMuted} />
+        <FloriaIcon name="warning" size={48} color={Colors.inkMuted} />
         <Text style={styles.notFoundText}>Product not found</Text>
         <Button
           label="Back to Products"
@@ -373,7 +373,7 @@ export default function EditProductScreen() {
           onPress={handleDeleteListing}
           style={styles.deleteButton}
         >
-          <Ionicons name="trash-outline" size={18} color={Colors.error} />
+          <FloriaIcon name="delete" size={18} color={Colors.error} />
           <Text style={styles.deleteButtonText}>Remove from Nursery Catalog</Text>
         </TouchableOpacity>
       </ScrollView>

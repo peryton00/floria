@@ -4,9 +4,14 @@
   "private": true,
   "description": "Floria Canonical Phosphor Icon System & Semantic Registry",
   "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "react-native": "./src/native/index.ts",
   "types": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts",
+    ".": {
+      "react-native": "./src/native/index.ts",
+      "default": "./src/index.ts"
+    },
     "./react": "./src/react/index.ts",
     "./native": "./src/native/index.ts"
   },
@@ -15,9 +20,13 @@
     "@types/react": "^19"
   },
   "peerDependencies": {
+    "@expo/vector-icons": "*",
     "react": ">=18.0.0"
   },
   "peerDependenciesMeta": {
+    "@expo/vector-icons": {
+      "optional": true
+    },
     "react": {
       "optional": true
     }

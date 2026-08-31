@@ -11,7 +11,7 @@ import {
   Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
+import { FloriaIcon } from "@floria/icons";
 import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
 import { Button } from "../../components/ui/Button";
 import { api } from "../../lib/api";
@@ -61,7 +61,7 @@ export default function SellerResetPasswordScreen() {
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
           <View style={styles.logo}>
-            <Ionicons name="lock-closed" size={28} color={Colors.white} />
+            <FloriaIcon name="sparkles" size={28} color={Colors.white} />
           </View>
           <Text style={styles.title}>Reset Password</Text>
           <Text style={styles.subtitle}>
@@ -121,7 +121,7 @@ export default function SellerResetPasswordScreen() {
             </>
           ) : (
             <View style={styles.successBox}>
-              <Ionicons name="checkmark-circle" size={44} color="#2D5A3C" style={styles.checkIcon} />
+              <FloriaIcon name="check_circle" size={44} color={Colors.forest} style={styles.checkIcon} />
               <Text style={styles.successTitle}>Password Updated</Text>
               <Text style={styles.successText}>
                 Your password has been changed successfully. You can now log in with your new credentials.

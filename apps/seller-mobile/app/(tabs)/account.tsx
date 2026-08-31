@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
+import { FloriaIcon } from "@floria/icons";
 import { useSellerAuth } from "../../lib/contexts/SellerAuthContext";
 import { useSellerFeedback } from "../../lib/contexts/SellerFeedbackContext";
 import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
@@ -72,8 +72,8 @@ export default function SellerAccountScreen() {
               {seller?.businessName || "Nursery Partner"}
             </Text>
             <View style={styles.verificationBadge}>
-              <Ionicons
-                name={isVerified ? "checkmark-circle" : "time-outline"}
+              <FloriaIcon
+                name={isVerified ? "check_circle" : "clock"}
                 size={14}
                 color={isVerified ? Colors.success : Colors.warning}
               />
@@ -100,13 +100,13 @@ export default function SellerAccountScreen() {
               style={styles.menuRow}
             >
               <View style={styles.iconWrap}>
-                <Ionicons name="business-outline" size={20} color={Colors.forest} />
+                <FloriaIcon name="nursery" size={20} color={Colors.forest} />
               </View>
               <View style={styles.menuTextWrap}>
                 <Text style={styles.menuTitle}>Nursery Details</Text>
                 <Text style={styles.menuSubtitle}>Location, contact & business info</Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color={Colors.inkMuted} />
+              <FloriaIcon name="chevron_right" size={16} color={Colors.inkMuted} />
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -115,13 +115,13 @@ export default function SellerAccountScreen() {
               style={[styles.menuRow, styles.lastRow]}
             >
               <View style={styles.iconWrap}>
-                <Ionicons name="time-outline" size={20} color={Colors.forest} />
+                <FloriaIcon name="clock" size={20} color={Colors.forest} />
               </View>
               <View style={styles.menuTextWrap}>
                 <Text style={styles.menuTitle}>Operating Hours</Text>
                 <Text style={styles.menuSubtitle}>Set daily open & closing times</Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color={Colors.inkMuted} />
+              <FloriaIcon name="chevron_right" size={16} color={Colors.inkMuted} />
             </TouchableOpacity>
           </View>
         </View>
@@ -136,13 +136,13 @@ export default function SellerAccountScreen() {
               style={styles.menuRow}
             >
               <View style={styles.iconWrap}>
-                <Ionicons name="card-outline" size={20} color={Colors.forest} />
+                <FloriaIcon name="credit_card" size={20} color={Colors.forest} />
               </View>
               <View style={styles.menuTextWrap}>
                 <Text style={styles.menuTitle}>Settlement Account</Text>
                 <Text style={styles.menuSubtitle}>Cashfree linked account & KYC status</Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color={Colors.inkMuted} />
+              <FloriaIcon name="chevron_right" size={16} color={Colors.inkMuted} />
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -151,13 +151,13 @@ export default function SellerAccountScreen() {
               style={[styles.menuRow, styles.lastRow]}
             >
               <View style={styles.iconWrap}>
-                <Ionicons name="wallet-outline" size={20} color={Colors.forest} />
+                <FloriaIcon name="wallet" size={20} color={Colors.forest} />
               </View>
               <View style={styles.menuTextWrap}>
                 <Text style={styles.menuTitle}>Transaction History</Text>
                 <Text style={styles.menuSubtitle}>Payouts, deductions & transfers</Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color={Colors.inkMuted} />
+              <FloriaIcon name="chevron_right" size={16} color={Colors.inkMuted} />
             </TouchableOpacity>
           </View>
         </View>
@@ -172,13 +172,13 @@ export default function SellerAccountScreen() {
               style={[styles.menuRow, styles.lastRow]}
             >
               <View style={styles.iconWrap}>
-                <Ionicons name="notifications-outline" size={20} color={Colors.forest} />
+                <FloriaIcon name="bell" size={20} color={Colors.forest} />
               </View>
               <View style={styles.menuTextWrap}>
                 <Text style={styles.menuTitle}>Notification Preferences</Text>
                 <Text style={styles.menuSubtitle}>Orders, stock alerts & payout chimes</Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color={Colors.inkMuted} />
+              <FloriaIcon name="chevron_right" size={16} color={Colors.inkMuted} />
             </TouchableOpacity>
           </View>
         </View>
@@ -193,13 +193,13 @@ export default function SellerAccountScreen() {
               style={styles.menuRow}
             >
               <View style={styles.iconWrap}>
-                <Ionicons name="headset-outline" size={20} color={Colors.forest} />
+                <FloriaIcon name="phone" size={20} color={Colors.forest} />
               </View>
               <View style={styles.menuTextWrap}>
                 <Text style={styles.menuTitle}>Contact Floria Care</Text>
                 <Text style={styles.menuSubtitle}>Call, WhatsApp, or email partner desk</Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color={Colors.inkMuted} />
+              <FloriaIcon name="chevron_right" size={16} color={Colors.inkMuted} />
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -208,13 +208,13 @@ export default function SellerAccountScreen() {
               style={[styles.menuRow, styles.lastRow]}
             >
               <View style={styles.iconWrap}>
-                <Ionicons name="document-text-outline" size={20} color={Colors.forest} />
+                <FloriaIcon name="document" size={20} color={Colors.forest} />
               </View>
               <View style={styles.menuTextWrap}>
                 <Text style={styles.menuTitle}>Partner Verification Desk</Text>
                 <Text style={styles.menuSubtitle}>Floria partner agreement & verification support</Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color={Colors.inkMuted} />
+              <FloriaIcon name="chevron_right" size={16} color={Colors.inkMuted} />
             </TouchableOpacity>
           </View>
         </View>
@@ -225,7 +225,7 @@ export default function SellerAccountScreen() {
           onPress={handleLogout}
           style={styles.logoutButton}
         >
-          <Ionicons name="log-out-outline" size={20} color={Colors.error} />
+          <FloriaIcon name="logout" size={20} color={Colors.error} />
           <Text style={styles.logoutText}>Sign Out of Nursery</Text>
         </TouchableOpacity>
       </ScrollView>

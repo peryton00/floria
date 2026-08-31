@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
+import { FloriaIcon } from "@floria/icons";
 import { api } from "../../lib/api";
 import { useSellerFeedback } from "../../lib/contexts/SellerFeedbackContext";
 import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
@@ -28,60 +28,33 @@ import {
   MobileProductImage,
 } from "../../components/seller";
 
-export default function AddPlantScreen() {
+export default function ListProductScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { seller } = useSellerAuth();
   const { showSuccess, showError } = useSellerFeedback();
 
-  const rawStatus = String(seller?.status || (seller as any)?.sellerStatus || "").toLowerCase();
-  const isApproved = rawStatus === "approved" || rawStatus === "active";
+  const isApproved =
+    seller?.status === "approved" || seller?.status === "active";
 
-  // Tab Mode: 'CATALOG' (Choose existing Floria product - Canonical Flow) vs 'CUSTOM' (Add new unlisted species)
-  const [creationMode, setCreationMode] = useState<"CUSTOM" | "CATALOG">("CATALOG");
+  // Step State: 1 = Choose Canonical Product, 2 = Set Nursery Listing Details
+  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
 
-  // Catalog Categories
-  const [categories, setCategories] = useState<any[]>([]);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
-
-  // Custom Product Form State
-  const [productName, setProductName] = useState<string>("");
-  const [botanicalName, setBotanicalName] = useState<string>("");
-  const [sku, setSku] = useState<string>("");
-  const [priceRupees, setPriceRupees] = useState<string>("");
-  const [stockQuantity, setStockQuantity] = useState<string>("10");
-  const [lowStockThreshold, setLowStockThreshold] = useState<string>("5");
-  const [description, setDescription] = useState<string>("");
-  const [careInstructions, setCareInstructions] = useState<string>("");
-  const [status, setStatus] = useState<"active" | "draft">("active");
-
-  // Images uploaded from device via Floria Image Engine
-  const [images, setImages] = useState<MobileProductImage[]>([]);
-  const [submitting, setSubmitting] = useState<boolean>(false);
-
-  // Quick-Add Catalog Search State
+  // Search State
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [catalogResults, setCatalogResults] = useState<any[]>([]);
   const [searchLoading, setSearchLoading] = useState<boolean>(false);
-  const [selectedCatalogProduct, setSelectedCatalogProduct] = useState<any | null>(null);
 
-  // Load categories on mount
-  useEffect(() => {
-    async function loadCategories() {
-      try {
-        const res = await api.getCategories();
-        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
-          setCategories(res.data);
-          setSelectedCategoryId(res.data[0].id);
-        }
-      } catch (e) {
-        console.warn("[AddPlant] Categories load error:", e);
-      }
-    }
-    loadCategories();
-  }, []);
+  // Listing Form State
+  const [priceRupees, setPriceRupees] = useState<string>("");
+  const [stockQuantity, setStockQuantity] = useState<string>("10");
+  const [lowStockThreshold, setLowStockThreshold] = useState<string>("5");
+  const [sku, setSku] = useState<string>("");
+  const [status, setStatus] = useState<"active" | "draft">("active");
+  const [images, setImages] = useState<MobileProductImage[]>([]);
+  const [submitting, setSubmitting] = useState<boolean>(false);
 
-  // Quick-add search
+  // Initial catalog fetch on mount
   const searchCatalog = useCallback(async (query: string) => {
     try {
       setSearchLoading(true);
@@ -95,7 +68,7 @@ export default function AddPlantScreen() {
         setCatalogResults([]);
       }
     } catch (err) {
-      console.warn("[AddPlant] Search error:", err);
+      console.warn("[ListProduct] Search error:", err);
       setCatalogResults([]);
     } finally {
       setSearchLoading(false);
@@ -103,695 +76,373 @@ export default function AddPlantScreen() {
   }, []);
 
   useEffect(() => {
-    if (creationMode === "CATALOG") {
-      searchCatalog(searchQuery);
+    searchCatalog("");
+  }, [searchCatalog]);
+
+  const handleSearchSubmit = () => {
+    searchCatalog(searchQuery);
+  };
+
+  const handleSelectProduct = (prod: any) => {
+    setSelectedProduct(prod);
+    // Prepopulate price suggestion if available
+    const existingPaise = prod.base_price_paise || prod.price_paise || 0;
+    if (existingPaise > 0) {
+      setPriceRupees(String(Math.round(existingPaise / 100)));
     }
-  }, [searchQuery, creationMode, searchCatalog]);
+    // Prepopulate SKU prefix
+    const slug = prod.slug || prod.name?.toLowerCase().replace(/\s+/g, "-") || "specimen";
+    setSku(`NUR-${slug.substring(0, 8).toUpperCase()}`);
+  };
+
+  const handleSubmitListing = async () => {
+    if (!selectedProduct) {
+      Alert.alert("Selection Required", "Please choose a botanical specimen to list.");
+      return;
+    }
+
+    const priceNum = parseFloat(priceRupees);
+    if (isNaN(priceNum) || priceNum <= 0) {
+      Alert.alert("Invalid Price", "Please enter a valid price in rupees.");
+      return;
+    }
+
+    const stockNum = parseInt(stockQuantity, 10);
+    if (isNaN(stockNum) || stockNum < 0) {
+      Alert.alert("Invalid Stock", "Please enter a valid stock quantity.");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      const payload = {
+        product_id: selectedProduct.id,
+        price_paise: Math.round(priceNum * 100),
+        stock_quantity: stockNum,
+        low_stock_threshold: parseInt(lowStockThreshold, 10) || 5,
+        sku: sku.trim() || undefined,
+        status,
+        images: images
+          .filter((img) => img.status === "COMPLETED" || img.status === "READY" || img.assetId)
+          .map((img, idx) => ({
+            asset_id: img.assetId,
+            url: img.url,
+            is_primary: idx === 0,
+          })),
+      };
+
+      const res = await api.createSellerProduct(payload);
+
+      if (res.success) {
+        showSuccess(`${selectedProduct.name} is now listed for sale.`);
+        router.replace("/(tabs)/products" as any);
+      } else {
+        showError(res.error?.message || "Could not create listing. Please try again.");
+      }
+    } catch (e: any) {
+      showError(e.message || "An unexpected error occurred.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   if (!isApproved) {
     return (
       <View style={[styles.screen, { paddingTop: insets.top }]}>
         <View style={styles.topBar}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={22} color={Colors.forest} />
+            <FloriaIcon name="arrow_left" size={20} color={Colors.forest} />
           </TouchableOpacity>
-          <Text style={styles.pageTitle}>Add Plant Product</Text>
+          <Text style={styles.topBarTitle}>List Product</Text>
+          <View style={{ width: 36 }} />
         </View>
-        <SellerPendingVerificationShield
-          seller={seller}
-          featureName="Add Plant Listing"
-        />
+        <View style={{ padding: Spacing.md }}>
+          <SellerPendingVerificationShield seller={seller} inline={true} />
+        </View>
       </View>
     );
   }
 
-  // Submit custom product
-  const handlePublishCustomProduct = async () => {
-    if (!productName.trim()) {
-      Alert.alert("Missing Name", "Please enter a product name for the plant.");
-      return;
-    }
-    const priceNum = parseFloat(priceRupees);
-    if (isNaN(priceNum) || priceNum <= 0) {
-      Alert.alert("Invalid Price", "Please specify a valid positive selling price in ₹.");
-      return;
-    }
-    const stockNum = parseInt(stockQuantity, 10);
-    if (isNaN(stockNum) || stockNum < 0) {
-      Alert.alert("Invalid Stock", "Please enter a valid stock quantity.");
-      return;
-    }
-
-    // Check if any image is still uploading or processing
-    const isImageInProgress = images.some(
-      (img) =>
-        img.status === "UPLOADING" ||
-        img.status === "PROCESSING" ||
-        img.status === "OPTIMIZING",
-    );
-    if (isImageInProgress) {
-      Alert.alert(
-        "Image Processing",
-        "Please wait until your photos finish processing through the Floria Image Engine.",
-      );
-      return;
-    }
-
-    try {
-      setSubmitting(true);
-      const cleanImages = images
-        .filter((img) => img.status !== "FAILED" && Boolean(img.url))
-        .map((img) => ({
-          asset_id:
-            img.assetId && img.assetId.trim().length > 10
-              ? img.assetId.trim()
-              : undefined,
-          url: img.url,
-          is_primary: Boolean(img.isPrimary),
-        }));
-
-      const primaryUrl =
-        cleanImages.find((img) => img.is_primary)?.url ||
-        cleanImages[0]?.url ||
-        "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=600&auto=format&fit=crop&q=80";
-
-      const payload = {
-        name: productName.trim(),
-        botanical_name: botanicalName.trim() || undefined,
-        category_id: selectedCategoryId || (categories.length > 0 ? categories[0].id : undefined),
-        price_paise: Math.round(priceNum * 100),
-        stock_quantity: stockNum,
-        low_stock_threshold: parseInt(lowStockThreshold, 10) || 5,
-        sku: sku.trim() || undefined,
-        description: description.trim() || undefined,
-        care_instructions: careInstructions.trim() || undefined,
-        status,
-        images: cleanImages.length > 0 ? cleanImages : undefined,
-        image_url: primaryUrl,
-      };
-
-      const res = await api.createSellerProduct(payload);
-      if (res.success) {
-        showSuccess(`"${productName.trim()}" published to nursery catalog.`);
-        router.back();
-      } else {
-        console.warn("[AddPlant] Publication failed:", res.error);
-        const msg = res.error?.message || "Failed to publish plant product.";
-        showError(msg);
-        Alert.alert("Publication Error", msg);
-      }
-    } catch (err: any) {
-      console.warn("[AddPlant] Unexpected submit error:", err);
-      const msg = err.message || "Failed to submit product.";
-      showError(msg);
-      Alert.alert("Error", msg);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  // Quick-Add from catalog selection
-  const handleSelectCatalogItem = (prod: any) => {
-    setSelectedCatalogProduct(prod);
-    const existingPrice =
-      prod.price_paise ||
-      prod.inventory?.[0]?.price_paise ||
-      prod.inventory?.price_paise ||
-      (prod.price ? prod.price * 100 : 49900);
-
-    setPriceRupees((existingPrice / 100).toFixed(0));
-    setStockQuantity("10");
-    setImages([]);
-  };
-
-  const handlePublishCatalogListing = async () => {
-    if (!selectedCatalogProduct) return;
-    const priceNum = parseFloat(priceRupees);
-    if (isNaN(priceNum) || priceNum <= 0) {
-      Alert.alert("Invalid Price", "Please specify a valid price in ₹.");
-      return;
-    }
-    const stockNum = parseInt(stockQuantity, 10);
-    if (isNaN(stockNum) || stockNum < 0) {
-      Alert.alert("Invalid Stock", "Please enter a valid stock quantity.");
-      return;
-    }
-
-    // Check if any image is still uploading or processing
-    const isImageInProgress = images.some(
-      (img) =>
-        img.status === "UPLOADING" ||
-        img.status === "PROCESSING" ||
-        img.status === "OPTIMIZING",
-    );
-    if (isImageInProgress) {
-      Alert.alert(
-        "Image Processing",
-        "Please wait until your specimen photos finish processing through the Floria Image Engine.",
-      );
-      return;
-    }
-
-    try {
-      setSubmitting(true);
-      const cleanImages = images
-        .filter((img) => img.status !== "FAILED" && Boolean(img.url))
-        .map((img) => ({
-          asset_id:
-            img.assetId && img.assetId.trim().length > 10
-              ? img.assetId.trim()
-              : undefined,
-          url: img.url,
-          is_primary: Boolean(img.isPrimary),
-        }));
-
-      const primaryUrl =
-        cleanImages.find((img) => img.is_primary)?.url ||
-        cleanImages[0]?.url ||
-        selectedCatalogProduct.image_url ||
-        selectedCatalogProduct.images?.[0]?.url;
-
-      const res = await api.createSellerProduct({
-        product_id: selectedCatalogProduct.id,
-        name: selectedCatalogProduct.name,
-        category_id: selectedCatalogProduct.category_id || selectedCatalogProduct.category?.id,
-        price_paise: Math.round(priceNum * 100),
-        stock_quantity: stockNum,
-        low_stock_threshold: parseInt(lowStockThreshold, 10) || 5,
-        sku: sku.trim() || undefined,
-        status,
-        images: cleanImages.length > 0 ? cleanImages : undefined,
-        image_url: primaryUrl,
-      });
-
-      if (res.success) {
-        showSuccess(`"${selectedCatalogProduct.name}" added to your nursery inventory.`);
-        router.back();
-      } else {
-        const msg = res.error?.message || "Failed to list plant.";
-        showError(msg);
-        Alert.alert("Listing Error", msg);
-      }
-    } catch (err: any) {
-      const msg = err.message || "Failed to add plant.";
-      showError(msg);
-      Alert.alert("Error", msg);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const estimatedPayoutPaise = priceRupees ? Math.round(parseFloat(priceRupees) * 100 * 0.9) : 0;
-
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
       style={styles.screen}
     >
-      {/* Top Header */}
-      <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={22} color={Colors.forest} />
+      {/* ── Top Bar ── */}
+      <View style={[styles.topBar, { paddingTop: insets.top + Spacing.xs }]}>
+        <TouchableOpacity
+          onPress={() => (selectedProduct ? setSelectedProduct(null) : router.back())}
+          style={styles.backButton}
+        >
+          <FloriaIcon name="arrow_left" size={20} color={Colors.forest} />
         </TouchableOpacity>
-        <Text style={styles.pageTitle}>Add Plant Product</Text>
+        <Text style={styles.topBarTitle}>
+          {selectedProduct ? "Listing Details" : "Choose Existing Product"}
+        </Text>
         <View style={{ width: 36 }} />
       </View>
 
-      {/* Mode Switcher Tabs */}
-      <View style={styles.tabSwitcher}>
-        <TouchableOpacity
-          onPress={() => setCreationMode("CATALOG")}
-          style={[styles.tabBtn, creationMode === "CATALOG" && styles.tabBtnActive]}
-          activeOpacity={0.8}
-        >
-          <Ionicons
-            name="library-outline"
-            size={16}
-            color={creationMode === "CATALOG" ? Colors.white : Colors.inkMuted}
-          />
-          <Text
-            style={[
-              styles.tabBtnText,
-              creationMode === "CATALOG" && styles.tabBtnTextActive,
-            ]}
-          >
-            Choose from Catalog
-          </Text>
-        </TouchableOpacity>
+      {!selectedProduct ? (
+        /* ── STEP 1: Search & Choose Canonical Product ── */
+        <View style={styles.stepContainer}>
+          <View style={styles.searchBarWrap}>
+            <FloriaIcon name="search" size={18} color={Colors.inkMuted} />
+            <TextInput
+              placeholder="Search Floria botanical catalog..."
+              placeholderTextColor={Colors.inkLight}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              onSubmitEditing={handleSearchSubmit}
+              returnKeyType="search"
+              style={styles.searchInput}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => { setSearchQuery(""); searchCatalog(""); }}>
+                <FloriaIcon name="close" size={16} color={Colors.inkMuted} />
+              </TouchableOpacity>
+            )}
+          </View>
 
-        <TouchableOpacity
-          onPress={() => setCreationMode("CUSTOM")}
-          style={[styles.tabBtn, creationMode === "CUSTOM" && styles.tabBtnActive]}
-          activeOpacity={0.8}
-        >
-          <Ionicons
-            name="sparkles"
-            size={16}
-            color={creationMode === "CUSTOM" ? Colors.white : Colors.inkMuted}
-          />
-          <Text
-            style={[
-              styles.tabBtnText,
-              creationMode === "CUSTOM" && styles.tabBtnTextActive,
-            ]}
-          >
-            New Custom Plant
+          <Text style={styles.catalogSubtitle}>
+            Select a verified specimen from Floria's canonical botanical collection:
           </Text>
-        </TouchableOpacity>
-      </View>
 
-      {/* ── Mode 1: Create New Plant Product Form ── */}
-      {creationMode === "CUSTOM" && (
+          {searchLoading ? (
+            <View style={styles.centerLoading}>
+              <ActivityIndicator size="large" color={Colors.forest} />
+              <Text style={styles.loadingText}>Searching botanical catalog...</Text>
+            </View>
+          ) : catalogResults.length === 0 ? (
+            <View style={styles.emptyResultsCard}>
+              <FloriaIcon name="plant" size={32} color={Colors.sageLight} />
+              <Text style={styles.emptyResultsTitle}>No botanical matches</Text>
+              <Text style={styles.emptyResultsSubtitle}>
+                Try searching for a different plant name, genus, or common term.
+              </Text>
+            </View>
+          ) : (
+            <FlatList
+              data={catalogResults}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={styles.catalogList}
+              showsVerticalScrollIndicator={false}
+              renderItem={({ item }) => {
+                const imgUrl =
+                  item.primary_image_url ||
+                  item.image_url ||
+                  item.product_images?.[0]?.url ||
+                  null;
+
+                return (
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() => handleSelectProduct(item)}
+                    style={styles.catalogItemRow}
+                  >
+                    <Image
+                      source={
+                        imgUrl
+                          ? { uri: imgUrl }
+                          : require("../../assets/images/floria_mark.png")
+                      }
+                      style={styles.catalogThumb}
+                      resizeMode="cover"
+                    />
+                    <View style={styles.catalogItemInfo}>
+                      <Text style={styles.catalogItemName} numberOfLines={1}>
+                        {item.name}
+                      </Text>
+                      {item.botanical_name && (
+                        <Text style={styles.catalogItemBotanical} numberOfLines={1}>
+                          {item.botanical_name}
+                        </Text>
+                      )}
+                      <View style={styles.catalogItemCategoryBadge}>
+                        <Text style={styles.catalogItemCategoryText}>
+                          {item.category?.name || "Botanical"}
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={styles.selectArrowWrap}>
+                      <FloriaIcon name="plus" size={18} color={Colors.forest} />
+                    </View>
+                  </TouchableOpacity>
+                );
+              }}
+            />
+          )}
+        </View>
+      ) : (
+        /* ── STEP 2: Configure Nursery Listing Details ── */
         <ScrollView
-          contentContainerStyle={[
-            styles.scrollContent,
-            { paddingBottom: insets.bottom + 40 },
-          ]}
+          contentContainerStyle={styles.formScrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Section 1: Basic Details */}
-          <View style={styles.sectionCard}>
-            <Text style={styles.sectionHeading}>Plant Identification</Text>
+          {/* Selected Product Summary Box */}
+          <View style={styles.selectedProductCard}>
+            <Image
+              source={
+                selectedProduct.primary_image_url || selectedProduct.image_url
+                  ? { uri: selectedProduct.primary_image_url || selectedProduct.image_url }
+                  : require("../../assets/images/floria_mark.png")
+              }
+              style={styles.selectedProductThumb}
+              resizeMode="cover"
+            />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.selectedProductPre}>CANONICAL SPECIMEN</Text>
+              <Text style={styles.selectedProductName} numberOfLines={1}>
+                {selectedProduct.name}
+              </Text>
+              {selectedProduct.botanical_name && (
+                <Text style={styles.selectedProductBotanical} numberOfLines={1}>
+                  {selectedProduct.botanical_name}
+                </Text>
+              )}
+            </View>
+            <TouchableOpacity
+              onPress={() => setSelectedProduct(null)}
+              style={styles.changeProductBtn}
+            >
+              <Text style={styles.changeProductText}>Change</Text>
+            </TouchableOpacity>
+          </View>
 
-            <View style={styles.field}>
-              <Text style={styles.label}>Product / Plant Name *</Text>
+          {/* Price & Stock Fields */}
+          <View style={styles.fieldSection}>
+            <Text style={styles.fieldLabel}>SELLER PRICE (₹) *</Text>
+            <View style={styles.inputWithIconWrap}>
+              <Text style={styles.currencySymbol}>₹</Text>
               <TextInput
-                style={styles.input}
-                value={productName}
-                onChangeText={setProductName}
-                placeholder="e.g. Philodendron Pink Princess"
-                placeholderTextColor={Colors.inkSubtle}
+                placeholder="e.g. 450"
+                placeholderTextColor={Colors.inkLight}
+                keyboardType="numeric"
+                value={priceRupees}
+                onChangeText={setPriceRupees}
+                style={styles.numericInput}
+              />
+            </View>
+            <Text style={styles.fieldHelper}>
+              Your nursery selling price before platform commission
+            </Text>
+          </View>
+
+          <View style={styles.rowTwoFields}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.fieldLabel}>AVAILABLE STOCK *</Text>
+              <TextInput
+                placeholder="10"
+                placeholderTextColor={Colors.inkLight}
+                keyboardType="number-pad"
+                value={stockQuantity}
+                onChangeText={setStockQuantity}
+                style={styles.textInput}
               />
             </View>
 
-            <View style={styles.field}>
-              <Text style={styles.label}>Botanical / Scientific Name (Optional)</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.fieldLabel}>LOW STOCK ALERT</Text>
               <TextInput
-                style={styles.input}
-                value={botanicalName}
-                onChangeText={setBotanicalName}
-                placeholder="e.g. Philodendron erubescens"
-                placeholderTextColor={Colors.inkSubtle}
-              />
-            </View>
-
-            {/* Categories Selector */}
-            <View style={styles.field}>
-              <Text style={styles.label}>Botanical Category *</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.catScroll}>
-                {categories.map((cat) => {
-                  const isSelected = selectedCategoryId === cat.id;
-                  return (
-                    <TouchableOpacity
-                      key={cat.id}
-                      onPress={() => setSelectedCategoryId(cat.id)}
-                      style={[styles.catChip, isSelected && styles.catChipActive]}
-                      activeOpacity={0.8}
-                    >
-                      <Text
-                        style={[
-                          styles.catChipText,
-                          isSelected && styles.catChipTextActive,
-                        ]}
-                      >
-                        {cat.name}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
-            </View>
-
-            <View style={styles.field}>
-              <Text style={styles.label}>SKU / Batch Code (Optional)</Text>
-              <TextInput
-                style={styles.input}
-                value={sku}
-                onChangeText={setSku}
-                placeholder="FLR-PLT-001"
-                placeholderTextColor={Colors.inkSubtle}
-                autoCapitalize="characters"
+                placeholder="5"
+                placeholderTextColor={Colors.inkLight}
+                keyboardType="number-pad"
+                value={lowStockThreshold}
+                onChangeText={setLowStockThreshold}
+                style={styles.textInput}
               />
             </View>
           </View>
 
-          {/* Section 2: Botanical Photography (From Device via Image Engine) */}
-          <View style={styles.sectionCard}>
-            <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionHeading}>Plant Photos ({images.length})</Text>
-              <Text style={styles.imageEngineTag}>Floria Image Engine</Text>
-            </View>
-            <Text style={styles.photoHelperText}>
-              Upload pictures directly from your device camera or photo gallery. Photos are automatically transcoded to high-speed WebP.
-            </Text>
-
-            <MobileProductImageUploader
-              images={images}
-              onChange={setImages}
-              maxImages={5}
+          {/* SKU Field */}
+          <View style={styles.fieldSection}>
+            <Text style={styles.fieldLabel}>NURSERY SKU (OPTIONAL)</Text>
+            <TextInput
+              placeholder="e.g. NUR-MON-01"
+              placeholderTextColor={Colors.inkLight}
+              value={sku}
+              onChangeText={setSku}
+              style={styles.textInput}
             />
           </View>
 
-          {/* Section 3: Pricing & Inventory */}
-          <View style={styles.sectionCard}>
-            <Text style={styles.sectionHeading}>Pricing & Stock Quantity</Text>
-
-            <View style={styles.rowFields}>
-              <View style={[styles.field, { flex: 1 }]}>
-                <Text style={styles.label}>Selling Price (₹) *</Text>
-                <TextInput
-                  style={styles.input}
-                  value={priceRupees}
-                  onChangeText={setPriceRupees}
-                  placeholder="499"
-                  placeholderTextColor={Colors.inkSubtle}
-                  keyboardType="numeric"
-                />
-              </View>
-
-              <View style={[styles.field, { flex: 1 }]}>
-                <Text style={styles.label}>Stock Units *</Text>
-                <TextInput
-                  style={styles.input}
-                  value={stockQuantity}
-                  onChangeText={setStockQuantity}
-                  placeholder="10"
-                  placeholderTextColor={Colors.inkSubtle}
-                  keyboardType="number-pad"
-                />
-              </View>
-            </View>
-
-            {/* Payout Estimator Banner */}
-            {parseFloat(priceRupees) > 0 && (
-              <View style={styles.payoutCard}>
-                <Ionicons name="cash-outline" size={18} color={Colors.forest} />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.payoutLabel}>Est. Net Nursery Payout</Text>
-                  <Text style={styles.payoutValue}>{formatINR(estimatedPayoutPaise)} per specimen</Text>
-                </View>
-              </View>
-            )}
-
-            <View style={styles.rowFields}>
-              <View style={[styles.field, { flex: 1 }]}>
-                <Text style={styles.label}>Low Stock Alert</Text>
-                <TextInput
-                  style={styles.input}
-                  value={lowStockThreshold}
-                  onChangeText={setLowStockThreshold}
-                  placeholder="5"
-                  placeholderTextColor={Colors.inkSubtle}
-                  keyboardType="number-pad"
-                />
-              </View>
-
-              <View style={[styles.field, { flex: 1 }]}>
-                <Text style={styles.label}>Listing Status</Text>
-                <View style={styles.statusToggleRow}>
-                  <TouchableOpacity
-                    onPress={() => setStatus("active")}
-                    style={[
-                      styles.statusToggleBtn,
-                      status === "active" && styles.statusToggleBtnActive,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.statusToggleText,
-                        status === "active" && styles.statusToggleTextActive,
-                      ]}
-                    >
-                      Active
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    onPress={() => setStatus("draft")}
-                    style={[
-                      styles.statusToggleBtn,
-                      status === "draft" && styles.statusToggleBtnActive,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.statusToggleText,
-                        status === "draft" && styles.statusToggleTextActive,
-                      ]}
-                    >
-                      Draft
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-          </View>
-
-          {/* Section 4: Care & Descriptions */}
-          <View style={styles.sectionCard}>
-            <Text style={styles.sectionHeading}>Plant Care & Descriptions</Text>
-
-            <View style={styles.field}>
-              <Text style={styles.label}>Plant Description</Text>
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                value={description}
-                onChangeText={setDescription}
-                placeholder="Healthy foliage plant, acclimated for indoor apartments and bright shaded patios..."
-                placeholderTextColor={Colors.inkSubtle}
-                multiline
-                numberOfLines={3}
-              />
-            </View>
-
-            <View style={styles.field}>
-              <Text style={styles.label}>Care & Watering Guidelines</Text>
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                value={careInstructions}
-                onChangeText={setCareInstructions}
-                placeholder="Water when top 2 inches of soil feel dry. Prefers bright indirect light. Avoid direct harsh sun."
-                placeholderTextColor={Colors.inkSubtle}
-                multiline
-                numberOfLines={3}
+          {/* Specimen Images via Floria Image Engine */}
+          <View style={styles.fieldSection}>
+            <Text style={styles.fieldLabel}>NURSERY SPECIMEN PHOTOS (OPTIONAL)</Text>
+            <Text style={styles.fieldHelper}>
+              Upload actual photographs of your nursery batch. Processed through Floria Image Engine.
+            </Text>
+            <View style={{ marginTop: Spacing.xs }}>
+              <MobileProductImageUploader
+                images={images}
+                onChange={setImages}
+                maxImages={4}
               />
             </View>
           </View>
 
-          {/* Publish Action Button */}
+          {/* Availability Status Toggle */}
+          <View style={styles.fieldSection}>
+            <Text style={styles.fieldLabel}>LISTING STATUS</Text>
+            <View style={styles.statusToggleRow}>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => setStatus("active")}
+                style={[
+                  styles.statusToggleBtn,
+                  status === "active" && styles.statusToggleActive,
+                ]}
+              >
+                <FloriaIcon
+                  name="check"
+                  size={16}
+                  color={status === "active" ? Colors.white : Colors.inkMuted}
+                />
+                <Text
+                  style={[
+                    styles.statusToggleText,
+                    status === "active" && styles.statusToggleTextActive,
+                  ]}
+                >
+                  Active for Sale
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => setStatus("draft")}
+                style={[
+                  styles.statusToggleBtn,
+                  status === "draft" && styles.statusToggleActive,
+                ]}
+              >
+                <FloriaIcon
+                  name="edit"
+                  size={16}
+                  color={status === "draft" ? Colors.white : Colors.inkMuted}
+                />
+                <Text
+                  style={[
+                    styles.statusToggleText,
+                    status === "draft" && styles.statusToggleTextActive,
+                  ]}
+                >
+                  Save as Draft
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Submit Button */}
           <Button
-            label={submitting ? "Publishing Plant..." : "Publish Plant to Marketplace"}
-            onPress={handlePublishCustomProduct}
+            label={submitting ? "Publishing Listing..." : "List Product for Sale"}
+            variant="primary"
+            size="lg"
             loading={submitting}
-            style={styles.publishBtn}
+            onPress={handleSubmitListing}
+            style={{ marginTop: Spacing.md }}
           />
         </ScrollView>
-      )}
-
-      {/* ── Mode 1: Quick-Add from Master Floria Catalog (Canonical Model) ── */}
-      {creationMode === "CATALOG" && (
-        <View style={{ flex: 1 }}>
-          {selectedCatalogProduct ? (
-            /* Selected Catalog Item Configuration */
-            <ScrollView
-              contentContainerStyle={[
-                styles.scrollContent,
-                { paddingBottom: insets.bottom + 40 },
-              ]}
-              showsVerticalScrollIndicator={false}
-            >
-              {/* Selected Master Plant Banner */}
-              <View style={styles.selectedProductCard}>
-                <Image
-                  source={{
-                    uri:
-                      selectedCatalogProduct.image_url ||
-                      selectedCatalogProduct.images?.[0]?.url ||
-                      "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=600",
-                  }}
-                  style={styles.selectedProductImage}
-                />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.selectedProductTitle}>{selectedCatalogProduct.name}</Text>
-                  {selectedCatalogProduct.botanical_name && (
-                    <Text style={[styles.selectedProductCat, { fontStyle: "italic", marginBottom: 2 }]}>
-                      {selectedCatalogProduct.botanical_name}
-                    </Text>
-                  )}
-                  <Text style={styles.selectedProductCat}>
-                    {selectedCatalogProduct.category?.name || "Botanical Species"}
-                  </Text>
-                  <TouchableOpacity
-                    onPress={() => setSelectedCatalogProduct(null)}
-                    style={{ marginTop: 6 }}
-                  >
-                    <Text style={styles.changeSelectionText}>← Change Selected Plant</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              {/* Pricing & Stock Card */}
-              <View style={styles.sectionCard}>
-                <Text style={styles.sectionHeading}>Your Nursery Pricing & Stock</Text>
-                <View style={styles.rowFields}>
-                  <View style={[styles.field, { flex: 1 }]}>
-                    <Text style={styles.label}>Selling Base Price (₹) *</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={priceRupees}
-                      onChangeText={setPriceRupees}
-                      placeholder="499"
-                      keyboardType="numeric"
-                    />
-                  </View>
-
-                  <View style={[styles.field, { flex: 1 }]}>
-                    <Text style={styles.label}>Stock Quantity *</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={stockQuantity}
-                      onChangeText={setStockQuantity}
-                      placeholder="10"
-                      keyboardType="number-pad"
-                    />
-                  </View>
-                </View>
-
-                {/* SKU & Low Stock Alert */}
-                <View style={styles.rowFields}>
-                  <View style={[styles.field, { flex: 1 }]}>
-                    <Text style={styles.label}>Nursery SKU (Optional)</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={sku}
-                      onChangeText={setSku}
-                      placeholder="e.g. NUR-MON-01"
-                      placeholderTextColor={Colors.inkSubtle}
-                    />
-                  </View>
-
-                  <View style={[styles.field, { flex: 1 }]}>
-                    <Text style={styles.label}>Low Stock Alert</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={lowStockThreshold}
-                      onChangeText={setLowStockThreshold}
-                      placeholder="5"
-                      keyboardType="number-pad"
-                    />
-                  </View>
-                </View>
-
-                {/* Payout Calculation Preview */}
-                {Boolean(priceRupees) && (
-                  <View style={styles.payoutCard}>
-                    <View style={styles.payoutRow}>
-                      <Text style={styles.payoutLabel}>Estimated Seller Payout (90%)</Text>
-                      <Text style={styles.payoutValue}>{formatINR(estimatedPayoutPaise)}</Text>
-                    </View>
-                    <Text style={styles.payoutNote}>
-                      Based on standard 10% platform commission fee.
-                    </Text>
-                  </View>
-                )}
-              </View>
-
-              {/* Optional Nursery Specimen Photos via Floria Image Engine */}
-              <View style={styles.sectionCard}>
-                <View style={{ marginBottom: 8 }}>
-                  <Text style={styles.sectionHeading}>Your Nursery Specimen Photos</Text>
-                  <Text style={styles.sectionSub}>
-                    Upload real photos of the plant in your nursery. All images are processed through the Floria Image Engine into fast WebP variants (Optional).
-                  </Text>
-                </View>
-
-                <MobileProductImageUploader
-                  images={images}
-                  onChange={setImages}
-                  maxImages={5}
-                />
-              </View>
-
-              {/* Submit Listing Button */}
-              <Button
-                label={submitting ? "Publishing Listing..." : "Publish to Nursery Marketplace"}
-                onPress={handlePublishCatalogListing}
-                loading={submitting}
-                style={styles.publishBtn}
-              />
-            </ScrollView>
-          ) : (
-            /* Catalog Search Screen */
-            <View style={{ flex: 1, padding: Spacing.md }}>
-              <View style={styles.searchBox}>
-                <Ionicons name="search" size={18} color={Colors.inkMuted} />
-                <TextInput
-                  style={styles.searchInput}
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                  placeholder="Search botanical species or plant name..."
-                  placeholderTextColor={Colors.inkSubtle}
-                />
-                {searchQuery.length > 0 && (
-                  <TouchableOpacity onPress={() => setSearchQuery("")}>
-                    <Ionicons name="close-circle" size={18} color={Colors.inkMuted} />
-                  </TouchableOpacity>
-                )}
-              </View>
-
-              {searchLoading ? (
-                <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="large" color={Colors.forest} />
-                </View>
-              ) : (
-                <FlatList
-                  data={catalogResults}
-                  keyExtractor={(item) => item.id}
-                  showsVerticalScrollIndicator={false}
-                  renderItem={({ item }) => (
-                    <TouchableOpacity
-                      onPress={() => handleSelectCatalogItem(item)}
-                      style={styles.catalogItemRow}
-                      activeOpacity={0.7}
-                    >
-                      <Image
-                        source={{
-                          uri:
-                            item.image_url ||
-                            item.images?.[0]?.url ||
-                            "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=600",
-                        }}
-                        style={styles.catalogItemThumb}
-                      />
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.catalogItemName}>{item.name}</Text>
-                        <Text style={styles.catalogItemCat}>
-                          {item.category?.name || "Botanical Specimen"}
-                        </Text>
-                      </View>
-                      <Ionicons name="add-circle" size={24} color={Colors.forest} />
-                    </TouchableOpacity>
-                  )}
-                  ListEmptyComponent={
-                    <View style={{ padding: Spacing.xl, alignItems: "center" }}>
-                      <Text style={{ color: Colors.inkMuted, fontSize: Typography.fontSizes.sm }}>
-                        No catalog templates matching "{searchQuery}".
-                      </Text>
-                      <TouchableOpacity
-                        onPress={() => setCreationMode("CUSTOM")}
-                        style={{ marginTop: 12 }}
-                      >
-                        <Text style={{ color: Colors.forest, fontWeight: "bold" }}>
-                          + Create Custom Plant Instead
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  }
-                />
-              )}
-            </View>
-          )}
-        </View>
       )}
     </KeyboardAvoidingView>
   );
@@ -804,293 +455,279 @@ const styles = StyleSheet.create({
   },
   topBar: {
     flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: Spacing.md,
-    paddingBottom: Spacing.sm,
-    backgroundColor: Colors.linen,
+    paddingVertical: Spacing.sm,
+    backgroundColor: Colors.page,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
   backButton: {
     width: 36,
     height: 36,
-    borderRadius: 18,
-    backgroundColor: Colors.page,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  pageTitle: {
-    fontSize: Typography.fontSizes.lg,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
-    color: Colors.forest,
-  },
-  tabSwitcher: {
-    flexDirection: "row",
-    backgroundColor: Colors.linen,
-    padding: 6,
-    marginHorizontal: Spacing.md,
-    marginTop: Spacing.sm,
-    borderRadius: BorderRadius.xl,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    gap: 6,
-  },
-  tabBtn: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 10,
-    borderRadius: BorderRadius.lg,
-    gap: 6,
-  },
-  tabBtnActive: {
-    backgroundColor: Colors.forest,
-  },
-  tabBtnText: {
-    fontSize: Typography.fontSizes.xs,
-    fontWeight: "600",
-    color: Colors.inkMuted,
-  },
-  tabBtnTextActive: {
-    color: Colors.white,
-    fontWeight: "700",
-  },
-  scrollContent: {
-    padding: Spacing.md,
-  },
-  sectionCard: {
-    backgroundColor: Colors.linen,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    marginBottom: Spacing.md,
-  },
-  sectionHeaderRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 4,
-  },
-  sectionHeading: {
-    fontSize: Typography.fontSizes.xs,
-    fontWeight: "700",
-    color: Colors.forest,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  imageEngineTag: {
-    fontSize: 9,
-    fontWeight: "700",
-    color: Colors.forest,
-    backgroundColor: "#DCFCE7",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  photoHelperText: {
-    fontSize: 11,
-    color: Colors.inkMuted,
-    lineHeight: 16,
-    marginBottom: Spacing.sm,
-  },
-  field: {
-    marginBottom: Spacing.md,
-  },
-  rowFields: {
-    flexDirection: "row",
-    gap: Spacing.md,
-  },
-  label: {
-    fontSize: Typography.fontSizes.xs,
-    fontWeight: "600",
-    color: Colors.ink,
-    marginBottom: 6,
-  },
-  input: {
-    backgroundColor: Colors.page,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: BorderRadius.lg,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 10,
-    fontSize: Typography.fontSizes.sm,
-    color: Colors.ink,
-  },
-  textArea: {
-    minHeight: 70,
-    textAlignVertical: "top",
-  },
-  catScroll: {
-    flexDirection: "row",
-    marginVertical: 4,
-  },
-  catChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
     borderRadius: BorderRadius.full,
-    backgroundColor: Colors.page,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    marginRight: 8,
-  },
-  catChipActive: {
-    backgroundColor: Colors.forest,
-    borderColor: Colors.forest,
-  },
-  catChipText: {
-    fontSize: Typography.fontSizes.xs,
-    color: Colors.ink,
-    fontWeight: "600",
-  },
-  catChipTextActive: {
-    color: Colors.white,
-    fontWeight: "700",
-  },
-  sectionSub: {
-    fontSize: 11,
-    color: Colors.inkMuted,
-    lineHeight: 16,
-    marginTop: 2,
-  },
-  payoutCard: {
-    backgroundColor: "#DCFCE7",
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.sm,
-    marginBottom: Spacing.md,
-  },
-  payoutRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  payoutLabel: {
-    fontSize: 10,
-    color: Colors.forestDark,
-    fontWeight: "600",
-    textTransform: "uppercase",
-  },
-  payoutValue: {
-    fontSize: Typography.fontSizes.sm,
-    fontWeight: "bold",
-    color: Colors.forest,
-  },
-  payoutNote: {
-    fontSize: 9,
-    color: Colors.forestDark,
-    marginTop: 2,
-  },
-  statusToggleRow: {
-    flexDirection: "row",
-    gap: 6,
-  },
-  statusToggleBtn: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: "center",
-    borderRadius: BorderRadius.lg,
-    backgroundColor: Colors.page,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  statusToggleBtnActive: {
-    backgroundColor: Colors.forest,
-    borderColor: Colors.forest,
-  },
-  statusToggleText: {
-    fontSize: Typography.fontSizes.xs,
-    fontWeight: "600",
-    color: Colors.inkMuted,
-  },
-  statusToggleTextActive: {
-    color: Colors.white,
-    fontWeight: "700",
-  },
-  publishBtn: {
-    marginTop: Spacing.xs,
-    marginBottom: Spacing.xl,
-  },
-  selectedProductCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
     backgroundColor: Colors.linen,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.md,
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: 1,
     borderColor: Colors.border,
-    marginBottom: Spacing.md,
   },
-  selectedProductImage: {
-    width: 60,
-    height: 60,
-    borderRadius: BorderRadius.lg,
-  },
-  selectedProductTitle: {
-    fontSize: Typography.fontSizes.base,
+  topBarTitle: {
+    fontFamily: "Georgia",
+    fontSize: Typography.fontSizes.md,
     fontWeight: "bold",
-    color: Colors.ink,
-  },
-  selectedProductCat: {
-    fontSize: Typography.fontSizes.xs,
-    color: Colors.inkMuted,
-  },
-  changeSelectionText: {
-    fontSize: Typography.fontSizes.xs,
     color: Colors.forest,
-    fontWeight: "700",
   },
-  searchBox: {
+  stepContainer: {
+    flex: 1,
+    padding: Spacing.md,
+  },
+  searchBarWrap: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: Colors.linen,
     borderRadius: BorderRadius.lg,
     paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
     borderWidth: 1,
     borderColor: Colors.border,
-    marginBottom: Spacing.md,
+    gap: Spacing.xs,
   },
   searchInput: {
     flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 8,
     fontSize: Typography.fontSizes.sm,
     color: Colors.ink,
+    paddingVertical: 4,
+  },
+  catalogSubtitle: {
+    fontSize: Typography.fontSizes.xs,
+    color: Colors.inkMuted,
+    marginVertical: Spacing.sm,
+    fontWeight: "500",
+  },
+  catalogList: {
+    paddingBottom: Spacing.xxl,
+    gap: Spacing.xs,
   },
   catalogItemRow: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: Colors.linen,
-    borderRadius: BorderRadius.xl,
+    borderRadius: BorderRadius.lg,
     padding: Spacing.sm,
     borderWidth: 1,
     borderColor: Colors.border,
-    marginBottom: Spacing.sm,
-    gap: 12,
+    gap: Spacing.sm,
   },
-  catalogItemThumb: {
-    width: 48,
-    height: 48,
+  catalogThumb: {
+    width: 52,
+    height: 52,
     borderRadius: BorderRadius.md,
+    backgroundColor: Colors.softSand,
+  },
+  catalogItemInfo: {
+    flex: 1,
   },
   catalogItemName: {
+    fontFamily: "Georgia",
     fontSize: Typography.fontSizes.sm,
     fontWeight: "bold",
-    color: Colors.ink,
+    color: Colors.forest,
   },
-  catalogItemCat: {
+  catalogItemBotanical: {
+    fontSize: Typography.fontSizes.xs,
+    fontStyle: "italic",
+    color: Colors.inkMuted,
+    marginTop: 1,
+  },
+  catalogItemCategoryBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: Colors.page,
+    borderRadius: BorderRadius.sm,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    marginTop: 4,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  catalogItemCategoryText: {
+    fontSize: 9,
+    fontWeight: "700",
+    color: Colors.sage,
+    textTransform: "uppercase",
+  },
+  selectArrowWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.botanical,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  centerLoading: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.xs,
+  },
+  loadingText: {
     fontSize: Typography.fontSizes.xs,
     color: Colors.inkMuted,
+    fontWeight: "500",
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
+  emptyResultsCard: {
     alignItems: "center",
+    justifyContent: "center",
     padding: Spacing.xl,
+    backgroundColor: Colors.linen,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    gap: Spacing.xs,
+    marginTop: Spacing.md,
+  },
+  emptyResultsTitle: {
+    fontSize: Typography.fontSizes.sm,
+    fontWeight: "bold",
+    color: Colors.forest,
+  },
+  emptyResultsSubtitle: {
+    fontSize: Typography.fontSizes.xs,
+    color: Colors.inkLight,
+    textAlign: "center",
+  },
+  formScrollContent: {
+    padding: Spacing.md,
+    paddingBottom: Spacing.xxl,
+  },
+  selectedProductCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.linen,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    gap: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  selectedProductThumb: {
+    width: 56,
+    height: 56,
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.softSand,
+  },
+  selectedProductPre: {
+    fontSize: 9,
+    fontWeight: "800",
+    color: Colors.terracotta,
+    letterSpacing: 0.5,
+  },
+  selectedProductName: {
+    fontFamily: "Georgia",
+    fontSize: Typography.fontSizes.base,
+    fontWeight: "bold",
+    color: Colors.forest,
+  },
+  selectedProductBotanical: {
+    fontSize: Typography.fontSizes.xs,
+    fontStyle: "italic",
+    color: Colors.inkMuted,
+  },
+  changeProductBtn: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: BorderRadius.sm,
+    backgroundColor: Colors.page,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  changeProductText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: Colors.forest,
+    textTransform: "uppercase",
+  },
+  fieldSection: {
+    marginBottom: Spacing.md,
+  },
+  fieldLabel: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: Colors.inkMuted,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
+  fieldHelper: {
+    fontSize: 10,
+    color: Colors.inkLight,
+    marginTop: 3,
+  },
+  inputWithIconWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.linen,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    paddingHorizontal: Spacing.md,
+  },
+  currencySymbol: {
+    fontSize: Typography.fontSizes.base,
+    fontWeight: "bold",
+    color: Colors.forest,
+    marginRight: 6,
+  },
+  numericInput: {
+    flex: 1,
+    fontSize: Typography.fontSizes.md,
+    fontWeight: "bold",
+    color: Colors.ink,
+    paddingVertical: Spacing.sm,
+  },
+  rowTwoFields: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  textInput: {
+    backgroundColor: Colors.linen,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    fontSize: Typography.fontSizes.sm,
+    color: Colors.ink,
+  },
+  statusToggleRow: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+  },
+  statusToggleBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.linen,
+    borderRadius: BorderRadius.md,
+    paddingVertical: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    gap: 6,
+  },
+  statusToggleActive: {
+    backgroundColor: Colors.forest,
+    borderColor: Colors.forestDark,
+  },
+  statusToggleText: {
+    fontSize: Typography.fontSizes.xs,
+    fontWeight: "700",
+    color: Colors.inkMuted,
+  },
+  statusToggleTextActive: {
+    color: Colors.white,
   },
 });

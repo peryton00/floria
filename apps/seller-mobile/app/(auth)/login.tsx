@@ -12,7 +12,7 @@ import {
   Image,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
+import { FloriaIcon } from "@floria/icons";
 import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
 import { Button } from "../../components/ui/Button";
 import { useSellerAuth } from "../../lib/contexts/SellerAuthContext";
@@ -96,7 +96,7 @@ export default function SellerLoginScreen() {
             activeOpacity={0.9}
             style={[styles.segmentTab, styles.segmentTabActive]}
           >
-            <Ionicons name="log-in-outline" size={16} color="#2D5A3C" />
+            <FloriaIcon name="login" size={16} color={Colors.forest} />
             <Text style={styles.segmentTextActive}>Sign In</Text>
           </TouchableOpacity>
 
@@ -105,7 +105,7 @@ export default function SellerLoginScreen() {
             onPress={() => router.push("/onboarding" as any)}
             style={styles.segmentTab}
           >
-            <Ionicons name="sparkles-outline" size={16} color="#64748B" />
+            <FloriaIcon name="sparkles" size={16} color={Colors.inkMuted} />
             <Text style={styles.segmentText}>Become a Seller</Text>
           </TouchableOpacity>
         </View>
@@ -132,7 +132,7 @@ export default function SellerLoginScreen() {
                 style={styles.noticeContactBtn}
                 onPress={() => setContactModalVisible(true)}
               >
-                <Ionicons name="headset" size={13} color="#FFFFFF" />
+                <FloriaIcon name="phone" size={13} color={Colors.white} />
                 <Text style={styles.noticeContactBtnText}>Contact Floria</Text>
               </TouchableOpacity>
             </View>
@@ -188,7 +188,7 @@ export default function SellerLoginScreen() {
           {/* Become a Seller Action Card */}
           <View style={styles.becomeSellerCard}>
             <View style={styles.becomeSellerIconCircle}>
-              <Ionicons name="storefront" size={20} color="#2D5A3C" />
+              <FloriaIcon name="storefront" size={20} color={Colors.forest} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.becomeSellerTitle}>New Botanical Partner?</Text>

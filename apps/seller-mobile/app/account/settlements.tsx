@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
+import { FloriaIcon } from "@floria/icons";
 import { api } from "../../lib/api";
 import { useSellerAuth } from "../../lib/contexts/SellerAuthContext";
 import { useSellerFeedback } from "../../lib/contexts/SellerFeedbackContext";
@@ -158,7 +158,7 @@ export default function SettlementAccountScreen() {
           style={styles.backButton}
           activeOpacity={0.7}
         >
-          <Ionicons name="arrow-back" size={22} color={Colors.forest} />
+          <FloriaIcon name="arrow_left" size={20} color={Colors.forest} />
         </TouchableOpacity>
         <Text style={styles.topBarTitle}>Settlement Account</Text>
         <View style={{ width: 36 }} />
@@ -180,7 +180,7 @@ export default function SettlementAccountScreen() {
           {/* Gateway Partner Card */}
           <View style={styles.gatewayCard}>
             <View style={styles.gatewayHeader}>
-              <Ionicons name="shield-checkmark" size={20} color={Colors.success} />
+              <FloriaIcon name="check_circle" size={20} color={Colors.success} />
               <Text style={styles.gatewayTitle}>Cashfree Verified Settlement</Text>
             </View>
             <Text style={styles.gatewaySub}>
@@ -192,14 +192,14 @@ export default function SettlementAccountScreen() {
           <View style={styles.bankCard}>
             <View style={styles.bankCardHeader}>
               <View style={styles.bankIconWrap}>
-                <Ionicons name="business" size={22} color={Colors.forest} />
+                <FloriaIcon name="credit_card" size={22} color={Colors.forest} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.bankName}>{bankInfo.bankName}</Text>
                 <Text style={styles.accountHolder}>{bankInfo.accountHolderName}</Text>
               </View>
               <View style={styles.statusBadge}>
-                <Ionicons name="checkmark-circle" size={14} color={Colors.forest} />
+                <FloriaIcon name="check" size={14} color={Colors.forest} />
                 <Text style={styles.statusBadgeText}>Verified</Text>
               </View>
             </View>
@@ -231,7 +231,7 @@ export default function SettlementAccountScreen() {
               onPress={openEditModal}
               style={styles.updateBankBtn}
             >
-              <Ionicons name="create-outline" size={16} color={Colors.forest} />
+              <FloriaIcon name="edit" size={16} color={Colors.forest} />
               <Text style={styles.updateBankBtnText}>Update Bank Account</Text>
             </TouchableOpacity>
           </View>
@@ -240,19 +240,19 @@ export default function SettlementAccountScreen() {
           <View style={styles.infoCard}>
             <Text style={styles.infoHeading}>Important Settlement Guidelines</Text>
             <View style={styles.bulletItem}>
-              <Ionicons name="checkmark-circle-outline" size={16} color={Colors.forest} style={{ marginTop: 2 }} />
+              <FloriaIcon name="check_circle" size={16} color={Colors.forest} style={{ marginTop: 2 }} />
               <Text style={styles.bulletText}>
                 The bank account holder name must match your botanical nursery registration or proprietor identity.
               </Text>
             </View>
             <View style={styles.bulletItem}>
-              <Ionicons name="checkmark-circle-outline" size={16} color={Colors.forest} style={{ marginTop: 2 }} />
+              <FloriaIcon name="check_circle" size={16} color={Colors.forest} style={{ marginTop: 2 }} />
               <Text style={styles.bulletText}>
                 Settlements for completed plant deliveries are automatically batched every business morning at 06:00 AM IST.
               </Text>
             </View>
             <View style={styles.bulletItem}>
-              <Ionicons name="checkmark-circle-outline" size={16} color={Colors.forest} style={{ marginTop: 2 }} />
+              <FloriaIcon name="check_circle" size={16} color={Colors.forest} style={{ marginTop: 2 }} />
               <Text style={styles.bulletText}>
                 No platform payout fees or deduction surcharge on direct IMPS settlements.
               </Text>
@@ -276,7 +276,7 @@ export default function SettlementAccountScreen() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Update Settlement Account</Text>
               <TouchableOpacity onPress={() => setEditModalVisible(false)}>
-                <Ionicons name="close" size={24} color={Colors.ink} />
+                <FloriaIcon name="close" size={20} color={Colors.ink} />
               </TouchableOpacity>
             </View>
 

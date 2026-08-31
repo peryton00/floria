@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   Platform,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { FloriaIcon } from "@floria/icons";
 import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
 import { ContactFloriaModal } from "./ContactFloriaModal";
 import type { SellerProfileData } from "../../lib/contexts/SellerAuthContext";
@@ -65,7 +65,7 @@ export function SellerPendingVerificationShield({
               style={styles.inlineContactButton}
               onPress={() => setContactModalVisible(true)}
             >
-              <Ionicons name="headset" size={14} color="#FFFFFF" />
+              <FloriaIcon name="phone" size={14} color={Colors.white} />
               <Text style={styles.inlineContactButtonText}>Contact Floria</Text>
             </TouchableOpacity>
           </View>
@@ -95,8 +95,8 @@ export function SellerPendingVerificationShield({
             { backgroundColor: badgeBg, borderColor: badgeColor + "33" },
           ]}
         >
-          <Ionicons
-            name={isCorrection ? "alert-circle" : isSuspended ? "shield-outline" : "time"}
+          <FloriaIcon
+            name={isCorrection ? "warning" : isSuspended ? "shield" : "clock"}
             size={32}
             color={badgeColor}
           />
@@ -142,7 +142,7 @@ export function SellerPendingVerificationShield({
           style={styles.contactButton}
           onPress={() => setContactModalVisible(true)}
         >
-          <Ionicons name="headset" size={18} color="#FFFFFF" />
+          <FloriaIcon name="phone" size={18} color={Colors.white} />
           <Text style={styles.contactButtonText}>Contact Floria Care</Text>
         </TouchableOpacity>
 

@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
+import { FloriaIcon } from "@floria/icons";
 import { api } from "../../lib/api";
 import { useSellerAuth } from "../../lib/contexts/SellerAuthContext";
 import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
@@ -89,7 +89,7 @@ export default function TransactionHistoryScreen() {
           style={styles.backButton}
           activeOpacity={0.7}
         >
-          <Ionicons name="arrow-back" size={22} color={Colors.forest} />
+          <FloriaIcon name="arrow_left" size={20} color={Colors.forest} />
         </TouchableOpacity>
         <Text style={styles.topBarTitle}>Transaction History</Text>
         <View style={{ width: 36 }} />
@@ -218,7 +218,7 @@ export default function TransactionHistoryScreen() {
           {filteredPayouts.length === 0 ? (
             <View style={styles.emptyWrap}>
               <EmptyState
-                icon="wallet-outline"
+                icon="wallet"
                 title="No Transactions Found"
                 description="Payout transfers and settled order funds will appear here as orders are fulfilled and delivered."
               />
@@ -236,8 +236,8 @@ export default function TransactionHistoryScreen() {
                 <View key={payout.id || idx} style={styles.payoutCard}>
                   <View style={styles.payoutTop}>
                     <View style={styles.payoutIconWrap}>
-                      <Ionicons
-                        name={isSettled ? "arrow-down-circle" : "time"}
+                      <FloriaIcon
+                        name={isSettled ? "check_circle" : "clock"}
                         size={22}
                         color={isSettled ? Colors.success : "#B45309"}
                       />

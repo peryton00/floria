@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -6,10 +6,11 @@ import {
   RefreshControl,
   TouchableOpacity,
   StyleSheet,
+  Image,
 } from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
+import { FloriaIcon } from "@floria/icons";
 import { api } from "../../lib/api";
 import { useSellerAuth } from "../../lib/contexts/SellerAuthContext";
 import { useSellerNotifications } from "../../lib/contexts/SellerNotificationContext";
@@ -17,8 +18,14 @@ import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
 import { formatINR } from "../../lib/format";
 import { HomeSkeleton } from "../../components/ui/Skeletons";
 import { StatusBadge } from "../../components/ui/StatusBadge";
-import { Button } from "../../components/ui/Button";
 import { SellerPendingVerificationShield } from "../../components/seller";
+
+function getTimeGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "GOOD MORNING,";
+  if (hour < 17) return "GOOD AFTERNOON,";
+  return "GOOD EVENING,";
+}
 
 export default function SellerHomeScreen() {
   const router = useRouter();
@@ -37,29 +44,45 @@ export default function SellerHomeScreen() {
     try {
       const [dashRes, ordersRes, inventoryRes] = await Promise.allSettled([
         api.getSellerDashboard(),
-        api.getSellerOrders({ limit: 5 }),
+        api.getSellerOrders({ limit: 9 }),
         api.getSellerInventory(),
       ]);
 
-      if (dashRes.status === "fulfilled" && dashRes.value.success && dashRes.value.data) {
+      if (
+        dashRes.status === "fulfilled" &&
+        dashRes.value.success &&
+        dashRes.value.data
+      ) {
         setDashboardData(dashRes.value.data);
       }
 
       let ordersList: any[] = [];
-      if (ordersRes.status === "fulfilled" && ordersRes.value.success && Array.isArray(ordersRes.value.data)) {
+      if (
+        ordersRes.status === "fulfilled" &&
+        ordersRes.value.success &&
+        Array.isArray(ordersRes.value.data)
+      ) {
         ordersList = ordersRes.value.data;
         setRecentOrders(ordersList);
-        const prep = ordersList.filter(
-          (o) =>
-            o.status?.toLowerCase() === "preparing" ||
-            o.status?.toLowerCase() === "placed" ||
-            o.status?.toLowerCase() === "new" ||
-            o.status?.toLowerCase() === "order placed",
-        ).length;
+        const prep = ordersList.filter((o) => {
+          const st = String(o.status || "").toLowerCase();
+          return (
+            st === "preparing" ||
+            st === "placed" ||
+            st === "new" ||
+            st === "order placed" ||
+            st === "nursery confirmed" ||
+            st === "seller_pending"
+          );
+        }).length;
         setToPrepareCount(prep);
       }
 
-      if (inventoryRes.status === "fulfilled" && inventoryRes.value.success && Array.isArray(inventoryRes.value.data)) {
+      if (
+        inventoryRes.status === "fulfilled" &&
+        inventoryRes.value.success &&
+        Array.isArray(inventoryRes.value.data)
+      ) {
         const low = inventoryRes.value.data.filter((item: any) => {
           const qty = item.stock_quantity ?? item.quantity ?? 0;
           const thresh = item.low_stock_threshold ?? 5;
@@ -83,18 +106,27 @@ export default function SellerHomeScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([fetchDashboard(), refreshProfile(), refreshNotifications()]);
+    await Promise.all([
+      fetchDashboard(),
+      refreshProfile(),
+      refreshNotifications(),
+    ]);
   };
+
+  const isApproved =
+    seller?.status === "approved" || seller?.status === "active";
 
   if (authLoading || (loading && !dashboardData && recentOrders.length === 0)) {
     return (
       <View style={[styles.screen, { paddingTop: insets.top }]}>
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.nurseryGreeting}>Good day,</Text>
-            <Text style={styles.nurseryName}>
-              {seller?.businessName || "Your Nursery"}
-            </Text>
+        <View style={styles.topHeader}>
+          <View style={styles.brandRow}>
+            <Image
+              source={require("../../assets/images/floria_mark.png")}
+              style={styles.logoMark}
+              resizeMode="contain"
+            />
+            <Text style={styles.brandTitle}>Floria</Text>
           </View>
         </View>
         <HomeSkeleton />
@@ -102,33 +134,61 @@ export default function SellerHomeScreen() {
     );
   }
 
-  // Determine State
-  const onboardingStatus = seller?.onboardingStatus || "incomplete";
-  const isApproved = seller?.status === "approved" || seller?.status === "active";
-  const productCount = seller?.productCount ?? (dashboardData?.totalProducts || 0);
+  // Today metrics
+  const todayOrders =
+    dashboardData?.todayOrders ??
+    recentOrders.filter((o) => {
+      const created = new Date(o.createdAtTimestamp || o.created_at || Date.now());
+      const now = new Date();
+      return (
+        created.getDate() === now.getDate() &&
+        created.getMonth() === now.getMonth() &&
+        created.getFullYear() === now.getFullYear()
+      );
+    }).length;
 
-  // Today's Stats
-  const todayOrders = dashboardData?.todayOrders ?? recentOrders.length;
-  const todaySalesPaise = dashboardData?.todaySalesPaise ?? dashboardData?.revenuePaise ?? 0;
+  const todaySalesPaise =
+    dashboardData?.todaySalesPaise ??
+    dashboardData?.revenuePaise ??
+    recentOrders.reduce((sum, o) => {
+      const created = new Date(o.createdAtTimestamp || o.created_at || Date.now());
+      const now = new Date();
+      if (
+        created.getDate() === now.getDate() &&
+        created.getMonth() === now.getMonth() &&
+        created.getFullYear() === now.getFullYear()
+      ) {
+        return (
+          sum +
+          (o.seller_payout_paise ?? o.totalPaise ?? o.subtotalPaise ?? 0)
+        );
+      }
+      return sum;
+    }, 0);
+
+  const sellerDisplayName =
+    seller?.businessName || seller?.username || "Nursery Partner";
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
-      {/* ── Compact Header ── */}
-      <View style={styles.header}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.nurseryGreeting}>Good morning,</Text>
-          <Text style={styles.nurseryName} numberOfLines={1}>
-            {seller?.businessName || "Your Nursery"}
-          </Text>
+      {/* ── 1. Compact Header: [Floria Logo] Floria       [Notification] ── */}
+      <View style={styles.topHeader}>
+        <View style={styles.brandRow}>
+          <Image
+            source={require("../../assets/images/floria_mark.png")}
+            style={styles.logoMark}
+            resizeMode="contain"
+          />
+          <Text style={styles.brandTitle}>Floria</Text>
         </View>
 
         <TouchableOpacity
-          activeOpacity={0.8}
+          activeOpacity={0.7}
           onPress={() => router.push("/notifications" as any)}
-          style={styles.bellButton}
+          style={styles.notificationButton}
           accessibilityLabel="Notifications"
         >
-          <Ionicons name="notifications-outline" size={22} color={Colors.forest} />
+          <FloriaIcon name="bell" size={20} color={Colors.forest} />
           {unreadCount > 0 && (
             <View style={styles.unreadBadge}>
               <Text style={styles.unreadBadgeText}>
@@ -141,6 +201,7 @@ export default function SellerHomeScreen() {
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -150,223 +211,253 @@ export default function SellerHomeScreen() {
           />
         }
       >
-        {/* ── Verification Pending Banner ── */}
+        {/* ── 2. Greeting Section ── */}
+        <View style={styles.greetingSection}>
+          <Text style={styles.greetingPre}>{getTimeGreeting()}</Text>
+          <Text style={styles.greetingName} numberOfLines={1}>
+            {sellerDisplayName}
+          </Text>
+        </View>
+
+        {/* Verification Shield if unapproved */}
         {!isApproved && (
-          <SellerPendingVerificationShield
-            seller={seller}
-            inline={true}
-          />
-        )}
-
-        {onboardingStatus === "needs_correction" && (
-          <View style={styles.stateBannerError}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-              <Ionicons name="alert-circle" size={20} color={Colors.error} />
-              <Text style={styles.stateBannerTitle}>Action required</Text>
-            </View>
-            <Text style={styles.stateBannerText}>
-              {seller?.correctionReason ||
-                "We need additional information to verify your nursery. Please update your details."}
-            </Text>
-            <Button
-              label="Fix issue"
-              variant="terracotta"
-              size="sm"
-              onPress={() => router.push("/onboarding" as any)}
-              style={{ marginTop: Spacing.sm }}
-            />
+          <View style={{ marginBottom: Spacing.md }}>
+            <SellerPendingVerificationShield seller={seller} inline={true} />
           </View>
         )}
 
-        {isApproved && productCount === 0 && (
-          <View style={styles.stateBannerSuccess}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-              <Ionicons name="checkmark-circle" size={20} color={Colors.success} />
-              <Text style={styles.stateBannerTitle}>You're ready to sell</Text>
-            </View>
-            <Text style={styles.stateBannerText}>
-              Your nursery is approved. Add your first botanical listing from the Floria canonical catalog.
-            </Text>
-            <Button
-              label="+ Add your first plant"
-              variant="primary"
-              size="sm"
-              onPress={() => router.push("/products/new" as any)}
-              style={{ marginTop: Spacing.sm }}
-            />
-          </View>
-        )}
-
-        {/* ── Today's Overview (2x2 Grid) ── */}
+        {/* ── 3. TODAY Section ── */}
         <View style={styles.section}>
-          <Text style={styles.sectionHeading}>Today's overview</Text>
-          <View style={styles.overviewGrid}>
-            <View style={styles.overviewCard}>
-              <Text style={styles.overviewLabel}>Orders</Text>
-              <Text style={styles.overviewValue}>{todayOrders}</Text>
-              <Text style={styles.overviewTrend}>↑ Today's volume</Text>
+          <Text style={styles.sectionHeaderLabel}>TODAY</Text>
+          <View style={styles.todayCardsRow}>
+            {/* Orders Card */}
+            <View style={styles.todayCard}>
+              <View style={styles.todayCardHeader}>
+                <Text style={styles.todayCardTitle}>ORDERS</Text>
+                <FloriaIcon name="orders" size={16} color={Colors.sage} />
+              </View>
+              <Text style={styles.todayCardValue}>{todayOrders}</Text>
+              <Text style={styles.todayCardSublabel}>Today's orders</Text>
             </View>
 
-            <View style={styles.overviewCard}>
-              <Text style={styles.overviewLabel}>Sales</Text>
-              <Text style={styles.overviewValue}>{formatINR(todaySalesPaise)}</Text>
-              <Text style={styles.overviewTrend}>↑ Gross payout</Text>
-            </View>
-
-            <View style={styles.overviewCard}>
-              <Text style={styles.overviewLabel}>To prepare</Text>
-              <Text
-                style={[
-                  styles.overviewValue,
-                  toPrepareCount > 0 && { color: Colors.terracotta },
-                ]}
-              >
-                {toPrepareCount}
+            {/* Sales Card */}
+            <View style={styles.todayCard}>
+              <View style={styles.todayCardHeader}>
+                <Text style={styles.todayCardTitle}>SALES</Text>
+                <FloriaIcon name="receipt" size={16} color={Colors.sage} />
+              </View>
+              <Text style={styles.todayCardValue} numberOfLines={1}>
+                {formatINR(todaySalesPaise)}
               </Text>
-              <Text style={styles.overviewTrend}>Awaiting dispatch</Text>
-            </View>
-
-            <View style={styles.overviewCard}>
-              <Text style={styles.overviewLabel}>Low stock</Text>
-              <Text
-                style={[
-                  styles.overviewValue,
-                  lowStockCount > 0 && { color: Colors.warning },
-                ]}
-              >
-                {lowStockCount}
-              </Text>
-              <Text style={styles.overviewTrend}>Needs restock</Text>
+              <Text style={styles.todayCardSublabel}>Today's sales</Text>
             </View>
           </View>
         </View>
 
-        {/* ── Needs Your Attention ── */}
-        {(toPrepareCount > 0 || lowStockCount > 0) && (
-          <View style={styles.section}>
-            <Text style={styles.sectionHeading}>Needs your attention</Text>
+        {/* ── 4. NEED YOUR ATTENTION Section ── */}
+        <View style={styles.section}>
+          <Text style={styles.sectionHeaderLabel}>NEED YOUR ATTENTION</Text>
+
+          {toPrepareCount === 0 && lowStockCount === 0 ? (
+            <View style={styles.attentionCleanCard}>
+              <View style={styles.cleanCheckCircle}>
+                <FloriaIcon name="check" size={16} color={Colors.success} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.cleanTitle}>You're all caught up</Text>
+                <Text style={styles.cleanSubtitle}>
+                  No orders or inventory issues need your attention.
+                </Text>
+              </View>
+            </View>
+          ) : (
             <View style={styles.attentionContainer}>
               {toPrepareCount > 0 && (
                 <TouchableOpacity
-                  activeOpacity={0.8}
+                  activeOpacity={0.75}
                   onPress={() => router.push("/(tabs)/orders" as any)}
                   style={styles.attentionRow}
                 >
-                  <View style={styles.attentionIconWrap}>
-                    <Ionicons name="cube-outline" size={18} color={Colors.terracotta} />
+                  <View style={styles.attentionCountBadge}>
+                    <Text style={styles.attentionCountNumber}>
+                      {toPrepareCount}
+                    </Text>
                   </View>
-                  <Text style={styles.attentionText}>
-                    {toPrepareCount} {toPrepareCount === 1 ? "order needs" : "orders need"} preparation
+                  <Text style={styles.attentionLabel} numberOfLines={1}>
+                    Orders awaiting dispatch
                   </Text>
-                  <Ionicons name="chevron-forward" size={18} color={Colors.inkMuted} />
+                  <FloriaIcon
+                    name="chevron_right"
+                    size={16}
+                    color={Colors.inkMuted}
+                  />
                 </TouchableOpacity>
               )}
 
               {lowStockCount > 0 && (
                 <TouchableOpacity
-                  activeOpacity={0.8}
+                  activeOpacity={0.75}
                   onPress={() => router.push("/inventory" as any)}
-                  style={styles.attentionRow}
+                  style={[
+                    styles.attentionRow,
+                    toPrepareCount > 0 && styles.attentionRowDivider,
+                  ]}
                 >
-                  <View style={styles.attentionIconWrap}>
-                    <Ionicons name="alert-circle-outline" size={18} color={Colors.warning} />
+                  <View
+                    style={[
+                      styles.attentionCountBadge,
+                      { backgroundColor: Colors.warningBg },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.attentionCountNumber,
+                        { color: Colors.warning },
+                      ]}
+                    >
+                      {lowStockCount}
+                    </Text>
                   </View>
-                  <Text style={styles.attentionText}>
-                    {lowStockCount} {lowStockCount === 1 ? "plant is" : "plants are"} running low
+                  <Text style={styles.attentionLabel} numberOfLines={1}>
+                    Products low in stock
                   </Text>
-                  <Ionicons name="chevron-forward" size={18} color={Colors.inkMuted} />
+                  <FloriaIcon
+                    name="chevron_right"
+                    size={16}
+                    color={Colors.inkMuted}
+                  />
                 </TouchableOpacity>
               )}
             </View>
-          </View>
-        )}
-
-        {/* ── Recent Orders ── */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionHeading}>Recent orders</Text>
-            <TouchableOpacity onPress={() => router.push("/(tabs)/orders" as any)}>
-              <Text style={styles.seeAllLink}>View all</Text>
-            </TouchableOpacity>
-          </View>
-
-          {recentOrders.length === 0 ? (
-            <View style={styles.emptyCard}>
-              <Ionicons name="receipt-outline" size={32} color={Colors.sageLight} />
-              <Text style={styles.emptyTitle}>No orders yet</Text>
-              <Text style={styles.emptySubtitle}>
-                New customer orders for your botanical specimens will appear here.
-              </Text>
-            </View>
-          ) : (
-            recentOrders.slice(0, 3).map((order) => {
-              const orderId = order.masterOrderId || order.id || "";
-              const shortId = orderId.substring(0, 8).toUpperCase();
-              const itemCount = order.items?.length || 1;
-              const subtotal = order.seller_payout_paise ?? order.totalPaise ?? order.subtotalPaise ?? 0;
-
-              return (
-                <TouchableOpacity
-                  key={orderId}
-                  activeOpacity={0.85}
-                  onPress={() => router.push(`/orders/${orderId}` as any)}
-                  style={styles.orderRow}
-                >
-                  <View style={styles.orderRowTop}>
-                    <Text style={styles.orderCode}>#FL-{shortId}</Text>
-                    <StatusBadge status={order.status || "PLACED"} />
-                  </View>
-
-                  <View style={styles.orderRowDetails}>
-                    <Text style={styles.orderItems}>
-                      {itemCount} {itemCount === 1 ? "item" : "items"}
-                    </Text>
-                    <Text style={styles.orderAmount}>{formatINR(subtotal)}</Text>
-                  </View>
-
-                  <View style={styles.orderRowFooter}>
-                    <Text style={styles.orderStatusText}>
-                      {order.status || "Preparing"}
-                    </Text>
-                    <Ionicons name="chevron-forward" size={16} color={Colors.inkMuted} />
-                  </View>
-                </TouchableOpacity>
-              );
-            })
           )}
         </View>
 
-        {/* ── Quick Actions ── */}
+        {/* ── 5. QUICK ACTIONS Section ── */}
         <View style={styles.section}>
-          <Text style={styles.sectionHeading}>Quick actions</Text>
-          <View style={styles.quickActionsContainer}>
+          <Text style={styles.sectionHeaderLabel}>QUICK ACTIONS</Text>
+          <View style={styles.quickActionsRow}>
+            {/* List Product Action */}
             <TouchableOpacity
-              activeOpacity={0.85}
+              activeOpacity={0.8}
               onPress={() => router.push("/products/new" as any)}
-              style={[styles.quickActionButton, styles.primaryQuickAction]}
+              style={[styles.quickActionTile, styles.quickActionPrimary]}
             >
-              <Ionicons name="add" size={18} color={Colors.white} />
-              <Text style={styles.primaryQuickActionText}>Add Plant</Text>
+              <View style={styles.quickActionIconWrapPrimary}>
+                <FloriaIcon name="leaf" size={20} color={Colors.white} />
+              </View>
+              <View>
+                <Text style={styles.quickActionTitlePrimary}>List Product</Text>
+                <Text style={styles.quickActionSubtitlePrimary}>
+                  From canonical catalog
+                </Text>
+              </View>
             </TouchableOpacity>
 
+            {/* Inventory Action */}
             <TouchableOpacity
-              activeOpacity={0.85}
+              activeOpacity={0.8}
               onPress={() => router.push("/inventory" as any)}
-              style={styles.quickActionButton}
+              style={styles.quickActionTile}
             >
-              <Ionicons name="file-tray-stacked-outline" size={18} color={Colors.forest} />
-              <Text style={styles.quickActionText}>Inventory</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              activeOpacity={0.85}
-              onPress={() => router.push("/(tabs)/orders" as any)}
-              style={styles.quickActionButton}
-            >
-              <Ionicons name="receipt-outline" size={18} color={Colors.forest} />
-              <Text style={styles.quickActionText}>Orders</Text>
+              <View style={styles.quickActionIconWrap}>
+                <FloriaIcon name="package" size={20} color={Colors.forest} />
+              </View>
+              <View>
+                <Text style={styles.quickActionTitle}>Inventory</Text>
+                <Text style={styles.quickActionSubtitle}>
+                  Stock & alert limits
+                </Text>
+              </View>
             </TouchableOpacity>
           </View>
+        </View>
+
+        {/* ── 6. RECENT ORDERS Section (Max 9) ── */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionHeaderLabel}>RECENT ORDERS</Text>
+            {recentOrders.length > 0 && (
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => router.push("/(tabs)/orders" as any)}
+              >
+                <Text style={styles.viewMoreHeaderLink}>View all</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {recentOrders.length === 0 ? (
+            <View style={styles.emptyOrdersCard}>
+              <FloriaIcon name="orders" size={28} color={Colors.sageLight} />
+              <Text style={styles.emptyOrdersTitle}>No orders yet</Text>
+              <Text style={styles.emptyOrdersSubtitle}>
+                Customer orders placed for your listed botanical specimens will
+                appear here.
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.ordersListContainer}>
+              {recentOrders.slice(0, 9).map((order, idx) => {
+                const orderId = order.masterOrderId || order.id || "";
+                const shortId = orderId.substring(0, 8).toUpperCase();
+                const itemCount = order.items?.length || 1;
+                const totalAmount =
+                  order.seller_payout_paise ??
+                  order.totalPaise ??
+                  order.subtotalPaise ??
+                  0;
+                const statusStr = order.status || "Order Placed";
+
+                return (
+                  <TouchableOpacity
+                    key={orderId || idx}
+                    activeOpacity={0.85}
+                    onPress={() => router.push(`/orders/${orderId}` as any)}
+                    style={styles.orderCard}
+                  >
+                    {/* Top Row: #FL-ID and Status Badge */}
+                    <View style={styles.orderCardTopRow}>
+                      <Text style={styles.orderCardCode}>#FL-{shortId}</Text>
+                      <StatusBadge status={statusStr} />
+                    </View>
+
+                    {/* Middle Row: Items and Total */}
+                    <View style={styles.orderCardMiddleRow}>
+                      <Text style={styles.orderCardItemsText}>
+                        {itemCount} {itemCount === 1 ? "item" : "items"}
+                      </Text>
+                      <Text style={styles.orderCardAmountText}>
+                        {formatINR(totalAmount)}
+                      </Text>
+                    </View>
+
+                    {/* Bottom Row: Status Text and Chevron */}
+                    <View style={styles.orderCardBottomRow}>
+                      <Text style={styles.orderCardStatusDesc}>
+                        {statusStr}
+                      </Text>
+                      <FloriaIcon
+                        name="chevron_right"
+                        size={14}
+                        color={Colors.inkMuted}
+                      />
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+
+              {/* View More Orders Action at Bottom */}
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => router.push("/(tabs)/orders" as any)}
+                style={styles.viewMoreButton}
+              >
+                <Text style={styles.viewMoreButtonText}>
+                  VIEW MORE ORDERS →
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       </ScrollView>
     </View>
@@ -378,32 +469,35 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.page,
   },
-  header: {
+  topHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
+    backgroundColor: Colors.page,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
-    backgroundColor: Colors.page,
   },
-  nurseryGreeting: {
-    fontSize: Typography.fontSizes.xs,
-    color: Colors.inkMuted,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    fontWeight: "700",
+  brandRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
-  nurseryName: {
-    fontSize: Typography.fontSizes.lg,
+  logoMark: {
+    width: 22,
+    height: 28,
+  },
+  brandTitle: {
     fontFamily: "Georgia",
+    fontSize: Typography.fontSizes.lg,
     fontWeight: "bold",
     color: Colors.forest,
+    letterSpacing: -0.3,
   },
-  bellButton: {
-    width: 40,
-    height: 40,
+  notificationButton: {
+    width: 36,
+    height: 36,
     borderRadius: BorderRadius.full,
     backgroundColor: Colors.linen,
     alignItems: "center",
@@ -414,78 +508,45 @@ const styles = StyleSheet.create({
   },
   unreadBadge: {
     position: "absolute",
-    top: 4,
-    right: 4,
+    top: 2,
+    right: 2,
     backgroundColor: Colors.terracotta,
     borderRadius: BorderRadius.full,
-    minWidth: 16,
-    height: 16,
+    minWidth: 15,
+    height: 15,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 3,
+    paddingHorizontal: 2,
   },
   unreadBadgeText: {
     color: Colors.white,
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: "bold",
   },
   scrollContent: {
-    padding: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.md,
     paddingBottom: Spacing.xxl,
   },
-  stateBannerWarning: {
-    backgroundColor: Colors.warningBg,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
+  greetingSection: {
     marginBottom: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.warning,
   },
-  stateBannerInfo: {
-    backgroundColor: Colors.infoBg,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-    marginBottom: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.info,
-  },
-  stateBannerError: {
-    backgroundColor: Colors.errorBg,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-    marginBottom: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.error,
-  },
-  stateBannerSuccess: {
-    backgroundColor: Colors.successBg,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-    marginBottom: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.success,
-  },
-  stateBannerTitle: {
-    fontSize: Typography.fontSizes.sm,
-    fontWeight: "bold",
-    color: Colors.ink,
-  },
-  stateBannerText: {
-    fontSize: Typography.fontSizes.xs,
-    color: Colors.inkLight,
-    lineHeight: 18,
-    marginTop: 4,
-  },
-  section: {
-    marginBottom: Spacing.lg,
-  },
-  sectionHeading: {
-    fontSize: Typography.fontSizes.sm,
+  greetingPre: {
+    fontSize: 10,
     fontWeight: "700",
     color: Colors.inkMuted,
     textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginBottom: Spacing.xs,
+    letterSpacing: 0.8,
+    marginBottom: 2,
+  },
+  greetingName: {
+    fontFamily: "Georgia",
+    fontSize: Typography.fontSizes.xl,
+    fontWeight: "bold",
+    color: Colors.forest,
+  },
+  section: {
+    marginBottom: Spacing.lg,
   },
   sectionHeaderRow: {
     flexDirection: "row",
@@ -493,41 +554,85 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: Spacing.xs,
   },
-  seeAllLink: {
+  sectionHeaderLabel: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: Colors.inkMuted,
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+    marginBottom: Spacing.xs,
+  },
+  viewMoreHeaderLink: {
     fontSize: Typography.fontSizes.xs,
     fontWeight: "700",
     color: Colors.forest,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
-  overviewGrid: {
+  todayCardsRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
     gap: Spacing.sm,
   },
-  overviewCard: {
-    flexBasis: "48%",
-    flexGrow: 1,
+  todayCard: {
+    flex: 1,
     backgroundColor: Colors.linen,
     borderRadius: BorderRadius.lg,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: Colors.border,
   },
-  overviewLabel: {
+  todayCardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  todayCardTitle: {
     fontSize: 10,
-    fontWeight: "700",
+    fontWeight: "800",
     color: Colors.inkMuted,
     textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
-  overviewValue: {
-    fontSize: Typography.fontSizes.xl,
-    fontWeight: "bold",
+  todayCardValue: {
     fontFamily: "Georgia",
+    fontSize: 22,
+    fontWeight: "bold",
     color: Colors.forest,
-    marginVertical: 4,
+    marginVertical: 2,
   },
-  overviewTrend: {
+  todayCardSublabel: {
     fontSize: 10,
     color: Colors.inkLight,
+    fontWeight: "500",
+  },
+  attentionCleanCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.linen,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    gap: Spacing.sm,
+  },
+  cleanCheckCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.successBg,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cleanTitle: {
+    fontSize: Typography.fontSizes.sm,
+    fontWeight: "bold",
+    color: Colors.forest,
+  },
+  cleanSubtitle: {
+    fontSize: Typography.fontSizes.xs,
+    color: Colors.inkLight,
+    marginTop: 2,
   },
   attentionContainer: {
     backgroundColor: Colors.linen,
@@ -540,116 +645,173 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     padding: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    gap: Spacing.sm,
   },
-  attentionIconWrap: {
-    marginRight: Spacing.sm,
+  attentionRowDivider: {
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
   },
-  attentionText: {
+  attentionCountBadge: {
+    width: 26,
+    height: 26,
+    borderRadius: BorderRadius.sm,
+    backgroundColor: Colors.terracottaLight + "30",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  attentionCountNumber: {
+    fontSize: Typography.fontSizes.xs,
+    fontWeight: "bold",
+    color: Colors.terracotta,
+  },
+  attentionLabel: {
     flex: 1,
     fontSize: Typography.fontSizes.sm,
     fontWeight: "600",
     color: Colors.ink,
   },
-  orderRow: {
+  quickActionsRow: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+  },
+  quickActionTile: {
+    flex: 1,
     backgroundColor: Colors.linen,
     borderRadius: BorderRadius.lg,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: Colors.border,
-    marginBottom: Spacing.xs,
+    gap: Spacing.sm,
   },
-  orderRowTop: {
+  quickActionPrimary: {
+    backgroundColor: Colors.forest,
+    borderColor: Colors.forestDark,
+  },
+  quickActionIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.page,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  quickActionIconWrapPrimary: {
+    width: 36,
+    height: 36,
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.forestLight,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  quickActionTitle: {
+    fontSize: Typography.fontSizes.sm,
+    fontWeight: "bold",
+    color: Colors.forest,
+  },
+  quickActionTitlePrimary: {
+    fontSize: Typography.fontSizes.sm,
+    fontWeight: "bold",
+    color: Colors.white,
+  },
+  quickActionSubtitle: {
+    fontSize: 10,
+    color: Colors.inkLight,
+    marginTop: 2,
+  },
+  quickActionSubtitlePrimary: {
+    fontSize: 10,
+    color: Colors.botanical,
+    marginTop: 2,
+  },
+  ordersListContainer: {
+    gap: Spacing.sm,
+  },
+  orderCard: {
+    backgroundColor: Colors.linen,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  orderCardTopRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 4,
   },
-  orderCode: {
+  orderCardCode: {
+    fontFamily: "Georgia",
     fontSize: Typography.fontSizes.sm,
     fontWeight: "bold",
-    fontFamily: "Georgia",
     color: Colors.ink,
   },
-  orderRowDetails: {
+  orderCardMiddleRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginVertical: 4,
   },
-  orderItems: {
+  orderCardItemsText: {
     fontSize: Typography.fontSizes.xs,
-    color: Colors.inkLight,
+    color: Colors.inkMuted,
   },
-  orderAmount: {
+  orderCardAmountText: {
     fontSize: Typography.fontSizes.sm,
     fontWeight: "bold",
     color: Colors.forest,
   },
-  orderRowFooter: {
+  orderCardBottomRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginTop: 4,
     paddingTop: 4,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: Colors.border + "80",
   },
-  orderStatusText: {
+  orderCardStatusDesc: {
     fontSize: 11,
+    fontWeight: "600",
     color: Colors.inkMuted,
-    fontWeight: "500",
   },
-  emptyCard: {
+  viewMoreButton: {
+    backgroundColor: Colors.linen,
+    borderRadius: BorderRadius.lg,
+    paddingVertical: Spacing.sm,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: Colors.border,
+    marginTop: 4,
+  },
+  viewMoreButtonText: {
+    fontSize: Typography.fontSizes.xs,
+    fontWeight: "800",
+    color: Colors.forest,
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+  emptyOrdersCard: {
     backgroundColor: Colors.linen,
     borderRadius: BorderRadius.lg,
     padding: Spacing.lg,
-    alignItems: "center",
     borderWidth: 1,
     borderColor: Colors.border,
-  },
-  emptyTitle: {
-    fontSize: Typography.fontSizes.base,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
-    color: Colors.ink,
-    marginTop: Spacing.xs,
-  },
-  emptySubtitle: {
-    fontSize: Typography.fontSizes.xs,
-    color: Colors.inkMuted,
-    textAlign: "center",
-    marginTop: 4,
-  },
-  quickActionsContainer: {
-    flexDirection: "row",
-    gap: Spacing.sm,
-  },
-  quickActionButton: {
-    flex: 1,
-    height: 48,
-    backgroundColor: Colors.linen,
-    borderRadius: BorderRadius.md,
-    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 6,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    gap: Spacing.xs,
   },
-  primaryQuickAction: {
-    backgroundColor: Colors.forest,
-    borderColor: Colors.forestDark,
-  },
-  primaryQuickActionText: {
+  emptyOrdersTitle: {
     fontSize: Typography.fontSizes.sm,
     fontWeight: "bold",
-    color: Colors.white,
-  },
-  quickActionText: {
-    fontSize: Typography.fontSizes.sm,
-    fontWeight: "600",
     color: Colors.forest,
+  },
+  emptyOrdersSubtitle: {
+    fontSize: Typography.fontSizes.xs,
+    color: Colors.inkLight,
+    textAlign: "center",
+    maxWidth: 240,
   },
 });

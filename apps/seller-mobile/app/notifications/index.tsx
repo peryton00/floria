@@ -8,7 +8,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
+import { FloriaIcon } from "@floria/icons";
 import { useSellerNotifications } from "../../lib/contexts/SellerNotificationContext";
 import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
 import { formatDate } from "../../lib/format";
@@ -43,15 +43,15 @@ export default function SellerNotificationsScreen() {
   const getCategoryIcon = (category: string) => {
     switch (category) {
       case "ORDER":
-        return { name: "receipt-outline" as const, color: Colors.forest, bg: Colors.botanical };
+        return { name: "orders" as const, color: Colors.forest, bg: Colors.botanical };
       case "INVENTORY":
-        return { name: "alert-circle-outline" as const, color: Colors.warning, bg: Colors.warningBg };
+        return { name: "warning" as const, color: Colors.warning, bg: Colors.warningBg };
       case "SETTLEMENT":
-        return { name: "wallet-outline" as const, color: Colors.success, bg: Colors.successBg };
+        return { name: "wallet" as const, color: Colors.success, bg: Colors.successBg };
       case "ACCOUNT":
-        return { name: "business-outline" as const, color: Colors.forestDark, bg: Colors.sand };
+        return { name: "nursery" as const, color: Colors.forestDark, bg: Colors.sand };
       default:
-        return { name: "notifications-outline" as const, color: Colors.ink, bg: Colors.linen };
+        return { name: "bell" as const, color: Colors.ink, bg: Colors.linen };
     }
   };
 
@@ -65,7 +65,7 @@ export default function SellerNotificationsScreen() {
         style={[styles.notificationCard, !item.isRead && styles.unreadCard]}
       >
         <View style={[styles.iconWrap, { backgroundColor: iconConfig.bg }]}>
-          <Ionicons name={iconConfig.name} size={18} color={iconConfig.color} />
+          <FloriaIcon name={iconConfig.name} size={18} color={iconConfig.color} />
         </View>
 
         <View style={styles.contentWrap}>
@@ -83,7 +83,7 @@ export default function SellerNotificationsScreen() {
           <Text style={styles.timeText}>{formatDate(item.createdAt)}</Text>
         </View>
 
-        <Ionicons name="chevron-forward" size={16} color={Colors.inkMuted} style={styles.chevron} />
+        <FloriaIcon name="chevron_right" size={16} color={Colors.inkMuted} style={styles.chevron} />
       </TouchableOpacity>
     );
   };
@@ -137,7 +137,7 @@ export default function SellerNotificationsScreen() {
         }
         ListEmptyComponent={
           <EmptyState
-            icon="notifications-off-outline"
+            icon="bell"
             title={filterUnread ? "No unread notifications" : "All caught up"}
             description={
               filterUnread

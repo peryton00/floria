@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
+import { FloriaIcon } from "@floria/icons";
 import { api } from "../../lib/api";
 import { useSellerAuth } from "../../lib/contexts/SellerAuthContext";
 import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
@@ -168,14 +168,14 @@ export default function SellerProductsScreen() {
           </View>
         </View>
 
-        <Ionicons name="chevron-forward" size={18} color={Colors.inkMuted} style={styles.chevron} />
+        <FloriaIcon name="chevron_right" size={16} color={Colors.inkMuted} style={styles.chevron} />
       </TouchableOpacity>
     );
   };
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
-      {/* ── Top Bar with Add Plant CTA ── */}
+      {/* ── Top Bar with List Product CTA ── */}
       <View style={styles.topBar}>
         <Text style={styles.pageTitle}>Products</Text>
         <TouchableOpacity
@@ -183,15 +183,15 @@ export default function SellerProductsScreen() {
           onPress={() => router.push("/products/new" as any)}
           style={styles.addPlantButton}
         >
-          <Ionicons name="add" size={18} color={Colors.white} />
-          <Text style={styles.addPlantButtonText}>Add Plant</Text>
+          <FloriaIcon name="plus" size={16} color={Colors.white} />
+          <Text style={styles.addPlantButtonText}>List Product</Text>
         </TouchableOpacity>
       </View>
 
       {/* ── Search Bar ── */}
       <View style={styles.searchContainer}>
         <View style={styles.searchInputWrap}>
-          <Ionicons name="search-outline" size={18} color={Colors.inkMuted} />
+          <FloriaIcon name="search" size={18} color={Colors.inkMuted} />
           <TextInput
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -202,7 +202,7 @@ export default function SellerProductsScreen() {
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={() => setSearchQuery("")}>
-              <Ionicons name="close-circle" size={16} color={Colors.inkMuted} />
+              <FloriaIcon name="close" size={16} color={Colors.inkMuted} />
             </TouchableOpacity>
           )}
         </View>
@@ -246,7 +246,7 @@ export default function SellerProductsScreen() {
           }
           ListEmptyComponent={
             <EmptyState
-              icon="leaf-outline"
+              icon="leaf"
               title="Your catalog is empty"
               description={
                 searchQuery
@@ -255,7 +255,7 @@ export default function SellerProductsScreen() {
                     ? `No products currently in "${PRODUCT_FILTERS.find((f) => f.key === activeFilter)?.label}" filter.`
                     : "Add your first botanical specimen from the canonical catalog to start selling."
               }
-              actionLabel={searchQuery ? "Clear Search" : "+ Add Plant"}
+              actionLabel={searchQuery ? "Clear Search" : "+ List Product"}
               onAction={() =>
                 searchQuery ? setSearchQuery("") : router.push("/products/new" as any)
               }

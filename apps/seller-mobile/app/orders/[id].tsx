@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
+import { FloriaIcon } from "@floria/icons";
 import { api } from "../../lib/api";
 import { useSellerAuth } from "../../lib/contexts/SellerAuthContext";
 import { useSellerFeedback } from "../../lib/contexts/SellerFeedbackContext";
@@ -68,7 +68,7 @@ export default function SellerOrderDetailScreen() {
       <View style={[styles.screen, { paddingTop: insets.top }]}>
         <View style={styles.topBar}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={22} color={Colors.forest} />
+            <FloriaIcon name="arrow_left" size={20} color={Colors.forest} />
           </TouchableOpacity>
           <Text style={styles.pageTitle}>Order Fulfillment</Text>
         </View>
@@ -167,7 +167,7 @@ export default function SellerOrderDetailScreen() {
   if (!order) {
     return (
       <View style={[styles.centerScreen, { paddingTop: insets.top }]}>
-        <Ionicons name="alert-circle-outline" size={48} color={Colors.inkMuted} />
+        <FloriaIcon name="warning" size={48} color={Colors.inkMuted} />
         <Text style={styles.notFoundText}>Order not found</Text>
         <Button
           label="Back to Orders"
@@ -231,18 +231,18 @@ export default function SellerOrderDetailScreen() {
         <View style={styles.card}>
           <Text style={styles.cardHeader}>Delivery Information</Text>
           <View style={styles.infoRow}>
-            <Ionicons name="person-outline" size={16} color={Colors.forest} />
+            <FloriaIcon name="nursery" size={16} color={Colors.forest} />
             <Text style={styles.infoText}>{customer.name || "Floria Customer"}</Text>
           </View>
           {customer.phone ? (
             <View style={styles.infoRow}>
-              <Ionicons name="call-outline" size={16} color={Colors.forest} />
+              <FloriaIcon name="phone" size={16} color={Colors.forest} />
               <Text style={styles.infoText}>{customer.phone}</Text>
             </View>
           ) : null}
           {customer.address ? (
             <View style={styles.infoRow}>
-              <Ionicons name="location-outline" size={16} color={Colors.forest} />
+              <FloriaIcon name="storefront" size={16} color={Colors.forest} />
               <Text style={styles.infoText}>
                 {typeof customer.address === "string"
                   ? customer.address
@@ -261,7 +261,7 @@ export default function SellerOrderDetailScreen() {
             return (
               <View key={idx} style={styles.itemRow}>
                 <View style={styles.itemBullet}>
-                  <Ionicons name="leaf" size={14} color={Colors.forest} />
+                  <FloriaIcon name="leaf" size={14} color={Colors.forest} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.itemName}>{prodName}</Text>
@@ -309,7 +309,7 @@ export default function SellerOrderDetailScreen() {
                       ]}
                     >
                       {isPast && (
-                        <Ionicons name="checkmark" size={10} color={Colors.white} />
+                        <FloriaIcon name="check" size={10} color={Colors.white} />
                       )}
                     </View>
                     {idx < TIMELINE_STEPS.length - 1 && (
@@ -359,21 +359,21 @@ export default function SellerOrderDetailScreen() {
           </View>
         ) : currentStatus.includes("picked") ? (
           <View style={styles.statusInfoBox}>
-            <Ionicons name="bicycle-outline" size={20} color={Colors.info} />
+            <FloriaIcon name="package" size={20} color={Colors.info} />
             <Text style={styles.statusInfoText}>
               Package picked up by courier and in transit.
             </Text>
           </View>
         ) : currentStatus.includes("deliver") || currentStatus.includes("complet") ? (
           <View style={[styles.statusInfoBox, { backgroundColor: Colors.successBg }]}>
-            <Ionicons name="checkmark-circle-outline" size={20} color={Colors.success} />
+            <FloriaIcon name="check_circle" size={20} color={Colors.success} />
             <Text style={[styles.statusInfoText, { color: Colors.success }]}>
               Order completed and delivered to customer.
             </Text>
           </View>
         ) : (
           <View style={[styles.statusInfoBox, { backgroundColor: Colors.errorBg }]}>
-            <Ionicons name="alert-circle-outline" size={20} color={Colors.error} />
+            <FloriaIcon name="warning" size={20} color={Colors.error} />
             <Text style={[styles.statusInfoText, { color: Colors.error }]}>
               Order status: {order.status || "Cancelled"}
             </Text>

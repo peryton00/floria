@@ -1,55 +1,35 @@
 import React from "react";
 import { View, ActivityIndicator } from "react-native";
 import { Tabs, Redirect } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
+import { FloriaIcon } from "@floria/icons";
 import { Colors } from "../../lib/theme";
 import { useSellerAuth } from "../../lib/contexts/SellerAuthContext";
 
-function TabIcon({ name, focused, color }: { name: string; focused: boolean; color?: any }) {
-  switch (name) {
-    case "index":
-      return (
-        <Ionicons
-          name={focused ? "speedometer" : "speedometer-outline"}
-          size={22}
-          color={color}
-        />
-      );
-    case "orders":
-      return (
-        <Ionicons
-          name={focused ? "receipt" : "receipt-outline"}
-          size={22}
-          color={color}
-        />
-      );
-    case "products":
-      return (
-        <Ionicons
-          name={focused ? "leaf" : "leaf-outline"}
-          size={22}
-          color={color}
-        />
-      );
-    case "analytics":
-      return (
-        <Ionicons
-          name={focused ? "bar-chart" : "bar-chart-outline"}
-          size={22}
-          color={color}
-        />
-      );
-    case "account":
-      return (
-        <Ionicons
-          name={focused ? "storefront" : "storefront-outline"}
-          size={22}
-          color={color}
-        />
-      );
-    default:
-      return <Ionicons name="ellipse-outline" size={22} color={color} />;
-  }
+function TabIcon({
+  name,
+  focused,
+  color,
+}: {
+  name: "home" | "orders" | "products" | "analytics" | "account";
+  focused: boolean;
+  color?: any;
+}) {
+  const iconNameMap = {
+    home: "home" as const,
+    orders: "orders" as const,
+    products: "leaf" as const,
+    analytics: "analytics" as const,
+    account: "storefront" as const,
+  };
+
+  return (
+    <FloriaIcon
+      name={iconNameMap[name]}
+      size={22}
+      color={color || (focused ? Colors.forest : Colors.inkMuted)}
+      weight={focused ? "fill" : "regular"}
+    />
+  );
 }
 
 export default function TabLayout() {
@@ -94,7 +74,7 @@ export default function TabLayout() {
           title: "Home",
           tabBarLabel: "Home",
           tabBarIcon: ({ focused, color }) => (
-            <TabIcon name="index" focused={focused} color={color} />
+            <TabIcon name="home" focused={focused} color={color} />
           ),
         }}
       />

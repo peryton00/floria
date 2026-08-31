@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
+import { FloriaIcon } from "@floria/icons";
 import { api } from "../../lib/api";
 import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
 import { Button } from "../../components/ui/Button";
@@ -152,7 +152,7 @@ export default function SellerOnboardingScreen() {
       <View style={[styles.screen, { paddingTop: insets.top, justifyContent: "center", padding: Spacing.lg }]}>
         <View style={styles.reviewCard}>
           <View style={styles.reviewIconCircle}>
-            <Ionicons name="hourglass" size={36} color="#2D5A3C" />
+            <FloriaIcon name="clock" size={36} color={Colors.forest} />
           </View>
           <View style={styles.badge}>
             <Text style={styles.badgeText}>● VERIFICATION PENDING</Text>
@@ -180,7 +180,7 @@ export default function SellerOnboardingScreen() {
             style={styles.contactDeskButton}
             onPress={() => setContactModalVisible(true)}
           >
-            <Ionicons name="headset" size={18} color="#FFFFFF" />
+            <FloriaIcon name="phone" size={18} color={Colors.white} />
             <Text style={styles.contactDeskButtonText}>Contact Floria Care</Text>
           </TouchableOpacity>
 
@@ -210,7 +210,7 @@ export default function SellerOnboardingScreen() {
         {/* Header */}
         <View style={styles.topHeader}>
           <TouchableOpacity onPress={handleBack} style={styles.backBtn}>
-            <Ionicons name="arrow-back" size={22} color={Colors.forest} />
+            <FloriaIcon name="arrow_left" size={20} color={Colors.forest} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Become a Seller</Text>
           <TouchableOpacity onPress={() => router.replace("/(auth)/login" as any)}>
@@ -225,7 +225,7 @@ export default function SellerOnboardingScreen() {
             onPress={() => router.replace("/(auth)/login" as any)}
             style={styles.topSegmentTab}
           >
-            <Ionicons name="log-in-outline" size={15} color="#64748B" />
+            <FloriaIcon name="login" size={15} color={Colors.inkMuted} />
             <Text style={styles.topSegmentText}>Sign In</Text>
           </TouchableOpacity>
 
@@ -233,7 +233,7 @@ export default function SellerOnboardingScreen() {
             activeOpacity={0.9}
             style={[styles.topSegmentTab, styles.topSegmentTabActive]}
           >
-            <Ionicons name="sparkles" size={15} color="#2D5A3C" />
+            <FloriaIcon name="sparkles" size={15} color={Colors.forest} />
             <Text style={styles.topSegmentTextActive}>Become a Seller</Text>
           </TouchableOpacity>
         </View>
@@ -254,7 +254,7 @@ export default function SellerOnboardingScreen() {
                     ]}
                   >
                     {isCompleted ? (
-                      <Ionicons name="checkmark" size={12} color={Colors.white} />
+                      <FloriaIcon name="check" size={12} color={Colors.white} />
                     ) : (
                       <Text style={[styles.stepNum, isCurrent && styles.stepNumCurrent]}>
                         {s.id}

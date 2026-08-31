@@ -11,7 +11,7 @@ import {
   Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
+import { FloriaIcon } from "@floria/icons";
 import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
 import { Button } from "../../components/ui/Button";
 import { api } from "../../lib/api";
@@ -51,7 +51,7 @@ export default function SellerForgotPasswordScreen() {
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
           <View style={styles.logo}>
-            <Ionicons name="key" size={28} color={Colors.white} />
+            <FloriaIcon name="sparkles" size={28} color={Colors.white} />
           </View>
           <Text style={styles.title}>Forgot Password</Text>
           <Text style={styles.subtitle}>
@@ -85,7 +85,7 @@ export default function SellerForgotPasswordScreen() {
             </>
           ) : (
             <View style={styles.successBox}>
-              <Ionicons name="mail-open" size={40} color="#2D5A3C" style={styles.mailIcon} />
+              <FloriaIcon name="mail" size={40} color={Colors.forest} style={styles.mailIcon} />
               <Text style={styles.successTitle}>Check Your Inbox</Text>
               <Text style={styles.successText}>
                 If an eligible account exists for {identifier}, we have sent password reset instructions.

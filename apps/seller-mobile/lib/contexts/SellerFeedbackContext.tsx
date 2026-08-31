@@ -17,7 +17,7 @@ import {
   BackHandler,
   Platform,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { FloriaIcon } from "@floria/icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Colors, Typography, Spacing, BorderRadius } from "../theme";
 
@@ -44,7 +44,7 @@ export interface ConfirmSheetConfig {
   onConfirm: () => Promise<void> | void;
 }
 
-export interface SellerFeedbackContextType {
+export interface SellerFeedbackContextValue {
   showSnackbar: (config: SnackbarConfig) => void;
   showSuccess: (message: string, action?: SnackbarAction) => void;
   showError: (message: string, action?: SnackbarAction) => void;
@@ -53,8 +53,10 @@ export interface SellerFeedbackContextType {
   confirmAction: (config: ConfirmSheetConfig) => void;
 }
 
+export type SellerFeedbackContextType = SellerFeedbackContextValue;
+
 const SellerFeedbackContext = createContext<
-  SellerFeedbackContextType | undefined
+  SellerFeedbackContextValue | undefined
 >(undefined);
 
 export function SellerFeedbackProvider({
@@ -63,67 +65,64 @@ export function SellerFeedbackProvider({
   children: React.ReactNode;
 }) {
   const insets = useSafeAreaInsets();
+
+  // Snackbar State
   const [snackbar, setSnackbar] = useState<SnackbarConfig | null>(null);
+  const translateYAnim = useRef(new Animated.Value(60)).current;
+  const opacityAnim = useRef(new Animated.Value(0)).current;
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Confirmation Bottom Sheet State
   const [confirmSheet, setConfirmSheet] = useState<ConfirmSheetConfig | null>(
     null,
   );
   const [confirmLoading, setConfirmLoading] = useState(false);
 
-  const opacityAnim = useRef(new Animated.Value(0)).current;
-  const translateYAnim = useRef(new Animated.Value(40)).current;
-  const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
   const hideSnackbar = useCallback(() => {
-    if (hideTimeoutRef.current) {
-      clearTimeout(hideTimeoutRef.current);
-      hideTimeoutRef.current = null;
-    }
     Animated.parallel([
+      Animated.timing(translateYAnim, {
+        toValue: 60,
+        duration: 220,
+        useNativeDriver: true,
+      }),
       Animated.timing(opacityAnim, {
         toValue: 0,
         duration: 200,
-        useNativeDriver: Platform.OS !== "web",
-      }),
-      Animated.timing(translateYAnim, {
-        toValue: 40,
-        duration: 200,
-        useNativeDriver: Platform.OS !== "web",
+        useNativeDriver: true,
       }),
     ]).start(() => {
       setSnackbar(null);
     });
-  }, [opacityAnim, translateYAnim]);
+  }, [translateYAnim, opacityAnim]);
 
   const showSnackbar = useCallback(
-    ({ message, type = "info", duration = 4000, action }: SnackbarConfig) => {
-      if (hideTimeoutRef.current) {
-        clearTimeout(hideTimeoutRef.current);
-      }
+    (config: SnackbarConfig) => {
+      if (timerRef.current) clearTimeout(timerRef.current);
 
-      setSnackbar({ message, type, duration, action });
+      setSnackbar(config);
+      translateYAnim.setValue(60);
       opacityAnim.setValue(0);
-      translateYAnim.setValue(40);
 
       Animated.parallel([
+        Animated.spring(translateYAnim, {
+          toValue: 0,
+          useNativeDriver: true,
+          damping: 18,
+          stiffness: 140,
+        }),
         Animated.timing(opacityAnim, {
           toValue: 1,
-          duration: 250,
-          useNativeDriver: Platform.OS !== "web",
-        }),
-        Animated.timing(translateYAnim, {
-          toValue: 0,
-          duration: 250,
-          useNativeDriver: Platform.OS !== "web",
+          duration: 200,
+          useNativeDriver: true,
         }),
       ]).start();
 
-      if (duration > 0) {
-        hideTimeoutRef.current = setTimeout(() => {
-          hideSnackbar();
-        }, duration);
-      }
+      const duration = config.duration ?? (config.action ? 6000 : 3500);
+      timerRef.current = setTimeout(() => {
+        hideSnackbar();
+      }, duration);
     },
-    [opacityAnim, translateYAnim, hideSnackbar],
+    [translateYAnim, opacityAnim, hideSnackbar],
   );
 
   const showSuccess = useCallback(
@@ -190,14 +189,14 @@ export function SellerFeedbackProvider({
   const getSnackbarIcon = (type: FeedbackType = "info") => {
     switch (type) {
       case "success":
-        return { name: "checkmark-circle" as const, color: Colors.success };
+        return { name: "check_circle" as const, color: Colors.success };
       case "error":
-        return { name: "alert-circle" as const, color: Colors.error };
+        return { name: "warning" as const, color: Colors.error };
       case "warning":
         return { name: "warning" as const, color: Colors.warning };
       case "info":
       default:
-        return { name: "information-circle" as const, color: Colors.forest };
+        return { name: "info" as const, color: Colors.forest };
     }
   };
 
@@ -227,7 +226,7 @@ export function SellerFeedbackProvider({
           ]}
         >
           <View style={styles.snackbarContent}>
-            <Ionicons
+            <FloriaIcon
               name={getSnackbarIcon(snackbar.type).name}
               size={20}
               color={getSnackbarIcon(snackbar.type).color}
