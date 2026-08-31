@@ -8,9 +8,13 @@ export const metadata: Metadata = {
   description:
     "Floria platform administration, seller verifications, catalog moderation, orders, and system health.",
   icons: {
-    icon: "/brand_logo.svg",
-    shortcut: "/brand_logo.svg",
-    apple: "/brand_logo.svg",
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon.ico", sizes: "48x48" },
+    ],
+    shortcut: "/favicon.svg",
+    apple: "/apple-touch-icon.png",
   },
 };
 
@@ -22,7 +26,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/brand_logo.svg" type="image/svg+xml" />
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
       <body className="bg-cream-100 text-ink-900 antialiased font-sans">
         <ToastProvider>

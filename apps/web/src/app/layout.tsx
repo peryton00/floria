@@ -22,9 +22,13 @@ export const metadata: Metadata = {
     locale: "en_IN",
   },
   icons: {
-    icon: "/brand_logo.svg",
-    shortcut: "/brand_logo.svg",
-    apple: "/brand_logo.svg",
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon.ico", sizes: "48x48" },
+    ],
+    shortcut: "/favicon.svg",
+    apple: "/apple-touch-icon.png",
   },
   robots: {
     index: true,
