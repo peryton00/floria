@@ -221,7 +221,8 @@ export class CheckoutService {
     ];
     const fulfillments = uniqueSellers.map((sellerId) => ({
       seller_id: sellerId,
-      status: "Order Placed",
+      status:
+        input.paymentMethod === "cod" ? "Order Placed" : "pending_payment",
     }));
 
     const orderPayload = {
@@ -349,7 +350,7 @@ export class CheckoutService {
       );
     }
 
-    // 6. Clear Cart — only for COD (cart is cleared for online after webhook payment confirmation)
+    // 6. Clear Cart — only for COD (cart is cleared for online after webhook/payment confirmation)
     if (input.paymentMethod === "cod") {
       await userDb.from("cart_items").delete().eq("cart_id", cartRow.id);
     }
@@ -368,28 +369,65 @@ export class CheckoutService {
       },
     });
 
-    // 8. Notifications Integration
+    // 8. Notifications Integration — only for COD at checkout; for online orders, dispatched upon payment capture
+    if (input.paymentMethod === "cod") {
+      await this.dispatchOrderPlacedNotifications(orderId);
+    }
+
+    return { orderId };
+  }
+
+  /**
+   * Dispatches order placed notifications to customer and nursery partners once payment is confirmed.
+   */
+  async dispatchOrderPlacedNotifications(orderId: string): Promise<void> {
+    const db = getAdminDb();
     try {
-      const { notificationService } =
-        await import("../notifications/notification.service.js");
+      const { data: order } = await db
+        .from("orders")
+        .select(
+          "id, customer_id, order_items(seller_id_snapshot, product:products(seller_id))",
+        )
+        .eq("id", orderId)
+        .maybeSingle();
 
-      // Customer notification
-      await notificationService.createNotification({
-        user_id: input.userId,
-        role: "customer",
-        type: "ORDER_PLACED",
-        title: "Order Placed Successfully",
-        message: `Your order #${orderId.slice(0, 8)} has been placed and routed to nursery partners.`,
-        data: { orderId },
-        source_type: "order",
-        source_id: orderId,
-        navigation: { entityType: "ORDER", entityId: orderId, action: "VIEW" },
-      });
+      if (!order) return;
 
-      // Seller notifications for each nursery in the order
+      const { notificationService } = await import(
+        "../notifications/notification.service.js"
+      );
+
+      // 1. Customer Notification
+      if (order.customer_id) {
+        await notificationService.createNotification({
+          user_id: order.customer_id,
+          role: "customer",
+          type: "ORDER_PLACED",
+          title: "Order Placed Successfully",
+          message: `Your order #${orderId.slice(0, 8)} has been placed and routed to nursery partners.`,
+          data: { orderId },
+          source_type: "order",
+          source_id: orderId,
+          navigation: {
+            entityType: "ORDER",
+            entityId: orderId,
+            action: "VIEW",
+          },
+        });
+      }
+
+      // 2. Seller Notifications
+      const items = order.order_items || [];
+      const uniqueSellers = [
+        ...new Set(
+          items
+            .map((it: any) => it.seller_id_snapshot || it.product?.seller_id)
+            .filter(Boolean),
+        ),
+      ];
+
       for (const sId of uniqueSellers) {
         let sellerUserId: string | null = null;
-
         const { data: sellerProf } = await db
           .from("seller_profiles")
           .select("user_id")
@@ -416,38 +454,14 @@ export class CheckoutService {
               action: "VIEW",
             },
           });
-        } else {
-          // Fallback: Notify all registered seller accounts for seed/test products
-          const { data: allSellers } = await db
-            .from("seller_profiles")
-            .select("user_id");
-
-          for (const s of allSellers || []) {
-            if (s.user_id) {
-              await notificationService.createNotification({
-                user_id: s.user_id,
-                role: "seller",
-                type: "NEW_ORDER",
-                title: "New Nursery Order Received",
-                message: `You have received a new order item on order #${orderId.slice(0, 8)}.`,
-                data: { orderId, sellerId: sId },
-                source_type: "order",
-                source_id: orderId,
-                navigation: {
-                  entityType: "ORDER",
-                  entityId: orderId,
-                  action: "VIEW",
-                },
-              });
-            }
-          }
         }
       }
     } catch (notifErr) {
-      console.error("[CheckoutService] Notification trigger error:", notifErr);
+      console.error(
+        "[CheckoutService] dispatchOrderPlacedNotifications error:",
+        notifErr,
+      );
     }
-
-    return { orderId };
   }
 }
 

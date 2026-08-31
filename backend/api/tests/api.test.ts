@@ -1273,13 +1273,27 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
         }
         if (table === "orders") {
           return {
+            select: () => ({
+              eq: () => ({
+                maybeSingle: async () => ({
+                  data: {
+                    id: "00000000-0000-0000-0000-000000000101",
+                    customer_id: "user-1",
+                  },
+                  error: null,
+                }),
+              }),
+            }),
             update: (payload: any) => {
               orderStatusUpdated = payload.status;
               return { eq: async () => ({ error: null }) };
             },
           };
         }
-        if (table === "seller_ledger_entries") {
+        if (
+          table === "seller_ledger_entries" ||
+          table === "seller_order_fulfillments"
+        ) {
           return { update: () => ({ eq: async () => ({ error: null }) }) };
         }
         if (table === "notifications") {

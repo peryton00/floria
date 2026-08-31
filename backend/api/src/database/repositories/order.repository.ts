@@ -10,6 +10,7 @@ export class OrderRepository {
         "*, order_items(*, product:products(id,name,slug)), seller_order_fulfillments(*)",
       )
       .eq("customer_id", customerId)
+      .neq("status", "pending_payment")
       .order("created_at", { ascending: false });
 
     if (error || !data) return [];

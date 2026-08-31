@@ -247,6 +247,11 @@ export class PaymentsService {
           .update({ status: "seller_pending" })
           .eq("id", payment.order_id);
 
+        await db
+          .from("seller_order_fulfillments")
+          .update({ status: "Order Placed" })
+          .eq("order_id", payment.order_id);
+
         // Update seller ledger entries to available
         await db
           .from("seller_ledger_entries")
@@ -272,33 +277,30 @@ export class PaymentsService {
           }
         }
 
-        // Trigger PAYMENT_SUCCESS notification
-        if (payment.customer_id) {
-          try {
-            const { notificationService } =
-              await import("../notifications/notification.service.js");
-            await notificationService.createNotification({
-              user_id: payment.customer_id,
-              role: "customer",
-              type: "PAYMENT_SUCCESS",
-              title: "Payment Confirmed",
-              message: `Payment of ₹${(payment.amount_paise / 100).toFixed(2)} was received successfully.`,
-              data: { orderId: payment.order_id, paymentId: payment.id },
-              source_type: "payment",
-              source_id: `${payment.id}_paid`,
-              navigation: {
-                entityType: "ORDER",
-                entityId: payment.order_id,
-                action: "VIEW",
-              },
-            });
-          } catch (notifErr) {
-            console.error(
-              "[PaymentsService] Payment success notification warning:",
-              notifErr,
-            );
-          }
+        // Trigger ORDER_PLACED and NEW_ORDER notifications to customer & sellers
+        try {
+          const { checkoutService } = await import(
+            "../checkout/checkout.service.js"
+          );
+          await checkoutService.dispatchOrderPlacedNotifications(
+            payment.order_id,
+          );
+        } catch (notifErr) {
+          console.error(
+            "[PaymentsService] Order notifications warning on payment capture:",
+            notifErr,
+          );
         }
+      } else if (isFailed && payment.order_id) {
+        await db
+          .from("orders")
+          .update({ status: "cancelled" })
+          .eq("id", payment.order_id);
+
+        await db
+          .from("seller_order_fulfillments")
+          .update({ status: "cancelled" })
+          .eq("order_id", payment.order_id);
       }
     }
 
@@ -367,7 +369,9 @@ export class PaymentsService {
     const { data: payment } = await db
       .from("payments")
       .select("*, orders(*)")
-      .or(`cf_order_id.eq.${cfOrderId},payment_reference.eq.${cfOrderId},order_id.eq.${cfOrderId}`)
+      .or(
+        `cf_order_id.eq.${cfOrderId},payment_reference.eq.${cfOrderId},order_id.eq.${cfOrderId}`,
+      )
       .maybeSingle();
 
     if (!payment?.order_id) {
@@ -375,18 +379,24 @@ export class PaymentsService {
     }
 
     let payStatus = String(payment.status || "pending").toLowerCase();
-    const o = Array.isArray(payment.orders) ? payment.orders[0] : payment.orders;
+    const o = Array.isArray(payment.orders)
+      ? payment.orders[0]
+      : payment.orders;
     let ordStatus = String(o?.status || "pending_payment").toLowerCase();
 
     // If still pending, query Cashfree in real time to verify if user paid or dropped/cancelled
     if (payStatus === "pending" || ordStatus === "pending_payment") {
       try {
-        const provider = PaymentProviderFactory.getProvider(payment.provider || "cashfree");
+        const provider = PaymentProviderFactory.getProvider(
+          payment.provider || "cashfree",
+        );
         if (typeof provider.fetchOrderStatus === "function") {
-          const liveCheck = await provider.fetchOrderStatus(payment.cf_order_id || cfOrderId);
+          const liveCheck = await provider.fetchOrderStatus(
+            payment.cf_order_id || cfOrderId,
+          );
           if (liveCheck?.isPaid) {
             payStatus = "captured";
-            ordStatus = "order_placed";
+            ordStatus = "seller_pending";
             await db
               .from("payments")
               .update({
@@ -398,10 +408,30 @@ export class PaymentsService {
             await db
               .from("orders")
               .update({
-                status: "order_placed",
+                status: "seller_pending",
                 updated_at: new Date().toISOString(),
               })
               .eq("id", payment.order_id);
+            await db
+              .from("seller_order_fulfillments")
+              .update({ status: "Order Placed" })
+              .eq("order_id", payment.order_id);
+
+            // Dispatch notifications to customer and sellers
+            try {
+              const { checkoutService } = await import(
+                "../checkout/checkout.service.js"
+              );
+              await checkoutService.dispatchOrderPlacedNotifications(
+                payment.order_id,
+              );
+            } catch (notifErr) {
+              console.error(
+                "[PaymentsService] Order notifications error:",
+                notifErr,
+              );
+            }
+
             // Clear cart for customer
             if (payment.customer_id) {
               const { data: cartRow } = await db
@@ -422,6 +452,7 @@ export class PaymentsService {
             liveCheck?.status === "USER_DROPPED"
           ) {
             payStatus = "failed";
+            ordStatus = "cancelled";
             await db
               .from("payments")
               .update({
@@ -429,16 +460,33 @@ export class PaymentsService {
                 updated_at: new Date().toISOString(),
               })
               .eq("id", payment.id);
+            await db
+              .from("orders")
+              .update({
+                status: "cancelled",
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", payment.order_id);
+            await db
+              .from("seller_order_fulfillments")
+              .update({ status: "cancelled" })
+              .eq("order_id", payment.order_id);
           }
         }
       } catch (liveErr) {
-        console.warn("[PaymentsService] Live order status check error:", liveErr);
+        console.warn(
+          "[PaymentsService] Live order status check error:",
+          liveErr,
+        );
       }
     }
 
     const isPaid =
-      (payStatus === "captured" || payStatus === "success" || payStatus === "paid") &&
-      ordStatus !== "pending_payment";
+      (payStatus === "captured" ||
+        payStatus === "success" ||
+        payStatus === "paid") &&
+      ordStatus !== "pending_payment" &&
+      ordStatus !== "cancelled";
 
     return {
       orderId: payment.order_id,

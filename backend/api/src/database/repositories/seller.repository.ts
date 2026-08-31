@@ -753,77 +753,91 @@ export class SellerRepository {
 
     const orderMap = new Map<string, any>();
 
-    // Process master orders first
-    (masterOrders || []).forEach((order: any) => {
-      const lineItems = (order.order_items || []).map((item: any) => {
-        const pricePaise = item.unit_price_paise_snapshot || 0;
-        const basePrice =
-          item.base_price_paise_snapshot ?? item.unit_price_paise_snapshot ?? 0;
-        const commRate =
-          item.commission_rate_snapshot ?? order.commission_rate ?? 0;
-        const commPaise =
-          item.commission_paise_snapshot ?? Math.round(basePrice * commRate);
-        const sellerNetPaise = basePrice - commPaise;
+    // Process master orders first — exclude unconfirmed pending_payment orders
+    (masterOrders || [])
+      .filter(
+        (order: any) =>
+          order &&
+          order.status !== "pending_payment" &&
+          order.status !== "cancelled",
+      )
+      .forEach((order: any) => {
+        const lineItems = (order.order_items || []).map((item: any) => {
+          const pricePaise = item.unit_price_paise_snapshot || 0;
+          const basePrice =
+            item.base_price_paise_snapshot ?? item.unit_price_paise_snapshot ?? 0;
+          const commRate =
+            item.commission_rate_snapshot ?? order.commission_rate ?? 0;
+          const commPaise =
+            item.commission_paise_snapshot ?? Math.round(basePrice * commRate);
+          const sellerNetPaise = basePrice - commPaise;
 
-        return {
-          product: {
-            id: item.product_id,
-            name: item.product_name_snapshot || item.product?.name || "Plant",
-            slug: item.product?.slug || "plant",
-          },
-          quantity: item.quantity,
-          pricePaise,
-          base_price_paise: basePrice,
-          seller_net_paise: sellerNetPaise,
-          commission_paise: commPaise,
-        };
-      });
+          return {
+            product: {
+              id: item.product_id,
+              name: item.product_name_snapshot || item.product?.name || "Plant",
+              slug: item.product?.slug || "plant",
+            },
+            quantity: item.quantity,
+            pricePaise,
+            base_price_paise: basePrice,
+            seller_net_paise: sellerNetPaise,
+            commission_paise: commPaise,
+          };
+        });
 
-      const subtotalPaise =
-        lineItems.reduce(
-          (sum: number, it: any) => sum + it.pricePaise * it.quantity,
+        const subtotalPaise =
+          lineItems.reduce(
+            (sum: number, it: any) => sum + it.pricePaise * it.quantity,
+            0,
+          ) ||
+          order.subtotal_paise ||
+          0;
+        const sellerPayoutPaise = lineItems.reduce(
+          (sum: number, it: any) => sum + it.seller_net_paise * it.quantity,
           0,
-        ) ||
-        order.subtotal_paise ||
-        0;
-      const sellerPayoutPaise = lineItems.reduce(
-        (sum: number, it: any) => sum + it.seller_net_paise * it.quantity,
-        0,
-      );
+        );
 
-      orderMap.set(order.id, {
-        masterOrderId: order.id,
-        sellerId: targetSellerId,
-        sellerName,
-        customer: {
-          name: order.delivery_address_snapshot?.full_name || "Customer",
-          phone: order.delivery_address_snapshot?.phone || "",
-          address: order.delivery_address_snapshot || {},
-        },
-        items: lineItems,
-        subtotalPaise,
-        seller_payout_paise: sellerPayoutPaise,
-        discountPaise: 0,
-        totalPaise: subtotalPaise,
-        status: order.status === "preparing" ? "Preparing" : "Order Placed",
-        masterStatus: order.status,
-        paymentMethod: order.notes?.includes("COD")
-          ? "Cash on Delivery"
-          : "Online Payment",
-        createdAt: new Date(order.created_at || Date.now()).toLocaleDateString(
-          "en-IN",
-          {
-            day: "numeric",
-            month: "short",
-            year: "numeric",
+        orderMap.set(order.id, {
+          masterOrderId: order.id,
+          sellerId: targetSellerId,
+          sellerName,
+          customer: {
+            name: order.delivery_address_snapshot?.full_name || "Customer",
+            phone: order.delivery_address_snapshot?.phone || "",
+            address: order.delivery_address_snapshot || {},
           },
-        ),
-        createdAtTimestamp: new Date(order.created_at || Date.now()).getTime(),
+          items: lineItems,
+          subtotalPaise,
+          seller_payout_paise: sellerPayoutPaise,
+          discountPaise: 0,
+          totalPaise: subtotalPaise,
+          status: order.status === "preparing" ? "Preparing" : "Order Placed",
+          masterStatus: order.status,
+          paymentMethod: order.notes?.includes("COD")
+            ? "Cash on Delivery"
+            : "Online Payment",
+          createdAt: new Date(order.created_at || Date.now()).toLocaleDateString(
+            "en-IN",
+            {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            },
+          ),
+          createdAtTimestamp: new Date(order.created_at || Date.now()).getTime(),
+        });
       });
-    });
 
-    // Process order items to catch any items assigned to this seller across split orders
-    (items || []).forEach((item: any) => {
+    // Process order items to catch any items assigned to this seller across split orders — exclude pending_payment
+    (items || [])
+      .filter(
+        (item: any) =>
+          item.order &&
+          item.order.status !== "pending_payment" &&
+          item.order.status !== "cancelled",
+      )
+      .forEach((item: any) => {
       const order = item.order;
       if (!order) return;
 
@@ -955,7 +969,13 @@ export class SellerRepository {
       .eq("id", orderId)
       .maybeSingle();
 
-    if (!order) return null;
+    if (
+      !order ||
+      order.status === "pending_payment" ||
+      order.status === "cancelled"
+    ) {
+      return null;
+    }
 
     const profQuery = db
       .from("seller_profiles")

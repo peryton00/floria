@@ -11,7 +11,12 @@ export class FulfillmentRepository {
       .order("created_at", { ascending: false });
 
     if (error || !data) return [];
-    return data;
+    return data.filter(
+      (f: any) =>
+        f.status !== "pending_payment" &&
+        f.status !== "cancelled" &&
+        (!f.orders || f.orders.status !== "pending_payment"),
+    );
   }
 
   async findByOrderAndSeller(
