@@ -110,9 +110,19 @@ export default function OrderDetailScreen() {
     );
   }
 
-  const currentStatus = order.status?.toLowerCase() || "confirmed";
-  const stageIndex = STAGES.findIndex((s) => s.key === currentStatus);
-  const activeIndex = stageIndex >= 0 ? stageIndex : 1;
+  const fulfillments = order.seller_order_fulfillments || [];
+  const rawStatus = (fulfillments[0]?.status || order.status || "").toLowerCase();
+
+  let activeIndex = 0;
+  if (rawStatus.includes("deliver") || rawStatus.includes("complet")) {
+    activeIndex = 3;
+  } else if (rawStatus.includes("shipped") || rawStatus.includes("picked") || rawStatus.includes("out")) {
+    activeIndex = 2;
+  } else if (rawStatus.includes("pack") || rawStatus.includes("ready") || rawStatus.includes("preparing")) {
+    activeIndex = 1;
+  } else {
+    activeIndex = 0;
+  }
 
   return (
     <ScrollView

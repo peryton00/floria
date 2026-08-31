@@ -52,32 +52,42 @@ import type {
 
 function mapApiOrderToRecord(o: any): OrderRecord {
   const addr = o.delivery_address_snapshot || {};
-  const fulfillments = o.seller_order_fulfillments || [];
+  const fulfillments: any[] = o.seller_order_fulfillments || [];
   const groupsMap = new Map<string, OrderNurseryGroup>();
 
   (o.order_items || []).forEach((item: any) => {
     const sellerId =
-      item.seller_id_snapshot || item.seller?.id || "seller_default";
-    const sellerName = item.seller?.business_name || "Nursery";
+      item.seller_id ||
+      item.seller_id_snapshot ||
+      item.product?.seller_id ||
+      item.seller?.id ||
+      o.seller_id ||
+      "seller_default";
+    const sellerName =
+      item.seller?.business_name ||
+      item.product?.seller?.business_name ||
+      "Nursery";
 
-    const fulfillment = fulfillments.find((f: any) => f.seller_id === sellerId);
+    const fulfillment = fulfillments.find(
+      (f: any) => f.seller_id === sellerId || fulfillments.length === 1,
+    );
     const rawStatus = fulfillment?.status || o.status || "Order Placed";
     const st = (rawStatus || "").toLowerCase().replace(/_/g, " ");
 
     let displayStatus: OrderStatus = "Order Placed";
-    if (st.includes("ready") || st.includes("pickup")) {
+    if (st.includes("ready") || st.includes("pickup") || st.includes("dispatch")) {
       displayStatus = "Ready for Pickup";
-    } else if (st.includes("preparing")) {
+    } else if (st.includes("preparing") || st.includes("processing")) {
       displayStatus = "Preparing";
     } else if (st.includes("nursery confirmed") || st.includes("confirmed")) {
       displayStatus = "Nursery Confirmed";
-    } else if (st.includes("picked up")) {
+    } else if (st.includes("picked up") || st.includes("picked")) {
       displayStatus = "Picked Up";
     } else if (st.includes("packing")) {
       displayStatus = "Packing";
     } else if (st.includes("delivery") || st.includes("out for delivery")) {
       displayStatus = "Out for Delivery";
-    } else if (st.includes("delivered")) {
+    } else if (st.includes("delivered") || st.includes("completed")) {
       displayStatus = "Delivered";
     } else if (st.includes("cancelled")) {
       displayStatus = "Cancelled";
@@ -99,29 +109,60 @@ function mapApiOrderToRecord(o: any): OrderRecord {
         slug: item.product?.slug || "plant",
       },
       quantity: item.quantity,
-      pricePaise: item.unit_price_paise_snapshot || 0,
+      pricePaise: item.unit_price_paise_snapshot || item.price_paise || 0,
       categoryName: null,
     });
   });
 
+  const STATUS_RANKS: Record<string, number> = {
+    "Order Placed": 0,
+    "Nursery Confirmed": 1,
+    "Preparing": 2,
+    "Ready for Pickup": 3,
+    "Picked Up": 4,
+    "Packing": 5,
+    "Out for Delivery": 6,
+    "Delivered": 7,
+  };
+
   let masterDisplayStatus: OrderStatus = "Order Placed";
   const mst = (o.status || "").toLowerCase().replace(/_/g, " ");
-  if (mst.includes("ready") || mst.includes("pickup")) {
-    masterDisplayStatus = "Ready for Pickup";
-  } else if (mst.includes("preparing")) {
-    masterDisplayStatus = "Preparing";
-  } else if (mst.includes("nursery confirmed") || mst.includes("confirmed")) {
-    masterDisplayStatus = "Nursery Confirmed";
-  } else if (mst.includes("picked up")) {
-    masterDisplayStatus = "Picked Up";
-  } else if (mst.includes("packing")) {
-    masterDisplayStatus = "Packing";
+
+  if (mst.includes("cancelled")) {
+    masterDisplayStatus = "Cancelled";
+  } else if (mst.includes("delivered") || mst.includes("completed")) {
+    masterDisplayStatus = "Delivered";
   } else if (mst.includes("delivery") || mst.includes("out for delivery")) {
     masterDisplayStatus = "Out for Delivery";
-  } else if (mst.includes("delivered")) {
-    masterDisplayStatus = "Delivered";
-  } else if (mst.includes("cancelled")) {
-    masterDisplayStatus = "Cancelled";
+  } else if (mst.includes("packing")) {
+    masterDisplayStatus = "Packing";
+  } else {
+    // If sellers updated fulfillment status, calculate active aggregate status
+    const groupStatuses = Array.from(groupsMap.values()).map((g) => g.status);
+    if (groupStatuses.length > 0) {
+      let minRank = 999;
+      let matchedStatus: OrderStatus = "Order Placed";
+      for (const gs of groupStatuses) {
+        const rank = STATUS_RANKS[gs] ?? 0;
+        if (rank < minRank) {
+          minRank = rank;
+          matchedStatus = gs;
+        }
+      }
+      if (minRank > 0 && minRank < 999) {
+        masterDisplayStatus = matchedStatus;
+      }
+    }
+
+    if (mst.includes("ready") || mst.includes("pickup")) {
+      masterDisplayStatus = "Ready for Pickup";
+    } else if (mst.includes("preparing") && (STATUS_RANKS[masterDisplayStatus] ?? 0) < 2) {
+      masterDisplayStatus = "Preparing";
+    } else if ((mst.includes("nursery confirmed") || mst.includes("confirmed")) && (STATUS_RANKS[masterDisplayStatus] ?? 0) < 1) {
+      masterDisplayStatus = "Nursery Confirmed";
+    } else if (mst.includes("picked up") && (STATUS_RANKS[masterDisplayStatus] ?? 0) < 4) {
+      masterDisplayStatus = "Picked Up";
+    }
   }
 
   return {
