@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   View,
   Text,
   FlatList,
+  ScrollView,
   TextInput,
   TouchableOpacity,
   RefreshControl,
@@ -21,11 +22,12 @@ import { EmptyState } from "../../components/ui/EmptyState";
 import { SellerPendingVerificationShield } from "../../components/seller";
 
 const STATUS_TABS = [
-  { key: "all", label: "All" },
-  { key: "new", label: "New" },
-  { key: "preparing", label: "Preparing" },
-  { key: "ready", label: "Ready" },
-  { key: "completed", label: "Completed" },
+  { key: "all", label: "All Orders" },
+  { key: "Order Placed", label: "New" },
+  { key: "Nursery Confirmed", label: "Confirmed" },
+  { key: "Preparing", label: "Preparing" },
+  { key: "Ready for Pickup", label: "Ready" },
+  { key: "Picked Up", label: "Completed" },
 ];
 
 export default function SellerOrdersScreen() {
@@ -48,16 +50,7 @@ export default function SellerOrdersScreen() {
     }
     try {
       setLoading(true);
-      let statusFilter: string | undefined = undefined;
-      if (activeTab === "new") statusFilter = "placed";
-      else if (activeTab === "preparing") statusFilter = "preparing";
-      else if (activeTab === "ready") statusFilter = "ready_for_pickup";
-      else if (activeTab === "completed") statusFilter = "delivered";
-
-      const res = await api.getSellerOrders({
-        status: statusFilter,
-        search: searchQuery.trim() || undefined,
-      });
+      const res = await api.getSellerOrders();
 
       if (res.success && Array.isArray(res.data)) {
         setOrders(res.data);
@@ -71,11 +64,59 @@ export default function SellerOrdersScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [activeTab, searchQuery, isApproved]);
+  }, [isApproved]);
 
   useEffect(() => {
     fetchOrders();
   }, [fetchOrders, seller?.id]);
+
+  const getTabCount = (key: string) => {
+    if (key === "all") return orders.length;
+    if (key === "Order Placed") {
+      return orders.filter((o) => {
+        const s = (o.status || "").toLowerCase();
+        return s === "order placed" || s === "placed" || s === "new";
+      }).length;
+    }
+    if (key === "Nursery Confirmed") {
+      return orders.filter((o) => (o.status || "").toLowerCase().includes("confirmed")).length;
+    }
+    if (key === "Preparing") {
+      return orders.filter((o) => (o.status || "").toLowerCase().includes("preparing")).length;
+    }
+    if (key === "Ready for Pickup") {
+      return orders.filter((o) => (o.status || "").toLowerCase().includes("ready")).length;
+    }
+    if (key === "Picked Up") {
+      return orders.filter((o) => {
+        const s = (o.status || "").toLowerCase();
+        return s.includes("picked") || s.includes("deliver") || s.includes("complet");
+      }).length;
+    }
+    return 0;
+  };
+
+  const filteredOrders = useMemo(() => {
+    return orders.filter((o) => {
+      const s = (o.status || "").toLowerCase();
+      if (activeTab === "Order Placed" && !(s === "order placed" || s === "placed" || s === "new")) return false;
+      if (activeTab === "Nursery Confirmed" && !s.includes("confirmed")) return false;
+      if (activeTab === "Preparing" && !s.includes("preparing")) return false;
+      if (activeTab === "Ready for Pickup" && !s.includes("ready")) return false;
+      if (activeTab === "Picked Up" && !(s.includes("picked") || s.includes("deliver") || s.includes("complet"))) return false;
+
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const matchesId = (o.masterOrderId || o.id || "").toLowerCase().includes(q);
+        const matchesCustomer = (o.customer?.name || "").toLowerCase().includes(q);
+        const matchesItem = (o.items || []).some((it: any) =>
+          (it.product?.name || it.product_name || "").toLowerCase().includes(q)
+        );
+        if (!matchesId && !matchesCustomer && !matchesItem) return false;
+      }
+      return true;
+    });
+  }, [orders, activeTab, searchQuery]);
 
   if (!isApproved) {
     return (
@@ -114,7 +155,7 @@ export default function SellerOrdersScreen() {
             <Text style={styles.orderIdText}>#FL-{shortId}</Text>
             <Text style={styles.orderDate}>{formatDate(createdAt)}</Text>
           </View>
-          <StatusBadge status={item.status || "PLACED"} />
+          <StatusBadge status={item.status || "Order Placed"} />
         </View>
 
         {/* Multi-Seller Isolated Items List */}
@@ -157,7 +198,7 @@ export default function SellerOrdersScreen() {
     <View style={[styles.screen, { paddingTop: insets.top }]}>
       {/* ── Screen Header ── */}
       <View style={styles.topBar}>
-        <Text style={styles.pageTitle}>Orders</Text>
+        <Text style={styles.pageTitle}>Orders Fulfillment</Text>
       </View>
 
       {/* ── Search Bar ── */}
@@ -180,23 +221,35 @@ export default function SellerOrdersScreen() {
         </View>
       </View>
 
-      {/* ── Status Tabs ── */}
-      <View style={styles.tabsContainer}>
-        {STATUS_TABS.map((tab) => {
-          const isActive = activeTab === tab.key;
-          return (
-            <TouchableOpacity
-              key={tab.key}
-              activeOpacity={0.8}
-              onPress={() => setActiveTab(tab.key)}
-              style={[styles.tabButton, isActive && styles.activeTabButton]}
-            >
-              <Text style={[styles.tabButtonText, isActive && styles.activeTabText]}>
-                {tab.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
+      {/* ── Status Tabs with Fulfillment Stats ── */}
+      <View style={styles.tabsWrapper}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.tabsScrollContent}
+        >
+          {STATUS_TABS.map((tab) => {
+            const isActive = activeTab === tab.key;
+            const count = getTabCount(tab.key);
+            return (
+              <TouchableOpacity
+                key={tab.key}
+                activeOpacity={0.8}
+                onPress={() => setActiveTab(tab.key)}
+                style={[styles.tabButton, isActive && styles.activeTabButton]}
+              >
+                <Text style={[styles.tabButtonText, isActive && styles.activeTabText]}>
+                  {tab.label}
+                </Text>
+                <View style={[styles.tabBadge, isActive && styles.activeTabBadge]}>
+                  <Text style={[styles.tabBadgeText, isActive && styles.activeTabBadgeText]}>
+                    {count}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
       </View>
 
       {/* ── Orders List / Loading / Empty ── */}
@@ -204,7 +257,7 @@ export default function SellerOrdersScreen() {
         <OrderListSkeleton />
       ) : (
         <FlatList
-          data={orders}
+          data={filteredOrders}
           keyExtractor={(item) => item.masterOrderId || item.id}
           renderItem={renderOrderItem}
           contentContainerStyle={styles.listContent}
@@ -219,7 +272,7 @@ export default function SellerOrdersScreen() {
           ListEmptyComponent={
             <EmptyState
               icon="receipt-outline"
-              title="No orders yet"
+              title="No orders found"
               description={
                 searchQuery
                   ? "No orders match your search query."
@@ -276,22 +329,27 @@ const styles = StyleSheet.create({
     fontSize: Typography.fontSizes.sm,
     color: Colors.ink,
   },
-  tabsContainer: {
-    flexDirection: "row",
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 6,
+  tabsWrapper: {
     backgroundColor: Colors.page,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
-    gap: 6,
+  },
+  tabsScrollContent: {
+    flexDirection: "row",
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 8,
+    gap: 8,
   },
   tabButton: {
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: BorderRadius.full,
     backgroundColor: Colors.linen,
     borderWidth: 1,
     borderColor: Colors.border,
+    gap: 6,
   },
   activeTabButton: {
     backgroundColor: Colors.forest,
@@ -305,6 +363,23 @@ const styles = StyleSheet.create({
   activeTabText: {
     color: Colors.white,
     fontWeight: "700",
+  },
+  tabBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.sand,
+  },
+  activeTabBadge: {
+    backgroundColor: Colors.forestDark,
+  },
+  tabBadgeText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: Colors.inkMuted,
+  },
+  activeTabBadgeText: {
+    color: Colors.white,
   },
   listContent: {
     padding: Spacing.md,

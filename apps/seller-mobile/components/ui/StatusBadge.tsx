@@ -4,27 +4,26 @@ import { Colors, Typography, BorderRadius } from "../../lib/theme";
 
 export function StatusBadge({ status }: { status: string }) {
   const getColors = () => {
-    switch (status?.toLowerCase()) {
-      case "delivered":
-      case "approved":
-      case "active":
-        return { bg: Colors.successBg, text: Colors.success };
-      case "ready":
-      case "ready_for_pickup":
-      case "preparing":
-      case "processing":
-        return { bg: Colors.botanical, text: Colors.forestDark };
-      case "pending":
-      case "new":
-      case "unfulfilled":
-        return { bg: Colors.warningBg, text: Colors.warning };
-      case "rejected":
-      case "cancelled":
-      case "suspended":
-        return { bg: Colors.errorBg, text: Colors.error };
-      default:
-        return { bg: Colors.sand, text: Colors.inkMuted };
+    const s = status?.toLowerCase() || "";
+    if (s.includes("deliver") || s.includes("approved") || s.includes("active") || s.includes("picked")) {
+      return { bg: Colors.successBg, text: Colors.success };
     }
+    if (s.includes("ready") || s.includes("pickup") || s.includes("dispatch")) {
+      return { bg: "#EDE9FE", text: "#6D28D9" };
+    }
+    if (s.includes("preparing") || s.includes("processing")) {
+      return { bg: Colors.warningBg, text: Colors.warning };
+    }
+    if (s.includes("confirmed")) {
+      return { bg: "#E0F2FE", text: "#0369A1" };
+    }
+    if (s.includes("placed") || s.includes("new") || s.includes("pending")) {
+      return { bg: "#EFF6FF", text: "#1D4ED8" };
+    }
+    if (s.includes("reject") || s.includes("cancel") || s.includes("suspend") || s.includes("issue")) {
+      return { bg: Colors.errorBg, text: Colors.error };
+    }
+    return { bg: Colors.sand, text: Colors.inkMuted };
   };
 
   const { bg, text } = getColors();

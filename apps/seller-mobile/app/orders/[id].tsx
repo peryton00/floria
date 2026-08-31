@@ -23,13 +23,31 @@ import { Button } from "../../components/ui/Button";
 import { SellerPendingVerificationShield } from "../../components/seller";
 
 const TIMELINE_STEPS = [
-  { key: "placed", label: "Order Placed" },
-  { key: "confirmed", label: "Order Confirmed" },
-  { key: "preparing", label: "Preparing" },
-  { key: "ready_for_pickup", label: "Ready for Dispatch" },
-  { key: "out_for_delivery", label: "Out for Delivery" },
-  { key: "delivered", label: "Delivered" },
+  { key: "Order Placed", label: "Order Placed" },
+  { key: "Nursery Confirmed", label: "Nursery Confirmed" },
+  { key: "Preparing", label: "Preparing" },
+  { key: "Ready for Pickup", label: "Ready for Pickup" },
+  { key: "Picked Up", label: "Picked Up" },
+  { key: "Delivered", label: "Delivered" },
 ];
+
+function getNextSellerStatus(currentStatus: string): string | null {
+  const s = (currentStatus || "").trim().toLowerCase();
+  if (s === "order placed" || s === "placed" || s === "new") return "Nursery Confirmed";
+  if (s === "nursery confirmed" || s === "confirmed") return "Preparing";
+  if (s === "preparing" || s === "processing") return "Ready for Pickup";
+  if (s === "ready for pickup" || s === "ready" || s === "ready_for_pickup") return "Picked Up";
+  return null;
+}
+
+function getSellerActionLabel(currentStatus: string): string | null {
+  const s = (currentStatus || "").trim().toLowerCase();
+  if (s === "order placed" || s === "placed" || s === "new") return "Confirm Order";
+  if (s === "nursery confirmed" || s === "confirmed") return "Start Preparing";
+  if (s === "preparing" || s === "processing") return "Mark Ready for Pickup";
+  if (s === "ready for pickup" || s === "ready" || s === "ready_for_pickup") return "Mark Picked Up";
+  return null;
+}
 
 export default function SellerOrderDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -96,15 +114,16 @@ export default function SellerOrderDetailScreen() {
   };
 
   const handleUpdateStatus = async (nextStatus: string) => {
-    if (!id) return;
+    const targetOrderId = order?.masterOrderId || order?.id || id;
+    if (!targetOrderId) return;
     try {
       setTransitioning(true);
-      const res = await api.updateFulfillmentStatus(id, nextStatus);
+      const res = await api.updateFulfillmentStatus(targetOrderId, nextStatus);
       if (res.success) {
-        showSuccess(`Order updated to ${nextStatus.replace(/_/g, " ")}`);
+        showSuccess(`Order updated to ${nextStatus}`);
         await fetchOrder();
       } else {
-        showError(res.error?.message || "Failed to update fulfillment status");
+        showError(res.error?.message || `Failed to update fulfillment status to ${nextStatus}`);
       }
     } catch (err: any) {
       showError(err.message || "Failed to update fulfillment status");
@@ -171,30 +190,18 @@ export default function SellerOrderDetailScreen() {
 
   // Calculate timeline progress index
   const getTimelineIndex = () => {
-    switch (currentStatus) {
-      case "placed":
-      case "new":
-      case "order placed":
-        return 0;
-      case "confirmed":
-        return 1;
-      case "preparing":
-      case "processing":
-        return 2;
-      case "ready_for_pickup":
-      case "ready":
-      case "ready_for_dispatch":
-        return 3;
-      case "out_for_delivery":
-        return 4;
-      case "delivered":
-      case "completed":
-        return 5;
-      default:
-        return 0;
-    }
+    const s = (order?.status || "").toLowerCase();
+    if (s.includes("placed") || s.includes("new")) return 0;
+    if (s.includes("confirmed")) return 1;
+    if (s.includes("preparing") || s.includes("processing")) return 2;
+    if (s.includes("ready")) return 3;
+    if (s.includes("picked")) return 4;
+    if (s.includes("deliver") || s.includes("complet")) return 5;
+    return 0;
   };
   const activeStepIdx = getTimelineIndex();
+  const nextStatus = getNextSellerStatus(order?.status);
+  const actionLabel = getSellerActionLabel(order?.status);
 
   return (
     <View style={styles.screen}>
@@ -216,7 +223,7 @@ export default function SellerOrderDetailScreen() {
               <Text style={styles.orderTitle}>Order #FL-{shortId}</Text>
               <Text style={styles.orderTimestamp}>{formatDate(order.createdAt)}</Text>
             </View>
-            <StatusBadge status={order.status || "PLACED"} />
+            <StatusBadge status={order.status || "Order Placed"} />
           </View>
         </View>
 
@@ -332,7 +339,7 @@ export default function SellerOrderDetailScreen() {
 
       {/* ── Bottom Action Bar ── */}
       <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 16) }]}>
-        {currentStatus === "placed" || currentStatus === "new" || currentStatus === "order placed" ? (
+        {nextStatus && actionLabel ? (
           <View style={styles.actionButtonsRow}>
             <Button
               label="Report Issue"
@@ -342,55 +349,22 @@ export default function SellerOrderDetailScreen() {
               style={{ flex: 1 }}
             />
             <Button
-              label="Accept & Prepare"
+              label={actionLabel}
               variant="primary"
               size="md"
               loading={transitioning}
-              onPress={() => handleUpdateStatus("preparing")}
-              style={{ flex: 1.5 }}
-            />
-          </View>
-        ) : currentStatus === "confirmed" ? (
-          <Button
-            label="Start Preparing Plant"
-            variant="primary"
-            size="md"
-            loading={transitioning}
-            onPress={() => handleUpdateStatus("preparing")}
-          />
-        ) : currentStatus === "preparing" || currentStatus === "processing" ? (
-          <View style={styles.actionButtonsRow}>
-            <Button
-              label="Report Issue"
-              variant="outline"
-              size="md"
-              onPress={() => setIssueModalVisible(true)}
-              style={{ flex: 1 }}
-            />
-            <Button
-              label="Mark Ready for Dispatch"
-              variant="success"
-              size="md"
-              loading={transitioning}
-              onPress={() => handleUpdateStatus("ready_for_pickup")}
+              onPress={() => handleUpdateStatus(nextStatus)}
               style={{ flex: 2 }}
             />
           </View>
-        ) : currentStatus === "ready_for_pickup" || currentStatus === "ready" ? (
-          <View style={styles.statusInfoBox}>
-            <Ionicons name="time-outline" size={20} color={Colors.sage} />
-            <Text style={styles.statusInfoText}>
-              Plant is ready. Waiting for Floria courier pickup & dispatch.
-            </Text>
-          </View>
-        ) : currentStatus === "out_for_delivery" ? (
+        ) : currentStatus.includes("picked") ? (
           <View style={styles.statusInfoBox}>
             <Ionicons name="bicycle-outline" size={20} color={Colors.info} />
             <Text style={styles.statusInfoText}>
-              Specimen is currently out for delivery with the courier.
+              Package picked up by courier and in transit.
             </Text>
           </View>
-        ) : currentStatus === "delivered" || currentStatus === "completed" ? (
+        ) : currentStatus.includes("deliver") || currentStatus.includes("complet") ? (
           <View style={[styles.statusInfoBox, { backgroundColor: Colors.successBg }]}>
             <Ionicons name="checkmark-circle-outline" size={20} color={Colors.success} />
             <Text style={[styles.statusInfoText, { color: Colors.success }]}>
