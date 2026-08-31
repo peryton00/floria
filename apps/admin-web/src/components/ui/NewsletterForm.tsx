@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { FloriaIcon } from "@floria/icons";
 
 export function NewsletterForm() {
   const [email, setEmail] = useState("");
@@ -17,7 +18,7 @@ export function NewsletterForm() {
   if (subscribed) {
     return (
       <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-forest-800/80 border border-forest-600/40 text-emerald-200 text-xs font-ui">
-        <span>🌱</span>
+        <FloriaIcon name="plant" size="xs" />
         <span className="font-semibold">
           Welcome to the Floria plant club! Check your inbox soon.
         </span>

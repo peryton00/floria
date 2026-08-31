@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { api } from "@/lib/api";
+import { FloriaIcon } from "@floria/icons";
 
 type CategoryFilter = "all" | "auth" | "changes" | "security";
 
@@ -105,7 +106,8 @@ export default function AdminAuditLogsPage() {
               onClick={fetchLogs}
               className="px-3 py-1.5 rounded-lg border border-ink-200 hover:bg-cream-100 text-xs font-bold text-ink-700 transition-colors flex items-center gap-1.5"
             >
-              <span>🔄</span> Refresh Logs
+              <FloriaIcon name="refresh" size="xs" />
+              <span>Refresh Logs</span>
             </button>
             <span className="px-3 py-1.5 rounded-lg bg-forest-50 text-forest-700 font-bold text-xs border border-forest-100">
               {filteredLogs.length} / {logs.length} Entries
@@ -136,29 +138,32 @@ export default function AdminAuditLogsPage() {
               <button
                 type="button"
                 onClick={() => setCategoryFilter("auth")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
                   categoryFilter === "auth" ? "bg-white text-blue-900 shadow-xs" : "text-ink-500 hover:text-ink-800"
                 }`}
               >
-                🔐 Login & Logout
+                <FloriaIcon name="lock" size="xs" />
+                <span>Login &amp; Logout</span>
               </button>
               <button
                 type="button"
                 onClick={() => setCategoryFilter("changes")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
                   categoryFilter === "changes" ? "bg-white text-emerald-900 shadow-xs" : "text-ink-500 hover:text-ink-800"
                 }`}
               >
-                ⚡ Data Changes
+                <FloriaIcon name="activity" size="xs" />
+                <span>Data Changes</span>
               </button>
               <button
                 type="button"
                 onClick={() => setCategoryFilter("security")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
                   categoryFilter === "security" ? "bg-white text-rose-900 shadow-xs" : "text-ink-500 hover:text-ink-800"
                 }`}
               >
-                ⚠️ Security Alerts
+                <FloriaIcon name="warning" size="xs" />
+                <span>Security Alerts</span>
               </button>
             </div>
 
@@ -280,7 +285,7 @@ export default function AdminAuditLogsPage() {
                   onClick={() => setSelectedLog(null)}
                   className="w-7 h-7 rounded-full bg-cream-100 hover:bg-cream-200 flex items-center justify-center text-ink-600 font-bold text-xs transition-colors"
                 >
-                  ✕
+                  <FloriaIcon name="close" size="xs" />
                 </button>
               </div>
 

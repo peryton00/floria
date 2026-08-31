@@ -78,3 +78,6 @@ export const CopyIcon = createIcon("copy", 18);
 export const EyeIcon = createIcon("eye", 18);
 export const FilterIcon = createIcon("filter", 18);
 export const ZapIcon = createIcon("sparkles", 18);
+export const CloseIcon = createIcon("close", 18);
+export const RefreshIcon = createIcon("refresh", 18);
+export const NurseryIcon = createIcon("storefront", 20);

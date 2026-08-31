@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { api } from "@/lib/api";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { FloriaIcon } from "@floria/icons";
 
 export interface ImageItem {
   id?: string; // product_images.id if attached
@@ -339,29 +340,32 @@ export function ProductImageUploader({
                     <button
                       type="button"
                       onClick={() => handleMove(idx, "up")}
-                      className="p-1 text-stone-700 bg-white rounded-md hover:bg-stone-100"
+                      className="p-1 text-stone-700 bg-white rounded-md hover:bg-stone-100 transition-colors"
                       title="Move Left"
+                      aria-label="Move Left"
                     >
-                      ←
+                      <FloriaIcon name="chevron_left" size="xs" />
                     </button>
                   )}
                   {idx < images.length - 1 && (
                     <button
                       type="button"
                       onClick={() => handleMove(idx, "down")}
-                      className="p-1 text-stone-700 bg-white rounded-md hover:bg-stone-100"
+                      className="p-1 text-stone-700 bg-white rounded-md hover:bg-stone-100 transition-colors"
                       title="Move Right"
+                      aria-label="Move Right"
                     >
-                      →
+                      <FloriaIcon name="chevron_right" size="xs" />
                     </button>
                   )}
                   <button
                     type="button"
                     onClick={() => handleRemove(idx)}
-                    className="p-1 text-red-600 bg-white rounded-md hover:bg-red-50"
+                    className="p-1 text-red-600 bg-white rounded-md hover:bg-red-50 transition-colors"
                     title="Remove Image"
+                    aria-label="Remove Image"
                   >
-                    ✕
+                    <FloriaIcon name="close" size="xs" />
                   </button>
                 </div>
               </div>

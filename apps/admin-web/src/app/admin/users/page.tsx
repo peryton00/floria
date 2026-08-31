@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { api } from "@/lib/api";
-import { SearchIcon } from "@/components/ui/Icons";
+import { SearchIcon, CloseIcon } from "@/components/ui/Icons";
 import { useToast } from "@/lib/contexts/ToastContext";
 import { TableSkeleton } from "@/components/ui/loading";
 
@@ -240,9 +240,10 @@ export default function AdminUsersPage() {
                 <button
                   type="button"
                   onClick={() => setSelectedUser(null)}
-                  className="text-ink-400 hover:text-ink-900 font-bold text-sm"
+                  className="text-ink-400 hover:text-ink-900 transition-colors p-1"
+                  aria-label="Close modal"
                 >
-                  ✕
+                  <CloseIcon size={16} />
                 </button>
               </div>
 

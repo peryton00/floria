@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { useToast } from "@/lib/contexts/ToastContext";
 import { TableSkeleton } from "@/components/ui/loading";
 import { MediaUploader } from "@/components/media/MediaUploader";
+import { CloseIcon } from "@/components/ui/Icons";
 
 export default function AdminCategoriesPage() {
   const { toast } = useToast();
@@ -241,9 +242,10 @@ export default function AdminCategoriesPage() {
                 <button
                   type="button"
                   onClick={() => { setShowCreateModal(false); resetForm(); }}
-                  className="text-ink-400 hover:text-ink-900 font-bold text-sm"
+                  className="text-ink-400 hover:text-ink-900 transition-colors p-1"
+                  aria-label="Close modal"
                 >
-                  ✕
+                  <CloseIcon size={16} />
                 </button>
               </div>
 

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import type { AdminOrderFinancialBreakdown } from "@floria/types";
+import { FloriaIcon } from "@floria/icons";
 
 interface Props {
   orderId: string;
@@ -44,24 +45,23 @@ export function OrderFinancialBreakdown({ orderId }: Props) {
 
   if (loading) {
     return (
-      <div className="rounded-2xl bg-slate-950 border border-slate-800 p-8 flex flex-col items-center justify-center gap-3 text-slate-400">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
-        <span className="text-xs font-mono text-slate-400">Calculating server-authoritative order breakdown...</span>
+      <div className="flex items-center justify-center py-12 gap-3 text-slate-400">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
+        <span className="text-xs font-mono">Loading financial breakdown...</span>
       </div>
     );
   }
 
   if (error || !data) {
     return (
-      <div className="rounded-2xl bg-slate-950 border border-rose-900/60 p-6 text-slate-300 text-xs space-y-1">
-        <p className="text-rose-400 font-bold">Financial Breakdown Unavailable</p>
-        <p className="text-slate-400">{error || "No financial breakdown record found for this order."}</p>
+      <div className="rounded-xl bg-rose-950/40 border border-rose-800/60 p-4 text-rose-300 text-xs">
+        {error || "Unable to load financial data for this master order."}
       </div>
     );
   }
 
   return (
-    <div className="rounded-2xl bg-slate-950 border border-slate-800 p-6 text-slate-100 space-y-6 shadow-2xl">
+    <div className="rounded-2xl bg-slate-950 border border-slate-800 p-6 space-y-6 text-slate-100 shadow-xl">
       {/* Header Bar */}
       <div className="flex items-start justify-between border-b border-slate-800 pb-4">
         <div>
@@ -81,7 +81,7 @@ export function OrderFinancialBreakdown({ orderId }: Props) {
       {/* Multi-Nursery Attribution Section */}
       <div className="space-y-4">
         <h3 className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
-          <span>🏪</span> Attributed Nursery Partners ({data.nurseryBreakdown.length})
+          <FloriaIcon name="storefront" size="xs" /> Attributed Nursery Partners ({data.nurseryBreakdown.length})
         </h3>
 
         {data.nurseryBreakdown.map((nursery) => (

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { api } from "@/lib/api";
 import { SellerStatusBadge } from "@/components/seller/SellerStatusBadge";
-import { LeafIcon } from "@/components/ui/Icons";
+import { LeafIcon, CloseIcon } from "@/components/ui/Icons";
 import { useToast } from "@/lib/contexts/ToastContext";
 import { NurseryGridSkeleton } from "@/components/ui/loading";
 
@@ -365,9 +365,10 @@ export default function AdminSellersPage() {
                     setSelectedSeller(null);
                     setActionPrompt(null);
                   }}
-                  className="p-1 text-[#6B7280] hover:text-[#111827] text-lg font-bold"
+                  className="p-1 text-[#6B7280] hover:text-[#111827] transition-colors"
+                  aria-label="Close modal"
                 >
-                  ✕
+                  <CloseIcon size={18} />
                 </button>
               </div>
 

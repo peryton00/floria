@@ -16,6 +16,7 @@ import {
   EditIcon,
   CopyIcon,
   EyeIcon,
+  CloseIcon,
 } from "@/components/ui/Icons";
 
 interface MediaItem {
@@ -845,9 +846,10 @@ export default function AdminMediaPage() {
               <button
                 type="button"
                 onClick={() => setPreviewItem(null)}
-                className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-gray-100 text-gray-500 font-bold text-sm"
+                className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-gray-100 text-gray-500 transition-colors"
+                aria-label="Close preview modal"
               >
-                ✕
+                <CloseIcon size={16} />
               </button>
 
               <div className="relative aspect-video bg-gray-900 rounded-xl overflow-hidden flex items-center justify-center">

@@ -6,7 +6,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { api } from "@/lib/api";
 import { formatINR } from "@/lib/format";
 import { useToast } from "@/lib/contexts/ToastContext";
-import { SearchIcon, PayoutIcon } from "@/components/ui/Icons";
+import { SearchIcon, PayoutIcon, CloseIcon } from "@/components/ui/Icons";
 
 export interface TransactionRecord {
   id: string;
@@ -387,9 +387,10 @@ export default function AdminPayoutsPage() {
                 <button
                   type="button"
                   onClick={() => setRefundModalItem(null)}
-                  className="text-slate-400 hover:text-slate-600 text-sm font-bold"
+                  className="text-slate-400 hover:text-slate-600 transition-colors p-1"
+                  aria-label="Close modal"
                 >
-                  ✕
+                  <CloseIcon size={16} />
                 </button>
               </div>
 

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { api } from "@/lib/api";
 import { PayoutIcon, ShieldIcon, CheckIcon, AlertIcon } from "@/components/ui/Icons";
+import { FloriaIcon } from "@floria/icons";
 import { useToast } from "@/lib/contexts/ToastContext";
 import type { FinancialSettings, PricingPolicyVersion, PolicyImpactPreview, PricingRecalculationJob } from "@floria/types";
 
@@ -269,7 +270,7 @@ export default function AdminSettingsPage() {
           <div className="flex items-center justify-between border-b border-ink-100 pb-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-forest-50 text-forest-700 flex items-center justify-center font-bold text-lg">
-                🏷️
+                <FloriaIcon name="tag" size="md" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -445,8 +446,9 @@ export default function AdminSettingsPage() {
                             )}
 
                             {isLive && (
-                              <span className="text-[10px] font-bold text-forest-700 px-2 py-1">
-                                ✓ Live Active
+                              <span className="text-[10px] font-bold text-forest-700 px-2 py-1 flex items-center gap-1">
+                                <FloriaIcon name="check" size="xs" />
+                                <span>Live Active</span>
                               </span>
                             )}
                           </div>
@@ -471,7 +473,7 @@ export default function AdminSettingsPage() {
                   onClick={() => setShowDraftModal(false)}
                   className="text-ink-400 hover:text-ink-900 font-bold text-sm"
                 >
-                  ✕
+                  <FloriaIcon name="close" size="sm" />
                 </button>
               </div>
 
@@ -606,7 +608,7 @@ export default function AdminSettingsPage() {
                   onClick={() => setPreviewingPolicy(null)}
                   className="text-ink-400 hover:text-ink-900 font-bold text-sm"
                 >
-                  ✕
+                  <FloriaIcon name="close" size="sm" />
                 </button>
               </div>
 

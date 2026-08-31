@@ -92,7 +92,7 @@ export function SellerSidebar({ onClose }: SellerSidebarProps) {
             className="md:hidden p-1.5 rounded hover:bg-white/10 text-white/70 hover:text-white transition-colors"
             aria-label="Close navigation"
           >
-            ✕
+            <FloriaIcon name="close" size="sm" />
           </button>
         )}
       </div>

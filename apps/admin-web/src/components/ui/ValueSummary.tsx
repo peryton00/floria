@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { FloriaIcon } from "@floria/icons";
 
 export interface ValueSummaryProps {
   isFreeDelivery?: boolean;
@@ -28,7 +29,7 @@ export function ValueSummary({
   if (isVerifiedSeller) {
     items.push(
       sellerName
-        ? `Verified nursery (${sellerName})`
+        ? `Verified nursery partner: ${sellerName}`
         : "Verified nursery partner",
     );
   }
@@ -40,7 +41,7 @@ export function ValueSummary({
     reviewCount > 0
   ) {
     items.push(
-      `${rating.toFixed(1)}★ rating from ${reviewCount} customer${reviewCount > 1 ? "s" : ""}`,
+      `${rating.toFixed(1)} star rating from ${reviewCount} customer${reviewCount > 1 ? "s" : ""}`,
     );
   } else {
     items.push("Fresh quality plant guarantee");
@@ -62,8 +63,8 @@ export function ValueSummary({
       <ul className="grid grid-cols-1 gap-1.5">
         {displayedItems.map((item, idx) => (
           <li key={idx} className="flex items-center gap-2 text-ink-700">
-            <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-forest-100 text-forest-800 text-[10px] font-bold flex-shrink-0">
-              ✓
+            <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-forest-100 text-forest-800 flex-shrink-0">
+              <FloriaIcon name="check" size="xs" />
             </span>
             <span className="font-medium text-xs">{item}</span>
           </li>

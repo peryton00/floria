@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import type { AdminProductFinancialCalculation } from "@floria/types";
+import { FloriaIcon } from "@floria/icons";
 
 interface Props {
   productId: string;
@@ -68,9 +69,7 @@ export function ProductFinancialBreakdown({ productId, onClose }: Props) {
             aria-label="Close modal"
             className="rounded-full p-2 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <FloriaIcon name="close" size="sm" />
           </button>
         </div>
 
@@ -103,7 +102,7 @@ export function ProductFinancialBreakdown({ productId, onClose }: Props) {
             <div className="rounded-xl bg-slate-900/50 border border-slate-800 p-4 space-y-3">
               <div className="flex items-center justify-between border-b border-slate-800 pb-2">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
-                  <span>🏪</span> Seller Base Price &amp; Commission Settlement
+                  <FloriaIcon name="storefront" size="xs" /> Seller Base Price &amp; Commission Settlement
                 </h4>
                 <span className="text-[10px] font-mono bg-amber-500/10 text-amber-300 border border-amber-500/20 px-2 py-0.5 rounded">
                   {data.commission.rate}% Commission Cut
@@ -137,7 +136,7 @@ export function ProductFinancialBreakdown({ productId, onClose }: Props) {
             <div className="rounded-xl bg-slate-900/50 border border-slate-800 p-4 space-y-3">
               <div className="flex items-center justify-between border-b border-slate-800 pb-2">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-sky-400 flex items-center gap-1.5">
-                  <span>⚙️</span> Floria Internal Pricing Components (Admin Only)
+                  <FloriaIcon name="settings" size="xs" /> Floria Internal Pricing Components (Admin Only)
                 </h4>
                 <span className="text-[10px] font-mono bg-sky-500/10 text-sky-300 border border-sky-500/20 px-2 py-0.5 rounded">
                   Internal Economics
@@ -160,13 +159,23 @@ export function ProductFinancialBreakdown({ productId, onClose }: Props) {
                 <div className="flex justify-between items-center border-t border-slate-800/80 pt-2">
                   <span className="text-slate-400">Product Free Delivery Qualification</span>
                   <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider border ${
+                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider border ${
                       data.pricing.isFreeDeliveryEligible
                         ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
                         : "bg-amber-500/15 text-amber-400 border-amber-500/30"
                     }`}
                   >
-                    {data.pricing.isFreeDeliveryEligible ? "✓ YES (Free Delivery)" : "✕ NO (Paid Delivery)"}
+                    {data.pricing.isFreeDeliveryEligible ? (
+                      <>
+                        <FloriaIcon name="check" size="xs" />
+                        <span>YES (Free Delivery)</span>
+                      </>
+                    ) : (
+                      <>
+                        <FloriaIcon name="close" size="xs" />
+                        <span>NO (Paid Delivery)</span>
+                      </>
+                    )}
                   </span>
                 </div>
               </div>
@@ -189,8 +198,8 @@ export function ProductFinancialBreakdown({ productId, onClose }: Props) {
 
             {/* Math Formula Explainer Legend Footer */}
             <div className="rounded-xl bg-slate-950 border border-slate-800/80 p-3.5 text-[11px] text-slate-400 space-y-1.5 font-mono leading-relaxed">
-              <p className="text-slate-300 font-bold text-[10px] uppercase tracking-wider border-b border-slate-800 pb-1 mb-1">
-                📌 Financial Calculation Formula Legend
+              <p className="text-slate-300 font-bold text-[10px] uppercase tracking-wider border-b border-slate-800 pb-1 mb-1 flex items-center gap-1.5">
+                <FloriaIcon name="info" size="xs" /> Financial Calculation Formula Legend
               </p>
               <p>
                 <strong className="text-amber-300">Seller Net Payout</strong> = Base Price ({formatINR(data.pricing.sellerBasePricePaise)}) − Commission ({data.commission.rate}%)

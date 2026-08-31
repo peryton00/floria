@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { api } from "@/lib/api";
 import { formatINR } from "@/lib/format";
-import { SearchIcon } from "@/components/ui/Icons";
+import { SearchIcon, CloseIcon } from "@/components/ui/Icons";
 import { OrderFinancialBreakdown } from "@/components/admin/OrderFinancialBreakdown";
 import { useToast } from "@/lib/contexts/ToastContext";
 import { TableSkeleton } from "@/components/ui/loading";
@@ -214,9 +214,10 @@ export default function AdminOrdersPage() {
                 <button
                   type="button"
                   onClick={() => setSelectedOrder(null)}
-                  className="text-ink-400 hover:text-ink-900 font-bold text-sm"
+                  className="text-ink-400 hover:text-ink-900 transition-colors p-1"
+                  aria-label="Close modal"
                 >
-                  ✕
+                  <CloseIcon size={16} />
                 </button>
               </div>
 

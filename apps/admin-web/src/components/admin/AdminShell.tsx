@@ -25,6 +25,7 @@ import {
   LockIcon,
   LogoutIcon,
   ImageIcon,
+  CloseIcon,
 } from "@/components/ui/Icons";
 
 interface AdminShellProps {
@@ -238,10 +239,10 @@ export function AdminShell({ children }: AdminShellProps) {
               <button
                 type="button"
                 onClick={() => setMobileDrawerOpen(false)}
-                className="p-2 text-white/70 hover:text-white font-bold"
+                className="p-2 text-white/70 hover:text-white font-bold transition-colors"
                 aria-label="Close navigation drawer"
               >
-                ✕
+                <CloseIcon size={18} />
               </button>
             </div>
 

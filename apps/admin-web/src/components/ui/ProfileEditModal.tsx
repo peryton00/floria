@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { LockIcon } from "@/components/ui/Icons";
+import { LockIcon, CloseIcon } from "@/components/ui/Icons";
 import { api } from "@/lib/api";
 import { MediaUploader } from "@/components/media/MediaUploader";
 
@@ -71,9 +71,9 @@ export function ProfileEditModal({
             type="button"
             onClick={onClose}
             aria-label="Close modal"
-            className="text-ink-400 hover:text-ink-900 text-lg font-bold p-1 rounded transition-colors"
+            className="text-ink-400 hover:text-ink-900 p-1 rounded transition-colors"
           >
-            ✕
+            <CloseIcon size={16} />
           </button>
         </div>
 

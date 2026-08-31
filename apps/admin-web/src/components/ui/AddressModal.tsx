@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useCustomer } from "@/lib/contexts/CustomerContext";
-import { MapPinIcon, CheckIcon, AlertIcon } from "@/components/ui/Icons";
+import { MapPinIcon, CheckIcon, AlertIcon, CloseIcon } from "@/components/ui/Icons";
 
 export interface AddressItem {
   id: string;
@@ -222,9 +222,9 @@ export function AddressModal({
             type="button"
             onClick={onClose}
             aria-label="Close modal"
-            className="text-ink-400 hover:text-ink-900 text-lg font-bold p-1 rounded transition-colors"
+            className="text-ink-400 hover:text-ink-900 p-1 rounded transition-colors"
           >
-            ✕
+            <CloseIcon size={16} />
           </button>
         </div>
 

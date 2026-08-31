@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { FilterSidebar } from "@/components/ui/FilterSidebar";
 import { FilterIcon } from "@/components/ui/Icons";
+import { FloriaIcon } from "@floria/icons";
 
 interface FilterAndSortControlsProps {
   totalCount: number;
@@ -59,6 +60,14 @@ export function FilterAndSortControls({
   // Resolve Nursery Name
   const nurseryName = activeNursery ? "Selected Nursery" : null;
 
+  const clearAllFilters = () => {
+    router.push(pathname);
+  };
+
+  const hasActiveFilters = Boolean(
+    activeQuery || activeNursery || activeMinPrice || activeMaxPrice || activeInStock
+  );
+
   return (
     <div className="space-y-3 mb-5">
       {/* Flipkart/Swiggy Horizontal Scroll Quick Filter Pills (Mobile Only) */}
@@ -110,13 +119,14 @@ export function FilterAndSortControls({
             )
           }
           className={[
-            "px-3 py-1.5 text-xs font-semibold rounded-full border transition-all flex-shrink-0 whitespace-nowrap",
+            "px-3 py-1.5 text-xs font-semibold rounded-full border transition-all flex-shrink-0 whitespace-nowrap flex items-center gap-1",
             activeSort === "top-rated"
               ? "bg-forest-100 text-forest-800 border-forest-300 font-bold"
               : "bg-white text-stone-700 border-stone-200 hover:bg-stone-50",
           ].join(" ")}
         >
-          ★ Top Rated
+          <FloriaIcon name="star" size="xs" />
+          <span>Top Rated</span>
         </button>
       </div>
 
@@ -163,26 +173,19 @@ export function FilterAndSortControls({
         </div>
       </div>
 
-      {/* Active Filter Badges */}
-      {(nurseryName ||
-        activeMinPrice ||
-        activeMaxPrice ||
-        activeInStock ||
-        activeQuery) && (
-        <div className="flex flex-wrap items-center gap-1.5 pt-1 font-ui">
-          <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider">
-            Active Filters:
-          </span>
-
+      {/* Active Filter Chips / Badges Row */}
+      {hasActiveFilters && (
+        <div className="flex flex-wrap items-center gap-2 pt-1">
           {activeQuery && (
             <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-forest-800 bg-forest-50 px-2.5 py-0.5 rounded-full border border-forest-200/80 shadow-2xs">
-              &quot;{activeQuery}&quot;
+              Search: &ldquo;{activeQuery}&rdquo;
               <button
                 type="button"
                 onClick={() => removeFilter("q")}
                 className="hover:text-red-700 font-bold ml-0.5"
+                aria-label="Remove search filter"
               >
-                ✕
+                <FloriaIcon name="close" size="xs" />
               </button>
             </span>
           )}
@@ -194,8 +197,9 @@ export function FilterAndSortControls({
                 type="button"
                 onClick={() => removeFilter("nursery")}
                 className="hover:text-red-700 font-bold ml-0.5"
+                aria-label="Remove nursery filter"
               >
-                ✕
+                <FloriaIcon name="close" size="xs" />
               </button>
             </span>
           )}
@@ -210,8 +214,9 @@ export function FilterAndSortControls({
                   removeFilter("maxPrice");
                 }}
                 className="hover:text-red-700 font-bold ml-0.5"
+                aria-label="Remove price filter"
               >
-                ✕
+                <FloriaIcon name="close" size="xs" />
               </button>
             </span>
           )}
@@ -223,8 +228,9 @@ export function FilterAndSortControls({
                 type="button"
                 onClick={() => removeFilter("inStock")}
                 className="hover:text-red-700 font-bold ml-0.5"
+                aria-label="Remove in stock filter"
               >
-                ✕
+                <FloriaIcon name="close" size="xs" />
               </button>
             </span>
           )}
@@ -246,10 +252,10 @@ export function FilterAndSortControls({
                 <button
                   type="button"
                   onClick={() => setIsMobileDrawerOpen(false)}
-                  className="text-stone-400 hover:text-stone-900 font-bold text-base p-1"
+                  className="text-stone-400 hover:text-stone-900 p-1"
                   aria-label="Close filters"
                 >
-                  ✕
+                  <FloriaIcon name="close" size="sm" />
                 </button>
               </div>
 

@@ -8,6 +8,7 @@ import type { ProductListing } from "@floria/types";
 import { StarRating } from "@/components/ui/StarRating";
 import { ProductPriceBlock } from "@/components/ui/ProductPriceBlock";
 import { BagIcon } from "@/components/ui/Icons";
+import { FloriaIcon } from "@floria/icons";
 import { useWishlist } from "@/lib/contexts/WishlistContext";
 import { useCart } from "@/lib/contexts/CartContext";
 import { WishlistHeartButton } from "@/components/ui/motion";
@@ -143,10 +144,10 @@ export function ProductCard({
           <span className="truncate">{seller.business_name}</span>
           {seller.is_verified && (
             <span
-              className="inline-flex items-center justify-center w-3 h-3 rounded-full bg-forest-100 text-forest-800 text-[8px] font-bold flex-shrink-0"
+              className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-forest-100 text-forest-800 flex-shrink-0"
               title="Verified Nursery Partner"
             >
-              ✓
+              <FloriaIcon name="check" size="xs" />
             </span>
           )}
         </p>
@@ -162,7 +163,7 @@ export function ProductCard({
             <div className="flex items-center gap-1.5">
               <div className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-forest-800 text-white text-[10px] font-bold shadow-2xs">
                 <span>{avgRating ? avgRating.toFixed(1) : "4.5"}</span>
-                <span className="text-[9px]">★</span>
+                <FloriaIcon name="star" size="xs" />
               </div>
               <span className="text-[11px] text-stone-400 font-medium font-ui">
                 ({reviewCount})
