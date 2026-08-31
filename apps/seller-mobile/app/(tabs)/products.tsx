@@ -9,7 +9,7 @@ import {
   RefreshControl,
   StyleSheet,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "../../lib/api";
@@ -75,9 +75,11 @@ export default function SellerProductsScreen() {
     }
   }, [activeFilter, searchQuery, isApproved]);
 
-  useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts, seller?.id]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchProducts();
+    }, [fetchProducts]),
+  );
 
   if (!isApproved) {
     return (
