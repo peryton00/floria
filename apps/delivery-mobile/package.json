@@ -17,6 +17,7 @@
     "@floria/types": "workspace:*",
     "@floria/validation": "workspace:*",
     "@supabase/supabase-js": "^2.47.0",
+    "@expo/vector-icons": "^14.0.2",
     "expo": "~57.0.17",
     "expo-auth-session": "^57.0.10",
     "expo-constants": "~57.0.15",
