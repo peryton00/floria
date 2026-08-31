@@ -329,58 +329,235 @@ export default function AdminSystemHealthPage() {
             {/* Memory & Host Architecture Details */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* RAM Distribution */}
-              <div className="bg-white rounded-xl border border-ink-100 p-5 shadow-xs space-y-4">
-                <div>
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-ink-900 flex items-center gap-2">
-                    <FloriaIcon name="server" size={14} /> Physical Host Memory Footprint
-                  </h2>
-                  <p className="text-[10px] text-ink-400 mt-0.5">Used physical RAM vs total host memory capacity.</p>
+              <div className="relative overflow-hidden bg-white rounded-2xl border border-floria-border/80 p-6 shadow-xs hover:shadow-md transition-all duration-300 space-y-5">
+                {/* Decorative background ambient glow */}
+                <div className="absolute -top-10 -right-10 w-40 h-40 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
+
+                {/* Header with status badge */}
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-forest-50 border border-forest-100/80 flex items-center justify-center text-forest-700 shadow-2xs">
+                      <FloriaIcon name="server" size={18} />
+                    </div>
+                    <div>
+                      <h2 className="text-xs font-bold uppercase tracking-wider text-ink-900 flex items-center gap-2">
+                        Physical Host Memory Footprint
+                      </h2>
+                      <p className="text-[11px] text-ink-400 mt-0.5">
+                        Used physical RAM vs total host memory capacity
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Dynamic Status Badge */}
+                  <div
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border transition-colors ${
+                      ramPercent > 85
+                        ? "bg-rose-50 text-rose-700 border-rose-200"
+                        : ramPercent > 70
+                          ? "bg-amber-50 text-amber-700 border-amber-200"
+                          : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    }`}
+                  >
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full animate-pulse ${
+                        ramPercent > 85
+                          ? "bg-rose-500"
+                          : ramPercent > 70
+                            ? "bg-amber-500"
+                            : "bg-emerald-500"
+                      }`}
+                    />
+                    <span>
+                      {ramPercent > 85
+                        ? "Critical"
+                        : ramPercent > 70
+                          ? "High Load"
+                          : "Optimal"}{" "}
+                      ({ramPercent}%)
+                    </span>
+                  </div>
                 </div>
 
-                <div className="space-y-3 pt-2">
-                  <div className="flex justify-between text-xs font-bold">
-                    <span className="text-ink-600">RAM Utilized</span>
-                    <span className="text-forest-800">{ramPercent}%</span>
+                {/* Meter Section */}
+                <div className="space-y-2">
+                  <div className="flex justify-between items-baseline text-xs">
+                    <span className="font-semibold text-ink-600">RAM Utilization</span>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-base font-extrabold text-ink-900 tracking-tight">
+                        {ramPercent}%
+                      </span>
+                      <span className="text-[11px] text-ink-400 font-medium">allocated</span>
+                    </div>
                   </div>
-                  <div className="w-full bg-cream-100 rounded-full h-3 overflow-hidden">
+
+                  {/* Sleek layered meter bar */}
+                  <div className="w-full bg-stone-100 rounded-full h-3.5 p-0.5 border border-stone-200/60 overflow-hidden shadow-inner">
                     <div
-                      className="bg-forest-700 h-full rounded-full transition-all duration-500"
-                      style={{ width: `${ramPercent}%` }}
+                      className={`h-full rounded-full transition-all duration-700 ease-out shadow-xs ${
+                        ramPercent > 85
+                          ? "bg-gradient-to-r from-rose-500 to-red-600"
+                          : ramPercent > 70
+                            ? "bg-gradient-to-r from-amber-500 to-orange-600"
+                            : "bg-gradient-to-r from-emerald-500 via-forest-600 to-forest-700"
+                      }`}
+                      style={{ width: `${Math.min(100, Math.max(2, ramPercent))}%` }}
                     />
                   </div>
-                  <div className="flex justify-between text-[10px] text-ink-400 font-mono">
-                    <span>Used: {metrics?.system?.memory?.used ?? 0} MB</span>
-                    <span>Free: {metrics?.system?.memory?.free ?? 0} MB</span>
-                    <span>Total: {metrics?.system?.memory?.total ?? 0} MB</span>
+                </div>
+
+                {/* Metric Breakdown Grid */}
+                <div className="grid grid-cols-3 gap-2.5 pt-1">
+                  <div className="bg-floria-soft-sand/60 border border-floria-border/60 rounded-xl p-3 flex flex-col justify-between">
+                    <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-ink-400">
+                      <span className="w-1.5 h-1.5 rounded-full bg-forest-600" />
+                      Used
+                    </div>
+                    <div className="mt-1.5">
+                      <span className="text-sm font-extrabold text-ink-900 font-mono tracking-tight">
+                        {metrics?.system?.memory?.used
+                          ? metrics.system.memory.used >= 1024
+                            ? `${(metrics.system.memory.used / 1024).toFixed(1)} GB`
+                            : `${metrics.system.memory.used} MB`
+                          : "0 MB"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="bg-floria-soft-sand/60 border border-floria-border/60 rounded-xl p-3 flex flex-col justify-between">
+                    <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-ink-400">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      Free
+                    </div>
+                    <div className="mt-1.5">
+                      <span className="text-sm font-extrabold text-emerald-700 font-mono tracking-tight">
+                        {metrics?.system?.memory?.free
+                          ? metrics.system.memory.free >= 1024
+                            ? `${(metrics.system.memory.free / 1024).toFixed(1)} GB`
+                            : `${metrics.system.memory.free} MB`
+                          : "0 MB"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="bg-floria-soft-sand/60 border border-floria-border/60 rounded-xl p-3 flex flex-col justify-between">
+                    <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-ink-400">
+                      <span className="w-1.5 h-1.5 rounded-full bg-ink-300" />
+                      Capacity
+                    </div>
+                    <div className="mt-1.5">
+                      <span className="text-sm font-extrabold text-ink-900 font-mono tracking-tight">
+                        {metrics?.system?.memory?.total
+                          ? metrics.system.memory.total >= 1024
+                            ? `${(metrics.system.memory.total / 1024).toFixed(1)} GB`
+                            : `${metrics.system.memory.total} MB`
+                          : "0 MB"}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* V8 Process Memory Breakdown */}
-              <div className="bg-white rounded-xl border border-ink-100 p-5 shadow-xs space-y-4">
-                <div>
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-ink-900 flex items-center gap-2">
-                    <FloriaIcon name="cpu" size={14} /> V8 Process Memory Breakdown
-                  </h2>
-                  <p className="text-[10px] text-ink-400 mt-0.5">Node.js process heap & RSS memory metrics.</p>
+              <div className="relative overflow-hidden bg-white rounded-2xl border border-floria-border/80 p-6 shadow-xs hover:shadow-md transition-all duration-300 space-y-5">
+                {/* Decorative background ambient glow */}
+                <div className="absolute -top-10 -right-10 w-40 h-40 bg-purple-500/5 rounded-full blur-3xl pointer-events-none" />
+
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-purple-50 border border-purple-100/80 flex items-center justify-center text-purple-700 shadow-2xs">
+                      <FloriaIcon name="cpu" size={18} />
+                    </div>
+                    <div>
+                      <h2 className="text-xs font-bold uppercase tracking-wider text-ink-900 flex items-center gap-2">
+                        V8 Process Memory Breakdown
+                      </h2>
+                      <p className="text-[11px] text-ink-400 mt-0.5">
+                        Node.js process heap & RSS memory metrics
+                      </p>
+                    </div>
+                  </div>
+
+                  <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200/60 font-mono">
+                    Heap:{" "}
+                    {procMemory?.heapTotalMb
+                      ? Math.round(
+                          ((procMemory.heapUsedMb || 0) /
+                            procMemory.heapTotalMb) *
+                            100,
+                        )
+                      : 0}
+                    %
+                  </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 pt-1 text-xs font-mono">
-                  <div className="p-2.5 bg-cream-50 rounded-lg flex justify-between items-center">
-                    <span className="text-ink-500 font-sans text-[11px]">RSS (Resident)</span>
-                    <span className="font-bold text-ink-900">{procMemory?.rssMb ?? 0} MB</span>
+                <div className="grid grid-cols-2 gap-3 pt-1">
+                  <div className="p-3 bg-floria-soft-sand/60 border border-floria-border/60 rounded-xl flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-blue-500" />
+                      <div>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-ink-400">
+                          RSS
+                        </div>
+                        <div className="text-[10px] text-ink-400">
+                          Resident Set
+                        </div>
+                      </div>
+                    </div>
+                    <span className="text-sm font-extrabold text-ink-900 font-mono">
+                      {procMemory?.rssMb ?? 0} MB
+                    </span>
                   </div>
-                  <div className="p-2.5 bg-cream-50 rounded-lg flex justify-between items-center">
-                    <span className="text-ink-500 font-sans text-[11px]">Heap Total</span>
-                    <span className="font-bold text-ink-900">{procMemory?.heapTotalMb ?? 0} MB</span>
+
+                  <div className="p-3 bg-floria-soft-sand/60 border border-floria-border/60 rounded-xl flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                      <div>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-ink-400">
+                          Heap Total
+                        </div>
+                        <div className="text-[10px] text-ink-400">
+                          Allocated
+                        </div>
+                      </div>
+                    </div>
+                    <span className="text-sm font-extrabold text-ink-900 font-mono">
+                      {procMemory?.heapTotalMb ?? 0} MB
+                    </span>
                   </div>
-                  <div className="p-2.5 bg-cream-50 rounded-lg flex justify-between items-center">
-                    <span className="text-ink-500 font-sans text-[11px]">Heap Used</span>
-                    <span className="font-bold text-forest-800">{procMemory?.heapUsedMb ?? 0} MB</span>
+
+                  <div className="p-3 bg-floria-soft-sand/60 border border-floria-border/60 rounded-xl flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-forest-600" />
+                      <div>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-ink-400">
+                          Heap Used
+                        </div>
+                        <div className="text-[10px] text-ink-400">
+                          In Active Use
+                        </div>
+                      </div>
+                    </div>
+                    <span className="text-sm font-extrabold text-forest-800 font-mono">
+                      {procMemory?.heapUsedMb ?? 0} MB
+                    </span>
                   </div>
-                  <div className="p-2.5 bg-cream-50 rounded-lg flex justify-between items-center">
-                    <span className="text-ink-500 font-sans text-[11px]">External</span>
-                    <span className="font-bold text-purple-800">{procMemory?.externalMb ?? 0} MB</span>
+
+                  <div className="p-3 bg-floria-soft-sand/60 border border-floria-border/60 rounded-xl flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-purple-500" />
+                      <div>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-ink-400">
+                          External
+                        </div>
+                        <div className="text-[10px] text-ink-400">
+                          C++ Buffers
+                        </div>
+                      </div>
+                    </div>
+                    <span className="text-sm font-extrabold text-purple-800 font-mono">
+                      {procMemory?.externalMb ?? 0} MB
+                    </span>
                   </div>
                 </div>
               </div>
