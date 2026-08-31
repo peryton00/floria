@@ -141,6 +141,10 @@ export function SellerAuthProvider({
           productCount,
         });
       } else {
+        // If profile fetch fails or token expired, clear invalid session
+        if (profileRes.status === "fulfilled" && profileRes.value.error?.code === "UNAUTHORIZED") {
+          setSellerMobileToken(null);
+        }
         setSeller(null);
       }
     } catch (err) {
@@ -171,7 +175,7 @@ export function SellerAuthProvider({
       const res = await api.loginSeller(identifier.trim(), pass);
 
       if (res.success && res.data) {
-        const { token, seller: profile } = res.data;
+        const { token } = res.data;
         if (token) {
           setSellerMobileToken(token);
         }
@@ -198,23 +202,6 @@ export function SellerAuthProvider({
       if (errCode === "SELLER_SUSPENDED") {
         setStatusMessage("Your seller account is currently unavailable.");
         return { success: false, error: "Your seller account is currently unavailable." };
-      }
-
-      // Try client Supabase Auth directly if email was provided
-      if (identifier.includes("@")) {
-        try {
-          const { data: supaAuth, error: supaErr } = await supabase.auth.signInWithPassword({
-            email: identifier.trim(),
-            password: pass,
-          });
-          if (!supaErr && supaAuth?.session?.access_token) {
-            setSellerMobileToken(supaAuth.session.access_token);
-            await refreshProfile();
-            return { success: true };
-          }
-        } catch {
-          // fallback failed, continue to return error
-        }
       }
 
       return { success: false, error: errMsg };

@@ -6,6 +6,10 @@ import {
   formatDate,
 } from "../../lib/format";
 import {
+  getSellerMobileToken,
+  setSellerMobileToken,
+} from "../../lib/token";
+import {
   SELLER_NOTIFICATION_CATEGORIES,
   ANDROID_SELLER_CHANNELS,
 } from "../../lib/notifications/types";
@@ -192,5 +196,72 @@ describe("Seller Mobile — Analytics & AOV Metrics", () => {
     expect(calculateAOV(100000, 2)).toBe(50000);
     expect(calculateAOV(0, 0)).toBe(0);
     expect(calculateAOV(125000, 3)).toBe(41667);
+  });
+});
+
+describe("Seller Mobile — Token Persistence & Session Store", () => {
+  it("manages seller mobile auth token securely", () => {
+    setSellerMobileToken("mock-jwt-token-xyz");
+    expect(getSellerMobileToken()).toBe("mock-jwt-token-xyz");
+
+    setSellerMobileToken(null);
+    expect(getSellerMobileToken()).toBeNull();
+  });
+});
+
+describe("Seller Mobile — Canonical Catalog Listing Payload Builder", () => {
+  it("builds server-compliant listing payload with WebP image references", () => {
+    const buildListingPayload = (input: {
+      canonicalProduct: { id: string; name: string };
+      priceRupees: string;
+      stockQuantity: string;
+      lowStockThreshold?: string;
+      sku?: string;
+      status: "active" | "draft";
+      images: Array<{ assetId?: string; url: string; status?: string }>;
+    }) => {
+      const priceNum = parseFloat(input.priceRupees);
+      const stockNum = parseInt(input.stockQuantity, 10);
+      const threshNum = parseInt(input.lowStockThreshold || "5", 10);
+
+      return {
+        product_id: input.canonicalProduct.id,
+        price_paise: Math.round(priceNum * 100),
+        stock_quantity: stockNum,
+        low_stock_threshold: threshNum,
+        sku: input.sku?.trim() || undefined,
+        status: input.status,
+        images: input.images
+          .filter((img) => img.status === "COMPLETED" || img.status === "READY" || img.assetId)
+          .map((img, idx) => ({
+            asset_id: img.assetId,
+            url: img.url,
+            is_primary: idx === 0,
+          })),
+      };
+    };
+
+    const payload = buildListingPayload({
+      canonicalProduct: { id: "prod-ficus-101", name: "Ficus Lyrata" },
+      priceRupees: "1499",
+      stockQuantity: "12",
+      lowStockThreshold: "4",
+      sku: "NUR-FICUS-01",
+      status: "active",
+      images: [
+        { assetId: "asset-1", url: "https://media.floria.com/ficus-med.webp", status: "READY" },
+        { assetId: "asset-2", url: "https://media.floria.com/ficus-thumb.webp", status: "COMPLETED" },
+        { url: "local://temp.jpg", status: "FAILED" }, // should be ignored
+      ],
+    });
+
+    expect(payload.product_id).toBe("prod-ficus-101");
+    expect(payload.price_paise).toBe(149900);
+    expect(payload.stock_quantity).toBe(12);
+    expect(payload.low_stock_threshold).toBe(4);
+    expect(payload.sku).toBe("NUR-FICUS-01");
+    expect(payload.images.length).toBe(2);
+    expect(payload.images[0].is_primary).toBe(true);
+    expect(payload.images[1].is_primary).toBe(false);
   });
 });

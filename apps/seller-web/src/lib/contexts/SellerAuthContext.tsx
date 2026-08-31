@@ -59,12 +59,8 @@ export function SellerAuthProvider({
     try {
       setIsLoading(true);
       const token = typeof window !== "undefined" ? localStorage.getItem("floria_seller_token") : null;
-      const supabase = getSupabaseBrowserClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
 
-      if (!token && !session?.user) {
+      if (!token) {
         setSellerProfile(null);
         setSellerStatus(null);
         setAuthState("UNAUTHENTICATED");
@@ -94,7 +90,13 @@ export function SellerAuthProvider({
         } else {
           setAuthState("AUTHENTICATED");
         }
-      } else if (res.error?.code === "AUTH_REQUIRED") {
+      } else if (
+        res.error?.code === "AUTH_REQUIRED" ||
+        res.error?.code === "UNAUTHORIZED" ||
+        res.error?.code === "FORBIDDEN" ||
+        (res as any).statusCode === 401 ||
+        (res as any).statusCode === 403
+      ) {
         setSellerProfile(null);
         setSellerStatus(null);
         setAuthState("SESSION_EXPIRED");

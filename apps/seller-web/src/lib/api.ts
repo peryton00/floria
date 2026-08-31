@@ -13,11 +13,7 @@ export const api = new FloriaApiClient({
         const localToken = localStorage.getItem("floria_seller_token");
         if (localToken) return localToken;
       }
-      const supabase = getSupabaseBrowserClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      return session?.access_token || null;
+      return null;
     } catch {
       return null;
     }
