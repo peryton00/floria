@@ -5,16 +5,7 @@ import { api } from "@/lib/api";
 import { formatINR } from "@/lib/format";
 import { useSeller } from "@/lib/contexts/SellerContext";
 import { useToast } from "@/lib/contexts/ToastContext";
-import {
-  Boxes,
-  Search,
-  AlertTriangle,
-  CheckCircle,
-  XCircle,
-  Edit2,
-  Save,
-  X
-} from "lucide-react";
+import { FloriaIcon } from "@floria/icons";
 
 export default function SellerInventoryPage() {
   const { toast } = useToast();
@@ -171,7 +162,7 @@ export default function SellerInventoryPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-9 pr-4 py-2 font-mono text-xs rounded border border-[#E2E8F0] focus:outline-none focus:ring-1 focus:ring-[#1B4D3E] focus:border-[#1B4D3E] bg-[#F8FAFC] placeholder:text-slate-400 font-sans"
           />
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <FloriaIcon name="search" size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
         </div>
       </div>
 
@@ -208,19 +199,19 @@ export default function SellerInventoryPage() {
                   // Status badge helper
                   let statusBadge = (
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-200">
-                      <CheckCircle size={11} /> In Stock
+                      <FloriaIcon name="check_circle" size={11} /> In Stock
                     </span>
                   );
                   if (qty <= 0) {
                     statusBadge = (
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-red-50 text-red-700 border border-red-200">
-                        <XCircle size={11} /> Out of Stock
+                        <FloriaIcon name="close_circle" size={11} /> Out of Stock
                       </span>
                     );
                   } else if (qty <= thresh) {
                     statusBadge = (
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200">
-                        <AlertTriangle size={11} /> Low Stock
+                        <FloriaIcon name="warning" size={11} /> Low Stock
                       </span>
                     );
                   }
@@ -307,7 +298,7 @@ export default function SellerInventoryPage() {
                               className="p-1.5 bg-[#1B4D3E] hover:bg-[#153e31] !text-white rounded shadow-xs transition-colors"
                               title="Save changes"
                             >
-                              <Save size={13} />
+                              <FloriaIcon name="save" size={13} />
                             </button>
                             <button
                               type="button"
@@ -315,7 +306,7 @@ export default function SellerInventoryPage() {
                               className="p-1.5 border border-[#E2E8F0] hover:bg-[#F8FAFC] text-slate-700 rounded transition-colors"
                               title="Cancel"
                             >
-                              <X size={13} />
+                              <FloriaIcon name="close" size={13} />
                             </button>
                           </div>
                         ) : (
@@ -325,7 +316,7 @@ export default function SellerInventoryPage() {
                             onClick={() => handleEdit(item)}
                             className="inline-flex items-center gap-1 px-2.5 py-1 rounded border border-[#E2E8F0] hover:bg-[#F8FAFC] text-slate-700 font-bold text-[10px] uppercase tracking-wider transition-colors disabled:opacity-40"
                           >
-                            <Edit2 size={11} /> Edit
+                            <FloriaIcon name="edit" size={11} /> Edit
                           </button>
                         )}
                       </td>
@@ -340,4 +331,3 @@ export default function SellerInventoryPage() {
     </div>
   );
 }
-

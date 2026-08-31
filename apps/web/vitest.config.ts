@@ -18,6 +18,10 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": resolve(__dirname, "./src"),
+      "@floria/icons": resolve(__dirname, "../../packages/icons/src/index.ts"),
+      "@floria/types": resolve(__dirname, "../../packages/types/src/index.ts"),
+      "@floria/validation": resolve(__dirname, "../../packages/validation/src/index.ts"),
+      "@floria/api-client": resolve(__dirname, "../../packages/api-client/src/index.ts"),
       // Mock server-only in tests — it's a no-op outside Next.js server context
       "server-only": resolve(
         __dirname,

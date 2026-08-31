@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Bell } from "lucide-react";
+import { FloriaIcon } from "@floria/icons";
 import { api } from "@/lib/api";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { NotificationDrawer } from "./NotificationDrawer";
@@ -91,7 +91,7 @@ export function NotificationBell({
         className="relative p-2 rounded-xl text-ink-600 hover:text-forest-700 hover:bg-cream-100/60 transition-colors focus:outline-none focus:ring-2 focus:ring-forest-700"
         aria-label={`View Notifications (${unreadCount} unread)`}
       >
-        <Bell size={20} />
+        <FloriaIcon name="bell" size={20} />
         {unreadCount > 0 && (
           <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 rounded-full bg-forest-700 text-white font-mono font-bold text-[9px] flex items-center justify-center border border-white shadow-2xs">
             {unreadCount > 99 ? "99+" : unreadCount}

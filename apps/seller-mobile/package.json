@@ -12,8 +12,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@expo/vector-icons": "^15.1.1",
     "@floria/api-client": "workspace:*",
+    "@floria/icons": "workspace:*",
     "@floria/types": "workspace:*",
     "@floria/validation": "workspace:*",
     "@supabase/supabase-js": "^2.47.0",

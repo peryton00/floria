@@ -5,24 +5,7 @@ import { useSeller } from "@/lib/contexts/SellerContext";
 import { SellerStatusBadge } from "@/components/seller/SellerStatusBadge";
 import { MediaUploader, MediaUploadResult } from "@/components/media/MediaUploader";
 import { api } from "@/lib/api";
-import {
-  Building2,
-  Phone,
-  MapPin,
-  Sprout,
-  CheckCircle2,
-  ChevronRight,
-  ChevronLeft,
-  Edit3,
-  Upload,
-  AlertCircle,
-  Loader2,
-  Sparkles,
-  ShieldCheck,
-  Store,
-  Layers,
-  ArrowRight,
-} from "lucide-react";
+import { FloriaIcon, type FloriaIconName } from "@floria/icons";
 
 // ── Validation Helpers ────────────────────────────────────────────
 
@@ -131,7 +114,7 @@ function NurseryImageUpload({
       <div>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-emerald-950 flex items-center gap-1.5">
-            <Store size={14} className="text-[#1B4D3E]" /> Nursery Logo & Storefront Showcase (Visible to Customers) *
+            <FloriaIcon name="storefront" size={14} className="text-[#1B4D3E]" /> Nursery Logo & Storefront Showcase (Visible to Customers) *
           </p>
           <span className="text-[10px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-300 px-2 py-0.5 rounded font-mono">
             Public Customer View
@@ -164,12 +147,12 @@ function NurseryImageUpload({
 
 // ── Onboarding Steps Navigation Bar ───────────────────────────────
 
-const STEPS = [
-  { id: 1, name: "Business Identity", icon: Building2 },
-  { id: 2, name: "Contact Information", icon: Phone },
-  { id: 3, name: "Business Address", icon: MapPin },
-  { id: 4, name: "Nursery Details", icon: Sprout },
-  { id: 5, name: "Review & Complete", icon: CheckCircle2 },
+const STEPS: { id: number; name: string; iconName: FloriaIconName }[] = [
+  { id: 1, name: "Business Identity", iconName: "storefront" },
+  { id: 2, name: "Contact Information", iconName: "phone" },
+  { id: 3, name: "Business Address", iconName: "map_pin" },
+  { id: 4, name: "Nursery Details", iconName: "plant" },
+  { id: 5, name: "Review & Complete", iconName: "check_circle" },
 ];
 
 function StepProgressBar({ currentStep, onStepClick }: { currentStep: number; onStepClick: (step: number) => void }) {
@@ -179,7 +162,6 @@ function StepProgressBar({ currentStep, onStepClick }: { currentStep: number; on
         {STEPS.map((s, idx) => {
           const isCurrent = s.id === currentStep;
           const isPassed = s.id < currentStep;
-          const Icon = s.icon;
 
           return (
             <div key={s.id} className="flex items-center gap-2 flex-shrink-0">
@@ -201,7 +183,7 @@ function StepProgressBar({ currentStep, onStepClick }: { currentStep: number; on
                   {isPassed ? (
                     <span className="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px]">✓</span>
                   ) : (
-                    <Icon size={14} className={isCurrent ? "text-emerald-300" : "text-slate-400"} />
+                    <FloriaIcon name={s.iconName} size={14} className={isCurrent ? "text-emerald-300" : "text-slate-400"} />
                   )}
                 </div>
                 <span className="hidden sm:inline">{s.name}</span>
@@ -580,7 +562,7 @@ export default function SellerProfilePage() {
   if (isLoading) {
     return (
       <div className="py-24 flex flex-col items-center justify-center text-[#1B4D3E] space-y-3 font-sans">
-        <Loader2 className="animate-spin" size={28} />
+        <FloriaIcon name="rotate" className="animate-spin" size={28} />
         <p className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500">Loading Nursery Profile...</p>
       </div>
     );
@@ -610,14 +592,14 @@ export default function SellerProfilePage() {
               style={{ color: "#ffffff" }}
               className="px-4 py-2 bg-[#1B4D3E] hover:bg-[#153e31] !text-white rounded font-bold text-xs uppercase tracking-wider transition-colors shadow-xs flex items-center gap-1.5"
             >
-              <Edit3 size={13} /> Edit Profile Details
+              <FloriaIcon name="edit" size={13} /> Edit Profile Details
             </button>
           </div>
         </div>
 
         {saveMessage && (
           <div className="p-4 bg-emerald-50 border border-emerald-200 rounded text-xs font-bold text-emerald-800 flex items-center gap-2 shadow-xs">
-            <CheckCircle2 size={16} /> {saveMessage}
+            <FloriaIcon name="check_circle" size={16} /> {saveMessage}
           </div>
         )}
 
@@ -627,7 +609,7 @@ export default function SellerProfilePage() {
           <div className="bg-white rounded border border-[#E2E8F0] shadow-xs overflow-hidden">
             <div className="px-5 py-3.5 border-b border-[#E2E8F0] bg-[#F8FAFC] flex justify-between items-center">
               <h2 className="font-sans font-bold text-sm text-[#0F172A] flex items-center gap-2">
-                <Building2 size={16} className="text-[#1B4D3E]" /> Business Identity
+                <FloriaIcon name="storefront" size={16} className="text-[#1B4D3E]" /> Business Identity
               </h2>
               <button
                 type="button"
@@ -652,7 +634,7 @@ export default function SellerProfilePage() {
                       onError={() => setImgError(true)}
                     />
                   ) : (
-                    <Store className="text-slate-400" size={20} />
+                    <FloriaIcon name="storefront" className="text-slate-400" size={20} />
                   )}
                 </div>
                 <div>
@@ -677,7 +659,7 @@ export default function SellerProfilePage() {
           <div className="bg-white rounded border border-[#E2E8F0] shadow-xs overflow-hidden">
             <div className="px-5 py-3.5 border-b border-[#E2E8F0] bg-[#F8FAFC] flex justify-between items-center">
               <h2 className="font-sans font-bold text-sm text-[#0F172A] flex items-center gap-2">
-                <Phone size={16} className="text-[#1B4D3E]" /> Contact Information
+                <FloriaIcon name="phone" size={16} className="text-[#1B4D3E]" /> Contact Information
               </h2>
               <button
                 type="button"
@@ -723,7 +705,7 @@ export default function SellerProfilePage() {
           <div className="bg-white rounded border border-[#E2E8F0] shadow-xs overflow-hidden">
             <div className="px-5 py-3.5 border-b border-[#E2E8F0] bg-[#F8FAFC] flex justify-between items-center">
               <h2 className="font-sans font-bold text-sm text-[#0F172A] flex items-center gap-2">
-                <MapPin size={16} className="text-[#1B4D3E]" /> Business Address &amp; Coordinates
+                <FloriaIcon name="map_pin" size={16} className="text-[#1B4D3E]" /> Business Address &amp; Coordinates
               </h2>
               <button
                 type="button"
@@ -753,7 +735,7 @@ export default function SellerProfilePage() {
           <div className="bg-white rounded border border-[#E2E8F0] shadow-xs overflow-hidden">
             <div className="px-5 py-3.5 border-b border-[#E2E8F0] bg-[#F8FAFC] flex justify-between items-center">
               <h2 className="font-sans font-bold text-sm text-[#0F172A] flex items-center gap-2">
-                <Sprout size={16} className="text-[#1B4D3E]" /> Botanical Specializations &amp; Services
+                <FloriaIcon name="plant" size={16} className="text-[#1B4D3E]" /> Botanical Specializations &amp; Services
               </h2>
               <button
                 type="button"
@@ -835,7 +817,7 @@ export default function SellerProfilePage() {
 
       {apiError && (
         <div className="p-4 bg-red-50 border border-red-200 rounded text-xs font-semibold text-red-700 flex items-center gap-2 shadow-xs">
-          <AlertCircle size={16} /> {apiError}
+          <FloriaIcon name="warning" size={16} /> {apiError}
         </div>
       )}
 
@@ -848,7 +830,7 @@ export default function SellerProfilePage() {
           <div className="space-y-5">
             <div className="border-b border-[#E2E8F0] pb-3">
               <h2 className="font-sans text-base font-bold text-[#0F172A] flex items-center gap-2">
-                <Building2 size={18} className="text-[#1B4D3E]" /> Step 1: Business Identity
+                <FloriaIcon name="storefront" size={18} className="text-[#1B4D3E]" /> Step 1: Business Identity
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">Tell us about your business name, structure, and brand representation.</p>
             </div>
@@ -942,7 +924,7 @@ export default function SellerProfilePage() {
                 style={{ color: "#ffffff" }}
                 className="px-6 py-2.5 rounded bg-[#1B4D3E] hover:bg-[#153e31] !text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-xs flex items-center gap-2"
               >
-                {saving ? <Loader2 size={13} className="animate-spin" /> : "Next: Contact Information →"}
+                {saving ? <FloriaIcon name="rotate" size={13} className="animate-spin" /> : "Next: Contact Information →"}
               </button>
             </div>
           </div>
@@ -955,7 +937,7 @@ export default function SellerProfilePage() {
           <div className="space-y-5">
             <div className="border-b border-[#E2E8F0] pb-3">
               <h2 className="font-sans text-base font-bold text-[#0F172A] flex items-center gap-2">
-                <Phone size={18} className="text-[#1B4D3E]" /> Step 2: Contact Information
+                <FloriaIcon name="phone" size={18} className="text-[#1B4D3E]" /> Step 2: Contact Information
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">Direct contact points for order dispatch and customer support coordination.</p>
             </div>
@@ -1095,7 +1077,7 @@ export default function SellerProfilePage() {
                 style={{ color: "#ffffff" }}
                 className="px-6 py-2.5 rounded bg-[#1B4D3E] hover:bg-[#153e31] !text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-xs flex items-center gap-2"
               >
-                {saving ? <Loader2 size={13} className="animate-spin" /> : "Next: Business Address →"}
+                {saving ? <FloriaIcon name="rotate" size={13} className="animate-spin" /> : "Next: Business Address →"}
               </button>
             </div>
           </div>
@@ -1108,7 +1090,7 @@ export default function SellerProfilePage() {
           <div className="space-y-5">
             <div className="border-b border-[#E2E8F0] pb-3">
               <h2 className="font-sans text-base font-bold text-[#0F172A] flex items-center gap-2">
-                <MapPin size={18} className="text-[#1B4D3E]" /> Step 3: Business Address &amp; Dispatch Location
+                <FloriaIcon name="map_pin" size={18} className="text-[#1B4D3E]" /> Step 3: Business Address &amp; Dispatch Location
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">Physical nursery location for Floria delivery partner pickups.</p>
             </div>
@@ -1249,7 +1231,7 @@ export default function SellerProfilePage() {
                 style={{ color: "#ffffff" }}
                 className="px-6 py-2.5 rounded bg-[#1B4D3E] hover:bg-[#153e31] !text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-xs flex items-center gap-2"
               >
-                {saving ? <Loader2 size={13} className="animate-spin" /> : "Next: Nursery Details →"}
+                {saving ? <FloriaIcon name="rotate" size={13} className="animate-spin" /> : "Next: Nursery Details →"}
               </button>
             </div>
           </div>
@@ -1262,7 +1244,7 @@ export default function SellerProfilePage() {
           <div className="space-y-5">
             <div className="border-b border-[#E2E8F0] pb-3">
               <h2 className="font-sans text-base font-bold text-[#0F172A] flex items-center gap-2">
-                <Sprout size={18} className="text-[#1B4D3E]" /> Step 4: Nursery Specializations &amp; Capabilities
+                <FloriaIcon name="plant" size={18} className="text-[#1B4D3E]" /> Step 4: Nursery Specializations &amp; Capabilities
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">Specify your nursery scale, botanical varieties, and service capabilities.</p>
             </div>
@@ -1427,7 +1409,7 @@ export default function SellerProfilePage() {
                 style={{ color: "#ffffff" }}
                 className="px-6 py-2.5 rounded bg-[#1B4D3E] hover:bg-[#153e31] !text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-xs flex items-center gap-2"
               >
-                {saving ? <Loader2 size={13} className="animate-spin" /> : "Review Profile & Complete →"}
+                {saving ? <FloriaIcon name="rotate" size={13} className="animate-spin" /> : "Review Profile & Complete →"}
               </button>
             </div>
           </div>
@@ -1440,7 +1422,7 @@ export default function SellerProfilePage() {
           <div className="space-y-6">
             <div className="border-b border-[#E2E8F0] pb-3">
               <h2 className="font-sans text-base font-bold text-[#0F172A] flex items-center gap-2">
-                <CheckCircle2 size={18} className="text-[#1B4D3E]" /> Step 5: Review &amp; Activate Profile
+                <FloriaIcon name="check_circle" size={18} className="text-[#1B4D3E]" /> Step 5: Review &amp; Activate Profile
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">Please review your nursery onboarding information before final submission.</p>
             </div>
@@ -1451,7 +1433,7 @@ export default function SellerProfilePage() {
               <div className="p-4 rounded border border-[#E2E8F0] bg-[#F8FAFC]">
                 <div className="flex justify-between items-center mb-2">
                   <h3 className="font-sans font-bold text-sm text-[#0F172A] flex items-center gap-1.5">
-                    <Building2 size={15} className="text-[#1B4D3E]" /> 1. Business Identity
+                    <FloriaIcon name="storefront" size={15} className="text-[#1B4D3E]" /> 1. Business Identity
                   </h3>
                   <button
                     type="button"
@@ -1473,7 +1455,7 @@ export default function SellerProfilePage() {
               <div className="p-4 rounded border border-[#E2E8F0] bg-[#F8FAFC]">
                 <div className="flex justify-between items-center mb-2">
                   <h3 className="font-sans font-bold text-sm text-[#0F172A] flex items-center gap-1.5">
-                    <Phone size={15} className="text-[#1B4D3E]" /> 2. Contact Information
+                    <FloriaIcon name="phone" size={15} className="text-[#1B4D3E]" /> 2. Contact Information
                   </h3>
                   <button
                     type="button"
@@ -1495,7 +1477,7 @@ export default function SellerProfilePage() {
               <div className="p-4 rounded border border-[#E2E8F0] bg-[#F8FAFC]">
                 <div className="flex justify-between items-center mb-2">
                   <h3 className="font-sans font-bold text-sm text-[#0F172A] flex items-center gap-1.5">
-                    <MapPin size={15} className="text-[#1B4D3E]" /> 3. Business Address
+                    <FloriaIcon name="map_pin" size={15} className="text-[#1B4D3E]" /> 3. Business Address
                   </h3>
                   <button
                     type="button"
@@ -1515,7 +1497,7 @@ export default function SellerProfilePage() {
               <div className="p-4 rounded border border-[#E2E8F0] bg-[#F8FAFC]">
                 <div className="flex justify-between items-center mb-2">
                   <h3 className="font-sans font-bold text-sm text-[#0F172A] flex items-center gap-1.5">
-                    <Sprout size={15} className="text-[#1B4D3E]" /> 4. Nursery Details &amp; Capabilities
+                    <FloriaIcon name="plant" size={15} className="text-[#1B4D3E]" /> 4. Nursery Details &amp; Capabilities
                   </h3>
                   <button
                     type="button"
@@ -1555,7 +1537,7 @@ export default function SellerProfilePage() {
                 style={{ color: "#ffffff" }}
                 className="px-8 py-3 rounded bg-[#1B4D3E] hover:bg-[#153e31] !text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-xs flex items-center gap-2"
               >
-                {saving ? <Loader2 size={14} className="animate-spin" /> : "Complete Profile & Activate Dashboard ✓"}
+                {saving ? <FloriaIcon name="rotate" size={14} className="animate-spin" /> : "Complete Profile & Activate Dashboard ✓"}
               </button>
             </div>
           </div>

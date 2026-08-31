@@ -4,15 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { api } from "@/lib/api";
 import { formatINR } from "@/lib/format";
 import { LineChart, BarChart } from "@/components/admin/SvgCharts";
-import {
-  TrendingUp,
-  ShoppingBag,
-  Leaf,
-  Calendar,
-  AlertTriangle,
-  Award,
-  PieChart
-} from "lucide-react";
+import { FloriaIcon } from "@floria/icons";
 
 type RangeType = "7d" | "30d" | "90d" | "12m" | "today";
 
@@ -87,7 +79,7 @@ export default function SellerAnalyticsPage() {
   if (error || !data) {
     return (
       <div className="max-w-md mx-auto py-16 text-center space-y-4 bg-floria-linen rounded-3xl border border-floria-border p-8 shadow-xs font-ui">
-        <AlertTriangle size={28} className="text-rose-600 mx-auto" />
+        <FloriaIcon name="warning" size={28} className="text-rose-600 mx-auto" />
         <h1 className="font-serif text-lg font-bold text-ink-900">Analytics Offline</h1>
         <p className="text-xs text-ink-500">{error || "Could not retrieve live sales aggregations."}</p>
       </div>
@@ -132,10 +124,10 @@ export default function SellerAnalyticsPage() {
       {/* Summary KPI Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: "Gross Revenue", value: formatINR(summary.grossRevenuePaise), sub: "Total sales volume", icon: <TrendingUp size={18} />, color: "bg-forest-50 text-forest-700 border border-forest-100" },
-          { label: "Total Orders", value: summary.ordersCount, sub: "Verified orders", icon: <ShoppingBag size={18} />, color: "bg-sky-50 text-sky-700 border border-sky-100" },
-          { label: "Plants Sold", value: summary.unitsSold, sub: "Item quantities", icon: <Leaf size={18} />, color: "bg-emerald-50 text-emerald-700 border border-emerald-100" },
-          { label: "Avg Order Value", value: formatINR(aov), sub: "Per-order average", icon: <Calendar size={18} />, color: "bg-amber-50 text-amber-700 border border-amber-100" }
+          { label: "Gross Revenue", value: formatINR(summary.grossRevenuePaise), sub: "Total sales volume", icon: <FloriaIcon name="trending_up" size={18} />, color: "bg-forest-50 text-forest-700 border border-forest-100" },
+          { label: "Total Orders", value: summary.ordersCount, sub: "Verified orders", icon: <FloriaIcon name="orders" size={18} />, color: "bg-sky-50 text-sky-700 border border-sky-100" },
+          { label: "Plants Sold", value: summary.unitsSold, sub: "Item quantities", icon: <FloriaIcon name="plant" size={18} />, color: "bg-emerald-50 text-emerald-700 border border-emerald-100" },
+          { label: "Avg Order Value", value: formatINR(aov), sub: "Per-order average", icon: <FloriaIcon name="calendar" size={18} />, color: "bg-amber-50 text-amber-700 border border-amber-100" }
         ].map((kpi) => (
           <div key={kpi.label} className="bg-white rounded border border-[#E2E8F0] p-4 shadow-xs hover:border-slate-400 transition-all flex items-start justify-between">
             <div className="min-w-0 flex-1 pr-2">
@@ -184,7 +176,7 @@ export default function SellerAnalyticsPage() {
         <div className="bg-white rounded border border-[#E2E8F0] shadow-xs overflow-hidden">
           <div className="p-4 sm:p-5 border-b border-[#E2E8F0] bg-[#F8FAFC]">
             <h2 className="font-sans text-sm font-bold text-[#0F172A] flex items-center gap-2">
-              <Award size={16} className="text-amber-600" /> Best Performing Botanical Varieties
+              <FloriaIcon name="star" size={16} className="text-amber-600" /> Best Performing Botanical Varieties
             </h2>
           </div>
           
@@ -211,7 +203,7 @@ export default function SellerAnalyticsPage() {
         <div className="bg-white rounded border border-[#E2E8F0] shadow-xs overflow-hidden">
           <div className="p-4 sm:p-5 border-b border-[#E2E8F0] bg-[#F8FAFC]">
             <h2 className="font-sans text-sm font-bold text-[#0F172A] flex items-center gap-2">
-              <PieChart size={16} className="text-[#1B4D3E]" /> Category Breakdown
+              <FloriaIcon name="analytics" size={16} className="text-[#1B4D3E]" /> Category Breakdown
             </h2>
           </div>
           
@@ -237,4 +229,3 @@ export default function SellerAnalyticsPage() {
     </div>
   );
 }
-

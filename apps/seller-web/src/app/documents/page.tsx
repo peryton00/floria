@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSeller } from "@/lib/contexts/SellerContext";
 import { api, type SellerDocument } from "@/lib/api";
-import { FileText, ShieldCheck, CheckCircle, Clock, AlertTriangle, Upload, Loader2 } from "lucide-react";
+import { FloriaIcon } from "@floria/icons";
 import { MediaUploader } from "@/components/media/MediaUploader";
 
 export default function SellerDocumentsPage() {
@@ -14,8 +14,6 @@ export default function SellerDocumentsPage() {
 
   // Upload Form State
   const [documentType, setDocumentType] = useState("gstin");
-  const [fileName, setFileName] = useState("");
-  const [fileUrl, setFileUrl] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
 
@@ -40,62 +38,30 @@ export default function SellerDocumentsPage() {
     fetchDocuments();
   }, [fetchDocuments]);
 
-  async function handleUpload(e: React.FormEvent) {
-    e.preventDefault();
-    if (!fileName.trim() || !fileUrl.trim()) return;
-
-    try {
-      setIsUploading(true);
-      setError(null);
-      setUploadSuccess(false);
-
-      const res = await api.uploadSellerDocument({
-        documentType,
-        fileName: fileName.trim(),
-        fileUrl: fileUrl.trim(),
-        fileSize: 1024 * 500, // 500 KB default metadata
-        mimeType: fileUrl.endsWith(".pdf") ? "application/pdf" : "image/jpeg",
-      });
-
-      if (res.success && res.data) {
-        setUploadSuccess(true);
-        setFileName("");
-        setFileUrl("");
-        fetchDocuments();
-      } else {
-        setError(res.error?.message || "Failed to upload document.");
-      }
-    } catch (err: any) {
-      setError(err.message || "Failed to upload document.");
-    } finally {
-      setIsUploading(false);
-    }
-  }
-
   const getStatusBadge = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "approved":
+    switch (status) {
+      case "verified":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-success-50 text-success-700 border border-success-100">
-            <CheckCircle size={10} /> Verified
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-200">
+            <FloriaIcon name="check_circle" size={10} /> Verified
           </span>
         );
       case "under_review":
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-100">
-            <Clock size={10} /> Under Review
+            <FloriaIcon name="clock" size={10} /> Under Review
           </span>
         );
       case "rejected":
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-error-50 text-error-700 border border-error-100">
-            <AlertTriangle size={10} /> Rejected
+            <FloriaIcon name="warning" size={10} /> Rejected
           </span>
         );
       default:
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-ink-100 text-ink-700 border border-ink-200">
-            <Clock size={10} /> Pending Verification
+            <FloriaIcon name="clock" size={10} /> Pending Verification
           </span>
         );
     }
@@ -124,7 +90,7 @@ export default function SellerDocumentsPage() {
       <div className="bg-white rounded border border-[#E2E8F0] p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-xs">
         <div className="flex gap-3.5 items-start">
           <div className="w-9 h-9 rounded bg-forest-50 text-forest-700 border border-forest-100 flex items-center justify-center flex-shrink-0 shadow-xs mt-0.5">
-            <ShieldCheck size={18} />
+            <FloriaIcon name="shield_check" size={18} />
           </div>
           <div>
             <h2 className="font-sans font-bold text-sm text-[#0F172A]">
@@ -142,7 +108,7 @@ export default function SellerDocumentsPage() {
       {/* Upload Form */}
       <section className="bg-white rounded border border-[#E2E8F0] p-5 shadow-xs space-y-4">
         <h2 className="font-sans text-sm font-bold text-[#0F172A] border-b border-[#E2E8F0] pb-3 flex items-center gap-2">
-          <Upload size={16} className="text-[#1B4D3E]" /> Upload Verification Document
+          <FloriaIcon name="upload" size={16} className="text-[#1B4D3E]" /> Upload Verification Document
         </h2>
 
         {error && (
@@ -216,7 +182,7 @@ export default function SellerDocumentsPage() {
 
         {loading ? (
           <div className="py-8 flex justify-center text-[#1B4D3E]">
-            <Loader2 className="animate-spin" size={22} />
+            <FloriaIcon name="rotate" className="animate-spin" size={22} />
           </div>
         ) : documents.length === 0 ? (
           <div className="py-8 text-center text-xs font-semibold text-slate-500 bg-[#F8FAFC] rounded border border-[#E2E8F0]">
@@ -228,7 +194,7 @@ export default function SellerDocumentsPage() {
               <div key={doc.id} className="py-3.5 flex justify-between items-center text-xs hover:bg-slate-50/80 transition-colors">
                 <div className="flex gap-3 items-center min-w-0">
                   <div className="w-8 h-8 rounded bg-forest-50 text-forest-700 flex items-center justify-center flex-shrink-0 border border-forest-100 shadow-xs">
-                    <FileText size={16} />
+                    <FloriaIcon name="document" size={16} />
                   </div>
                   <div className="min-w-0">
                     <p className="font-bold text-[#0F172A] truncate">{doc.file_name || doc.document_type.toUpperCase()}</p>
@@ -255,7 +221,7 @@ export default function SellerDocumentsPage() {
                     }}
                     className="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 font-mono font-bold text-[10px] text-slate-800 border border-slate-300 transition-colors flex items-center gap-1"
                   >
-                    <Upload size={10} className="rotate-180" /> Secure Download
+                    <FloriaIcon name="download" size={10} /> Secure Download
                   </button>
                   {getStatusBadge(doc.status)}
                 </div>
@@ -267,4 +233,3 @@ export default function SellerDocumentsPage() {
     </div>
   );
 }
-

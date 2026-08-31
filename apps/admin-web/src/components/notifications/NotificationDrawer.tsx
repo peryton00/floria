@@ -5,18 +5,7 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { api, NotificationItem } from "@/lib/api";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
-import {
-  Bell,
-  CheckCheck,
-  Package,
-  ShoppingBag,
-  Store,
-  AlertTriangle,
-  Info,
-  X,
-  ChevronRight,
-  Trash2,
-} from "lucide-react";
+import { FloriaIcon } from "@floria/icons";
 
 import { resolveNotificationNavigation } from "@/lib/navigation/notificationResolver";
 
@@ -120,14 +109,14 @@ export function NotificationDrawer({
 
   const getIcon = (type: string) => {
     if (type.includes("ORDER"))
-      return <ShoppingBag size={16} className="text-forest-700" />;
+      return <FloriaIcon name="bag" size={16} className="text-forest-700" />;
     if (type.includes("STOCK"))
-      return <AlertTriangle size={16} className="text-warning-600" />;
+      return <FloriaIcon name="warning" size={16} className="text-warning-600" />;
     if (type.includes("SELLER") || type.includes("NURSERY"))
-      return <Store size={16} className="text-purple-700" />;
+      return <FloriaIcon name="storefront" size={16} className="text-purple-700" />;
     if (type.includes("PICKUP") || type.includes("DELIVERY"))
-      return <Package size={16} className="text-blue-700" />;
-    return <Info size={16} className="text-ink-500" />;
+      return <FloriaIcon name="package" size={16} className="text-blue-700" />;
+    return <FloriaIcon name="info" size={16} className="text-ink-500" />;
   };
 
   if (!isOpen || !mounted) return null;
@@ -138,7 +127,7 @@ export function NotificationDrawer({
         {/* Header */}
         <div className="p-4 border-b border-floria-border flex justify-between items-center bg-floria-soft-sand/60">
           <div className="flex items-center gap-2">
-            <Bell size={18} className="text-forest-700" />
+            <FloriaIcon name="bell" size={18} className="text-forest-700" />
             <h2 className="font-serif text-base font-bold text-ink-900">
               Notifications
             </h2>
@@ -150,14 +139,14 @@ export function NotificationDrawer({
               className="text-[10px] font-bold uppercase tracking-wider text-forest-700 hover:text-forest-900 flex items-center gap-1 bg-forest-50 px-2 py-1 rounded-md border border-forest-100"
               title="Mark all as read"
             >
-              <CheckCheck size={12} /> Read all
+              <FloriaIcon name="check" size={12} /> Read all
             </button>
             <button
               type="button"
               onClick={onClose}
               className="p-1 rounded-lg text-ink-400 hover:text-ink-900 hover:bg-floria-soft-sand transition-colors"
             >
-              <X size={18} />
+              <FloriaIcon name="close" size={18} />
             </button>
           </div>
         </div>
@@ -176,7 +165,7 @@ export function NotificationDrawer({
             </div>
           ) : notifications.length === 0 ? (
             <div className="py-16 text-center space-y-2">
-              <Bell size={32} className="mx-auto text-ink-200" />
+              <FloriaIcon name="bell" size={32} className="mx-auto text-ink-200" />
               <p className="font-serif font-bold text-ink-800 text-sm">
                 You&apos;re all caught up!
               </p>
@@ -232,7 +221,7 @@ export function NotificationDrawer({
                         })}
                       </span>
                       <span className="text-forest-700 font-medium flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
-                        View details <ChevronRight size={10} />
+                        View details <FloriaIcon name="chevron_right" size={10} />
                       </span>
                     </div>
                   </Link>
@@ -243,7 +232,7 @@ export function NotificationDrawer({
                     className="absolute top-3 right-3 p-1 rounded-md text-ink-400 hover:text-error-600 hover:bg-error-50 opacity-0 group-hover:opacity-100 transition-all"
                     title="Dismiss notification"
                   >
-                    <Trash2 size={13} />
+                    <FloriaIcon name="trash" size={13} />
                   </button>
                 </div>
               );

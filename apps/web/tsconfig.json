@@ -23,7 +23,9 @@
     "paths": {
       "@/*": ["./src/*"],
       "@floria/types": ["../../packages/types/src/index.ts"],
-      "@floria/validation": ["../../packages/validation/src/index.ts"]
+      "@floria/validation": ["../../packages/validation/src/index.ts"],
+      "@floria/icons": ["../../packages/icons/src/index.ts"],
+      "@floria/icons/*": ["../../packages/icons/src/*"]
     },
     "incremental": true
   },

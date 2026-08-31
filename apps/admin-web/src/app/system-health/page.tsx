@@ -3,25 +3,7 @@
 import { useState, useEffect } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { api } from "@/lib/api";
-import {
-  Activity,
-  Database,
-  Cpu,
-  Server,
-  Layers,
-  AlertTriangle,
-  Clock,
-  RefreshCw,
-  Box,
-  ShoppingBag,
-  Store,
-  Users,
-  FolderTree,
-  FileText,
-  HardDrive,
-  Image as ImageIcon,
-  CheckCircle2
-} from "lucide-react";
+import { FloriaIcon } from "@floria/icons";
 
 export default function AdminSystemHealthPage() {
   const [metrics, setMetrics] = useState<any>(null);
@@ -71,7 +53,7 @@ export default function AdminSystemHealthPage() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="font-serif text-2xl font-bold text-ink-900 leading-tight flex items-center gap-2">
-              <Activity className="text-forest-700" size={24} /> System Health & Database Diagnostics
+              <FloriaIcon name="activity" className="text-forest-700" size={24} /> System Health & Database Diagnostics
             </h1>
             <p className="text-xs text-ink-400 mt-0.5">
               Live telemetry monitoring backend container health, V8 heap usage, PostgreSQL table counts, and business alert queues.
@@ -97,14 +79,14 @@ export default function AdminSystemHealthPage() {
               onClick={fetchHealth}
               className="px-3.5 py-1.5 border border-ink-200 text-ink-700 bg-white hover:bg-cream-100 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors shadow-xs flex items-center gap-1.5"
             >
-              <RefreshCw size={12} className={loading ? "animate-spin" : ""} /> Refresh
+              <FloriaIcon name="refresh" size={12} className={loading ? "animate-spin" : ""} /> Refresh
             </button>
           </div>
         </div>
 
         {error && (
           <div className="bg-error-50 border border-error-100 rounded-xl p-4 text-xs text-error-700 flex items-center gap-2">
-            <AlertTriangle size={16} />
+            <FloriaIcon name="warning" size={16} />
             <span>{error}</span>
           </div>
         )}
@@ -120,7 +102,7 @@ export default function AdminSystemHealthPage() {
               <div className="bg-white rounded-xl border border-ink-100 p-4 shadow-xs space-y-1">
                 <div className="flex items-center justify-between text-ink-400">
                   <span className="text-[10px] font-bold uppercase tracking-wider">Database Ping</span>
-                  <Database size={16} className="text-forest-700" />
+                  <FloriaIcon name="database" size={16} className="text-forest-700" />
                 </div>
                 <p className="text-xl font-bold font-mono text-forest-800">
                   {metrics?.database?.latencyMs ?? 0} <span className="text-xs font-normal">ms</span>
@@ -131,7 +113,7 @@ export default function AdminSystemHealthPage() {
               <div className="bg-white rounded-xl border border-ink-100 p-4 shadow-xs space-y-1">
                 <div className="flex items-center justify-between text-ink-400">
                   <span className="text-[10px] font-bold uppercase tracking-wider">Host RAM Used</span>
-                  <Server size={16} className="text-blue-700" />
+                  <FloriaIcon name="server" size={16} className="text-blue-700" />
                 </div>
                 <p className="text-xl font-bold font-mono text-ink-900">{ramPercent}%</p>
                 <p className="text-[10px] text-ink-400 font-mono">
@@ -142,7 +124,7 @@ export default function AdminSystemHealthPage() {
               <div className="bg-white rounded-xl border border-ink-100 p-4 shadow-xs space-y-1">
                 <div className="flex items-center justify-between text-ink-400">
                   <span className="text-[10px] font-bold uppercase tracking-wider">V8 Heap Used</span>
-                  <Cpu size={16} className="text-purple-700" />
+                  <FloriaIcon name="cpu" size={16} className="text-purple-700" />
                 </div>
                 <p className="text-xl font-bold font-mono text-ink-900">
                   {procMemory?.heapUsedMb ?? 0} <span className="text-xs font-normal">MB</span>
@@ -155,7 +137,7 @@ export default function AdminSystemHealthPage() {
               <div className="bg-white rounded-xl border border-ink-100 p-4 shadow-xs space-y-1">
                 <div className="flex items-center justify-between text-ink-400">
                   <span className="text-[10px] font-bold uppercase tracking-wider">Container Uptime</span>
-                  <Clock size={16} className="text-amber-700" />
+                  <FloriaIcon name="clock" size={16} className="text-amber-700" />
                 </div>
                 <p className="text-xl font-bold font-mono text-ink-900">
                   {sysDays}d {sysHours}h {sysMinutes}m
@@ -168,7 +150,7 @@ export default function AdminSystemHealthPage() {
             <div className="bg-cream-50 rounded-2xl border border-ink-100 p-5 space-y-4">
               <div className="flex justify-between items-center">
                 <h2 className="font-serif text-sm font-bold text-ink-900 flex items-center gap-2">
-                  <AlertTriangle size={16} className="text-warning-600" /> Operational & Business Queue Alerts
+                  <FloriaIcon name="warning" size={16} className="text-warning-600" /> Operational & Business Queue Alerts
                 </h2>
                 <span className="text-[10px] text-ink-400 font-mono">Last Sync: {lastUpdated}</span>
               </div>
@@ -218,7 +200,7 @@ export default function AdminSystemHealthPage() {
             <div className="bg-white rounded-2xl border border-ink-100 p-5 shadow-xs space-y-4">
               <div>
                 <h2 className="font-serif text-base font-bold text-ink-900 flex items-center gap-2">
-                  <Layers size={18} className="text-forest-700" /> Database Table Record Counts (Supabase / Postgres)
+                  <FloriaIcon name="layers" size={18} className="text-forest-700" /> Database Table Record Counts (Supabase / Postgres)
                 </h2>
                 <p className="text-xs text-ink-400 mt-0.5">Exact row count distribution fetched dynamically via PostgreSQL database query.</p>
               </div>
@@ -226,7 +208,7 @@ export default function AdminSystemHealthPage() {
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                 <div className="p-3 bg-cream-50/70 rounded-xl border border-ink-100/60 space-y-1">
                   <div className="flex items-center gap-1.5 text-forest-700">
-                    <Box size={14} />
+                    <FloriaIcon name="box" size={14} />
                     <span className="text-[10px] font-bold uppercase tracking-wider text-ink-600">Products</span>
                   </div>
                   <p className="text-lg font-bold font-mono text-ink-900">{dbRecords?.products ?? 0}</p>
@@ -234,7 +216,7 @@ export default function AdminSystemHealthPage() {
 
                 <div className="p-3 bg-cream-50/70 rounded-xl border border-ink-100/60 space-y-1">
                   <div className="flex items-center gap-1.5 text-blue-700">
-                    <ShoppingBag size={14} />
+                    <FloriaIcon name="bag" size={14} />
                     <span className="text-[10px] font-bold uppercase tracking-wider text-ink-600">Orders</span>
                   </div>
                   <p className="text-lg font-bold font-mono text-ink-900">{dbRecords?.orders ?? 0}</p>
@@ -242,7 +224,7 @@ export default function AdminSystemHealthPage() {
 
                 <div className="p-3 bg-cream-50/70 rounded-xl border border-ink-100/60 space-y-1">
                   <div className="flex items-center gap-1.5 text-purple-700">
-                    <Store size={14} />
+                    <FloriaIcon name="store" size={14} />
                     <span className="text-[10px] font-bold uppercase tracking-wider text-ink-600">Sellers</span>
                   </div>
                   <p className="text-lg font-bold font-mono text-ink-900">{dbRecords?.sellers ?? 0}</p>
@@ -250,7 +232,7 @@ export default function AdminSystemHealthPage() {
 
                 <div className="p-3 bg-cream-50/70 rounded-xl border border-ink-100/60 space-y-1">
                   <div className="flex items-center gap-1.5 text-amber-700">
-                    <Users size={14} />
+                    <FloriaIcon name="users" size={14} />
                     <span className="text-[10px] font-bold uppercase tracking-wider text-ink-600">Users</span>
                   </div>
                   <p className="text-lg font-bold font-mono text-ink-900">{dbRecords?.users ?? 0}</p>
@@ -258,7 +240,7 @@ export default function AdminSystemHealthPage() {
 
                 <div className="p-3 bg-cream-50/70 rounded-xl border border-ink-100/60 space-y-1">
                   <div className="flex items-center gap-1.5 text-emerald-700">
-                    <FolderTree size={14} />
+                    <FloriaIcon name="category" size={14} />
                     <span className="text-[10px] font-bold uppercase tracking-wider text-ink-600">Categories</span>
                   </div>
                   <p className="text-lg font-bold font-mono text-ink-900">{dbRecords?.categories ?? 0}</p>
@@ -266,7 +248,7 @@ export default function AdminSystemHealthPage() {
 
                 <div className="p-3 bg-cream-50/70 rounded-xl border border-ink-100/60 space-y-1">
                   <div className="flex items-center gap-1.5 text-ink-700">
-                    <FileText size={14} />
+                    <FloriaIcon name="document" size={14} />
                     <span className="text-[10px] font-bold uppercase tracking-wider text-ink-600">Audit Logs</span>
                   </div>
                   <p className="text-lg font-bold font-mono text-ink-900">{dbRecords?.auditLogs ?? 0}</p>
@@ -279,14 +261,14 @@ export default function AdminSystemHealthPage() {
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                 <div>
                   <h2 className="font-serif text-base font-bold text-ink-900 flex items-center gap-2">
-                    <HardDrive size={18} className="text-emerald-700" /> Supabase Storage Fulfillment & Image Engine Diagnostics
+                    <FloriaIcon name="hard_drive" size={18} className="text-emerald-700" /> Supabase Storage Fulfillment & Image Engine Diagnostics
                   </h2>
                   <p className="text-xs text-ink-400 mt-0.5">
                     Real-time metrics on bucket usage, binary compression status, Sharp WebP variants, and quota capacity.
                   </p>
                 </div>
                 <span className="px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1.5">
-                  <CheckCircle2 size={12} className="text-emerald-600" /> Sharp Engine Active
+                  <FloriaIcon name="check_circle" size={12} className="text-emerald-600" /> Sharp Engine Active
                 </span>
               </div>
 
@@ -350,7 +332,7 @@ export default function AdminSystemHealthPage() {
               <div className="bg-white rounded-xl border border-ink-100 p-5 shadow-xs space-y-4">
                 <div>
                   <h2 className="text-xs font-bold uppercase tracking-wider text-ink-900 flex items-center gap-2">
-                    <Server size={14} /> Physical Host Memory Footprint
+                    <FloriaIcon name="server" size={14} /> Physical Host Memory Footprint
                   </h2>
                   <p className="text-[10px] text-ink-400 mt-0.5">Used physical RAM vs total host memory capacity.</p>
                 </div>
@@ -378,7 +360,7 @@ export default function AdminSystemHealthPage() {
               <div className="bg-white rounded-xl border border-ink-100 p-5 shadow-xs space-y-4">
                 <div>
                   <h2 className="text-xs font-bold uppercase tracking-wider text-ink-900 flex items-center gap-2">
-                    <Cpu size={14} /> V8 Process Memory Breakdown
+                    <FloriaIcon name="cpu" size={14} /> V8 Process Memory Breakdown
                   </h2>
                   <p className="text-[10px] text-ink-400 mt-0.5">Node.js process heap & RSS memory metrics.</p>
                 </div>

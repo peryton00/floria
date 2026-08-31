@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { api, type SellerNotificationSettings } from "@/lib/api";
-import { User, Bell, Shield, Loader2, CheckCircle2 } from "lucide-react";
+import { FloriaIcon } from "@floria/icons";
 
 export default function SellerSettingsPage() {
   const [settings, setSettings] = useState<SellerNotificationSettings>({
@@ -76,7 +76,7 @@ export default function SellerSettingsPage() {
 
       {message && (
         <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded text-xs text-emerald-800 font-bold flex items-center gap-2">
-          <CheckCircle2 size={16} /> {message}
+          <FloriaIcon name="check_circle" size={16} /> {message}
         </div>
       )}
 
@@ -85,7 +85,7 @@ export default function SellerSettingsPage() {
         <Link href="/seller/profile" className="p-5 flex justify-between items-center hover:bg-slate-50/80 transition-colors group">
           <div className="flex gap-3.5 items-center">
             <div className="w-9 h-9 rounded bg-forest-50 text-forest-700 border border-forest-100 flex items-center justify-center shadow-xs">
-              <User size={18} />
+              <FloriaIcon name="user" size={18} />
             </div>
             <div>
               <h3 className="font-sans font-bold text-[#0F172A] text-sm">Nursery Profile &amp; Storefront Details</h3>
@@ -99,7 +99,7 @@ export default function SellerSettingsPage() {
         <div className="p-5 space-y-4">
           <div className="flex gap-3.5 items-center">
             <div className="w-9 h-9 rounded bg-forest-50 text-forest-700 border border-forest-100 flex items-center justify-center flex-shrink-0 shadow-xs">
-              <Bell size={18} />
+              <FloriaIcon name="bell" size={18} />
             </div>
             <div>
               <h3 className="font-sans font-bold text-[#0F172A] text-sm">Notification Preferences</h3>
@@ -109,7 +109,7 @@ export default function SellerSettingsPage() {
 
           {loading ? (
             <div className="py-4 flex justify-center text-[#1B4D3E]">
-              <Loader2 className="animate-spin" size={20} />
+              <FloriaIcon name="rotate" className="animate-spin" size={20} />
             </div>
           ) : (
             <div className="space-y-3 text-xs border-t border-[#E2E8F0] pt-4">
@@ -183,7 +183,7 @@ export default function SellerSettingsPage() {
         <div className="p-5 flex justify-between items-center bg-[#F8FAFC]">
           <div className="flex gap-3.5 items-center">
             <div className="w-9 h-9 rounded bg-forest-50 text-forest-700 border border-forest-100 flex items-center justify-center shadow-xs">
-              <Shield size={18} />
+              <FloriaIcon name="shield" size={18} />
             </div>
             <div>
               <h3 className="font-sans font-bold text-[#0F172A] text-sm">Security &amp; Authorization</h3>
@@ -196,4 +196,3 @@ export default function SellerSettingsPage() {
     </div>
   );
 }
-

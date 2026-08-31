@@ -1,5 +1,5 @@
 import React from "react";
-import { CheckCircle2, AlertCircle, UploadCloud } from "lucide-react";
+import { FloriaIcon } from "@floria/icons";
 import { Spinner } from "./Spinner";
 
 export interface UploadLoaderProps {
@@ -38,7 +38,7 @@ export function UploadLoader({
           />
         ) : (
           <div className="w-10 h-10 rounded-lg bg-stone-100 flex items-center justify-center text-stone-500">
-            <UploadCloud className="w-5 h-5" />
+            <FloriaIcon name="upload" size={20} />
           </div>
         )}
 
@@ -58,12 +58,12 @@ export function UploadLoader({
           )}
           {isSuccess && (
             <span className="flex items-center gap-1 text-xs font-bold text-emerald-700">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Done
+              <FloriaIcon name="check_circle" size={16} className="text-emerald-600" /> Done
             </span>
           )}
           {isError && (
             <span className="flex items-center gap-1 text-xs font-bold text-red-700">
-              <AlertCircle className="w-4 h-4 text-red-600" /> Failed
+              <FloriaIcon name="error" size={16} className="text-red-600" /> Failed
             </span>
           )}
         </div>

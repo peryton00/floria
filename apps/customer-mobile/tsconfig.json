@@ -19,6 +19,12 @@
       ],
       "@floria/api-client": [
         "../../packages/api-client/src/index.ts"
+      ],
+      "@floria/icons": [
+        "../../packages/icons/src/index.ts"
+      ],
+      "@floria/icons/native": [
+        "../../packages/icons/src/native/index.ts"
       ]
     }
   },

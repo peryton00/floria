@@ -57,11 +57,14 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
           select: () => ({
             eq: () => ({
               maybeSingle: async () => ({
-                data: {
-                  id: `sel-${userId}`,
-                  user_id: userId,
-                  status: sellerStatus,
-                },
+                data:
+                  role === "seller"
+                    ? {
+                        id: `sel-${userId}`,
+                        user_id: userId,
+                        status: sellerStatus,
+                      }
+                    : null,
                 error: null,
               }),
             }),

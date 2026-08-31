@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { StarRating } from "@/components/ui/StarRating";
 import type { ProductReview, ReviewSummary } from "@/lib/api";
 import { api } from "@/lib/api";
-import { ThumbsUp, ShieldCheck } from "lucide-react";
+import { FloriaIcon } from "@floria/icons";
 import { useToast } from "@/lib/contexts/ToastContext";
 
 interface ReviewListProps {
@@ -119,7 +119,7 @@ export function ReviewList({
                   </span>
                   {rev.is_verified_purchase && (
                     <span className="inline-flex items-center gap-1 text-[10px] text-forest-700 font-semibold">
-                      <ShieldCheck size={10} />
+                      <FloriaIcon name="shield_check" size={10} />
                       Verified Purchase
                     </span>
                   )}
@@ -181,8 +181,10 @@ export function ReviewList({
               className="inline-flex items-center gap-1.5 text-[10px] text-ink-400 hover:text-forest-700 transition-colors"
               aria-label="Mark review as helpful"
             >
-              <ThumbsUp
-                size={11}
+              <FloriaIcon
+                name="thumbs_up"
+                size={12}
+                weight={helpfulVotes[rev.id] ? "fill" : "regular"}
                 className={helpfulVotes[rev.id] ? "text-forest-700" : ""}
               />
               Helpful ({rev.helpful_count + (helpfulVotes[rev.id] ? 1 : 0)})

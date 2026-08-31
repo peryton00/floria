@@ -3,12 +3,7 @@
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { formatINR } from "@/lib/format";
-import {
-  History,
-  AlertTriangle,
-  ExternalLink,
-  Info
-} from "lucide-react";
+import { FloriaIcon } from "@floria/icons";
 
 export default function SellerPayoutsPage() {
   const [earnings, setEarnings] = useState<any>(null);
@@ -57,7 +52,7 @@ export default function SellerPayoutsPage() {
         <div>
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <h1 className="font-sans text-xl font-bold text-[#0F172A] tracking-tight">Payout Settlements & Disbursements</h1>
+            <h1 className="font-sans text-xl font-bold text-[#0F172A] tracking-tight">Payout Settlements &amp; Disbursements</h1>
           </div>
           <p className="text-xs text-slate-500 mt-1">Track bank transfers and historical settlements issued for completed nursery marketplace orders.</p>
         </div>
@@ -73,7 +68,7 @@ export default function SellerPayoutsPage() {
       <div className="bg-white rounded border border-[#E2E8F0] p-5 space-y-4 shadow-xs">
         <div className="flex gap-3.5 items-start">
           <div className="w-8 h-8 rounded bg-forest-50 text-forest-700 border border-forest-100 flex items-center justify-center flex-shrink-0 shadow-xs mt-0.5">
-            <Info size={16} />
+            <FloriaIcon name="info" size={16} />
           </div>
           <div className="space-y-1">
             <h2 className="font-sans font-bold text-sm text-[#0F172A]">Payout Settlement Policy</h2>
@@ -89,7 +84,7 @@ export default function SellerPayoutsPage() {
             <p className="text-[10px] text-slate-400 mt-0.5 font-mono">Verified via server accounting ledger</p>
           </div>
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200">
-            <AlertTriangle size={11} /> Automated Settlement Engine Scheduled
+            <FloriaIcon name="warning" size={11} /> Automated Settlement Engine Scheduled
           </span>
         </div>
       </div>
@@ -117,4 +112,3 @@ export default function SellerPayoutsPage() {
     </div>
   );
 }
-

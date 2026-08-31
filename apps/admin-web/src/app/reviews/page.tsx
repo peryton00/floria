@@ -5,8 +5,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { StarRating } from "@/components/ui/StarRating";
 import { api } from "@/lib/api";
 import type { ProductReview } from "@/lib/api";
-import { StarIcon, CheckIcon, AlertIcon } from "@/components/ui/Icons";
-import { X, Flag, ShieldCheck } from "lucide-react";
+import { FloriaIcon } from "@floria/icons";
 
 type FilterStatus = "all" | "pending" | "approved" | "rejected" | "flagged";
 
@@ -114,7 +113,7 @@ export default function AdminReviewsPage() {
         ) : reviews.length === 0 ? (
           <div className="bg-white rounded-2xl border border-ink-100 p-12 text-center shadow-xs space-y-3 max-w-md">
             <div className="w-12 h-12 rounded-full bg-forest-50 text-forest-700 flex items-center justify-center mx-auto">
-              <StarIcon size={24} />
+              <FloriaIcon name="star" size={24} />
             </div>
             <p className="font-serif text-lg font-bold text-ink-900">No {filter === "all" ? "" : filter} reviews</p>
             <p className="text-xs text-ink-500">
@@ -135,7 +134,7 @@ export default function AdminReviewsPage() {
                         <p className="text-xs font-semibold text-ink-900">{maskName(customer?.full_name)}</p>
                         {rev.is_verified_purchase && (
                           <span className="inline-flex items-center gap-0.5 text-[10px] text-forest-700 font-semibold">
-                            <ShieldCheck size={10} /> Verified
+                            <FloriaIcon name="shield_check" size={10} /> Verified
                           </span>
                         )}
                       </div>
@@ -155,7 +154,7 @@ export default function AdminReviewsPage() {
                       </p>
                       {(rev.reported_count ?? 0) > 0 && (
                         <p className="text-[10px] text-orange-600 flex items-center gap-1 justify-end">
-                          <Flag size={10} /> {rev.reported_count} flag{(rev.reported_count ?? 0) !== 1 ? "s" : ""}
+                          <FloriaIcon name="flag" size={10} /> {rev.reported_count} flag{(rev.reported_count ?? 0) !== 1 ? "s" : ""}
                         </p>
                       )}
                     </div>
@@ -175,14 +174,14 @@ export default function AdminReviewsPage() {
                         disabled={moderating === rev.id}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold rounded-lg bg-forest-50 text-forest-700 hover:bg-forest-100 disabled:opacity-50 transition-colors border border-forest-200"
                       >
-                        <CheckIcon size={12} /> Approve
+                        <FloriaIcon name="check" size={12} /> Approve
                       </button>
                       <button
                         onClick={() => setNoteTarget({ id: rev.id, action: "reject" })}
                         disabled={moderating === rev.id}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold rounded-lg bg-red-50 text-red-600 hover:bg-red-100 disabled:opacity-50 transition-colors border border-red-200"
                       >
-                        <X size={12} /> Reject
+                        <FloriaIcon name="close" size={12} /> Reject
                       </button>
                     </div>
                   )}

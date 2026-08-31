@@ -2,6 +2,7 @@
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
+    "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
       "@/*": [
@@ -15,6 +16,12 @@
       ],
       "@floria/api-client": [
         "../../packages/api-client/src/index.ts"
+      ],
+      "@floria/icons": [
+        "../../packages/icons/src/index.ts"
+      ],
+      "@floria/icons/native": [
+        "../../packages/icons/src/native/index.ts"
       ]
     }
   },

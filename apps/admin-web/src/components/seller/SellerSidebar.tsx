@@ -18,7 +18,7 @@ import {
   SettingsIcon,
   LogoutIcon,
 } from "@/components/ui/Icons";
-import { BarChart3 } from "lucide-react";
+import { FloriaIcon } from "@floria/icons";
 
 interface SidebarItem {
   label: string;
@@ -35,7 +35,7 @@ const NAV_ITEMS: SidebarItem[] = [
   { label: "Categories",      href: "/seller/categories", icon: <PlanterIcon size={18} /> },
   { label: "Earnings",        href: "/seller/earnings",   icon: <PayoutIcon size={18} /> },
   { label: "Payouts",         href: "/seller/payouts",    icon: <PayoutIcon size={18} /> },
-  { label: "Analytics",       href: "/seller/analytics",  icon: <BarChart3 size={18} /> },
+  { label: "Analytics",       href: "/seller/analytics",  icon: <FloriaIcon name="analytics" size={18} /> },
   { label: "Reviews",         href: "/seller/reviews",    icon: <StarIcon size={18} /> },
   { label: "Nursery Profile", href: "/seller/profile",    icon: <UserGroupIcon size={18} /> },
   { label: "Documents",       href: "/seller/documents",  icon: <ShieldIcon size={18} /> },

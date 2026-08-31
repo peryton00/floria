@@ -3,13 +3,7 @@
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { formatINR } from "@/lib/format";
-import {
-  DollarSign,
-  TrendingUp,
-  Percent,
-  Calendar,
-  AlertCircle
-} from "lucide-react";
+import { FloriaIcon } from "@floria/icons";
 
 export default function SellerEarningsPage() {
   const [earnings, setEarnings] = useState<any>(null);
@@ -61,7 +55,7 @@ export default function SellerEarningsPage() {
   if (error || !earnings) {
     return (
       <div className="max-w-md mx-auto py-16 text-center space-y-4 bg-floria-linen rounded-3xl border border-floria-border p-8 shadow-xs font-ui">
-        <AlertCircle size={28} className="text-rose-600 mx-auto" />
+        <FloriaIcon name="error" size={28} className="text-rose-600 mx-auto" />
         <h1 className="font-serif text-lg font-bold text-ink-900">Earnings Data Unavailable</h1>
         <p className="text-xs text-ink-500">{error || "Could not retrieve live accounting metrics."}</p>
       </div>
@@ -96,7 +90,7 @@ export default function SellerEarningsPage() {
             <p className="text-[11px] text-slate-400 mt-1">From {earnings.ordersCount} completed order(s)</p>
           </div>
           <div className="w-9 h-9 rounded bg-forest-50 text-forest-700 border border-forest-100 flex items-center justify-center flex-shrink-0 shadow-xs">
-            <TrendingUp size={18} />
+            <FloriaIcon name="trending_up" size={18} />
           </div>
         </div>
 
@@ -107,7 +101,7 @@ export default function SellerEarningsPage() {
             <p className="text-[11px] text-slate-400 mt-1">Aggregated per-order fee snapshot</p>
           </div>
           <div className="w-9 h-9 rounded bg-amber-50 text-amber-700 border border-amber-100 flex items-center justify-center flex-shrink-0 shadow-xs">
-            <Percent size={18} />
+            <FloriaIcon name="percent" size={18} />
           </div>
         </div>
 
@@ -118,7 +112,7 @@ export default function SellerEarningsPage() {
             <p className="text-[11px] text-slate-400 mt-1">Total eligible for settlement payout</p>
           </div>
           <div className="w-9 h-9 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center justify-center flex-shrink-0 shadow-xs">
-            <DollarSign size={18} />
+            <FloriaIcon name="wallet" size={18} />
           </div>
         </div>
       </div>
@@ -131,7 +125,7 @@ export default function SellerEarningsPage() {
             <p className="text-xs text-slate-500 mt-0.5">Itemized list of order segment revenues and commission snapshot deductions.</p>
           </div>
           <span className="text-[11px] font-mono font-bold text-slate-600 flex items-center gap-1.5 bg-white px-2.5 py-1 rounded border border-[#E2E8F0]">
-            <Calendar size={12} /> Live Accounting Sync
+            <FloriaIcon name="calendar" size={12} /> Live Accounting Sync
           </span>
         </div>
 

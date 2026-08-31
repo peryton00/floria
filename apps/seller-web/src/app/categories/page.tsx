@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
-import { FolderTree, Info } from "lucide-react";
+import { FloriaIcon } from "@floria/icons";
 
 export default function SellerCategoriesPage() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -59,7 +59,7 @@ export default function SellerCategoriesPage() {
       {/* Info notice about categories */}
       <div className="bg-white rounded border border-[#E2E8F0] p-5 flex gap-3.5 text-xs shadow-xs items-start">
         <div className="w-8 h-8 rounded bg-forest-50 text-forest-700 border border-forest-100 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-xs">
-          <Info size={16} />
+          <FloriaIcon name="info" size={16} />
         </div>
         <div className="space-y-1">
           <h2 className="font-sans font-bold text-sm text-[#0F172A]">Category Classification Policy</h2>
@@ -81,7 +81,7 @@ export default function SellerCategoriesPage() {
           <div key={c.id} className="bg-white rounded border border-[#E2E8F0] p-5 shadow-xs flex flex-col justify-between hover:border-slate-400 transition-all">
             <div className="space-y-2">
               <div className="w-8 h-8 rounded bg-forest-50 text-forest-700 border border-forest-100 flex items-center justify-center shadow-xs">
-                <FolderTree size={16} />
+                <FloriaIcon name="categories" size={16} />
               </div>
               <h3 className="font-sans font-bold text-[#0F172A] text-sm">{c.name}</h3>
               <p className="text-xs text-slate-500 line-clamp-3 leading-relaxed">{c.description || "No description provided."}</p>
@@ -96,4 +96,3 @@ export default function SellerCategoriesPage() {
     </div>
   );
 }
-

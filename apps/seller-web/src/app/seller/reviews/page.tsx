@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Star, MessageSquare, Flag } from "lucide-react";
+import { FloriaIcon } from "@floria/icons";
 import { api } from "@/lib/api";
 import { StarRating } from "@/components/ui/StarRating";
 import type { ProductReview, ReviewSummary } from "@/lib/api";
@@ -99,14 +99,14 @@ export default function SellerReviewsPage() {
       ) : reviews.length === 0 ? (
         <div className="bg-white rounded border border-[#E2E8F0] p-12 text-center shadow-xs max-w-lg mx-auto space-y-4">
           <div className="w-12 h-12 rounded bg-forest-50 text-forest-700 border border-forest-100 flex items-center justify-center mx-auto shadow-xs">
-            <MessageSquare size={20} />
+            <FloriaIcon name="chat" size={20} />
           </div>
           <h2 className="font-sans text-base font-bold text-[#0F172A]">No Reviews Recorded Yet</h2>
           <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
             Customer ratings and botanical quality reviews will automatically populate here once clients receive plant deliveries from your nursery.
           </p>
           <div className="pt-2 flex justify-center gap-1.5 text-amber-400">
-            {[...Array(5)].map((_, i) => <Star key={i} size={16} fill="currentColor" />)}
+            {[...Array(5)].map((_, i) => <FloriaIcon key={i} name="star_fill" size={16} />)}
           </div>
         </div>
       ) : (
@@ -150,7 +150,7 @@ export default function SellerReviewsPage() {
                       disabled={flagging === rev.id}
                       className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-400 hover:text-amber-700 transition-colors disabled:opacity-50"
                     >
-                      <Flag size={12} />
+                      <FloriaIcon name="flag" size={12} />
                       {flagging === rev.id ? "Flagging review…" : "Flag for moderation review"}
                     </button>
                   </div>

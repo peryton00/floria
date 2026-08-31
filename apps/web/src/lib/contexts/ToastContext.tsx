@@ -9,14 +9,7 @@ import React, {
   useRef,
   useEffect,
 } from "react";
-import {
-  CheckCircle2,
-  AlertCircle,
-  AlertTriangle,
-  Info,
-  Loader2,
-  X,
-} from "lucide-react";
+import { FloriaIcon } from "@floria/icons";
 
 export type ToastType = "success" | "error" | "warning" | "info" | "loading";
 
@@ -258,33 +251,33 @@ function ToastItem({
         return {
           bg: "bg-white border-l-4 border-l-emerald-600 border border-stone-200 shadow-lg text-stone-900",
           icon: (
-            <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+            <FloriaIcon name="check_circle" size={20} className="text-emerald-600 flex-shrink-0 mt-0.5" />
           ),
         };
       case "error":
         return {
           bg: "bg-white border-l-4 border-l-red-600 border border-stone-200 shadow-lg text-stone-900",
           icon: (
-            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <FloriaIcon name="error" size={20} className="text-red-600 flex-shrink-0 mt-0.5" />
           ),
         };
       case "warning":
         return {
           bg: "bg-white border-l-4 border-l-amber-500 border border-stone-200 shadow-lg text-stone-900",
           icon: (
-            <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+            <FloriaIcon name="warning" size={20} className="text-amber-500 flex-shrink-0 mt-0.5" />
           ),
         };
       case "info":
         return {
           bg: "bg-white border-l-4 border-l-sky-600 border border-stone-200 shadow-lg text-stone-900",
-          icon: <Info className="w-5 h-5 text-sky-600 flex-shrink-0 mt-0.5" />,
+          icon: <FloriaIcon name="info" size={20} className="text-sky-600 flex-shrink-0 mt-0.5" />,
         };
       case "loading":
         return {
           bg: "bg-white border-l-4 border-l-forest-600 border border-stone-200 shadow-lg text-stone-900",
           icon: (
-            <Loader2 className="w-5 h-5 text-forest-600 animate-spin flex-shrink-0 mt-0.5" />
+            <FloriaIcon name="rotate" size={20} className="text-forest-600 animate-spin flex-shrink-0 mt-0.5" />
           ),
         };
     }
@@ -315,7 +308,7 @@ function ToastItem({
         onClick={() => onDismiss(toast.id)}
         className="min-w-[44px] min-h-[44px] -mr-2 -mt-2.5 flex items-center justify-center text-stone-400 hover:text-stone-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-forest-600 rounded-lg"
       >
-        <X className="w-4 h-4" />
+        <FloriaIcon name="close" size={16} />
       </button>
     </div>
   );
