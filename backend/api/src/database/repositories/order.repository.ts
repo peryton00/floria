@@ -43,9 +43,9 @@ export class OrderRepository {
         order_items(
           *,
           product:products(
+            id,
             name,
-            slug,
-            seller:seller_profiles(id, business_name)
+            slug
           )
         ),
         seller_order_fulfillments(*)

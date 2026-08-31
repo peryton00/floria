@@ -118,7 +118,7 @@ export function AdminShell({ children }: AdminShellProps) {
     { label: "Promotions", href: "/admin/promotions", icon: <VerifiedIcon size={18} /> },
     { label: "Reports", href: "/admin/reports", icon: <AlertIcon size={18} /> },
     { label: "Audit Logs", href: "/admin/audit-logs", icon: <ShieldIcon size={18} /> },
-    { label: "Settings", href: "/admin/settings", icon: <SettingsIcon size={18} /> },
+    { label: "Business Rules & Policies", href: "/admin/settings", icon: <SettingsIcon size={18} /> },
   ];
 
   if (loading) {

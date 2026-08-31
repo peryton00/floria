@@ -15,11 +15,12 @@ export class UserRepository {
     return data as UserProfile;
   }
 
-  async findAll(limit = 50, offset = 0): Promise<UserProfile[]> {
+  async findAll(limit = 1000, offset = 0): Promise<UserProfile[]> {
     const db = getAdminDb();
     const { data, error } = await db
       .from("user_profiles")
       .select("*")
+      .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
 
     if (error || !data) return [];

@@ -5,6 +5,8 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { api } from "@/lib/api";
 import { FloriaIcon } from "@floria/icons";
 
+import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
+
 type CategoryFilter = "all" | "auth" | "changes" | "security";
 
 export default function AdminAuditLogsPage() {
@@ -15,6 +17,7 @@ export default function AdminAuditLogsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLog, setSelectedLog] = useState<any | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isLive, setIsLive] = useState(true);
 
   const fetchLogs = async () => {
     try {
@@ -36,6 +39,35 @@ export default function AdminAuditLogsPage() {
 
   useEffect(() => {
     fetchLogs();
+
+    // Real-time log streaming from Supabase
+    try {
+      const supabase = getSupabaseBrowserClient();
+      const channel = supabase
+        .channel("realtime-audit-logs")
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "audit_logs",
+          },
+          (payload: any) => {
+            if (payload?.new) {
+              setLogs((prev) => [payload.new, ...prev]);
+            }
+          },
+        )
+        .subscribe((status) => {
+          setIsLive(status === "SUBSCRIBED");
+        });
+
+      return () => {
+        void supabase.removeChannel(channel);
+      };
+    } catch {
+      setIsLive(false);
+    }
   }, [roleFilter]);
 
   const filteredLogs = useMemo(() => {
@@ -102,12 +134,18 @@ export default function AdminAuditLogsPage() {
           </div>
 
           <div className="flex items-center gap-2">
+            {isLive && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 text-[11px] font-bold border border-emerald-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Live Stream
+              </span>
+            )}
             <button
               onClick={fetchLogs}
               className="px-3 py-1.5 rounded-lg border border-ink-200 hover:bg-cream-100 text-xs font-bold text-ink-700 transition-colors flex items-center gap-1.5"
             >
               <FloriaIcon name="refresh" size="xs" />
-              <span>Refresh Logs</span>
+              <span>Refresh</span>
             </button>
             <span className="px-3 py-1.5 rounded-lg bg-forest-50 text-forest-700 font-bold text-xs border border-forest-100">
               {filteredLogs.length} / {logs.length} Entries
