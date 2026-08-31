@@ -19,20 +19,23 @@ import { SellerPendingVerificationShield } from "../../components/seller";
 
 const RANGES = [
   { key: "today", label: "Today" },
-  { key: "week", label: "This Week" },
-  { key: "month", label: "This Month" },
+  { key: "7d", label: "7D" },
+  { key: "30d", label: "30D" },
+  { key: "90d", label: "90D" },
+  { key: "12m", label: "12M" },
 ];
 
 export default function SellerAnalyticsScreen() {
   const insets = useSafeAreaInsets();
   const { seller } = useSellerAuth();
 
-  const [activeRange, setActiveRange] = useState<string>("today");
+  const [activeRange, setActiveRange] = useState<string>("30d");
   const [analyticsData, setAnalyticsData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
-  const isApproved = seller?.status === "approved" || seller?.status === "active";
+  const isApproved =
+    seller?.status === "approved" || seller?.status === "active";
 
   const fetchAnalytics = useCallback(async () => {
     if (!isApproved) {
@@ -79,28 +82,60 @@ export default function SellerAnalyticsScreen() {
     fetchAnalytics();
   };
 
-  // Extract Authoritative Metrics
+  // Authoritative Metrics Extraction
+  const summary = analyticsData?.summary || {};
   const revenuePaise =
+    summary.grossRevenuePaise ??
     analyticsData?.revenue_paise ??
     analyticsData?.totalRevenuePaise ??
-    analyticsData?.salesPaise ??
     0;
   const ordersCount =
+    summary.ordersCount ??
     analyticsData?.orders_count ??
     analyticsData?.totalOrders ??
-    analyticsData?.orderCount ??
     0;
   const itemsSold =
+    summary.unitsSold ??
     analyticsData?.items_sold ??
     analyticsData?.itemsSold ??
-    analyticsData?.plantCount ??
     0;
   const aovPaise =
     ordersCount > 0 ? Math.round(revenuePaise / ordersCount) : 0;
-  const topProducts = analyticsData?.top_products || analyticsData?.topSellingPlants || [];
-  const trendData = analyticsData?.daily_trend || analyticsData?.trend || [];
 
-  const hasData = revenuePaise > 0 || ordersCount > 0 || itemsSold > 0 || topProducts.length > 0;
+  const topProducts =
+    analyticsData?.topProducts ||
+    analyticsData?.top_products ||
+    analyticsData?.topSellingPlants ||
+    [];
+
+  const categories =
+    analyticsData?.categories ||
+    analyticsData?.category_breakdown ||
+    [];
+
+  const rawSeries =
+    analyticsData?.series ||
+    analyticsData?.daily_trend ||
+    analyticsData?.trend ||
+    [];
+
+  const trendData = rawSeries.map((item: any, idx: number) => {
+    const dateStr = item.date || item.label || `${idx + 1}`;
+    const dateParts = dateStr.split("-");
+    const label =
+      dateParts.length === 3 ? `${dateParts[2]}/${dateParts[1]}` : dateStr;
+    return {
+      label,
+      revenuePaise: item.grossRevenuePaise ?? item.revenue_paise ?? 0,
+      ordersCount: item.ordersCount ?? item.orders ?? 0,
+    };
+  });
+
+  const hasData =
+    revenuePaise > 0 ||
+    ordersCount > 0 ||
+    itemsSold > 0 ||
+    topProducts.length > 0;
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
@@ -120,7 +155,12 @@ export default function SellerAnalyticsScreen() {
               onPress={() => setActiveRange(range.key)}
               style={[styles.rangeTab, isActive && styles.activeRangeTab]}
             >
-              <Text style={[styles.rangeTabText, isActive && styles.activeRangeTabText]}>
+              <Text
+                style={[
+                  styles.rangeTabText,
+                  isActive && styles.activeRangeTabText,
+                ]}
+              >
                 {range.label}
               </Text>
             </TouchableOpacity>
@@ -154,19 +194,19 @@ export default function SellerAnalyticsScreen() {
               <View style={styles.kpiCard}>
                 <Text style={styles.kpiLabel}>Revenue</Text>
                 <Text style={styles.kpiValue}>{formatINR(revenuePaise)}</Text>
-                <Text style={styles.kpiSub}>Gross seller earnings</Text>
+                <Text style={styles.kpiSub}>Gross sales volume</Text>
               </View>
 
               <View style={styles.kpiCard}>
                 <Text style={styles.kpiLabel}>Orders</Text>
                 <Text style={styles.kpiValue}>{ordersCount}</Text>
-                <Text style={styles.kpiSub}>Completed & in-flight</Text>
+                <Text style={styles.kpiSub}>Verified orders</Text>
               </View>
 
               <View style={styles.kpiCard}>
-                <Text style={styles.kpiLabel}>Items Sold</Text>
+                <Text style={styles.kpiLabel}>Plants Sold</Text>
                 <Text style={styles.kpiValue}>{itemsSold}</Text>
-                <Text style={styles.kpiSub}>Plants shipped</Text>
+                <Text style={styles.kpiSub}>Item quantities</Text>
               </View>
 
               <View style={styles.kpiCard}>
@@ -179,15 +219,20 @@ export default function SellerAnalyticsScreen() {
             {/* ── Visual Trend Bars ── */}
             {trendData.length > 0 && (
               <View style={styles.trendSection}>
-                <Text style={styles.sectionHeading}>Sales Trend</Text>
+                <Text style={styles.sectionHeading}>Sales Trend (₹)</Text>
                 <View style={styles.trendCard}>
                   <View style={styles.barsContainer}>
                     {trendData.map((item: any, idx: number) => {
                       const maxVal = Math.max(
-                        ...trendData.map((d: any) => d.revenue_paise || d.amount || 1),
+                        ...trendData.map(
+                          (d: any) => d.revenuePaise || 1,
+                        ),
                       );
-                      const currentVal = item.revenue_paise || item.amount || 0;
-                      const heightPercent = Math.max(12, Math.round((currentVal / maxVal) * 100));
+                      const currentVal = item.revenuePaise || 0;
+                      const heightPercent = Math.max(
+                        14,
+                        Math.round((currentVal / maxVal) * 100),
+                      );
 
                       return (
                         <View key={idx} style={styles.barColumn}>
@@ -199,7 +244,7 @@ export default function SellerAnalyticsScreen() {
                               ]}
                             />
                           </View>
-                          <Text style={styles.barLabel}>{item.label || item.day || `${idx + 1}`}</Text>
+                          <Text style={styles.barLabel}>{item.label}</Text>
                         </View>
                       );
                     })}
@@ -208,9 +253,9 @@ export default function SellerAnalyticsScreen() {
               </View>
             )}
 
-            {/* ── Top Selling Plants ── */}
+            {/* ── Top Selling Botanical Varieties ── */}
             <View style={styles.section}>
-              <Text style={styles.sectionHeading}>Top Selling Plants</Text>
+              <Text style={styles.sectionHeading}>Top Selling Varieties</Text>
               <View style={styles.topPlantsContainer}>
                 {topProducts.length === 0 ? (
                   <Text style={styles.noTopProductsText}>
@@ -218,9 +263,11 @@ export default function SellerAnalyticsScreen() {
                   </Text>
                 ) : (
                   topProducts.map((prod: any, index: number) => {
-                    const plantName = prod.name || prod.product_name || `Plant #${index + 1}`;
-                    const count = prod.units_sold || prod.quantity || 0;
-                    const totalRevenue = prod.total_revenue_paise ?? prod.revenuePaise ?? 0;
+                    const plantName =
+                      prod.name || prod.product_name || `Plant #${index + 1}`;
+                    const count = prod.quantity || prod.units_sold || 0;
+                    const totalRevenue =
+                      prod.revenuePaise ?? prod.total_revenue_paise ?? 0;
 
                     return (
                       <View key={index} style={styles.topPlantRow}>
@@ -233,7 +280,7 @@ export default function SellerAnalyticsScreen() {
                             {plantName}
                           </Text>
                           <Text style={styles.plantQuantityText}>
-                            {count} {count === 1 ? "unit sold" : "units sold"}
+                            {count} {count === 1 ? "plant sold" : "plants sold"}
                           </Text>
                         </View>
 
@@ -246,6 +293,53 @@ export default function SellerAnalyticsScreen() {
                 )}
               </View>
             </View>
+
+            {/* ── Category Breakdown ── */}
+            {categories.length > 0 && (
+              <View style={styles.section}>
+                <Text style={styles.sectionHeading}>Category Breakdown</Text>
+                <View style={styles.topPlantsContainer}>
+                  {categories.map((cat: any, index: number) => {
+                    const catName = cat.name || "Uncategorized";
+                    const count = cat.quantity || 0;
+                    const totalRevenue = cat.revenuePaise || 0;
+
+                    return (
+                      <View key={index} style={styles.topPlantRow}>
+                        <View
+                          style={[
+                            styles.rankBadge,
+                            { backgroundColor: Colors.sand },
+                          ]}
+                        >
+                          <FloriaIcon
+                            name="leaf"
+                            size={12}
+                            color={Colors.forest}
+                          />
+                        </View>
+
+                        <View style={styles.plantInfo}>
+                          <Text
+                            style={styles.plantNameText}
+                            numberOfLines={1}
+                          >
+                            {catName}
+                          </Text>
+                          <Text style={styles.plantQuantityText}>
+                            {count} {count === 1 ? "plant sold" : "plants sold"}
+                          </Text>
+                        </View>
+
+                        <Text style={styles.plantRevenueText}>
+                          {formatINR(totalRevenue)}
+                        </Text>
+                      </View>
+                    );
+                  })}
+                </View>
+              </View>
+            )}
           </>
         )}
       </ScrollView>
