@@ -1206,8 +1206,7 @@ export class SellerRepository {
       if (
         s === "Order Placed" ||
         s === "order_placed" ||
-        s === "seller_pending" ||
-        s === "Order Placed"
+        s === "seller_pending"
       )
         newOrders++;
       else if (
@@ -1221,9 +1220,7 @@ export class SellerRepository {
       else if (s === "Picked Up" || s === "Delivered" || s === "delivered")
         completedOrders++;
 
-      if (s === "Picked Up" || s === "Delivered" || s === "delivered") {
-        totalRevenuePaise += o.totalPaise || 0;
-      }
+      totalRevenuePaise += o.totalPaise || 0;
     });
     const actionRequired: any[] = [];
     if (newOrders > 0) {
@@ -1288,10 +1285,23 @@ export class SellerRepository {
 
   async getEarnings(sellerId: string): Promise<any> {
     const db = getAdminDb();
-    const { data: items, error } = await db
+
+    const profQuery = db.from("seller_profiles").select("id, user_id");
+    const { data: sellerProf } = await (typeof profQuery.or === "function"
+      ? profQuery.or(`id.eq.${sellerId},user_id.eq.${sellerId}`).maybeSingle()
+      : profQuery.eq("id", sellerId).maybeSingle());
+
+    const targetSellerId = sellerProf?.id || sellerId;
+    const targetUserId = sellerProf?.user_id || sellerId;
+
+    const itemsQuery = db
       .from("order_items")
-      .select("*, order:orders(*)")
-      .eq("seller_id_snapshot", sellerId);
+      .select("*, order:orders(*)");
+    const { data: items, error } = await (typeof itemsQuery.or === "function"
+      ? itemsQuery.or(
+          `seller_id_snapshot.eq.${targetSellerId},seller_id_snapshot.eq.${targetUserId}`,
+        )
+      : itemsQuery.eq("seller_id_snapshot", targetSellerId));
 
     if (error || !items)
       return {
@@ -1306,20 +1316,25 @@ export class SellerRepository {
     let totalCommission = 0;
     const uniqueOrders = new Set<string>();
 
-    items.forEach((item: any) => {
-      const order = item.order;
-      if (!order) return;
-      uniqueOrders.add(order.id);
+    items
+      .filter(
+        (item: any) =>
+          item.order &&
+          item.order.status !== "pending_payment" &&
+          item.order.status !== "cancelled",
+      )
+      .forEach((item: any) => {
+        const order = item.order;
+        if (!order) return;
+        uniqueOrders.add(order.id);
 
-      const gross = (item.unit_price_paise_snapshot || 0) * item.quantity;
-      // commission_rate is an immutable snapshot stored at order creation time.
-      // Never fall back to a hardcoded rate — use the snapshotted value from the order row.
-      const rate = order.commission_rate ?? 0;
-      const commission = Math.round(gross * rate);
+        const gross = (item.unit_price_paise_snapshot || 0) * item.quantity;
+        const rate = order.commission_rate ?? 0;
+        const commission = Math.round(gross * rate);
 
-      totalGross += gross;
-      totalCommission += commission;
-    });
+        totalGross += gross;
+        totalCommission += commission;
+      });
 
     const net = totalGross - totalCommission;
 
@@ -1334,16 +1349,24 @@ export class SellerRepository {
 
   async getPayouts(sellerId: string): Promise<any> {
     const db = getAdminDb();
+
+    const profQuery = db.from("seller_profiles").select("id, user_id");
+    const { data: sellerProf } = await (typeof profQuery.or === "function"
+      ? profQuery.or(`id.eq.${sellerId},user_id.eq.${sellerId}`).maybeSingle()
+      : profQuery.eq("id", sellerId).maybeSingle());
+
+    const targetSellerId = sellerProf?.id || sellerId;
+
     const { data: payoutsList } = await db
       .from("payouts")
       .select("*")
-      .eq("seller_id", sellerId)
+      .eq("seller_id", targetSellerId)
       .order("created_at", { ascending: false });
 
     const { ledgerService } = await import("../../payments/ledger.service.js");
-    const balances = await ledgerService.getSellerBalance(sellerId);
+    const balances = await ledgerService.getSellerBalance(targetSellerId);
     const ledgerEntries = await ledgerService.getSellerLedgerEntries(
-      sellerId,
+      targetSellerId,
       30,
     );
 
@@ -1357,12 +1380,25 @@ export class SellerRepository {
 
   async getAnalytics(sellerId: string, range: string): Promise<any> {
     const db = getAdminDb();
-    const { data: items, error } = await db
+
+    const profQuery = db.from("seller_profiles").select("id, user_id");
+    const { data: sellerProf } = await (typeof profQuery.or === "function"
+      ? profQuery.or(`id.eq.${sellerId},user_id.eq.${sellerId}`).maybeSingle()
+      : profQuery.eq("id", sellerId).maybeSingle());
+
+    const targetSellerId = sellerProf?.id || sellerId;
+    const targetUserId = sellerProf?.user_id || sellerId;
+
+    const itemsQuery = db
       .from("order_items")
       .select(
         "*, order:orders(*), product:products(name, category_id, category:categories(name))",
-      )
-      .eq("seller_id_snapshot", sellerId);
+      );
+    const { data: items, error } = await (typeof itemsQuery.or === "function"
+      ? itemsQuery.or(
+          `seller_id_snapshot.eq.${targetSellerId},seller_id_snapshot.eq.${targetUserId}`,
+        )
+      : itemsQuery.eq("seller_id_snapshot", targetSellerId));
 
     if (error || !items) {
       return {
@@ -1383,6 +1419,7 @@ export class SellerRepository {
     const filteredItems = items.filter((item: any) => {
       const order = item.order;
       if (!order) return false;
+      if (order.status === "pending_payment" || order.status === "cancelled") return false;
       const orderTime = new Date(order.created_at).getTime();
       return now - orderTime <= filterMs;
     });
