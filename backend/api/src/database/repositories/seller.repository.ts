@@ -2,6 +2,7 @@
 import { getAdminDb } from "../../config/database.js";
 import type { SellerProfile } from "@floria/types";
 import { ProductRepository } from "./product.repository.js";
+import { Errors } from "../../utils/errors.js";
 
 const productRepo = new ProductRepository();
 
@@ -485,7 +486,7 @@ export class SellerRepository {
 
       if (prodErr || !newProd) {
         console.error("[SellerRepository] createProduct DB error:", prodErr?.message || prodErr);
-        throw prodErr || new Error("Failed to create product record in database");
+        throw Errors.validation(prodErr?.message || "Failed to create product record in database");
       }
 
       targetProduct = newProd;
