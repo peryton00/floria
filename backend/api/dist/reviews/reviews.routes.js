@@ -10,6 +10,7 @@ const products_controller_js_1 = require("../products/products.controller.js");
 const router = (0, express_1.Router)();
 // ── PUBLIC: ranked nursery listing ────────────────────────────────────────
 router.get("/catalog/sellers", rateLimit_js_1.publicCatalogRateLimiter, products_controller_js_1.productsController.getRankedNurseries);
+router.get("/catalog/sellers/:id", rateLimit_js_1.publicCatalogRateLimiter, products_controller_js_1.productsController.getNurseryById);
 // ── PUBLIC: product reviews list + summary ────────────────────────────────
 // Mounted at /api/v1  →  GET /api/v1/catalog/products/:id/reviews
 // (registered from app.ts via productsRoutes OR directly here — see app.ts mount)

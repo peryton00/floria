@@ -1,3 +1,3 @@
-export * from "./types.js";
-export * from "./registry.js";
-export * from "./react/index.js";
+export * from "./types";
+export * from "./registry";
+export * from "./react";

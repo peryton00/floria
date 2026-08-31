@@ -9,14 +9,22 @@ const PRODUCT_LISTING_SELECT = `*, category:categories(id,name,slug), seller:sel
 class SellerRepository {
     async findByUserId(userId) {
         const db = (0, database_js_1.getAdminDb)();
-        const { data, error } = await db
+        const { data: byUser, error: errUser } = await db
             .from("seller_profiles")
             .select("*")
             .eq("user_id", userId)
             .maybeSingle();
-        if (error || !data)
-            return null;
-        return data;
+        if (!errUser && byUser)
+            return byUser;
+        // Secondary fallback lookup by ID
+        const { data: byId } = await db
+            .from("seller_profiles")
+            .select("*")
+            .eq("id", userId)
+            .maybeSingle();
+        if (byId)
+            return byId;
+        return null;
     }
     async findById(sellerId) {
         const db = (0, database_js_1.getAdminDb)();
@@ -254,17 +262,26 @@ class SellerRepository {
     async createProduct(sellerId, productData) {
         const db = (0, database_js_1.getAdminDb)();
         const now = new Date().toISOString();
-        const slug = (productData.name || "plant")
+        let finalCategoryId = productData.category_id;
+        if (!finalCategoryId || finalCategoryId === "" || typeof finalCategoryId !== "string") {
+            const { data: firstCat } = await db
+                .from("categories")
+                .select("id")
+                .limit(1)
+                .maybeSingle();
+            finalCategoryId = firstCat?.id || null;
+        }
+        const cleanName = (productData.name || "Botanical Plant").trim();
+        const slug = cleanName
             .toLowerCase()
-            .trim()
             .replace(/[^a-z0-9\s-]/g, "")
             .replace(/\s+/g, "-") + `-${Date.now().toString().slice(-4)}`;
         const { data: prod, error: prodErr } = await db
             .from("products")
             .insert({
             seller_id: sellerId,
-            category_id: productData.category_id,
-            name: productData.name.trim(),
+            category_id: finalCategoryId,
+            name: cleanName,
             slug,
             description: productData.description?.trim() || null,
             care_instructions: productData.care_instructions?.trim() || null,
@@ -274,21 +291,33 @@ class SellerRepository {
         })
             .select()
             .single();
-        if (prodErr || !prod)
-            throw prodErr || new Error("Failed to create product");
+        if (prodErr || !prod) {
+            console.error("[SellerRepository] createProduct DB error:", prodErr?.message || prodErr);
+            throw prodErr || new Error("Failed to create product record in database");
+        }
         // Auto-generate permanent unique SKU if not provided
         const autoSku = productData.sku?.trim() ||
             `FLR-${prod.id.replace(/-/g, "").slice(0, 8).toUpperCase()}`;
         // Inventory
-        await db.from("inventory").insert({
+        const { error: invErr } = await db.from("inventory").insert({
             product_id: prod.id,
             seller_id: sellerId,
-            price_paise: Math.max(0, productData.price_paise || 0),
-            stock_quantity: Math.max(0, productData.stock_quantity || 0),
-            low_stock_threshold: Math.max(0, productData.low_stock_threshold ?? 5),
+            price_paise: Math.max(0, Number(productData.price_paise) || 0),
+            stock_quantity: Math.max(0, Number(productData.stock_quantity) || 0),
+            low_stock_threshold: Math.max(0, Number(productData.low_stock_threshold) ?? 5),
             sku: autoSku,
             updated_at: now,
         });
+        if (invErr) {
+            console.warn("[SellerRepository] Inventory insert notice:", invErr.message);
+        }
+        // Helper to safely sanitize asset IDs so empty strings never cause PostgreSQL UUID syntax errors
+        const sanitizeAssetId = (val) => {
+            if (typeof val === "string" && val.trim().length > 10 && val.includes("-")) {
+                return val.trim();
+            }
+            return null;
+        };
         // Primary & Additional Images Support
         const supabaseUrl = process.env.SUPABASE_URL ||
             process.env.NEXT_PUBLIC_SUPABASE_URL ||
@@ -298,19 +327,20 @@ class SellerRepository {
                 return `${supabaseUrl}/storage/v1/object/public/public-media/products/${sellerId}/${aId}/medium.webp`;
             }
             if (!rUrl || rUrl.includes("/media-staging/")) {
-                return "/floria-logo.png";
+                return "/brand_logo.svg";
             }
             return rUrl;
         };
         if (Array.isArray(productData.images) && productData.images.length > 0) {
             for (let i = 0; i < productData.images.length; i++) {
                 const imgObj = productData.images[i];
-                const assetId = typeof imgObj === "string"
+                const rawAssetId = typeof imgObj === "string"
                     ? imgObj
                     : imgObj.asset_id || imgObj.assetId || null;
+                const assetId = sanitizeAssetId(rawAssetId);
                 const rawUrl = typeof imgObj === "string"
                     ? imgObj
-                    : imgObj.url || productData.image_url || "/floria-logo.png";
+                    : imgObj.url || productData.image_url || "/brand_logo.svg";
                 const isPrimary = typeof imgObj === "object" && imgObj.is_primary !== undefined
                     ? imgObj.is_primary
                     : i === 0;
@@ -326,19 +356,20 @@ class SellerRepository {
             }
         }
         else if (productData.asset_id || productData.image_url) {
-            const aId = productData.asset_id || null;
-            const rUrl = productData.image_url || "/floria-logo.png";
+            const assetId = sanitizeAssetId(productData.asset_id);
+            const rUrl = productData.image_url || "/brand_logo.svg";
             await db.from("product_images").insert({
                 product_id: prod.id,
-                asset_id: aId,
-                url: resolveSanitizedUrl(aId, rUrl),
+                asset_id: assetId,
+                url: resolveSanitizedUrl(assetId, rUrl),
                 alt_text: prod.name,
                 display_order: 1,
                 is_primary: true,
                 created_at: now,
             });
         }
-        return this.findSellerProductById(sellerId, prod.id);
+        const finalProduct = await this.findSellerProductById(sellerId, prod.id);
+        return finalProduct || prod;
     }
     async updateProduct(sellerId, productId, updates) {
         const db = (0, database_js_1.getAdminDb)();
@@ -395,11 +426,11 @@ class SellerRepository {
                 .eq("is_primary", true)
                 .maybeSingle();
             const aId = updates.asset_id || null;
-            const rawUrl = updates.image_url || "/floria-logo.png";
+            const rawUrl = updates.image_url || "/brand_logo.svg";
             const cleanUrl = aId
                 ? `${supabaseUrl}/storage/v1/object/public/public-media/products/${sellerId}/${aId}/medium.webp`
                 : rawUrl.includes("/media-staging/")
-                    ? "/floria-logo.png"
+                    ? "/brand_logo.svg"
                     : rawUrl;
             if (primaryImg) {
                 const imgPayload = { url: cleanUrl };

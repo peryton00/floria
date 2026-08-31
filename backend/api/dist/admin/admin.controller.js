@@ -187,6 +187,16 @@ class AdminController {
             next(err);
         }
     }
+    async getSellerApplications(req, res, next) {
+        try {
+            const status = req.query.status;
+            const applications = await admin_service_js_1.adminService.getSellerApplications(status);
+            res.json({ success: true, data: applications });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
     async approveSeller(req, res, next) {
         try {
             const result = await admin_service_js_1.adminService.updateSellerStatus(req.user.id, req.params.id, "approved");
@@ -198,7 +208,16 @@ class AdminController {
     }
     async rejectSeller(req, res, next) {
         try {
-            const result = await admin_service_js_1.adminService.updateSellerStatus(req.user.id, req.params.id, "rejected");
+            const result = await admin_service_js_1.adminService.updateSellerStatus(req.user.id, req.params.id, "rejected", req.body?.reason);
+            res.json({ success: true, data: result });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+    async requestCorrection(req, res, next) {
+        try {
+            const result = await admin_service_js_1.adminService.updateSellerStatus(req.user.id, req.params.id, "needs_correction", req.body?.reason || "Please update your nursery application details.");
             res.json({ success: true, data: result });
         }
         catch (err) {
@@ -207,7 +226,7 @@ class AdminController {
     }
     async suspendSeller(req, res, next) {
         try {
-            const result = await admin_service_js_1.adminService.updateSellerStatus(req.user.id, req.params.id, "suspended");
+            const result = await admin_service_js_1.adminService.updateSellerStatus(req.user.id, req.params.id, "suspended", req.body?.reason);
             res.json({ success: true, data: result });
         }
         catch (err) {

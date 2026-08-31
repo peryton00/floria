@@ -4,7 +4,7 @@ import {
   FloriaIconSize,
   FloriaIconWeight,
   ICON_SIZE_MAP,
-} from "./types.js";
+} from "./types";
 
 /**
  * Maps semantic Floria icon names to their canonical Phosphor component identifier.

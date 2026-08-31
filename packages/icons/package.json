@@ -12,24 +12,5 @@
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10"
-  },
-  "peerDependencies": {
-    "phosphor-react-native": "*",
-    "react-native-svg": "*"
-  },
-  "peerDependenciesMeta": {
-    "phosphor-react-native": {
-      "optional": true
-    },
-    "react-native-svg": {
-      "optional": true
-    }
-  },
-  "devDependencies": {
-    "@types/react": "^19",
-    "@types/react-native": "*",
-    "react": "^19.2.3",
-    "react-native": "0.86.3",
-    "typescript": "^5"
   }
 }

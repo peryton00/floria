@@ -7,12 +7,20 @@ const auth_js_1 = require("../middleware/auth.js");
 const authorization_js_1 = require("../middleware/authorization.js");
 const rateLimit_js_1 = require("../middleware/rateLimit.js");
 const router = (0, express_1.Router)();
-// Profile & Onboarding (Accessible to seller role even if pending/suspended)
+// Dedicated Seller Auth & Lifecycle Routes (Public & Unauthenticated)
+router.post("/auth/login", rateLimit_js_1.sellerFulfillmentRateLimiter, sellers_controller_js_1.sellersController.login);
+router.post("/auth/register", rateLimit_js_1.sellerFulfillmentRateLimiter, sellers_controller_js_1.sellersController.apply);
+router.post("/auth/apply", rateLimit_js_1.sellerFulfillmentRateLimiter, sellers_controller_js_1.sellersController.apply);
+router.post("/auth/forgot-password", rateLimit_js_1.sellerFulfillmentRateLimiter, sellers_controller_js_1.sellersController.forgotPassword);
+router.post("/auth/reset-password", rateLimit_js_1.sellerFulfillmentRateLimiter, sellers_controller_js_1.sellersController.resetPassword);
+// Profile & Onboarding
 router.get("/profile", auth_js_1.authenticateToken, (0, authorization_js_1.requireRole)("seller", "admin", "super_admin"), sellers_controller_js_1.sellersController.getProfile);
 router.patch("/profile", auth_js_1.authenticateToken, rateLimit_js_1.sellerFulfillmentRateLimiter, (0, authorization_js_1.requireRole)("seller", "admin", "super_admin"), sellers_controller_js_1.sellersController.updateProfile);
-router.post("/applications", auth_js_1.authenticateToken, rateLimit_js_1.sellerFulfillmentRateLimiter, (0, authorization_js_1.requireRole)("seller", "customer", "admin"), sellers_controller_js_1.sellersController.submitApplication);
+router.post("/applications", rateLimit_js_1.sellerFulfillmentRateLimiter, sellers_controller_js_1.sellersController.submitApplication);
 router.get("/applications", auth_js_1.authenticateToken, (0, authorization_js_1.requireRole)("seller", "customer", "admin"), sellers_controller_js_1.sellersController.getApplication);
 router.get("/application", auth_js_1.authenticateToken, (0, authorization_js_1.requireRole)("seller", "customer", "admin"), sellers_controller_js_1.sellersController.getApplication);
+router.get("/application/status", auth_js_1.authenticateToken, sellers_controller_js_1.sellersController.getApplicationStatus);
+router.post("/application/resubmit", auth_js_1.authenticateToken, rateLimit_js_1.sellerFulfillmentRateLimiter, sellers_controller_js_1.sellersController.resubmitApplication);
 // Seller Dashboard KPIs
 router.get("/dashboard", auth_js_1.authenticateToken, (0, authorization_js_1.requireRole)("seller", "admin"), sellers_controller_js_1.sellersController.getDashboard);
 // Seller Products Management
@@ -42,6 +50,7 @@ router.get("/payouts", auth_js_1.authenticateToken, (0, authorization_js_1.requi
 router.get("/analytics", auth_js_1.authenticateToken, (0, authorization_js_1.requireRole)("seller", "admin"), sellers_controller_js_1.sellersController.getAnalytics);
 router.get("/documents", auth_js_1.authenticateToken, (0, authorization_js_1.requireRole)("seller", "admin"), sellers_controller_js_1.sellersController.getDocuments);
 router.post("/documents", auth_js_1.authenticateToken, rateLimit_js_1.sellerFulfillmentRateLimiter, (0, authorization_js_1.requireRole)("seller", "admin"), sellers_controller_js_1.sellersController.uploadDocument);
+router.get("/settings/financials", auth_js_1.authenticateToken, (0, authorization_js_1.requireRole)("seller", "admin"), sellers_controller_js_1.sellersController.getFinancialSettings);
 router.get("/settings/notifications", auth_js_1.authenticateToken, (0, authorization_js_1.requireRole)("seller", "admin"), sellers_controller_js_1.sellersController.getNotificationSettings);
 router.patch("/settings/notifications", auth_js_1.authenticateToken, rateLimit_js_1.sellerFulfillmentRateLimiter, (0, authorization_js_1.requireRole)("seller", "admin"), sellers_controller_js_1.sellersController.updateNotificationSettings);
 exports.default = router;

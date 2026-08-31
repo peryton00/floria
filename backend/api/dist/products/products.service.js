@@ -58,9 +58,9 @@ class ProductsService {
             };
         }
     }
-    async getProducts(categoryId, search) {
+    async getProducts(categoryIdOrSlug, search, sellerId, limit) {
         const settings = await pricing_service_js_1.pricingService.getFinancialSettings();
-        const products = await product_repository_js_1.productRepository.findActiveCatalog(categoryId, search);
+        const products = await product_repository_js_1.productRepository.findActiveCatalog(categoryIdOrSlug, search, sellerId, limit);
         // Check for active overrides in parallel
         const overrideMap = await this.getActiveOverridesMap();
         return products.map((p) => this.enrichWithDbPricing(p, settings, overrideMap));

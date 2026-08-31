@@ -125,54 +125,104 @@ class AdminService {
             throw errors_js_1.Errors.notFound("Seller profile");
         return seller;
     }
-    async updateSellerStatus(adminUserId, sellerId, status) {
+    async getSellerApplications(status) {
+        const { sellerAuthRepository } = await import("../database/repositories/seller-auth.repository.js");
+        return sellerAuthRepository.findAllApplications(status);
+    }
+    async updateSellerStatus(adminUserId, sellerId, status, reason) {
         const seller = await seller_repository_js_1.sellerRepository.findById(sellerId);
         if (!seller)
             throw errors_js_1.Errors.notFound("Seller profile");
         const currentStatus = seller.status;
-        if (currentStatus === status) {
-            return { id: sellerId, status };
-        }
         if (currentStatus === "rejected" && status === "approved") {
             throw errors_js_1.Errors.validation("Cannot directly approve a rejected seller application without resubmission");
         }
         let action = "SELLER_UPDATED";
-        if (status === "approved")
+        if (status === "approved" || status === "active")
             action = "SELLER_APPROVED";
         else if (status === "rejected")
             action = "SELLER_REJECTED";
         else if (status === "suspended")
             action = "SELLER_SUSPENDED";
+        else if (status === "needs_correction")
+            action = "SELLER_NEEDS_CORRECTION";
         else if (status === "pending" ||
-            (currentStatus === "suspended" && status === "approved"))
+            (currentStatus === "suspended" && (status === "approved" || status === "active")))
             action = "SELLER_REACTIVATED";
-        const success = await seller_repository_js_1.sellerRepository.updateStatus(sellerId, status);
+        const targetStatus = status === "active" ? "approved" : status;
+        const isActive = targetStatus === "approved";
+        // 1. Update seller profile
+        const success = await seller_repository_js_1.sellerRepository.updateStatus(sellerId, targetStatus);
         if (!success)
             throw errors_js_1.Errors.database("Failed to update seller status.");
+        await seller_repository_js_1.sellerRepository.updateProfile(sellerId, {
+            status: targetStatus,
+            is_active: isActive,
+        });
+        // 2. Update user_profiles role if approved
+        if (isActive) {
+            try {
+                const db = (await import("../config/database.js")).getAdminDb();
+                const targetUserId = seller.user_id;
+                if (targetUserId) {
+                    await db.from("user_profiles").update({ role: "seller" }).eq("id", targetUserId);
+                }
+            }
+            catch {
+                // Continue
+            }
+        }
+        // 3. Update seller application record if present
+        const { sellerAuthRepository } = await import("../database/repositories/seller-auth.repository.js");
+        const app = await sellerAuthRepository.findApplicationBySellerId(sellerId);
+        if (app) {
+            await sellerAuthRepository.updateApplicationStatus(app.id, {
+                status: targetStatus,
+                reviewed_by: adminUserId,
+                reviewed_at: new Date().toISOString(),
+                rejection_reason: targetStatus === "rejected" ? reason || "Application rejected by administrator." : null,
+                correction_reason: targetStatus === "needs_correction" ? reason || "Application requires additional information." : null,
+            });
+        }
+        // 4. Log detailed audit record
         await audit_repository_js_1.auditRepository.log({
             actor_user_id: adminUserId,
             actor_role: "admin",
             action,
             resource_type: "seller_profile",
             resource_id: sellerId,
-            metadata: { from: currentStatus, to: status },
+            metadata: { from: currentStatus, to: targetStatus, reason: reason || null },
         });
-        // Trigger notification to seller user
+        // 5. Trigger notification to seller user
         if (seller.user_id) {
             try {
                 const { notificationService } = await import("../notifications/notification.service.js");
+                let message = "";
+                let title = "";
+                if (targetStatus === "approved") {
+                    title = "Nursery Application Approved";
+                    message = "Your Floria seller account has been approved. You can now log in and start selling.";
+                }
+                else if (targetStatus === "rejected") {
+                    title = "Nursery Application Update";
+                    message = reason ? `Your Floria seller application was not approved: ${reason}` : "Your Floria seller application was not approved.";
+                }
+                else if (targetStatus === "needs_correction") {
+                    title = "Action Required on Seller Application";
+                    message = reason ? `Your application requires correction: ${reason}` : "Please update your nursery application details.";
+                }
+                else {
+                    title = "Nursery Partner Account Update";
+                    message = "Your Floria nursery seller account has been suspended.";
+                }
                 await notificationService.createNotification({
                     user_id: seller.user_id,
                     role: "seller",
-                    type: `SELLER_${status.toUpperCase()}`,
-                    title: `Nursery Partner Status: ${status.toUpperCase()}`,
-                    message: status === "approved"
-                        ? "Congratulations! Your Floria nursery seller application has been approved."
-                        : status === "rejected"
-                            ? "Your Floria nursery seller application was not approved."
-                            : "Your Floria nursery seller account has been suspended.",
+                    type: `SELLER_${targetStatus.toUpperCase()}`,
+                    title,
+                    message,
                     source_type: "seller_profile",
-                    source_id: `${sellerId}_${status}`,
+                    source_id: `${sellerId}_${targetStatus}`,
                     navigation: {
                         entityType: "SELLER",
                         entityId: sellerId,
@@ -184,7 +234,7 @@ class AdminService {
                 console.error("[AdminService] Seller status notification error:", notifErr);
             }
         }
-        return { id: sellerId, status };
+        return { id: sellerId, status: targetStatus, reason };
     }
     async getSellerDocuments(sellerId) {
         const seller = await seller_repository_js_1.sellerRepository.findById(sellerId);

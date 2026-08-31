@@ -10,6 +10,7 @@ exports.attachReviewImage = attachReviewImage;
 exports.attachSellerDocument = attachSellerDocument;
 exports.getSignedDocumentUrl = getSignedDocumentUrl;
 exports.updateNurseryBanner = updateNurseryBanner;
+exports.uploadDirectMedia = uploadDirectMedia;
 const media_service_js_1 = require("./media.service.js");
 const errors_js_1 = require("../utils/errors.js");
 async function createUploadSession(req, res, next) {
@@ -162,6 +163,17 @@ async function updateNurseryBanner(req, res, next) {
         const { DomainMediaService } = await import("./domain-media.service.js");
         const result = await DomainMediaService.updateNurseryBanner(req.user, req.body.assetId);
         res.status(200).json({ success: true, data: result });
+    }
+    catch (err) {
+        next(err);
+    }
+}
+async function uploadDirectMedia(req, res, next) {
+    try {
+        if (!req.user)
+            return next(errors_js_1.Errors.authRequired());
+        const result = await media_service_js_1.MediaService.uploadDirectMedia(req.user, req.body);
+        res.status(201).json({ success: true, data: result });
     }
     catch (err) {
         next(err);

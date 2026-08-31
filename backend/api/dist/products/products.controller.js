@@ -7,10 +7,35 @@ const nursery_repository_js_1 = require("../database/repositories/nursery.reposi
 class ProductsController {
     async getProducts(req, res, next) {
         try {
-            const categoryId = req.query.category_id;
+            const categoryParam = (req.query.category ||
+                req.query.category_id ||
+                req.query.categoryId);
+            const sellerParam = (req.query.seller_id ||
+                req.query.sellerId ||
+                req.query.nursery_id ||
+                req.query.nurseryId);
             const search = req.query.search;
-            const products = await products_service_js_1.productsService.getProducts(categoryId, search);
+            const limit = req.query.limit ? Number(req.query.limit) : undefined;
+            const products = await products_service_js_1.productsService.getProducts(categoryParam, search, sellerParam, limit);
             res.json({ success: true, data: products });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+    async getNurseryById(req, res, next) {
+        try {
+            const sellerId = String(req.params.id);
+            const { sellerRepository } = await import("../database/repositories/seller.repository.js");
+            const nursery = await sellerRepository.findById(sellerId);
+            if (!nursery) {
+                res.status(404).json({
+                    success: false,
+                    error: { code: "NOT_FOUND", message: "Nursery not found." },
+                });
+                return;
+            }
+            res.json({ success: true, data: nursery });
         }
         catch (err) {
             next(err);

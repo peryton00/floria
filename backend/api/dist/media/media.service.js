@@ -468,5 +468,103 @@ class MediaService {
             variants,
         };
     }
+    /**
+     * Direct base64/binary media upload:
+     * Decodes image, processes multi-variant WebP via Sharp ImageEngine on the backend,
+     * stores variants in public-media bucket, and returns asset with permanent URLs immediately.
+     */
+    static async uploadDirectMedia(user, input) {
+        const db = (0, database_js_1.getAdminDb)();
+        if (!input.base64Data) {
+            throw errors_js_1.Errors.validation("Field 'base64Data' is required.");
+        }
+        const cleanBase64 = input.base64Data
+            .replace(/^data:[^;]+;base64,/, "")
+            .trim();
+        const buffer = Buffer.from(cleanBase64, "base64");
+        if (!buffer || buffer.length === 0) {
+            throw errors_js_1.Errors.validation("Invalid or empty image file data.");
+        }
+        if (buffer.length > exports.MAX_FILE_SIZE_BYTES) {
+            throw errors_js_1.Errors.validation("Uploaded image size exceeds 10 MB ceiling.");
+        }
+        const targetProfile = input.profile || "PRODUCT";
+        // 1. Process with Sharp ImageEngine on backend
+        const engineResult = await image_engine_js_1.ImageEngine.process(buffer, targetProfile);
+        // 2. Identify seller if user is a seller
+        let sellerId = null;
+        if (user.role === "seller" || user.sellerId) {
+            sellerId = user.sellerId || null;
+            if (!sellerId) {
+                const { data: sellerRow } = await db
+                    .from("seller_profiles")
+                    .select("id")
+                    .eq("user_id", user.id)
+                    .maybeSingle();
+                sellerId = sellerRow?.id || null;
+            }
+        }
+        const assetId = crypto_1.default.randomUUID();
+        const sha256Hash = crypto_1.default.createHash("sha256").update(buffer).digest("hex");
+        const supabaseUrl = process.env.SUPABASE_URL || "https://supabase.co";
+        const storageBucket = "public-media";
+        // 3. Create media_assets record
+        await db.from("media_assets").insert({
+            id: assetId,
+            seller_id: sellerId,
+            uploaded_by_user_id: user.id,
+            media_category: "IMAGE",
+            original_filename: input.filename || "mobile-upload.jpg",
+            mime_type: input.mimeType || "image/jpeg",
+            file_size_bytes: buffer.length,
+            sha256_hash: sha256Hash,
+            storage_bucket: storageBucket,
+            status: "READY",
+            is_system_seeded: false,
+        });
+        // 4. Upload each WebP variant to public-media bucket
+        const variantRecords = [];
+        const variantsMap = {};
+        for (const v of engineResult.variants) {
+            const publicPath = (0, path_builder_js_1.buildPublicVariantPath)(targetProfile, sellerId, user.id, assetId, v.variantName);
+            const { error: upErr } = await db.storage
+                .from(storageBucket)
+                .upload(publicPath, v.buffer, {
+                contentType: "image/webp",
+                cacheControl: "public, max-age=31536000, immutable",
+                upsert: true,
+            });
+            if (!upErr) {
+                variantRecords.push({
+                    asset_id: assetId,
+                    variant_name: v.variantName,
+                    format: "webp",
+                    width: v.width,
+                    height: v.height,
+                    size_bytes: v.sizeBytes,
+                    storage_bucket: storageBucket,
+                    storage_path: publicPath,
+                });
+                const fullPublicUrl = `${supabaseUrl}/storage/v1/object/public/${storageBucket}/${publicPath}`;
+                variantsMap[v.variantName] = fullPublicUrl;
+            }
+            else {
+                console.error("[MediaService] Storage variant upload error:", upErr.message);
+            }
+        }
+        if (variantRecords.length > 0) {
+            await db.from("media_variants").insert(variantRecords);
+        }
+        const primaryUrl = variantsMap.medium ||
+            variantsMap.large ||
+            variantsMap.thumbnail ||
+            `${supabaseUrl}/storage/v1/object/public/${storageBucket}/products/s-${sellerId || "1"}/${assetId}/medium.webp`;
+        return {
+            assetId,
+            status: "READY",
+            variants: variantsMap,
+            url: primaryUrl,
+        };
+    }
 }
 exports.MediaService = MediaService;

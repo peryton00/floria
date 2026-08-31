@@ -4,12 +4,12 @@ import * as PhosphorIconsNative from "phosphor-react-native";
 import {
   BaseFloriaIconProps,
   FloriaIconName,
-} from "../types.js";
+} from "../types";
 import {
   PHOSPHOR_ICON_NAME_MAP,
   resolveDefaultWeight,
   resolveIconSize,
-} from "../registry.js";
+} from "../registry";
 
 export interface FloriaNativeIconProps extends Omit<BaseFloriaIconProps, "name"> {
   name: FloriaIconName;

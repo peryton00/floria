@@ -5,12 +5,12 @@ import * as PhosphorIcons from "@phosphor-icons/react";
 import {
   BaseFloriaIconProps,
   FloriaIconName,
-} from "../types.js";
+} from "../types";
 import {
   PHOSPHOR_ICON_NAME_MAP,
   resolveDefaultWeight,
   resolveIconSize,
-} from "../registry.js";
+} from "../registry";
 
 export interface FloriaWebIconProps extends Omit<BaseFloriaIconProps, "name"> {
   name: FloriaIconName;

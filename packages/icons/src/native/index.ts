@@ -1,2 +1,2 @@
-export * from "./FloriaIcon.js";
-export { default } from "./FloriaIcon.js";
+export * from "./FloriaIcon";
+export { default } from "./FloriaIcon";

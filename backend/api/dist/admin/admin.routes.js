@@ -29,9 +29,11 @@ router.patch("/users/:id/status", (0, validation_js_1.validateRequest)(uuidParam
 router.patch("/users/:id", (0, validation_js_1.validateRequest)(uuidParamSchema), admin_controller_js_1.adminController.updateUser);
 // Seller Administration
 router.get("/sellers", admin_controller_js_1.adminController.getSellers);
+router.get("/seller-applications", admin_controller_js_1.adminController.getSellerApplications);
 router.get("/sellers/:id", (0, validation_js_1.validateRequest)(uuidParamSchema), admin_controller_js_1.adminController.getSellerById);
 router.post("/sellers/:id/approve", (0, validation_js_1.validateRequest)(uuidParamSchema), admin_controller_js_1.adminController.approveSeller);
 router.post("/sellers/:id/reject", (0, validation_js_1.validateRequest)(uuidParamSchema), admin_controller_js_1.adminController.rejectSeller);
+router.post("/sellers/:id/request-correction", (0, validation_js_1.validateRequest)(uuidParamSchema), admin_controller_js_1.adminController.requestCorrection);
 router.post("/sellers/:id/suspend", (0, validation_js_1.validateRequest)(uuidParamSchema), admin_controller_js_1.adminController.suspendSeller);
 router.post("/sellers/:id/reactivate", (0, validation_js_1.validateRequest)(uuidParamSchema), admin_controller_js_1.adminController.reactivateSeller);
 router.get("/sellers/:id/documents", (0, validation_js_1.validateRequest)(uuidParamSchema), admin_controller_js_1.adminController.getSellerDocuments);
