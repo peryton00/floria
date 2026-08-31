@@ -83,9 +83,18 @@ export default function CartPage() {
     delta: number,
     maxStock: number,
   ) => {
-    const next = current + delta;
-    if (next < 1 || next > maxStock) return;
-    updateQuantity(productId, next);
+    if (delta < 0) {
+      const next = Math.max(1, current - 1);
+      updateQuantity(productId, next);
+      return;
+    }
+
+    if (delta > 0) {
+      const safeMax = typeof maxStock === "number" && maxStock > 0 ? maxStock : 99;
+      if (current < safeMax) {
+        updateQuantity(productId, current + 1);
+      }
+    }
   };
 
   const handleMoveToWishlist = (item: CartItem) => {
@@ -189,11 +198,24 @@ export default function CartPage() {
                   const { listing, quantity } = item;
                   const { product, inventory, primary_image, category } =
                     listing;
+                  const invObj = Array.isArray(inventory)
+                    ? inventory[0]
+                    : (inventory || {});
+                  const stockQuantity =
+                    typeof invObj?.stock_quantity === "number"
+                      ? invObj.stock_quantity
+                      : (typeof (product as any)?.stock_quantity === "number"
+                        ? (product as any).stock_quantity
+                        : 99);
+                  const lowStockThreshold =
+                    typeof invObj?.low_stock_threshold === "number"
+                      ? invObj.low_stock_threshold
+                      : 5;
                   const status = stockStatus(
-                    inventory.stock_quantity,
-                    inventory.low_stock_threshold,
+                    stockQuantity,
+                    lowStockThreshold,
                   );
-                  const isOOS = status === "out";
+                  const isOOS = status === "out" || stockQuantity <= 0;
                   const isLow = status === "low";
                   const customerUnitPricePaise = getItemPrice(item);
                   const originalPricePaise = getOriginalPrice(item);
@@ -287,7 +309,7 @@ export default function CartPage() {
                         {/* Stock badges */}
                         {isLow && (
                           <span className="inline-flex text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 mb-2 w-fit">
-                            Only {inventory.stock_quantity} left
+                            Only {stockQuantity} left
                           </span>
                         )}
                         {isOOS && (
@@ -304,13 +326,13 @@ export default function CartPage() {
                               <button
                                 type="button"
                                 aria-label={`Decrease quantity of ${product.name}`}
-                                disabled={isOOS || quantity <= 1}
+                                disabled={quantity <= 1}
                                 onClick={() =>
                                   handleQtyChange(
                                     product.id,
                                     quantity,
                                     -1,
-                                    inventory.stock_quantity,
+                                    stockQuantity,
                                   )
                                 }
                                 className="w-8 h-8 flex items-center justify-center text-ink-500 hover:bg-floria-soft-sand font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none"
@@ -324,14 +346,14 @@ export default function CartPage() {
                                 type="button"
                                 aria-label={`Increase quantity of ${product.name}`}
                                 disabled={
-                                  isOOS || quantity >= inventory.stock_quantity
+                                  isOOS || (stockQuantity > 0 && quantity >= stockQuantity)
                                 }
                                 onClick={() =>
                                   handleQtyChange(
                                     product.id,
                                     quantity,
                                     +1,
-                                    inventory.stock_quantity,
+                                    stockQuantity,
                                   )
                                 }
                                 className="w-8 h-8 flex items-center justify-center text-ink-500 hover:bg-floria-soft-sand font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none"

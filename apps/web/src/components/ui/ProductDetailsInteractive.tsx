@@ -30,7 +30,14 @@ export function ProductDetailsInteractive({
   listing,
 }: ProductDetailsInteractiveProps) {
   const { product, inventory, seller, category, images } = listing;
-  const isOutOfStock = inventory.stock_quantity === 0;
+  const invObj = Array.isArray(inventory) ? inventory[0] : (inventory || {});
+  const availableStock =
+    typeof invObj?.stock_quantity === "number"
+      ? invObj.stock_quantity
+      : (typeof (product as any)?.stock_quantity === "number"
+        ? (product as any).stock_quantity
+        : 99);
+  const isOutOfStock = availableStock <= 0;
 
   // States
   const [selectedImage, setSelectedImage] = useState(images[0] || null);
@@ -114,7 +121,7 @@ export function ProductDetailsInteractive({
   ];
 
   const handleIncrement = () => {
-    if (quantity < inventory.stock_quantity) {
+    if (quantity < availableStock) {
       setQuantity((q) => q + 1);
     }
   };
@@ -453,7 +460,7 @@ export function ProductDetailsInteractive({
             >
               {isOutOfStock
                 ? "Out of Stock"
-                : `In Stock (${inventory.stock_quantity} available)`}
+                : `In Stock (${availableStock} available)`}
             </span>
           </div>
 
