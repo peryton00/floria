@@ -92,7 +92,8 @@ export default function CheckoutPage() {
 
   // ── Cashfree Return Redirect Handler ────────────────────────────────────────
   // Cashfree redirects to /checkout?order_id=CF-ORD-xxx&floria_order_id=yyy after payment.
-  // We resolve the order ID, clear the cart, and redirect to the receipt/order page.
+  // We strictly verify if the payment was completed (isPaid === true).
+  // If cancelled or incomplete, we restore the checkout step and preserve the cart.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const floriaOrderId = params.get("floria_order_id");
@@ -101,35 +102,38 @@ export default function CheckoutPage() {
     if (!floriaOrderId && !cfOrderId) return;
 
     setStep("redirecting");
+    const lookupId = cfOrderId || floriaOrderId || "";
 
-    if (floriaOrderId) {
-      clearCart();
-      refreshOrders().catch(() => {});
-      router.replace(`/orders/${floriaOrderId}`);
-      return;
-    }
+    api
+      .getOrderByCfOrderId(lookupId)
+      .then((res) => {
+        const data = res?.data;
+        const resolvedOrderId = data?.orderId || floriaOrderId;
 
-    if (cfOrderId) {
-      setRedirectOrderId(cfOrderId);
-      api
-        .getOrderByCfOrderId(cfOrderId)
-        .then((res) => {
-          const resolvedOrderId =
-            (res as any)?.data?.orderId || (res as any)?.data?.order_id;
+        if (data?.isPaid && resolvedOrderId) {
           clearCart();
           refreshOrders().catch(() => {});
-          if (resolvedOrderId) {
-            router.replace(`/orders/${resolvedOrderId}`);
-          } else {
-            router.replace("/orders");
+          router.replace(`/orders/${resolvedOrderId}`);
+        } else {
+          // Payment was cancelled or failed — fallback to checkout step with cart intact
+          setStep("checkout");
+          setValidationError(
+            "Payment was cancelled or not completed. Your items are still in your cart — you can try again or choose Cash on Delivery.",
+          );
+          if (typeof window !== "undefined") {
+            window.history.replaceState({}, "", "/checkout");
           }
-        })
-        .catch(() => {
-          clearCart();
-          refreshOrders().catch(() => {});
-          router.replace("/orders");
-        });
-    }
+        }
+      })
+      .catch(() => {
+        setStep("checkout");
+        setValidationError(
+          "Payment was not completed. Your items remain in your cart.",
+        );
+        if (typeof window !== "undefined") {
+          window.history.replaceState({}, "", "/checkout");
+        }
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -322,12 +326,39 @@ export default function CheckoutPage() {
                 ? "production"
                 : "sandbox";
             const cashfree = CashfreeSDK({ mode: environment });
-            await cashfree.checkout({
+            const checkoutResult = await cashfree.checkout({
               paymentSessionId: sessionRes.data.paymentSessionId,
-              redirectTarget: "_self",
+              redirectTarget: "_modal",
             });
-            // Cashfree handles redirect / modal
-            return;
+
+            if (checkoutResult?.error) {
+              setValidationError(
+                checkoutResult.error.message ||
+                  "Payment was cancelled. Your items remain in your cart.",
+              );
+              setIsPlacingOrder(false);
+              isPlacingOrderRef.current = false;
+              return;
+            }
+
+            if (checkoutResult?.paymentDetails) {
+              const verifyRes = await api.getOrderByCfOrderId(
+                sessionRes.data.cfOrderId || orderId,
+              );
+              if (verifyRes?.data?.isPaid) {
+                clearCart();
+                refreshOrders().catch(() => {});
+                router.replace(`/orders/${orderId}`);
+                return;
+              } else {
+                setValidationError(
+                  "Payment was not completed. Your items remain in your cart — you can try again or choose Cash on Delivery.",
+                );
+                setIsPlacingOrder(false);
+                isPlacingOrderRef.current = false;
+                return;
+              }
+            }
           } catch (cfErr: any) {
             console.error("[Checkout] Cashfree launch error:", cfErr);
             setValidationError(

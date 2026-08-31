@@ -207,6 +207,9 @@ declare class FloriaApiClient {
     }>>;
     getOrderByCfOrderId(cfOrderId: string): Promise<ApiResponse<{
         orderId: string;
+        paymentStatus?: string;
+        orderStatus?: string;
+        isPaid?: boolean;
     }>>;
     getPaymentStatus(paymentId: string): Promise<ApiResponse<any>>;
     requestRefund(paymentId: string, amountPaise: number, reason?: string): Promise<ApiResponse<any>>;

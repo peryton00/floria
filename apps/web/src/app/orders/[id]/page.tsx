@@ -24,6 +24,8 @@ interface Props {
 
 function getStatusBadgeStyle(status: OrderStatus) {
   switch (status) {
+    case "Payment Pending":
+      return "bg-amber-50 text-amber-800 border-amber-200";
     case "Order Placed":
     case "Nursery Confirmed":
       return "bg-blue-50 text-blue-700 border-blue-200";
@@ -128,7 +130,9 @@ function mapApiOrderToRecord(o: any): OrderRecord {
   let masterDisplayStatus: OrderStatus = "Order Placed";
   const mst = (o.status || "").toLowerCase().replace(/_/g, " ");
 
-  if (mst.includes("cancelled")) {
+  if (mst.includes("pending payment") || o.status === "pending_payment") {
+    masterDisplayStatus = "Payment Pending";
+  } else if (mst.includes("cancelled")) {
     masterDisplayStatus = "Cancelled";
   } else if (mst.includes("delivered") || mst.includes("completed")) {
     masterDisplayStatus = "Delivered";

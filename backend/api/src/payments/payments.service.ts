@@ -357,19 +357,95 @@ export class PaymentsService {
    */
   async lookupOrderByCfOrderId(
     cfOrderId: string,
-  ): Promise<{ orderId: string }> {
+  ): Promise<{
+    orderId: string;
+    paymentStatus: string;
+    orderStatus: string;
+    isPaid: boolean;
+  }> {
     const db = getAdminDb();
     const { data: payment } = await db
       .from("payments")
-      .select("order_id")
-      .or(`cf_order_id.eq.${cfOrderId},payment_reference.eq.${cfOrderId}`)
+      .select("*, orders(*)")
+      .or(`cf_order_id.eq.${cfOrderId},payment_reference.eq.${cfOrderId},order_id.eq.${cfOrderId}`)
       .maybeSingle();
 
     if (!payment?.order_id) {
       throw Errors.notFound("Order payment reference");
     }
 
-    return { orderId: payment.order_id };
+    let payStatus = String(payment.status || "pending").toLowerCase();
+    const o = Array.isArray(payment.orders) ? payment.orders[0] : payment.orders;
+    let ordStatus = String(o?.status || "pending_payment").toLowerCase();
+
+    // If still pending, query Cashfree in real time to verify if user paid or dropped/cancelled
+    if (payStatus === "pending" || ordStatus === "pending_payment") {
+      try {
+        const provider = PaymentProviderFactory.getProvider(payment.provider || "cashfree");
+        if (typeof provider.fetchOrderStatus === "function") {
+          const liveCheck = await provider.fetchOrderStatus(payment.cf_order_id || cfOrderId);
+          if (liveCheck?.isPaid) {
+            payStatus = "captured";
+            ordStatus = "order_placed";
+            await db
+              .from("payments")
+              .update({
+                status: "captured",
+                cf_payment_id: liveCheck.cfPaymentId || payment.cf_payment_id,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", payment.id);
+            await db
+              .from("orders")
+              .update({
+                status: "order_placed",
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", payment.order_id);
+            // Clear cart for customer
+            if (payment.customer_id) {
+              const { data: cartRow } = await db
+                .from("carts")
+                .select("id")
+                .eq("user_id", payment.customer_id)
+                .maybeSingle();
+              if (cartRow) {
+                await db
+                  .from("cart_items")
+                  .delete()
+                  .eq("cart_id", cartRow.id);
+              }
+            }
+          } else if (
+            liveCheck?.status === "CANCELLED" ||
+            liveCheck?.status === "FAILED" ||
+            liveCheck?.status === "USER_DROPPED"
+          ) {
+            payStatus = "failed";
+            await db
+              .from("payments")
+              .update({
+                status: "failed",
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", payment.id);
+          }
+        }
+      } catch (liveErr) {
+        console.warn("[PaymentsService] Live order status check error:", liveErr);
+      }
+    }
+
+    const isPaid =
+      (payStatus === "captured" || payStatus === "success" || payStatus === "paid") &&
+      ordStatus !== "pending_payment";
+
+    return {
+      orderId: payment.order_id,
+      paymentStatus: payStatus,
+      orderStatus: ordStatus,
+      isPaid,
+    };
   }
 
   /**

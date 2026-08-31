@@ -500,8 +500,20 @@ export class FloriaApiClient {
 
   public async getOrderByCfOrderId(
     cfOrderId: string,
-  ): Promise<ApiResponse<{ orderId: string }>> {
-    return this.request<{ orderId: string }>(
+  ): Promise<
+    ApiResponse<{
+      orderId: string;
+      paymentStatus?: string;
+      orderStatus?: string;
+      isPaid?: boolean;
+    }>
+  > {
+    return this.request<{
+      orderId: string;
+      paymentStatus?: string;
+      orderStatus?: string;
+      isPaid?: boolean;
+    }>(
       `/api/v1/payments/lookup-order?cf_order_id=${encodeURIComponent(cfOrderId)}`,
     );
   }

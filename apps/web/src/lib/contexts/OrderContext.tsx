@@ -11,6 +11,7 @@ import { api } from "@/lib/api";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 export type OrderStatus =
+  | "Payment Pending"
   | "Order Placed"
   | "Nursery Confirmed"
   | "Preparing"
@@ -187,7 +188,9 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
       let masterDisplayStatus: OrderStatus = "Order Placed";
       const mst = (o.status || "").toLowerCase().replace(/_/g, " ");
 
-      if (mst.includes("cancelled")) {
+      if (mst.includes("pending payment") || o.status === "pending_payment") {
+        masterDisplayStatus = "Payment Pending";
+      } else if (mst.includes("cancelled")) {
         masterDisplayStatus = "Cancelled";
       } else if (mst.includes("delivered") || mst.includes("completed")) {
         masterDisplayStatus = "Delivered";

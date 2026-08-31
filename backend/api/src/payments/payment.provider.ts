@@ -69,6 +69,13 @@ export interface PaymentProvider {
     reason?: string;
     idempotencyKey?: string;
   }): Promise<RefundResult>;
+
+  fetchOrderStatus?(cfOrderId: string): Promise<{
+    isPaid: boolean;
+    status: string;
+    cfPaymentId?: string;
+    rawResponse?: Record<string, unknown>;
+  }>;
 }
 
 // 1. Cash On Delivery (COD) Provider Implementation
@@ -106,6 +113,10 @@ export class CodPaymentProvider implements PaymentProvider {
       amountPaise: input.amountPaise,
       rawProviderResponse: { mode: "manual_cod_refund", reason: input.reason },
     };
+  }
+
+  async fetchOrderStatus(_cfOrderId: string) {
+    return { isPaid: true, status: "PAID" };
   }
 }
 
@@ -247,6 +258,89 @@ export class CashfreePaymentProvider implements PaymentProvider {
       paymentSessionId: resJson.payment_session_id,
       rawProviderResponse: resJson,
     };
+  }
+
+  async fetchOrderStatus(cfOrderId: string): Promise<{
+    isPaid: boolean;
+    status: string;
+    cfPaymentId?: string;
+    rawResponse?: Record<string, unknown>;
+  }> {
+    if (!process.env.CASHFREE_CLIENT_ID || !process.env.CASHFREE_CLIENT_SECRET) {
+      return { isPaid: false, status: "UNCONFIGURED" };
+    }
+
+    try {
+      const url = `${this.getBaseUrl()}/orders/${encodeURIComponent(cfOrderId)}`;
+      const response = await fetch(url, {
+        method: "GET",
+        headers: this.getHeaders(),
+      });
+
+      if (!response.ok) {
+        return { isPaid: false, status: `HTTP_${response.status}` };
+      }
+
+      const resJson = (await response.json()) as any;
+      const orderStatus = (resJson?.order_status || "").toUpperCase();
+
+      if (orderStatus === "PAID") {
+        return {
+          isPaid: true,
+          status: "PAID",
+          rawResponse: resJson,
+        };
+      }
+
+      // Check payments endpoint as secondary verification
+      try {
+        const paymentsUrl = `${this.getBaseUrl()}/orders/${encodeURIComponent(cfOrderId)}/payments`;
+        const payRes = await fetch(paymentsUrl, {
+          method: "GET",
+          headers: this.getHeaders(),
+        });
+        if (payRes.ok) {
+          const paymentsJson = (await payRes.json()) as any[];
+          if (Array.isArray(paymentsJson)) {
+            const successPayment = paymentsJson.find(
+              (p) => (p.payment_status || "").toUpperCase() === "SUCCESS",
+            );
+            if (successPayment) {
+              return {
+                isPaid: true,
+                status: "PAID",
+                cfPaymentId: successPayment.cf_payment_id
+                  ? String(successPayment.cf_payment_id)
+                  : undefined,
+                rawResponse: successPayment,
+              };
+            }
+            const lastPayment = paymentsJson[paymentsJson.length - 1];
+            if (lastPayment) {
+              return {
+                isPaid: false,
+                status: (
+                  lastPayment.payment_status || orderStatus
+                ).toUpperCase(),
+                rawResponse: lastPayment,
+              };
+            }
+          }
+        }
+      } catch {}
+
+      return {
+        isPaid: false,
+        status: orderStatus || "PENDING",
+        rawResponse: resJson,
+      };
+    } catch (e: any) {
+      console.warn(
+        "[CashfreePaymentProvider] fetchOrderStatus error:",
+        e.message,
+      );
+      return { isPaid: false, status: "ERROR" };
+    }
   }
 
   async verifyWebhookSignature(
