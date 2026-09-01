@@ -7,13 +7,33 @@ import type { NurserySummary } from "@/lib/api";
 import type { Category } from "@floria/types";
 
 interface FilterSidebarProps {
-  currentCategory?: string;
+  currentCategory?: string | null;
   onFilterChange?: () => void; // Optional callback for closing mobile drawer
+  onSelectCategory?: (slug: string | null) => void;
+  onSelectNursery?: (nurseryId: string | null) => void;
+  onSelectPrice?: (min: number | null, max: number | null) => void;
+  onToggleInStock?: (inStock: boolean) => void;
+  onClearAll?: () => void;
+  activeCategory?: string | null;
+  activeNursery?: string | null;
+  activeMinPrice?: string | null;
+  activeMaxPrice?: string | null;
+  activeInStock?: boolean;
 }
 
 export function FilterSidebar({
   currentCategory,
   onFilterChange,
+  onSelectCategory,
+  onSelectNursery,
+  onSelectPrice,
+  onToggleInStock,
+  onClearAll,
+  activeCategory: propActiveCategory,
+  activeNursery: propActiveNursery,
+  activeMinPrice: propActiveMinPrice,
+  activeMaxPrice: propActiveMaxPrice,
+  activeInStock: propActiveInStock,
 }: FilterSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -31,13 +51,13 @@ export function FilterSidebar({
     });
   }, []);
 
-  // URL state params
+  // URL state params with prop override support
   const activeCategory =
-    currentCategory ?? searchParams.get("category") ?? "all";
-  const activeNursery = searchParams.get("nursery") ?? "all";
-  const activeMinPrice = searchParams.get("minPrice") ?? "";
-  const activeMaxPrice = searchParams.get("maxPrice") ?? "";
-  const activeInStock = searchParams.get("inStock") === "true";
+    propActiveCategory ?? currentCategory ?? searchParams.get("category") ?? "all";
+  const activeNursery = propActiveNursery ?? searchParams.get("nursery") ?? "all";
+  const activeMinPrice = propActiveMinPrice ?? searchParams.get("minPrice") ?? "";
+  const activeMaxPrice = propActiveMaxPrice ?? searchParams.get("maxPrice") ?? "";
+  const activeInStock = propActiveInStock !== undefined ? propActiveInStock : searchParams.get("inStock") === "true";
   const activeSort = searchParams.get("sort") ?? "featured";
   const activeQuery = searchParams.get("q") ?? "";
 
@@ -50,6 +70,33 @@ export function FilterSidebar({
     setMaxPrice(activeMaxPrice);
   }, [activeMinPrice, activeMaxPrice]);
 
+  const handleCategoryClick = (catSlug: string) => {
+    if (onSelectCategory) {
+      onSelectCategory(catSlug === "all" ? null : catSlug);
+    } else {
+      updateParam("category", catSlug);
+    }
+    if (onFilterChange) onFilterChange();
+  };
+
+  const handleNurseryClick = (nurseryId: string) => {
+    if (onSelectNursery) {
+      onSelectNursery(nurseryId === "all" ? null : nurseryId);
+    } else {
+      updateParam("nursery", nurseryId);
+    }
+    if (onFilterChange) onFilterChange();
+  };
+
+  const handleInStockToggle = () => {
+    if (onToggleInStock) {
+      onToggleInStock(!activeInStock);
+    } else {
+      updateParam("inStock", activeInStock ? null : "true");
+    }
+    if (onFilterChange) onFilterChange();
+  };
+
   const updateParam = (key: string, value: string | null) => {
     const params = new URLSearchParams(searchParams.toString());
     if (value && value !== "all" && value !== "") {
@@ -58,7 +105,6 @@ export function FilterSidebar({
       params.delete(key);
     }
 
-    // Determine target URL path
     let targetPath = pathname;
     if (key === "category") {
       if (value && value !== "all") {
@@ -77,21 +123,23 @@ export function FilterSidebar({
   };
 
   const handleClearAll = () => {
-    let targetPath = pathname;
-    if (pathname.startsWith("/categories/")) {
-      targetPath = "/shop";
+    if (onClearAll) {
+      onClearAll();
+    } else {
+      let targetPath = pathname;
+      if (pathname.startsWith("/categories/")) {
+        targetPath = "/shop";
+      }
+      const params = new URLSearchParams();
+      if (activeQuery) params.set("q", activeQuery);
+      const queryStr = params.toString();
+      router.push(queryStr ? `${targetPath}?${queryStr}` : targetPath);
     }
-    const params = new URLSearchParams();
-    if (activeQuery) params.set("q", activeQuery);
-    const queryStr = params.toString();
-    router.push(queryStr ? `${targetPath}?${queryStr}` : targetPath);
     if (onFilterChange) onFilterChange();
   };
 
   const handlePriceApply = (e: React.FormEvent) => {
     e.preventDefault();
-    const params = new URLSearchParams(searchParams.toString());
-
     let parsedMin = minPrice ? parseFloat(minPrice) : NaN;
     let parsedMax = maxPrice ? parseFloat(maxPrice) : NaN;
 
@@ -106,14 +154,19 @@ export function FilterSidebar({
       setMaxPrice(parsedMax.toString());
     }
 
-    if (!isNaN(parsedMin)) params.set("minPrice", parsedMin.toString());
-    else params.delete("minPrice");
+    if (onSelectPrice) {
+      onSelectPrice(!isNaN(parsedMin) ? parsedMin : null, !isNaN(parsedMax) ? parsedMax : null);
+    } else {
+      const params = new URLSearchParams(searchParams.toString());
+      if (!isNaN(parsedMin)) params.set("minPrice", parsedMin.toString());
+      else params.delete("minPrice");
 
-    if (!isNaN(parsedMax)) params.set("maxPrice", parsedMax.toString());
-    else params.delete("maxPrice");
+      if (!isNaN(parsedMax)) params.set("maxPrice", parsedMax.toString());
+      else params.delete("maxPrice");
 
-    const queryStr = params.toString();
-    router.push(queryStr ? `${pathname}?${queryStr}` : pathname);
+      const queryStr = params.toString();
+      router.push(queryStr ? `${pathname}?${queryStr}` : pathname);
+    }
     if (onFilterChange) onFilterChange();
   };
 
@@ -157,7 +210,7 @@ export function FilterSidebar({
           <li>
             <button
               type="button"
-              onClick={() => updateParam("category", "all")}
+              onClick={() => handleCategoryClick("all")}
               className={[
                 "w-full text-left py-2 px-3 rounded-lg transition-all flex items-center justify-between group",
                 activeCategory === "all"
@@ -177,7 +230,7 @@ export function FilterSidebar({
               <li key={cat.id}>
                 <button
                   type="button"
-                  onClick={() => updateParam("category", cat.slug)}
+                  onClick={() => handleCategoryClick(cat.slug)}
                   className={[
                     "w-full text-left py-2 px-3 rounded-lg transition-all flex items-center justify-between group",
                     isActive
@@ -207,7 +260,7 @@ export function FilterSidebar({
           <li>
             <button
               type="button"
-              onClick={() => updateParam("nursery", "all")}
+              onClick={() => handleNurseryClick("all")}
               className={[
                 "w-full text-left py-2 px-3 rounded-lg transition-all flex items-center justify-between",
                 activeNursery === "all"
@@ -227,7 +280,7 @@ export function FilterSidebar({
               <li key={seller.id}>
                 <button
                   type="button"
-                  onClick={() => updateParam("nursery", seller.id)}
+                  onClick={() => handleNurseryClick(seller.id)}
                   className={[
                     "w-full text-left py-2 px-3 rounded-lg transition-all flex items-center justify-between",
                     isActive
@@ -304,9 +357,7 @@ export function FilterSidebar({
           <input
             type="checkbox"
             checked={activeInStock}
-            onChange={(e) =>
-              updateParam("inStock", e.target.checked ? "true" : null)
-            }
+            onChange={handleInStockToggle}
             className="w-4 h-4 rounded border-stone-300 text-forest-800 focus:ring-forest-800 accent-forest-800 cursor-pointer"
           />
           <span className="font-semibold text-stone-800">In Stock Only</span>

@@ -8,11 +8,35 @@ import { FilterIcon } from "@/components/ui/Icons";
 interface FilterAndSortControlsProps {
   totalCount: number;
   currentCategorySlug?: string;
+  activeSort?: string;
+  activeNursery?: string;
+  activeMinPrice?: string;
+  activeMaxPrice?: string;
+  activeInStock?: boolean;
+  onSortChange?: (sort: string) => void;
+  onToggleInStock?: (inStock: boolean) => void;
+  onRemoveFilter?: (key: string) => void;
+  onSelectCategory?: (slug: string | null) => void;
+  onSelectNursery?: (nurseryId: string | null) => void;
+  onSelectPrice?: (min: number | null, max: number | null) => void;
+  onClearAll?: () => void;
 }
 
 export function FilterAndSortControls({
   totalCount,
   currentCategorySlug,
+  activeSort: propActiveSort,
+  activeNursery: propActiveNursery,
+  activeMinPrice: propActiveMinPrice,
+  activeMaxPrice: propActiveMaxPrice,
+  activeInStock: propActiveInStock,
+  onSortChange,
+  onToggleInStock,
+  onRemoveFilter,
+  onSelectCategory,
+  onSelectNursery,
+  onSelectPrice,
+  onClearAll,
 }: FilterAndSortControlsProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -20,40 +44,52 @@ export function FilterAndSortControls({
 
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
 
-  const activeSort = searchParams.get("sort") ?? "featured";
-  const activeNursery = searchParams.get("nursery");
-  const activeMinPrice = searchParams.get("minPrice");
-  const activeMaxPrice = searchParams.get("maxPrice");
-  const activeInStock = searchParams.get("inStock") === "true";
+  const activeSort = propActiveSort ?? searchParams.get("sort") ?? "featured";
+  const activeNursery = propActiveNursery ?? searchParams.get("nursery");
+  const activeMinPrice = propActiveMinPrice ?? searchParams.get("minPrice");
+  const activeMaxPrice = propActiveMaxPrice ?? searchParams.get("maxPrice");
+  const activeInStock = propActiveInStock !== undefined ? propActiveInStock : searchParams.get("inStock") === "true";
   const activeQuery = searchParams.get("q");
 
   const handleSortChange = (newSort: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (newSort === "featured") {
-      params.delete("sort");
+    if (onSortChange) {
+      onSortChange(newSort);
     } else {
-      params.set("sort", newSort);
+      const params = new URLSearchParams(searchParams.toString());
+      if (newSort === "featured") {
+        params.delete("sort");
+      } else {
+        params.set("sort", newSort);
+      }
+      const queryStr = params.toString();
+      router.push(queryStr ? `${pathname}?${queryStr}` : pathname);
     }
-    const queryStr = params.toString();
-    router.push(queryStr ? `${pathname}?${queryStr}` : pathname);
   };
 
   const toggleParam = (key: string, value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (params.get(key) === value) {
-      params.delete(key);
+    if (key === "inStock" && onToggleInStock) {
+      onToggleInStock(!activeInStock);
     } else {
-      params.set(key, value);
+      const params = new URLSearchParams(searchParams.toString());
+      if (params.get(key) === value) {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+      const queryStr = params.toString();
+      router.push(queryStr ? `${pathname}?${queryStr}` : pathname);
     }
-    const queryStr = params.toString();
-    router.push(queryStr ? `${pathname}?${queryStr}` : pathname);
   };
 
   const removeFilter = (key: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete(key);
-    const queryStr = params.toString();
-    router.push(queryStr ? `${pathname}?${queryStr}` : pathname);
+    if (onRemoveFilter) {
+      onRemoveFilter(key);
+    } else {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete(key);
+      const queryStr = params.toString();
+      router.push(queryStr ? `${pathname}?${queryStr}` : pathname);
+    }
   };
 
   // Resolve Nursery Name
@@ -256,6 +292,16 @@ export function FilterAndSortControls({
               <FilterSidebar
                 currentCategory={currentCategorySlug}
                 onFilterChange={() => setIsMobileDrawerOpen(false)}
+                onSelectCategory={onSelectCategory}
+                onSelectNursery={onSelectNursery}
+                onSelectPrice={onSelectPrice}
+                onToggleInStock={onToggleInStock}
+                onClearAll={onClearAll}
+                activeCategory={currentCategorySlug}
+                activeNursery={activeNursery}
+                activeMinPrice={activeMinPrice}
+                activeMaxPrice={activeMaxPrice}
+                activeInStock={activeInStock}
               />
             </div>
 

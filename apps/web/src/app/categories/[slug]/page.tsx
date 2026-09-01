@@ -7,11 +7,7 @@ import {
   getProductListingsByCategorySlug,
   getActiveCategories,
 } from "@/lib/services/storefront";
-import { ProductCard } from "@/components/ui/ProductCard";
-import { FilterSidebar } from "@/components/ui/FilterSidebar";
-import { FilterAndSortControls } from "@/components/ui/FilterAndSortControls";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { LeafIcon } from "@/components/ui/Icons";
+import { ShopCatalogClient } from "@/components/shop/ShopCatalogClient";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -121,59 +117,18 @@ export default async function CategorySlugPage({
         </Link>
       </div>
 
-      {/* Layout Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-8 items-start">
-        {/* Sidebar with Independent Scroll */}
-        <div className="hidden md:block sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto pr-1">
-          <FilterSidebar currentCategory={slug} />
-        </div>
-
-        {/* Content Panel */}
-        <div>
-          <FilterAndSortControls
-            totalCount={productListings.length}
-            currentCategorySlug={slug}
-          />
-
-          {/* Product Grid */}
-          {productListings.length === 0 ? (
-            <EmptyState
-              badge="No Matching Plants"
-              title="No products match your filters"
-              description="We couldn't find anything matching your active filters in this category. Try adjusting your criteria or discover other green collections."
-              primaryAction={{
-                label: "Reset Category Filters",
-                href: `/categories/${slug}`,
-              }}
-              secondaryAction={{
-                label: "Explore All Categories",
-                href: "/categories",
-              }}
-              suggestions={allCategories
-                .filter((c) => c.slug !== slug)
-                .slice(0, 4)
-                .map((c) => ({
-                  label: c.name,
-                  href: `/categories/${c.slug}`,
-                }))}
-            />
-          ) : (
-            <div
-              className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4"
-              aria-label={`Products in ${category.name}`}
-            >
-              {productListings.map((listing, i) => (
-                <ProductCard
-                  key={listing.product.id}
-                  listing={listing}
-                  showBestSeller={i === 0}
-                  discountPercent={i === 1 ? 25 : undefined}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+      {/* Dynamic Catalog Area */}
+      <ShopCatalogClient
+        initialListings={productListings}
+        categories={allCategories}
+        fixedCategorySlug={slug}
+        initialNursery={sParams.nursery}
+        initialMinPrice={minPriceNum}
+        initialMaxPrice={maxPriceNum}
+        initialInStock={sParams.inStock === "true"}
+        initialSort={sParams.sort}
+        initialQuery={sParams.q}
+      />
     </CustomerShell>
   );
 }
