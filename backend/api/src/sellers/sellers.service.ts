@@ -282,17 +282,6 @@ export class SellersService {
               { onConflict: "policy_version_id,product_id" },
             );
           }
-
-          await db
-            .from("inventory")
-            .update({
-              base_price_paise: calc.sellerBasePricePaise,
-              floria_profit_paise: calc.floriaProfitPaise,
-              delivery_recovery_paise: calc.deliveryRecoveryPaise,
-              price_paise: calc.customerProductPricePaise,
-            })
-            .eq("product_id", productId)
-            .eq("seller_id", sellerProfile.id);
         }
       } catch (err) {
         console.warn("[SellersService] product_pricing creation persistence warning:", err);
@@ -358,16 +347,6 @@ export class SellersService {
           },
           { onConflict: "policy_version_id,product_id" },
         );
-
-        await db
-          .from("inventory")
-          .update({
-            base_price_paise: calc.sellerBasePricePaise,
-            floria_profit_paise: calc.floriaProfitPaise,
-            delivery_recovery_paise: calc.deliveryRecoveryPaise,
-            price_paise: calc.customerProductPricePaise,
-          })
-          .eq("product_id", productId);
       }
     } catch (err) {
       console.warn("[SellersService] product_pricing update persistence warning:", err);

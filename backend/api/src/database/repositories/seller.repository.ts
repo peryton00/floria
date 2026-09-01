@@ -572,8 +572,13 @@ export class SellerRepository {
     updates: any,
   ): Promise<any | null> {
     const db = getAdminDb();
-    const existing = await this.findSellerProductById(sellerId, productId);
-    if (!existing) return null;
+    const profQuery = db.from("seller_profiles").select("id, user_id");
+    const { data: sellerProf } = await (typeof profQuery.or === "function"
+      ? profQuery.or(`id.eq.${sellerId},user_id.eq.${sellerId}`).maybeSingle()
+      : profQuery.eq("id", sellerId).maybeSingle());
+
+    const targetSellerId = sellerProf?.id || sellerId;
+    const targetUserId = sellerProf?.user_id || sellerId;
 
     const now = new Date().toISOString();
     const prodPayload: Record<string, unknown> = { updated_at: now };
@@ -590,8 +595,7 @@ export class SellerRepository {
     await db
       .from("products")
       .update(prodPayload)
-      .eq("id", productId)
-      .eq("seller_id", sellerId);
+      .eq("id", productId);
 
     // Update Inventory
     if (
@@ -613,11 +617,29 @@ export class SellerRepository {
       if (updates.sku !== undefined)
         invPayload["sku"] = updates.sku?.trim() || null;
 
-      await db
+      const { data: existingInv } = await db
         .from("inventory")
-        .update(invPayload)
+        .select("id")
         .eq("product_id", productId)
-        .eq("seller_id", sellerId);
+        .or(`seller_id.eq.${targetSellerId},seller_id.eq.${targetUserId}`)
+        .maybeSingle();
+
+      if (existingInv) {
+        await db
+          .from("inventory")
+          .update(invPayload)
+          .eq("id", existingInv.id);
+      } else {
+        await db.from("inventory").insert({
+          product_id: productId,
+          seller_id: targetSellerId,
+          price_paise: typeof invPayload["price_paise"] === "number" ? invPayload["price_paise"] : 0,
+          stock_quantity: typeof invPayload["stock_quantity"] === "number" ? invPayload["stock_quantity"] : 0,
+          low_stock_threshold: typeof invPayload["low_stock_threshold"] === "number" ? invPayload["low_stock_threshold"] : 5,
+          sku: typeof invPayload["sku"] === "string" ? invPayload["sku"] : null,
+          updated_at: now,
+        });
+      }
     }
 
     // Update Primary image if image_url or asset_id provided
@@ -657,7 +679,7 @@ export class SellerRepository {
           product_id: productId,
           asset_id: aId,
           url: cleanUrl,
-          alt_text: existing.name,
+          alt_text: updates.name || "Product Image",
           display_order: 1,
           is_primary: true,
           created_at: now,

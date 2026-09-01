@@ -143,6 +143,10 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
       const res = await api.updateSellerProduct(productId, updates);
       if (res.success) {
         setSavedSuccess(true);
+        setTimeout(() => {
+          router.push("/seller/products");
+          router.refresh();
+        }, 800);
       } else {
         setApiError(res.error?.message || "Failed to update product");
       }
