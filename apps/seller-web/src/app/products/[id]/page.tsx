@@ -41,6 +41,10 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [financialSettings, setFinancialSettings] = useState<any>(null);
 
+  const isUploadingImages = productImages.some(
+    (img) => img.status === "UPLOADING" || img.status === "PROCESSING"
+  );
+
   useEffect(() => {
     async function loadData() {
       try {
@@ -397,11 +401,15 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
         <div className="flex gap-3 pt-3 border-t border-[#E2E8F0]">
           <button
             type="submit"
-            disabled={!isApproved || isSubmitting}
+            disabled={!isApproved || isSubmitting || isUploadingImages}
             style={{ color: "#ffffff" }}
-            className="flex-1 py-2.5 rounded bg-[#1B4D3E] hover:bg-[#153e31] !text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-xs disabled:opacity-50"
+            className="flex-1 py-2.5 rounded bg-[#1B4D3E] hover:bg-[#153e31] !text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? "Saving Changes..." : "Save Product Changes"}
+            {isUploadingImages
+              ? "Processing Images..."
+              : isSubmitting
+                ? "Saving Changes..."
+                : "Save Product Changes"}
           </button>
           <Link
             href="/seller/products"
