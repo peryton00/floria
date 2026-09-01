@@ -75,8 +75,10 @@ export class UserRepository {
         .maybeSingle();
 
       if (!existingSeller) {
+        const generatedPublicId = `FLR-SLR-${userId.replace(/-/g, "").substring(0, 8).toUpperCase()}`;
         await db.from("seller_profiles").insert({
           user_id: userId,
+          public_seller_id: generatedPublicId,
           business_name: data.full_name || "Nursery Partner",
           business_description: "Role assigned by Admin",
           contact_email: "",
