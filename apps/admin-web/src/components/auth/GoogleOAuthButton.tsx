@@ -6,11 +6,13 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 interface GoogleOAuthButtonProps {
   label?: string;
   redirectTo?: string;
+  className?: string;
 }
 
 export function GoogleOAuthButton({
   label = "Continue with Google",
   redirectTo,
+  className = "",
 }: GoogleOAuthButtonProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +51,7 @@ export function GoogleOAuthButton({
   return (
     <div className="w-full space-y-2">
       {error && (
-        <div className="p-3 bg-error-50 border border-error-100 rounded-xl text-xs text-error-700 text-center">
+        <div className="p-3 bg-error-500/20 border border-error-500/40 rounded-xl text-xs text-error-200 text-center font-medium">
           {error}
         </div>
       )}
@@ -58,17 +60,17 @@ export function GoogleOAuthButton({
         type="button"
         disabled={loading}
         onClick={handleGoogleSignIn}
-        className="w-full h-11 px-4 py-2.5 bg-white hover:bg-cream-50 active:bg-cream-100 text-ink-900 border border-ink-200 hover:border-ink-300 font-bold text-xs uppercase tracking-wider rounded-xl shadow-2xs flex items-center justify-center gap-3 transition-colors focus:outline-none focus:ring-2 focus:ring-forest-700 disabled:opacity-50 min-h-[44px]"
+        className={`group relative w-full h-12 px-5 py-3 bg-white hover:bg-cream-50 active:bg-cream-100 text-[#212529] border border-white/40 font-medium text-xs tracking-wider rounded-2xl shadow-[0_4px_16px_-4px_rgba(0,0,0,0.15)] flex items-center justify-center gap-3 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-emerald-500/20 disabled:opacity-50 min-h-[48px] cursor-pointer select-none ${className}`}
         aria-label={label}
       >
         {loading ? (
-          <div className="w-4 h-4 border-2 border-ink-600 border-t-transparent rounded-full animate-spin" />
+          <div className="w-4 h-4 border-2 border-neutral-700 border-t-transparent rounded-full animate-spin" />
         ) : (
           <svg
             width="18"
             height="18"
             viewBox="0 0 24 24"
-            className="flex-shrink-0"
+            className="flex-shrink-0 group-hover:scale-105 transition-transform duration-300"
           >
             <path
               fill="#4285F4"
@@ -88,7 +90,9 @@ export function GoogleOAuthButton({
             />
           </svg>
         )}
-        <span>{loading ? "Connecting to Google..." : label}</span>
+        <span className="font-sans font-semibold text-[#212529] text-xs sm:text-sm tracking-normal">
+          {loading ? "Connecting to Google..." : label}
+        </span>
       </button>
     </div>
   );

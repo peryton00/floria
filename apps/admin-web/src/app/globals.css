@@ -10,49 +10,9 @@
 @import "tailwindcss";
 
 /* ============================================================
-   Design Tokens — CSS Custom Properties
+   Tailwind CSS v4 @theme configuration
    ============================================================ */
-:root {
-  color-scheme: light;
-
-  /* --- Core Brand Tokens --- */
-  --floria-forest:         #1E3A2B; /* Primary Base / Deep Forest Green */
-  --floria-terracotta:     #943828; /* Primary Accent / Earthy Terracotta */
-  --floria-sage:           #4A5D4E; /* Secondary Brand / Olive Sage */
-  --floria-botanical:      #DDE7DD; /* Light Accent / Soft Botanical Green */
-
-  /* --- Surface Tokens --- */
-  --floria-page:           #F9F8F3; /* Main Page Background / Warm Cream */
-  --floria-linen:          #FBF8F1; /* Elevated Linen / Cards, Modals */
-  --floria-soft-sand:      #F6F1E7; /* Soft Sand / Content blocks */
-  --floria-sand:           #EFE8DC; /* Sand / Inputs, filter controls */
-  --floria-natural-sand:   #E9E1D3; /* Natural Sand / Media containers */
-  --floria-border:         #E2D9CC; /* Border / Divider Linen */
-
-  /* Legacy surface aliases */
-  --floria-background:     var(--floria-page);
-  --floria-surface:        var(--floria-linen);
-  --floria-muted-surface:  var(--floria-sand);
-
-  /* --- Typography Tokens --- */
-  --floria-text-primary:   #212529; /* Text Primary / Charcoal */
-  --floria-text-secondary: #6C756F; /* Text Secondary / Muted Gray-Green */
-
-  /* --- Functional Semantic Aliases --- */
-  --color-primary:         var(--floria-forest);
-  --color-primary-hover:   #15291E;
-  --color-action:          var(--floria-terracotta);
-  --color-action-hover:    #7D2E20;
-  --color-secondary:       var(--floria-sage);
-  --color-secondary-hover: #3D4D40;
-  --color-botanical:       var(--floria-botanical);
-  --color-page:            var(--floria-page);
-  --color-surface:         var(--floria-linen);
-  --color-muted-surface:   var(--floria-sand);
-  --color-text:            var(--floria-text-primary);
-  --color-text-secondary:  var(--floria-text-secondary);
-  --color-border:          var(--floria-border);
-
+@theme {
   /* --- Scales: Forest --- */
   --color-forest-50:  #F4F8F4;
   --color-forest-100: #DDE7DD;
@@ -131,6 +91,51 @@
   --color-error-500: #EF4444;
   --color-error-600: #DC2626;
   --color-error-700: #B91C1C;
+}
+
+/* ============================================================
+   Design Tokens — CSS Custom Properties
+   ============================================================ */
+:root {
+  color-scheme: light;
+
+  /* --- Core Brand Tokens --- */
+  --floria-forest:         #1E3A2B;
+  --floria-terracotta:     #943828;
+  --floria-sage:           #4A5D4E;
+  --floria-botanical:      #DDE7DD;
+
+  /* --- Surface Tokens --- */
+  --floria-page:           #F9F8F3;
+  --floria-linen:          #FBF8F1;
+  --floria-soft-sand:      #F6F1E7;
+  --floria-sand:           #EFE8DC;
+  --floria-natural-sand:   #E9E1D3;
+  --floria-border:         #E2D9CC;
+
+  /* Legacy surface aliases */
+  --floria-background:     var(--floria-page);
+  --floria-surface:        var(--floria-linen);
+  --floria-muted-surface:  var(--floria-sand);
+
+  /* --- Typography Tokens --- */
+  --floria-text-primary:   #212529;
+  --floria-text-secondary: #6C756F;
+
+  /* --- Functional Semantic Aliases --- */
+  --color-primary:         var(--floria-forest);
+  --color-primary-hover:   #15291E;
+  --color-action:          var(--floria-terracotta);
+  --color-action-hover:    #7D2E20;
+  --color-secondary:       var(--floria-sage);
+  --color-secondary-hover: #3D4D40;
+  --color-botanical:       var(--floria-botanical);
+  --color-page:            var(--floria-page);
+  --color-surface:         var(--floria-linen);
+  --color-muted-surface:   var(--floria-sand);
+  --color-text:            var(--floria-text-primary);
+  --color-text-secondary:  var(--floria-text-secondary);
+  --color-border:          var(--floria-border);
 }
 
 body {

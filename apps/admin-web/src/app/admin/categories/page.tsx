@@ -14,7 +14,6 @@ import {
   CheckIcon,
   GridIcon,
   LeafIcon,
-  ZapIcon,
   RefreshIcon,
 } from "@/components/ui/Icons";
 
@@ -224,12 +223,12 @@ export default function AdminCategoriesPage() {
             </p>
           </div>
 
-          {/* Primary CTA - Nested Island Button */}
+          {/* Primary CTA - Refined Floria Botanical Island Button */}
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={fetchCategories}
-              className="p-3 rounded-full bg-white border border-cream-400/60 text-ink-600 hover:text-ink-900 hover:bg-cream-100/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.96]"
+              className="p-3 rounded-full bg-white border border-cream-400/60 text-ink-600 hover:text-ink-900 hover:bg-cream-100/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.96] focus:outline-none focus:ring-4 focus:ring-forest-700/10 cursor-pointer select-none"
               title="Refresh categories"
             >
               <RefreshIcon size={16} className={loading ? "animate-spin" : ""} />
@@ -241,10 +240,10 @@ export default function AdminCategoriesPage() {
                 resetForm();
                 setShowCreateModal(true);
               }}
-              className="group relative inline-flex items-center gap-3 pl-5 pr-2 py-2 rounded-full bg-forest-800 text-white font-medium text-xs tracking-wide shadow-[0_4px_16px_-2px_rgba(30,58,43,0.25)] hover:bg-forest-900 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]"
+              className="group relative inline-flex items-center gap-3 pl-5 pr-2 py-2 rounded-full bg-forest-800 hover:bg-forest-900 active:bg-forest-950 text-white font-medium text-xs tracking-wider uppercase border border-forest-700/60 shadow-[0_4px_16px_-2px_rgba(30,58,43,0.25),inset_0_1px_1px_rgba(255,255,255,0.15)] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-forest-700/15 cursor-pointer select-none"
             >
-              <span>Create New Category</span>
-              <span className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center text-white/90 group-hover:bg-white/25 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300">
+              <span className="font-semibold tracking-wide">Create New Category</span>
+              <span className="w-6 h-6 rounded-full bg-white/15 flex items-center justify-center text-white/95 font-bold text-xs group-hover:bg-white/25 group-hover:scale-105 transition-all duration-300">
                 +
               </span>
             </button>
@@ -307,7 +306,7 @@ export default function AdminCategoriesPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search category by name, slug, or keywords..."
-              className="w-full pl-9 pr-8 py-2 rounded-xl bg-white border border-cream-400/70 text-xs text-ink-900 placeholder:text-ink-400 focus:outline-none focus:border-forest-700/60 focus:ring-4 focus:ring-forest-700/5 transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]"
+              className="w-full pl-9 pr-8 py-2 rounded-xl bg-white border border-cream-400/70 text-xs text-ink-900 placeholder:text-ink-400 focus:outline-none focus:border-forest-700/60 focus:ring-4 focus:ring-forest-700/5 transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)] font-sans"
             />
             {searchQuery && (
               <button
@@ -363,7 +362,7 @@ export default function AdminCategoriesPage() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="px-3 py-1.5 rounded-xl bg-white border border-cream-400/70 text-[11px] text-ink-700 focus:outline-none focus:border-forest-700/60 cursor-pointer shadow-xs"
+              className="px-3 py-1.5 rounded-xl bg-white border border-cream-400/70 text-[11px] text-ink-700 focus:outline-none focus:border-forest-700/60 cursor-pointer shadow-xs font-sans"
             >
               <option value="ORDER_ASC">Position: Low to High</option>
               <option value="ORDER_DESC">Position: High to Low</option>
@@ -374,7 +373,7 @@ export default function AdminCategoriesPage() {
 
         {/* Global Error Banner */}
         {error && (
-          <div className="p-4 rounded-2xl bg-error-50 border border-error-100 text-xs text-error-700 flex items-center justify-between">
+          <div className="p-4 rounded-2xl bg-error-50 border border-error-100 text-xs text-error-700 flex items-center justify-between font-medium">
             <span>{error}</span>
             <button
               type="button"
@@ -404,7 +403,7 @@ export default function AdminCategoriesPage() {
                 setSearchQuery("");
                 setStatusFilter("ALL");
               }}
-              className="inline-block mt-2 px-4 py-1.5 rounded-full bg-white border border-cream-300 text-xs text-ink-700 font-medium hover:bg-cream-50"
+              className="inline-block mt-2 px-4 py-1.5 rounded-full bg-white border border-cream-300 text-xs text-ink-700 font-medium hover:bg-cream-50 cursor-pointer"
             >
               Clear Filters
             </button>
@@ -481,7 +480,7 @@ export default function AdminCategoriesPage() {
                         <button
                           type="button"
                           onClick={() => copyToClipboard(c.slug, c.id)}
-                          className="group/slug inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-cream-100/90 hover:bg-cream-200/90 border border-cream-300/60 font-mono text-[10px] text-ink-600 transition-colors text-left max-w-full truncate"
+                          className="group/slug inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-cream-100/90 hover:bg-cream-200/90 border border-cream-300/60 font-mono text-[10px] text-ink-600 transition-colors text-left max-w-full truncate cursor-pointer select-all"
                           title="Click to copy slug"
                         >
                           <span className="text-ink-400 font-sans text-[9px] uppercase font-bold tracking-wider">Slug:</span>
@@ -509,10 +508,10 @@ export default function AdminCategoriesPage() {
                       <button
                         type="button"
                         onClick={() => handleToggleActive(c)}
-                        className={`px-3 py-1.5 rounded-xl font-medium text-[10px] uppercase tracking-wider transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+                        className={`px-3.5 py-1.5 rounded-full font-medium text-[11px] uppercase tracking-wider transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] cursor-pointer select-none ${
                           c.is_active
-                            ? "border border-cream-400/80 hover:bg-terracotta-50 text-ink-700 hover:text-terracotta-700 hover:border-terracotta-200"
-                            : "border border-emerald-200 bg-emerald-50/50 hover:bg-emerald-100 text-emerald-800"
+                            ? "border border-cream-400/80 bg-cream-100/60 hover:bg-terracotta-50 text-ink-700 hover:text-terracotta-700 hover:border-terracotta-200"
+                            : "border border-emerald-300 bg-emerald-50/70 hover:bg-emerald-100 text-emerald-800"
                         }`}
                       >
                         {c.is_active ? "Deactivate" : "Activate"}
@@ -522,10 +521,10 @@ export default function AdminCategoriesPage() {
                       <button
                         type="button"
                         onClick={() => handleOpenEdit(c)}
-                        className="group/btn relative inline-flex items-center gap-2 pl-3.5 pr-2 py-1.5 rounded-full bg-forest-800 hover:bg-forest-900 text-white font-medium text-[10px] uppercase tracking-wider shadow-xs transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]"
+                        className="group/btn relative inline-flex items-center gap-2 pl-3.5 pr-2 py-1.5 rounded-full bg-forest-800 hover:bg-forest-900 active:bg-forest-950 text-white font-medium text-[11px] uppercase tracking-wider border border-forest-700/60 shadow-[0_2px_8px_-1px_rgba(30,58,43,0.2),inset_0_1px_1px_rgba(255,255,255,0.15)] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-forest-700/15 cursor-pointer select-none"
                       >
-                        <span>Edit Details</span>
-                        <span className="w-5 h-5 rounded-full bg-white/15 flex items-center justify-center text-white/90 group-hover/btn:bg-white/25 group-hover/btn:rotate-12 transition-all">
+                        <span className="font-semibold tracking-wide">Edit Details</span>
+                        <span className="w-5 h-5 rounded-full bg-white/15 flex items-center justify-center text-white/95 group-hover/btn:bg-white/25 group-hover/btn:rotate-12 transition-all duration-300">
                           <EditIcon size={11} />
                         </span>
                       </button>
@@ -581,7 +580,7 @@ export default function AdminCategoriesPage() {
                       value={name}
                       onChange={(e) => handleNameChange(e.target.value)}
                       placeholder="e.g. Rare Tropical Aroids"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-cream-400/80 text-xs text-ink-900 focus:outline-none focus:border-forest-700/60 focus:ring-4 focus:ring-forest-700/5 bg-cream-50/50 transition-all placeholder:text-ink-400"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-cream-400/80 text-xs text-ink-900 focus:outline-none focus:border-forest-700/60 focus:ring-4 focus:ring-forest-700/5 bg-cream-50/50 transition-all placeholder:text-ink-400 font-sans"
                     />
                   </div>
 
@@ -611,7 +610,7 @@ export default function AdminCategoriesPage() {
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       placeholder="Botanical descriptions, habitat highlights, and customer care taxonomy details..."
-                      className="w-full p-3.5 rounded-xl border border-cream-400/80 text-xs text-ink-900 focus:outline-none focus:border-forest-700/60 focus:ring-4 focus:ring-forest-700/5 bg-cream-50/50 transition-all placeholder:text-ink-400 resize-none"
+                      className="w-full p-3.5 rounded-xl border border-cream-400/80 text-xs text-ink-900 focus:outline-none focus:border-forest-700/60 focus:ring-4 focus:ring-forest-700/5 bg-cream-50/50 transition-all placeholder:text-ink-400 resize-none font-sans"
                     />
                   </div>
 
@@ -623,7 +622,7 @@ export default function AdminCategoriesPage() {
                       type="number"
                       value={displayOrder}
                       onChange={(e) => setDisplayOrder(Number(e.target.value))}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-cream-400/80 text-xs text-ink-900 focus:outline-none focus:border-forest-700/60 focus:ring-4 focus:ring-forest-700/5 bg-cream-50/50 transition-all"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-cream-400/80 text-xs text-ink-900 focus:outline-none focus:border-forest-700/60 focus:ring-4 focus:ring-forest-700/5 bg-cream-50/50 transition-all font-sans"
                     />
                   </div>
 
@@ -673,7 +672,7 @@ export default function AdminCategoriesPage() {
                         setShowCreateModal(false);
                         resetForm();
                       }}
-                      className="flex-1 py-2.5 rounded-full border border-cream-400 text-ink-700 font-medium text-xs uppercase tracking-wider hover:bg-cream-100 transition-colors"
+                      className="flex-1 py-3 rounded-full border border-cream-400/80 text-ink-700 font-medium text-xs uppercase tracking-wider hover:bg-cream-100 transition-colors cursor-pointer select-none"
                     >
                       Cancel
                     </button>
@@ -681,7 +680,7 @@ export default function AdminCategoriesPage() {
                     <button
                       type="submit"
                       disabled={actionLoading}
-                      className="flex-1 py-2.5 rounded-full bg-forest-800 hover:bg-forest-900 text-white font-medium text-xs uppercase tracking-wider shadow-[0_4px_12px_-2px_rgba(30,58,43,0.2)] transition-all duration-300 disabled:opacity-50"
+                      className="flex-1 py-3 px-6 rounded-full bg-forest-800 hover:bg-forest-900 active:bg-forest-950 text-white font-medium text-xs uppercase tracking-wider border border-forest-700/60 shadow-[0_4px_16px_-2px_rgba(30,58,43,0.25),inset_0_1px_1px_rgba(255,255,255,0.2)] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-forest-700/20 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer select-none"
                     >
                       {actionLoading ? "Saving..." : editingCategory ? "Save Changes" : "Create Node"}
                     </button>
