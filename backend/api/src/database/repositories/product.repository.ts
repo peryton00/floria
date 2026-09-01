@@ -35,7 +35,7 @@ export class ProductRepository {
         db
           .from("media_variants")
           .select(
-            "asset_id, variant_name, format, width, height, file_size_bytes, storage_bucket, storage_path",
+            "asset_id, variant_name, format, width, height, size_bytes, storage_bucket, storage_path",
           )
           .in("asset_id", assetIds),
       ]);
@@ -64,7 +64,7 @@ export class ProductRepository {
             format: v.format,
             width: v.width,
             height: v.height,
-            file_size_bytes: v.file_size_bytes,
+            file_size_bytes: v.size_bytes,
             storage_bucket: v.storage_bucket,
             storage_path: v.storage_path,
             url: publicUrl,
@@ -83,6 +83,17 @@ export class ProductRepository {
               const assetMeta = assetMap.get(img.asset_id) || null;
               const preferredUrl =
                 vars.medium || vars.large || vars.thumbnail || img.url;
+
+              if (
+                preferredUrl &&
+                preferredUrl !== img.url &&
+                (img.url === "/brand_logo.svg" || img.url?.includes("/media-staging/") || img.url?.startsWith("blob:"))
+              ) {
+                db.from("product_images")
+                  .update({ url: preferredUrl })
+                  .eq("id", img.id)
+                  .then(undefined, () => {});
+              }
 
               return {
                 ...img,
