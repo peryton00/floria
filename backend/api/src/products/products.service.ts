@@ -9,6 +9,7 @@ export class ProductsService {
     product: any,
     settings: any,
     overrideMap?: Map<string, any>,
+    isSellerContext: boolean = false,
   ) {
     if (!product) return product;
 
@@ -38,10 +39,13 @@ export class ProductsService {
       return {
         ...inv,
         base_price_paise: basePrice,
-        price_paise: customerPrice,
+        // In seller context, price_paise must ALWAYS be the seller's original base price.
+        // In customer storefront context, price_paise is the final customer price.
+        price_paise: isSellerContext ? basePrice : customerPrice,
         customer_price_paise: customerPrice,
         seller_net_paise: calc.sellerNetPaise,
         pricing: {
+          sellerBasePricePaise: basePrice,
           customerPricePaise: customerPrice,
           sellingPricePaise: customerPrice,
           originalPricePaise: originalPrice,

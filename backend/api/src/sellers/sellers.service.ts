@@ -218,7 +218,7 @@ export class SellersService {
     const { productsService } = await import("../products/products.service.js");
     const settings = await pricingService.getFinancialSettings();
     return products.map((p) =>
-      productsService.enrichWithDbPricing(p, settings),
+      productsService.enrichWithDbPricing(p, settings, undefined, true),
     );
   }
 
@@ -230,7 +230,7 @@ export class SellersService {
     if (!prod) throw Errors.notFound("Product");
     const { productsService } = await import("../products/products.service.js");
     const settings = await pricingService.getFinancialSettings();
-    return productsService.enrichWithDbPricing(prod, settings);
+    return productsService.enrichWithDbPricing(prod, settings, undefined, true);
   }
 
   async createProduct(sellerProfile: SellerProfile, productData: any) {
