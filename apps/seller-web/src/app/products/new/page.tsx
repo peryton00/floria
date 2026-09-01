@@ -82,22 +82,28 @@ export default function AddProductPage() {
       return;
     }
 
+    const isUploadingImages = productImages.some(
+      (img) => img.status === "UPLOADING" || img.status === "PROCESSING"
+    );
+    if (isUploadingImages) {
+      setApiError("Please wait for all images to finish uploading and processing before submitting.");
+      return;
+    }
+
     try {
       setIsSubmitting(true);
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://supabase.co";
-      const cleanImages = productImages.map((img) => {
-        let cleanUrl = img.url;
-        if (cleanUrl && cleanUrl.startsWith("blob:")) {
-          cleanUrl = img.assetId
-            ? `${supabaseUrl}/storage/v1/object/public/public-media/product/${img.assetId}.webp`
-            : "/brand_logo.svg";
-        }
-        return {
-          asset_id: img.assetId || undefined,
-          url: cleanUrl,
+      const cleanImages = productImages
+        .filter((img) => img.status !== "FAILED" && !img.url.startsWith("blob:"))
+        .map((img) => ({
+          asset_id: img.assetId && img.assetId.trim().length > 10 ? img.assetId : undefined,
+          url: img.url,
           is_primary: img.isPrimary,
-        };
-      });
+        }));
+
+      const primaryImage =
+        cleanImages.find((img) => img.is_primary)?.url ||
+        cleanImages[0]?.url ||
+        "/brand_logo.svg";
 
       const payload = {
         name: name.trim(),
@@ -110,7 +116,7 @@ export default function AddProductPage() {
         care_instructions: careInstructions.trim() || undefined,
         status,
         images: cleanImages,
-        image_url: cleanImages.find((img) => img.is_primary)?.url || cleanImages[0]?.url || "/brand_logo.svg",
+        image_url: primaryImage,
       };
 
       const res = await api.createSellerProduct(payload);

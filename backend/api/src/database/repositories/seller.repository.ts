@@ -380,10 +380,18 @@ export class SellerRepository {
       aId: string | null,
       rUrl: string | null,
     ): string => {
+      if (
+        rUrl &&
+        (rUrl.startsWith("http://") || rUrl.startsWith("https://")) &&
+        !rUrl.includes("/media-staging/") &&
+        !rUrl.startsWith("blob:")
+      ) {
+        return rUrl;
+      }
       if (aId) {
         return `${supabaseUrl}/storage/v1/object/public/public-media/products/${targetSellerId}/${aId}/medium.webp`;
       }
-      if (!rUrl || rUrl.includes("/media-staging/")) {
+      if (!rUrl || rUrl.includes("/media-staging/") || rUrl.startsWith("blob:")) {
         return "/brand_logo.svg";
       }
       return rUrl;
@@ -627,11 +635,15 @@ export class SellerRepository {
 
       const aId = updates.asset_id || null;
       const rawUrl = updates.image_url || "/brand_logo.svg";
-      const cleanUrl = aId
-        ? `${supabaseUrl}/storage/v1/object/public/public-media/products/${sellerId}/${aId}/medium.webp`
-        : rawUrl.includes("/media-staging/")
-          ? "/brand_logo.svg"
-          : rawUrl;
+      const cleanUrl =
+        rawUrl &&
+        (rawUrl.startsWith("http://") || rawUrl.startsWith("https://")) &&
+        !rawUrl.includes("/media-staging/") &&
+        !rawUrl.startsWith("blob:")
+          ? rawUrl
+          : aId
+            ? `${supabaseUrl}/storage/v1/object/public/public-media/products/${sellerId}/${aId}/medium.webp`
+            : "/brand_logo.svg";
 
       if (primaryImg) {
         const imgPayload: Record<string, any> = { url: cleanUrl };
