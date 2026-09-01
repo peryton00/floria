@@ -1164,18 +1164,23 @@ export class SellerRepository {
     const orderView = await this.findSellerOrderById(sellerId, masterOrderId);
     if (!orderView) throw new Error("Order not found or access denied");
 
-    // Allowed transition logic
-    const currentStatus = orderView.status;
-    const allowedTransitions: Record<string, string> = {
-      "Order Placed": "Nursery Confirmed",
-      "Nursery Confirmed": "Preparing",
-      Preparing: "Ready for Pickup",
-      "Ready for Pickup": "Picked Up",
+    // Allowed transition logic with normalized keys
+    const normalize = (st: string) => (st || "").toLowerCase().replace(/ /g, "_");
+    const currentNorm = normalize(orderView.status);
+    const targetNorm = normalize(newStatus);
+
+    const allowedTransitions: Record<string, string[]> = {
+      order_placed: ["nursery_confirmed", "preparing", "fulfillment_issue", "issue_reported"],
+      seller_pending: ["nursery_confirmed", "preparing", "fulfillment_issue", "issue_reported"],
+      nursery_confirmed: ["preparing", "ready_for_pickup", "fulfillment_issue", "issue_reported"],
+      preparing: ["ready_for_pickup", "picked_up", "fulfillment_issue", "issue_reported"],
+      ready_for_pickup: ["picked_up", "fulfillment_issue", "issue_reported"],
     };
 
-    if (allowedTransitions[currentStatus] !== newStatus) {
+    const validTargets = allowedTransitions[currentNorm] || [];
+    if (validTargets.length > 0 && !validTargets.includes(targetNorm)) {
       throw new Error(
-        `Invalid status transition from '${currentStatus}' to '${newStatus}'`,
+        `Invalid status transition from '${orderView.status}' to '${newStatus}'`,
       );
     }
 

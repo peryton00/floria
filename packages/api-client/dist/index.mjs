@@ -28,8 +28,16 @@ var FloriaApiClient = class {
         return cached.data;
       }
     }
-    if (isGet) {
-      const existing = this.pendingGetRequests.get(url);
+    let token = null;
+    if (this.getAccessToken) {
+      try {
+        token = await this.getAccessToken();
+      } catch {
+      }
+    }
+    const dedupeKey = isGet ? `${url}::${token || "anon"}` : "";
+    if (isGet && dedupeKey) {
+      const existing = this.pendingGetRequests.get(dedupeKey);
       if (existing) {
         return existing;
       }
@@ -39,17 +47,11 @@ var FloriaApiClient = class {
         "Content-Type": "application/json",
         ...options.headers
       };
-      if (this.getAccessToken) {
-        try {
-          const token = await this.getAccessToken();
-          if (token) {
-            headers["Authorization"] = `Bearer ${token}`;
-          }
-        } catch {
-        }
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
       }
       const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
-      const timeoutId = controller ? setTimeout(() => controller.abort(), 15e3) : null;
+      const timeoutId = controller ? setTimeout(() => controller.abort(), 3e4) : null;
       try {
         const fetchFn = this.customFetch || (typeof window !== "undefined" ? window.fetch.bind(window) : globalThis.fetch.bind(globalThis));
         const response = await fetchFn(url, {
@@ -75,14 +77,14 @@ var FloriaApiClient = class {
           }
         };
       } finally {
-        if (isGet) {
-          this.pendingGetRequests.delete(url);
+        if (isGet && dedupeKey) {
+          this.pendingGetRequests.delete(dedupeKey);
         }
       }
     };
-    if (isGet) {
+    if (isGet && dedupeKey) {
       const promise = executeRequest();
-      this.pendingGetRequests.set(url, promise);
+      this.pendingGetRequests.set(dedupeKey, promise);
       return promise;
     }
     return executeRequest();
