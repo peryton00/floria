@@ -58,36 +58,41 @@
   --color-cream-500: #E2D9CC;
   --color-cream-600: #C8BEAF;
   --color-cream-700: #ADA394;
-  --color-cream-800: #8A8174;
-  --color-cream-900: #5E564B;
+  --color-cream-800: #8E8475;
+  --color-cream-900: #6D6456;
 
-  /* --- Scales: Ink / Neutrals --- */
-  --color-ink-50:  #F8F9FA;
-  --color-ink-100: #F1F3F5;
-  --color-ink-200: #E9ECEF;
-  --color-ink-300: #DEE2E6;
-  --color-ink-400: #CED4DA;
-  --color-ink-500: #ADB5BD;
-  --color-ink-600: #6C756F;
-  --color-ink-700: #495057;
-  --color-ink-800: #343A40;
+  /* --- Scales: High-Contrast Ink --- */
+  --color-ink-50:  #F7F8F8;
+  --color-ink-100: #EFEFEF;
+  --color-ink-200: #DFE1E2;
+  --color-ink-300: #C6C8CB;
+  --color-ink-400: #999DA2;
+  --color-ink-500: #6C756F;
+  --color-ink-600: #495057;
+  --color-ink-700: #343A40;
+  --color-ink-800: #2B3035;
   --color-ink-900: #212529;
 
-  /* --- Scales: Success --- */
+  /* --- Semantic: Success --- */
   --color-success-50:  #F0FDF4;
   --color-success-100: #DCFCE7;
+  --color-success-200: #BBF7D0;
   --color-success-500: #22C55E;
+  --color-success-600: #16A34A;
   --color-success-700: #15803D;
 
-  /* --- Scales: Warning --- */
+  /* --- Semantic: Warning --- */
   --color-warning-50:  #FFFBEB;
   --color-warning-100: #FEF3C7;
+  --color-warning-200: #FDE68A;
   --color-warning-500: #F59E0B;
+  --color-warning-600: #D97706;
   --color-warning-700: #B45309;
 
-  /* --- Scales: Error --- */
+  /* --- Semantic: Error --- */
   --color-error-50:  #FEF2F2;
   --color-error-100: #FEE2E2;
+  --color-error-200: #FECACA;
   --color-error-500: #EF4444;
   --color-error-600: #DC2626;
   --color-error-700: #B91C1C;
@@ -153,4 +158,85 @@ body {
 
 .font-sans {
   font-family: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ============================================================
+   Custom Botanical Scrollbar Styling
+   ============================================================ */
+
+/* Universal light mode slim scrollbar */
+html,
+body,
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(30, 58, 43, 0.18) transparent;
+}
+
+/* WebKit & Chromium (Chrome, Edge, Safari, Opera) */
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(30, 58, 43, 0.18);
+  border-radius: 9999px;
+  transition: background-color 0.25s ease;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(30, 58, 43, 0.38);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Dark Containers & Sidebars (`.custom-scrollbar`) */
+.custom-scrollbar,
+aside,
+[data-theme="dark"] {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar,
+aside::-webkit-scrollbar,
+[data-theme="dark"]::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track,
+aside::-webkit-scrollbar-track,
+[data-theme="dark"]::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb,
+aside::-webkit-scrollbar-thumb,
+[data-theme="dark"]::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+  transition: background-color 0.25s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover,
+aside::-webkit-scrollbar-thumb:hover,
+[data-theme="dark"]::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.32);
+}
+
+/* Utility to hide scrollbar while keeping scrollability */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
