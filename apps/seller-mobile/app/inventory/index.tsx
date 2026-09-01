@@ -9,7 +9,6 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { FloriaIcon } from "@floria/icons";
 import { api } from "../../lib/api";
 import { useSellerAuth } from "../../lib/contexts/SellerAuthContext";
 import { useSellerFeedback } from "../../lib/contexts/SellerFeedbackContext";
@@ -41,13 +40,7 @@ export default function InventoryManagementScreen() {
 
   if (!isApproved) {
     return (
-      <View style={[styles.screen, { paddingTop: insets.top }]}>
-        <View style={styles.topBar}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <FloriaIcon name="arrow_left" size={20} color={Colors.forest} />
-          </TouchableOpacity>
-          <Text style={styles.pageTitle}>Stock & Inventory</Text>
-        </View>
+      <View style={styles.screen}>
         <SellerPendingVerificationShield
           seller={seller}
           featureName="Stock & Inventory"

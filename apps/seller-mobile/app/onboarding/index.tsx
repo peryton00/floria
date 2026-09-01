@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { FloriaIcon } from "@floria/icons";
+import { FloriaIcon } from "../../components/ui/FloriaIcon";
 import { api } from "../../lib/api";
 import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
 import { Button } from "../../components/ui/Button";
@@ -49,9 +49,9 @@ export default function SellerOnboardingScreen() {
   const [gstNumber, setGstNumber] = useState<string>("");
 
   const [address, setAddress] = useState<string>("");
-  const [city, setCity] = useState<string>("Raipur");
+  const [city, setCity] = useState<string>("");
   const [state, setState] = useState<string>("Chhattisgarh");
-  const [postalCode, setPostalCode] = useState<string>("492001");
+  const [postalCode, setPostalCode] = useState<string>("");
 
   const [bankAccount, setBankAccount] = useState<string>("");
   const [ifscCode, setIfscCode] = useState<string>("");
@@ -59,17 +59,12 @@ export default function SellerOnboardingScreen() {
 
   const handleNext = () => {
     setErrorMessage(null);
-
     if (currentStep === 1) {
-      if (!username.trim() || username.length < 3) {
-        setErrorMessage("Username / Seller ID must be at least 3 characters.");
+      if (!username.trim() || !email.trim() || !password) {
+        setErrorMessage("Please complete all required login credentials.");
         return;
       }
-      if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-        setErrorMessage("Valid Gmail/email address is required.");
-        return;
-      }
-      if (!password || password.length < 8) {
+      if (password.length < 8) {
         setErrorMessage("Password must be at least 8 characters.");
         return;
       }
@@ -78,23 +73,17 @@ export default function SellerOnboardingScreen() {
         return;
       }
     } else if (currentStep === 2) {
-      if (!businessName.trim() || businessName.trim() === "Nursery Partner" || businessName.trim() === "New Nursery") {
-        setErrorMessage("Valid nursery business name is required.");
-        return;
-      }
-      const cleanPhone = contactPhone.replace(/[\s\-+()\u00a0]/g, "").replace(/^91/, "");
-      if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
-        setErrorMessage("Enter a valid 10-digit Indian phone number.");
+      if (!businessName.trim() || !contactPhone.trim()) {
+        setErrorMessage("Nursery name and contact phone are required.");
         return;
       }
     } else if (currentStep === 3) {
-      if (!address.trim() || !city.trim() || !state.trim() || !/^\d{6}$/.test(postalCode.trim())) {
-        setErrorMessage("Please enter a complete address, city, state, and 6-digit PIN code.");
+      if (!address.trim() || !city.trim() || !postalCode.trim()) {
+        setErrorMessage("Please provide complete physical address for plant inspections.");
         return;
       }
     }
-
-    setCurrentStep((prev) => Math.min(ONBOARDING_STEPS.length, prev + 1));
+    setCurrentStep((prev) => Math.min(prev + 1, 5));
   };
 
   const handleBack = () => {
@@ -106,35 +95,33 @@ export default function SellerOnboardingScreen() {
     }
   };
 
-  const handleSubmitApplication = async () => {
+  const handleSubmit = async () => {
     try {
       setLoading(true);
       setErrorMessage(null);
-      const cleanPhone = contactPhone.replace(/[\s\-+()\u00a0]/g, "").replace(/^91/, "");
 
       const payload = {
-        username: username.trim().toLowerCase(),
+        username: username.trim(),
         email: email.trim().toLowerCase(),
         password,
         business_name: businessName.trim(),
-        business_description: businessDescription.trim() || "Registered Floria botanical nursery partner.",
+        description: businessDescription.trim() || undefined,
         business_type: businessType,
-        contact_phone: cleanPhone,
+        contact_phone: contactPhone.trim(),
+        gst_number: gstNumber.trim() || undefined,
         address: address.trim(),
         city: city.trim(),
         state: state.trim(),
         postal_code: postalCode.trim(),
-        gst_number: gstNumber.trim().toUpperCase() || undefined,
-        settlement_account: {
-          bank_account_number: bankAccount.trim() || undefined,
-          ifsc_code: ifscCode.trim().toUpperCase() || undefined,
-          account_holder_name: accountHolderName.trim() || undefined,
-        },
+        bank_account_number: bankAccount.trim() || undefined,
+        bank_ifsc: ifscCode.trim() || undefined,
+        account_holder_name: accountHolderName.trim() || undefined,
       };
 
       const res = await api.submitSellerApplication(payload);
-      if (res.success) {
-        setAssignedId(res.data?.publicSellerId || null);
+
+      if (res.success && res.data) {
+        setAssignedId(res.data.id || res.data.public_seller_id || res.data.publicSellerId);
         setIsSubmitted(true);
       } else {
         setErrorMessage(res.error?.message || "Failed to submit application.");
@@ -523,7 +510,7 @@ export default function SellerOnboardingScreen() {
             ) : (
               <Button
                 label={loading ? "Submitting..." : "Submit Partner Application"}
-                onPress={handleSubmitApplication}
+                onPress={handleSubmit}
                 loading={loading}
                 style={styles.buttonPrimary}
               />

@@ -11,7 +11,7 @@ import {
   Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { FloriaIcon } from "@floria/icons";
+import { FloriaIcon } from "../../components/ui/FloriaIcon";
 import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
 import { Button } from "../../components/ui/Button";
 import { api } from "../../lib/api";
@@ -51,7 +51,7 @@ export default function SellerForgotPasswordScreen() {
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
           <View style={styles.logo}>
-            <FloriaIcon name="sparkles" size={28} color={Colors.white} />
+            <FloriaIcon name="key" size={28} color={Colors.white} />
           </View>
           <Text style={styles.title}>Forgot Password</Text>
           <Text style={styles.subtitle}>

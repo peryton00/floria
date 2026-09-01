@@ -1,7 +1,13 @@
 import React, { useEffect, useRef } from "react";
 import { View, Text, Image, StyleSheet, Animated } from "react-native";
 import { Tabs } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
+import {
+  House,
+  Compass,
+  Heart,
+  ShoppingBag,
+  User,
+} from "phosphor-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Colors } from "../../lib/theme";
 import { useCart } from "../../lib/contexts/CartContext";
@@ -46,28 +52,26 @@ function TabItemIcon({
     }).start();
   }, [focused]);
 
-  let iconName: any = "ellipse-outline";
-  switch (name) {
-    case "home":
-      iconName = focused ? "home" : "home-outline";
-      break;
-    case "explore":
-      iconName = focused ? "grid" : "grid-outline";
-      break;
-    case "wishlist":
-      iconName = focused ? "heart" : "heart-outline";
-      break;
-    case "cart":
-      iconName = focused ? "bag-handle" : "bag-handle-outline";
-      break;
-    case "profile":
-      iconName = focused ? "person" : "person-outline";
-      break;
-  }
+  const weight = focused ? "fill" : "regular";
+
+  const renderIcon = () => {
+    switch (name) {
+      case "home":
+        return <House size={24} color={color} weight={weight} />;
+      case "explore":
+        return <Compass size={24} color={color} weight={weight} />;
+      case "wishlist":
+        return <Heart size={24} color={color} weight={weight} />;
+      case "cart":
+        return <ShoppingBag size={24} color={color} weight={weight} />;
+      case "profile":
+        return <User size={24} color={color} weight={weight} />;
+    }
+  };
 
   return (
     <View style={styles.tabIconWrapper}>
-      <Ionicons name={iconName} size={24} color={color} />
+      {renderIcon()}
       <Animated.View
         style={[
           styles.activeIndicatorDot,

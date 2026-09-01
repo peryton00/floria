@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
-import { FloriaIcon } from "@floria/icons";
+import { FloriaIcon } from "../ui/FloriaIcon";
 import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
 import { formatINR, formatDate } from "../../lib/format";
 import { StatusBadge } from "../ui/StatusBadge";

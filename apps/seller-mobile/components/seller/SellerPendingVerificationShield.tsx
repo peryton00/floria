@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   Platform,
 } from "react-native";
-import { FloriaIcon } from "@floria/icons";
+import { FloriaIcon } from "../ui/FloriaIcon";
 import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
 import { ContactFloriaModal } from "./ContactFloriaModal";
 import type { SellerProfileData } from "../../lib/contexts/SellerAuthContext";

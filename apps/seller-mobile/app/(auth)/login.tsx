@@ -12,7 +12,7 @@ import {
   Image,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { FloriaIcon } from "@floria/icons";
+import { FloriaIcon } from "../../components/ui/FloriaIcon";
 import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
 import { Button } from "../../components/ui/Button";
 import { useSellerAuth } from "../../lib/contexts/SellerAuthContext";
@@ -49,22 +49,24 @@ export default function SellerLoginScreen() {
           type: "info",
           title: "Verification Pending",
           message:
-            "Floria care will contact you soon. Your botanical nursery verification is currently being reviewed by our horticulture onboarding team.",
+            "Your seller partner account is under review by Floria Quality Assurance. You will be notified once approved.",
         });
-      } else if (result.error.includes("correction")) {
+      } else if (result.error.includes("needs correction") || result.error.includes("SELLER_NEEDS_CORRECTION")) {
         setStatusNotice({
           type: "warning",
-          title: "Correction Required",
-          message: result.error,
+          title: "Application Details Needed",
+          message:
+            "Floria requires updated nursery documentation. Please contact Floria partner care desk.",
         });
-      } else if (result.error.includes("unavailable") || result.error.includes("suspended")) {
+      } else if (result.error.includes("rejected") || result.error.includes("suspended")) {
         setStatusNotice({
           type: "error",
-          title: "Account Unavailable",
-          message: "Your seller account is currently unavailable. Please contact Floria care.",
+          title: "Account Inactive",
+          message:
+            "Your nursery account is currently deactivated. Please reach out to partner support.",
         });
       } else {
-        Alert.alert("Authentication Failed", result.error);
+        Alert.alert("Sign In Failed", result.error);
       }
     }
   };
@@ -74,19 +76,21 @@ export default function SellerLoginScreen() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.flex}
     >
-      <ScrollView contentContainerStyle={styles.container}>
-        {/* Brand Header */}
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header Branding */}
         <View style={styles.header}>
-          <View style={styles.logo}>
-            <Image
-              source={require("../../assets/images/floria_mark_white.png")}
-              style={{ width: 24, height: 32 }}
-              resizeMode="contain"
-            />
-          </View>
-          <Text style={styles.title}>Floria Nursery Portal</Text>
+          <Image
+            source={require("../../assets/images/floria_mark.png")}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <Text style={styles.title}>Floria Partner Desk</Text>
           <Text style={styles.subtitle}>
-            Mobile operational control for botanical partners
+            Empowering botanical growers & certified plant nurseries
           </Text>
         </View>
 

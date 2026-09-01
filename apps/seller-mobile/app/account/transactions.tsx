@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { FloriaIcon } from "@floria/icons";
+import { FloriaIcon } from "../../components/ui/FloriaIcon";
 import { api } from "../../lib/api";
 import { useSellerAuth } from "../../lib/contexts/SellerAuthContext";
 import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
@@ -31,27 +31,24 @@ export default function TransactionHistoryScreen() {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [filter, setFilter] = useState<FilterTab>("ALL");
 
-  const fetchTransactions = useCallback(async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      const [earnRes, payRes] = await Promise.allSettled([
-        api.getSellerEarnings(),
+      const [earningsRes, payoutsRes] = await Promise.all([
+        api.getSellerAnalytics({ period: "30d" }),
         api.getSellerPayouts(),
       ]);
 
-      if (earnRes.status === "fulfilled" && earnRes.value.success) {
-        setEarnings(earnRes.value.data);
+      if (earningsRes.success && earningsRes.data) {
+        setEarnings(earningsRes.data);
       }
-      if (payRes.status === "fulfilled" && payRes.value.success) {
-        const rawPayouts = payRes.value.data;
-        if (Array.isArray(rawPayouts)) {
-          setPayouts(rawPayouts);
-        } else if (rawPayouts && Array.isArray((rawPayouts as any).payouts)) {
-          setPayouts((rawPayouts as any).payouts);
-        }
+      if (payoutsRes.success && Array.isArray(payoutsRes.data)) {
+        setPayouts(payoutsRes.data);
+      } else {
+        setPayouts([]);
       }
     } catch (err) {
-      console.warn("[TransactionHistoryScreen] Fetch error:", err);
+      console.warn("[TransactionHistory] Load error:", err);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -59,18 +56,13 @@ export default function TransactionHistoryScreen() {
   }, []);
 
   useEffect(() => {
-    fetchTransactions();
-  }, [fetchTransactions, seller?.id]);
+    loadData();
+  }, [loadData, seller?.id]);
 
   const onRefresh = () => {
     setRefreshing(true);
-    fetchTransactions();
+    loadData();
   };
-
-  const settledPaise = earnings?.settled_amount_paise ?? earnings?.settledPaise ?? earnings?.totalNetEarningsPaise ?? 0;
-  const pendingPaise = earnings?.pending_settlement_paise ?? earnings?.pendingPaise ?? 0;
-  const grossSalesPaise = earnings?.gross_sales_paise ?? earnings?.grossPaise ?? earnings?.totalGrossRevenuePaise ?? (settledPaise + pendingPaise);
-  const deductionsPaise = earnings?.marketplace_deductions_paise ?? earnings?.deductionsPaise ?? earnings?.totalCommissionPaise ?? 0;
 
   // Filter payouts list
   const filteredPayouts = payouts.filter((p) => {
@@ -82,19 +74,6 @@ export default function TransactionHistoryScreen() {
 
   return (
     <View style={styles.screen}>
-      {/* Top Bar */}
-      <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-          activeOpacity={0.7}
-        >
-          <FloriaIcon name="arrow_left" size={20} color={Colors.forest} />
-        </TouchableOpacity>
-        <Text style={styles.topBarTitle}>Transaction History</Text>
-        <View style={{ width: 36 }} />
-      </View>
-
       {loading && !refreshing ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.forest} />
@@ -116,49 +95,26 @@ export default function TransactionHistoryScreen() {
           }
           showsVerticalScrollIndicator={false}
         >
-          {/* Financial Overview Grid */}
-          <View style={styles.balancesGrid}>
-            <View style={[styles.balanceCard, { backgroundColor: Colors.forest }]}>
-              <Text style={[styles.balanceLabel, { color: Colors.botanical }]}>
-                Total Settled
-              </Text>
-              <Text style={[styles.balanceValue, { color: Colors.white }]}>
-                {formatINR(settledPaise)}
-              </Text>
-              <Text style={[styles.balanceSub, { color: Colors.botanical }]}>
-                Transferred to bank
+          {/* Summary Cards */}
+          <View style={styles.summaryRow}>
+            <View style={[styles.summaryCard, { flex: 1 }]}>
+              <Text style={styles.summaryLabel}>Total Settled</Text>
+              <Text style={styles.summaryValue}>
+                {formatINR(earnings?.summary?.totalSettledPaise || earnings?.summary?.revenue_paise || 0)}
               </Text>
             </View>
 
-            <View style={[styles.balanceCard, { backgroundColor: Colors.linen }]}>
-              <Text style={[styles.balanceLabel, { color: Colors.inkMuted }]}>
-                Pending Settlement
+            <View style={[styles.summaryCard, { flex: 1 }]}>
+              <Text style={styles.summaryLabel}>Pending Payouts</Text>
+              <Text style={[styles.summaryValue, { color: Colors.forest }]}>
+                {formatINR(earnings?.summary?.pendingPayoutPaise || 0)}
               </Text>
-              <Text style={[styles.balanceValue, { color: Colors.ink }]}>
-                {formatINR(pendingPaise)}
-              </Text>
-              <Text style={[styles.balanceSub, { color: Colors.inkMuted }]}>
-                In transit (T+2 rolling)
-              </Text>
-            </View>
-          </View>
-
-          {/* Secondary Stats Row */}
-          <View style={styles.secondaryStatsRow}>
-            <View style={styles.statBox}>
-              <Text style={styles.statBoxLabel}>Gross Sales</Text>
-              <Text style={styles.statBoxValue}>{formatINR(grossSalesPaise)}</Text>
-            </View>
-            <View style={styles.statBox}>
-              <Text style={styles.statBoxLabel}>Marketplace Fees</Text>
-              <Text style={styles.statBoxValue}>{formatINR(deductionsPaise)}</Text>
             </View>
           </View>
 
           {/* Filter Chips */}
           <View style={styles.filterRow}>
             <TouchableOpacity
-              activeOpacity={0.8}
               onPress={() => setFilter("ALL")}
               style={[
                 styles.filterChip,
@@ -171,12 +127,11 @@ export default function TransactionHistoryScreen() {
                   filter === "ALL" && styles.filterChipTextActive,
                 ]}
               >
-                All Transactions
+                All
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              activeOpacity={0.8}
               onPress={() => setFilter("SETTLED")}
               style={[
                 styles.filterChip,
@@ -194,7 +149,6 @@ export default function TransactionHistoryScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              activeOpacity={0.8}
               onPress={() => setFilter("PENDING")}
               style={[
                 styles.filterChip,
@@ -339,6 +293,30 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: Spacing.md,
+  },
+  summaryRow: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  summaryCard: {
+    backgroundColor: Colors.linen,
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  summaryLabel: {
+    fontSize: Typography.fontSizes.xs,
+    color: Colors.inkMuted,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  summaryValue: {
+    fontSize: Typography.fontSizes.lg,
+    fontWeight: "bold",
+    fontFamily: "Georgia",
+    color: Colors.ink,
   },
   balancesGrid: {
     flexDirection: "row",

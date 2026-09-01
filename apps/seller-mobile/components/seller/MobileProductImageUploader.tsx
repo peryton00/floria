@@ -11,7 +11,16 @@ import {
   StyleSheet,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import { FloriaIcon } from "@floria/icons";
+import {
+  Star,
+  Check,
+  WarningCircle,
+  Trash,
+  Camera,
+  Images,
+  X,
+  CaretRight,
+} from "phosphor-react-native";
 import { api } from "../../lib/api";
 import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
 
@@ -322,15 +331,15 @@ export function MobileProductImageUploader({
               {/* Cover Badge */}
               {item.isPrimary && !isInProgress && (
                 <View style={styles.primaryBadge}>
-                  <FloriaIcon name="sparkles" size={10} color="#FFFFFF" />
-                  <Text style={styles.primaryBadgeText}>Cover</Text>
+                  <Star size={10} color="#FFFFFF" weight="fill" />
+                  <Text style={styles.primaryBadgeText}>Primary</Text>
                 </View>
               )}
 
               {/* WebP Ready Badge */}
               {isCompleted && !item.isPrimary && (
                 <View style={styles.readyBadge}>
-                  <FloriaIcon name="check" size={10} color="#FFFFFF" />
+                  <Check size={10} color="#FFFFFF" weight="bold" />
                   <Text style={styles.readyBadgeText}>WebP</Text>
                 </View>
               )}
@@ -346,7 +355,7 @@ export function MobileProductImageUploader({
               {/* Failed Overlay with Retry */}
               {isFailed && (
                 <View style={[styles.overlay, { backgroundColor: "rgba(220, 38, 38, 0.88)" }]}>
-                  <FloriaIcon name="warning" size={18} color="#FFFFFF" />
+                  <WarningCircle size={18} color="#FFFFFF" weight="bold" />
                   <Text style={styles.overlayText}>Failed</Text>
                   {item.localUri && (
                     <TouchableOpacity
@@ -369,7 +378,7 @@ export function MobileProductImageUploader({
                       style={styles.actionCircle}
                       activeOpacity={0.8}
                     >
-                      <FloriaIcon name="sparkles" size={14} color={Colors.forest} />
+                      <Star size={14} color={Colors.forest} weight="regular" />
                     </TouchableOpacity>
                   )}
 
@@ -378,7 +387,7 @@ export function MobileProductImageUploader({
                     style={[styles.actionCircle, { backgroundColor: "#FEE2E2" }]}
                     activeOpacity={0.8}
                   >
-                    <FloriaIcon name="delete" size={14} color={Colors.error} />
+                    <Trash size={14} color={Colors.error} weight="regular" />
                   </TouchableOpacity>
                 </View>
               )}
@@ -399,7 +408,7 @@ export function MobileProductImageUploader({
             ) : (
               <>
                 <View style={styles.plusIconWrap}>
-                  <FloriaIcon name="camera" size={22} color={Colors.forest} />
+                  <Camera size={22} color={Colors.forest} weight="regular" />
                 </View>
                 <Text style={styles.addTileText}>+ Add Photo</Text>
                 <Text style={styles.addTileSub}>
@@ -423,7 +432,7 @@ export function MobileProductImageUploader({
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Upload Plant Photo</Text>
               <TouchableOpacity onPress={() => setPickerModalVisible(false)}>
-                <FloriaIcon name="close" size={20} color={Colors.ink} />
+                <X size={20} color={Colors.ink} weight="bold" />
               </TouchableOpacity>
             </View>
 
@@ -438,7 +447,7 @@ export function MobileProductImageUploader({
               activeOpacity={0.8}
             >
               <View style={[styles.optionIcon, { backgroundColor: "#DCFCE7" }]}>
-                <FloriaIcon name="leaf" size={22} color={Colors.forest} />
+                <Images size={22} color={Colors.forest} weight="regular" />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.optionTitle}>Select from Photo Gallery</Text>
@@ -446,7 +455,7 @@ export function MobileProductImageUploader({
                   Pick up to {maxImages - images.length} photos at once from your phone
                 </Text>
               </View>
-              <FloriaIcon name="chevron_right" size={16} color={Colors.inkMuted} />
+              <CaretRight size={16} color={Colors.inkMuted} weight="bold" />
             </TouchableOpacity>
 
             {/* Option 2: Camera with 4:3 Crop Box */}
@@ -456,7 +465,7 @@ export function MobileProductImageUploader({
               activeOpacity={0.8}
             >
               <View style={[styles.optionIcon, { backgroundColor: "#E0F2FE" }]}>
-                <FloriaIcon name="camera" size={22} color="#0284C7" />
+                <Camera size={22} color="#0284C7" weight="regular" />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.optionTitle}>Take Live Photo (4:3 Crop)</Text>
@@ -464,7 +473,7 @@ export function MobileProductImageUploader({
                   Capture fresh specimen directly in your nursery with 4:3 crop box
                 </Text>
               </View>
-              <FloriaIcon name="chevron_right" size={16} color={Colors.inkMuted} />
+              <CaretRight size={16} color={Colors.inkMuted} weight="bold" />
             </TouchableOpacity>
           </View>
         </View>

@@ -8,8 +8,17 @@ import {
   StyleSheet,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { FloriaIcon } from "@floria/icons";
+import {
+  Storefront,
+  Clock,
+  CreditCard,
+  Wallet,
+  Bell,
+  PhoneCall,
+  ShieldCheck,
+  SignOut,
+  CaretRight,
+} from "phosphor-react-native";
 import { useSellerAuth } from "../../lib/contexts/SellerAuthContext";
 import { useSellerFeedback } from "../../lib/contexts/SellerFeedbackContext";
 import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
@@ -20,7 +29,6 @@ import {
 
 export default function SellerAccountScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { seller, signOut } = useSellerAuth();
   const { confirmAction } = useSellerFeedback();
   const [contactModalVisible, setContactModalVisible] = useState(false);
@@ -42,48 +50,44 @@ export default function SellerAccountScreen() {
   };
 
   return (
-    <View style={[styles.screen, { paddingTop: insets.top }]}>
-      {/* ── Top Bar ── */}
-      <View style={styles.topBar}>
-        <Text style={styles.pageTitle}>Account</Text>
-      </View>
-
+    <View style={styles.screen}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* ── Verification Pending Banner ── */}
+        {/* Verification Status Shield (if not active) */}
         {!isVerified && (
-          <SellerPendingVerificationShield
-            seller={seller}
-            inline={true}
-          />
+          <SellerPendingVerificationShield seller={seller} inline={true} />
         )}
 
-        {/* ── Nursery Profile Card ── */}
+        {/* ── Nursery Partner Profile Header ── */}
         <View style={styles.profileCard}>
-          <Image
-            source={
-              logoUrl
-                ? { uri: logoUrl }
-                : require("../../assets/images/floria_mark.png")
-            }
-            style={styles.nurseryLogo}
-          />
-          <View style={styles.profileInfo}>
-            <Text style={styles.nurseryName} numberOfLines={1}>
-              {seller?.businessName || "Nursery Partner"}
+          {logoUrl ? (
+            <Image source={{ uri: logoUrl }} style={styles.nurseryLogo} />
+          ) : (
+            <View style={styles.placeholderLogo}>
+              <Text style={styles.placeholderText}>
+                {(seller?.businessName || seller?.username || "N")
+                  .charAt(0)
+                  .toUpperCase()}
+              </Text>
+            </View>
+          )}
+
+          <View style={styles.profileDetails}>
+            <Text style={styles.nurseryName}>
+              {seller?.businessName || "Botanical Partner"}
             </Text>
-            <View style={styles.verificationBadge}>
-              <FloriaIcon
-                name={isVerified ? "check_circle" : "clock"}
-                size={14}
-                color={isVerified ? Colors.success : Colors.warning}
-              />
-              <Text
+            <View style={styles.statusRow}>
+              <View
                 style={[
-                  styles.verificationText,
-                  { color: isVerified ? Colors.success : Colors.warning },
+                  styles.statusDot,
+                  {
+                    backgroundColor: isVerified
+                      ? Colors.success
+                      : Colors.warning,
+                  },
                 ]}
-              >
-                {isVerified ? "Verified Partner ✓" : "Pending Verification"}
+              />
+              <Text style={styles.statusLabel}>
+                {isVerified ? "Verified Partner" : "Under Review"}
               </Text>
             </View>
             <Text style={styles.nurseryEmail}>{seller?.email}</Text>
@@ -100,13 +104,13 @@ export default function SellerAccountScreen() {
               style={styles.menuRow}
             >
               <View style={styles.iconWrap}>
-                <FloriaIcon name="nursery" size={20} color={Colors.forest} />
+                <Storefront size={20} color={Colors.forest} weight="regular" />
               </View>
               <View style={styles.menuTextWrap}>
                 <Text style={styles.menuTitle}>Nursery Details</Text>
                 <Text style={styles.menuSubtitle}>Location, contact & business info</Text>
               </View>
-              <FloriaIcon name="chevron_right" size={16} color={Colors.inkMuted} />
+              <CaretRight size={16} color={Colors.inkMuted} weight="bold" />
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -115,13 +119,13 @@ export default function SellerAccountScreen() {
               style={[styles.menuRow, styles.lastRow]}
             >
               <View style={styles.iconWrap}>
-                <FloriaIcon name="clock" size={20} color={Colors.forest} />
+                <Clock size={20} color={Colors.forest} weight="regular" />
               </View>
               <View style={styles.menuTextWrap}>
                 <Text style={styles.menuTitle}>Operating Hours</Text>
                 <Text style={styles.menuSubtitle}>Set daily open & closing times</Text>
               </View>
-              <FloriaIcon name="chevron_right" size={16} color={Colors.inkMuted} />
+              <CaretRight size={16} color={Colors.inkMuted} weight="bold" />
             </TouchableOpacity>
           </View>
         </View>
@@ -136,13 +140,13 @@ export default function SellerAccountScreen() {
               style={styles.menuRow}
             >
               <View style={styles.iconWrap}>
-                <FloriaIcon name="credit_card" size={20} color={Colors.forest} />
+                <CreditCard size={20} color={Colors.forest} weight="regular" />
               </View>
               <View style={styles.menuTextWrap}>
                 <Text style={styles.menuTitle}>Settlement Account</Text>
                 <Text style={styles.menuSubtitle}>Cashfree linked account & KYC status</Text>
               </View>
-              <FloriaIcon name="chevron_right" size={16} color={Colors.inkMuted} />
+              <CaretRight size={16} color={Colors.inkMuted} weight="bold" />
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -151,13 +155,13 @@ export default function SellerAccountScreen() {
               style={[styles.menuRow, styles.lastRow]}
             >
               <View style={styles.iconWrap}>
-                <FloriaIcon name="wallet" size={20} color={Colors.forest} />
+                <Wallet size={20} color={Colors.forest} weight="regular" />
               </View>
               <View style={styles.menuTextWrap}>
                 <Text style={styles.menuTitle}>Transaction History</Text>
                 <Text style={styles.menuSubtitle}>Payouts, deductions & transfers</Text>
               </View>
-              <FloriaIcon name="chevron_right" size={16} color={Colors.inkMuted} />
+              <CaretRight size={16} color={Colors.inkMuted} weight="bold" />
             </TouchableOpacity>
           </View>
         </View>
@@ -172,13 +176,13 @@ export default function SellerAccountScreen() {
               style={[styles.menuRow, styles.lastRow]}
             >
               <View style={styles.iconWrap}>
-                <FloriaIcon name="bell" size={20} color={Colors.forest} />
+                <Bell size={20} color={Colors.forest} weight="regular" />
               </View>
               <View style={styles.menuTextWrap}>
                 <Text style={styles.menuTitle}>Notification Preferences</Text>
                 <Text style={styles.menuSubtitle}>Orders, stock alerts & payout chimes</Text>
               </View>
-              <FloriaIcon name="chevron_right" size={16} color={Colors.inkMuted} />
+              <CaretRight size={16} color={Colors.inkMuted} weight="bold" />
             </TouchableOpacity>
           </View>
         </View>
@@ -193,13 +197,13 @@ export default function SellerAccountScreen() {
               style={styles.menuRow}
             >
               <View style={styles.iconWrap}>
-                <FloriaIcon name="phone" size={20} color={Colors.forest} />
+                <PhoneCall size={20} color={Colors.forest} weight="regular" />
               </View>
               <View style={styles.menuTextWrap}>
                 <Text style={styles.menuTitle}>Contact Floria Care</Text>
                 <Text style={styles.menuSubtitle}>Call, WhatsApp, or email partner desk</Text>
               </View>
-              <FloriaIcon name="chevron_right" size={16} color={Colors.inkMuted} />
+              <CaretRight size={16} color={Colors.inkMuted} weight="bold" />
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -208,13 +212,13 @@ export default function SellerAccountScreen() {
               style={[styles.menuRow, styles.lastRow]}
             >
               <View style={styles.iconWrap}>
-                <FloriaIcon name="document" size={20} color={Colors.forest} />
+                <ShieldCheck size={20} color={Colors.forest} weight="regular" />
               </View>
               <View style={styles.menuTextWrap}>
                 <Text style={styles.menuTitle}>Partner Verification Desk</Text>
                 <Text style={styles.menuSubtitle}>Floria partner agreement & verification support</Text>
               </View>
-              <FloriaIcon name="chevron_right" size={16} color={Colors.inkMuted} />
+              <CaretRight size={16} color={Colors.inkMuted} weight="bold" />
             </TouchableOpacity>
           </View>
         </View>
@@ -225,7 +229,7 @@ export default function SellerAccountScreen() {
           onPress={handleLogout}
           style={styles.logoutButton}
         >
-          <FloriaIcon name="logout" size={20} color={Colors.error} />
+          <SignOut size={20} color={Colors.error} weight="bold" />
           <Text style={styles.logoutText}>Sign Out of Nursery</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -278,7 +282,21 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.lg,
     backgroundColor: Colors.sand,
   },
-  profileInfo: {
+  placeholderLogo: {
+    width: 64,
+    height: 64,
+    borderRadius: BorderRadius.lg,
+    backgroundColor: Colors.botanical,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  placeholderText: {
+    fontSize: 24,
+    fontFamily: "Georgia",
+    fontWeight: "bold",
+    color: Colors.forest,
+  },
+  profileDetails: {
     flex: 1,
     marginLeft: Spacing.md,
   },
@@ -288,15 +306,21 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: Colors.ink,
   },
-  verificationBadge: {
+  statusRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: 6,
     marginVertical: 3,
   },
-  verificationText: {
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  statusLabel: {
     fontSize: 11,
     fontWeight: "700",
+    color: Colors.inkMuted,
   },
   nurseryEmail: {
     fontSize: Typography.fontSizes.xs,

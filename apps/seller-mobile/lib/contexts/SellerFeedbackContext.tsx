@@ -2,22 +2,22 @@ import React, {
   createContext,
   useContext,
   useState,
-  useCallback,
   useRef,
+  useCallback,
   useEffect,
 } from "react";
 import {
   View,
   Text,
+  Animated,
   TouchableOpacity,
   StyleSheet,
-  Animated,
   Modal,
   ActivityIndicator,
   BackHandler,
   Platform,
 } from "react-native";
-import { FloriaIcon } from "@floria/icons";
+import { FloriaIcon } from "../../components/ui/FloriaIcon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Colors, Typography, Spacing, BorderRadius } from "../theme";
 
@@ -53,11 +53,18 @@ export interface SellerFeedbackContextValue {
   confirmAction: (config: ConfirmSheetConfig) => void;
 }
 
-export type SellerFeedbackContextType = SellerFeedbackContextValue;
+export interface ToastMethods {
+  success: (title: string, message?: string) => void;
+  error: (title: string, message?: string) => void;
+  info: (title: string, message?: string) => void;
+  warning: (title: string, message?: string) => void;
+}
 
-const SellerFeedbackContext = createContext<
-  SellerFeedbackContextValue | undefined
->(undefined);
+export interface SellerFeedbackContextType extends SellerFeedbackContextValue {
+  toast: ToastMethods;
+}
+
+const SellerFeedbackContext = createContext<SellerFeedbackContextType | null>(null);
 
 export function SellerFeedbackProvider({
   children,
@@ -68,11 +75,11 @@ export function SellerFeedbackProvider({
 
   // Snackbar State
   const [snackbar, setSnackbar] = useState<SnackbarConfig | null>(null);
-  const translateYAnim = useRef(new Animated.Value(60)).current;
+  const translateYAnim = useRef(new Animated.Value(50)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Confirmation Bottom Sheet State
+  // Confirm Sheet State
   const [confirmSheet, setConfirmSheet] = useState<ConfirmSheetConfig | null>(
     null,
   );
@@ -81,8 +88,8 @@ export function SellerFeedbackProvider({
   const hideSnackbar = useCallback(() => {
     Animated.parallel([
       Animated.timing(translateYAnim, {
-        toValue: 60,
-        duration: 220,
+        toValue: 50,
+        duration: 200,
         useNativeDriver: true,
       }),
       Animated.timing(opacityAnim, {
@@ -97,28 +104,27 @@ export function SellerFeedbackProvider({
 
   const showSnackbar = useCallback(
     (config: SnackbarConfig) => {
-      if (timerRef.current) clearTimeout(timerRef.current);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
 
       setSnackbar(config);
-      translateYAnim.setValue(60);
+      translateYAnim.setValue(50);
       opacityAnim.setValue(0);
 
       Animated.parallel([
-        Animated.spring(translateYAnim, {
+        Animated.timing(translateYAnim, {
           toValue: 0,
+          duration: 250,
           useNativeDriver: true,
-          damping: 18,
-          stiffness: 140,
         }),
         Animated.timing(opacityAnim, {
           toValue: 1,
-          duration: 200,
+          duration: 250,
           useNativeDriver: true,
         }),
       ]).start();
 
-      const duration = config.duration ?? (config.action ? 6000 : 3500);
-      timerRef.current = setTimeout(() => {
+      const duration = config.duration || (config.action ? 6000 : 3500);
+      timeoutRef.current = setTimeout(() => {
         hideSnackbar();
       }, duration);
     },
@@ -134,7 +140,7 @@ export function SellerFeedbackProvider({
 
   const showError = useCallback(
     (message: string, action?: SnackbarAction) => {
-      showSnackbar({ message, type: "error", duration: 5000, action });
+      showSnackbar({ message, type: "error", action });
     },
     [showSnackbar],
   );
@@ -153,6 +159,21 @@ export function SellerFeedbackProvider({
     [showSnackbar],
   );
 
+  const toast: ToastMethods = {
+    success: (title: string, message?: string) => {
+      showSuccess(message ? `${title}: ${message}` : title);
+    },
+    error: (title: string, message?: string) => {
+      showError(message ? `${title}: ${message}` : title);
+    },
+    info: (title: string, message?: string) => {
+      showInfo(message ? `${title}: ${message}` : title);
+    },
+    warning: (title: string, message?: string) => {
+      showWarning(message ? `${title}: ${message}` : title);
+    },
+  };
+
   const confirmAction = useCallback((config: ConfirmSheetConfig) => {
     setConfirmSheet(config);
   }, []);
@@ -167,14 +188,15 @@ export function SellerFeedbackProvider({
     try {
       setConfirmLoading(true);
       await confirmSheet.onConfirm();
-    } finally {
       hideConfirmSheet();
+    } catch (err) {
+      console.warn("[SellerFeedback] Confirmation handler error:", err);
+      setConfirmLoading(false);
     }
   };
 
-  // Safe Android Back Button Handler
+  // Hardware Back Handler for Android when Confirm Sheet is open
   useEffect(() => {
-    if (Platform.OS !== "android") return;
     const onBackPress = () => {
       if (confirmSheet) {
         hideConfirmSheet();
@@ -209,6 +231,7 @@ export function SellerFeedbackProvider({
         showWarning,
         showInfo,
         confirmAction,
+        toast,
       }}
     >
       {children}

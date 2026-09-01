@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { FloriaIcon } from "@floria/icons";
+import { FloriaIcon } from "../../components/ui/FloriaIcon";
 import { api } from "../../lib/api";
 import { useSellerAuth } from "../../lib/contexts/SellerAuthContext";
 import { useSellerFeedback } from "../../lib/contexts/SellerFeedbackContext";
@@ -33,115 +33,122 @@ interface BankAccountInfo {
 export default function SettlementAccountScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { seller, refreshProfile } = useSellerAuth();
+  const { seller } = useSellerAuth();
   const { showSuccess, showError } = useSellerFeedback();
 
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
   const [editModalVisible, setEditModalVisible] = useState<boolean>(false);
 
-  // Bank account details state
+  // Stored Info
   const [bankInfo, setBankInfo] = useState<BankAccountInfo>({
-    accountHolderName: seller?.businessName || "Nursery Partner",
+    accountHolderName: "Floria Partner Nursery",
     bankName: "HDFC Bank",
-    accountNumber: "•••• •••• •••• 4829",
+    accountNumber: "••••••••5678",
     ifscCode: "HDFC0001234",
     accountType: "Current",
     isVerified: true,
   });
 
-  // Edit form state
-  const [formHolder, setFormHolder] = useState("");
-  const [formBank, setFormBank] = useState("");
-  const [formAccount, setFormAccount] = useState("");
-  const [formConfirmAccount, setFormConfirmAccount] = useState("");
-  const [formIfsc, setFormIfsc] = useState("");
+  // Modal Form State
+  const [formHolder, setFormHolder] = useState<string>("");
+  const [formBank, setFormBank] = useState<string>("");
+  const [formAccount, setFormAccount] = useState<string>("");
+  const [formConfirmAccount, setFormConfirmAccount] = useState<string>("");
+  const [formIfsc, setFormIfsc] = useState<string>("");
   const [formType, setFormType] = useState<"Current" | "Savings">("Current");
 
-  const fetchSettlementDetails = useCallback(async () => {
+  const loadSettlementDetails = useCallback(async () => {
     try {
       setLoading(true);
       const res = await api.getSellerProfile();
       if (res.success && res.data) {
-        const p = res.data;
-        const sa = (p as any).settlement_account;
-        if (sa) {
-          const rawAcc = sa.account_number || sa.accountNumber || "";
-          const masked = rawAcc.length > 4
-            ? `•••• •••• •••• ${rawAcc.slice(-4)}`
-            : rawAcc || "•••• •••• •••• 4829";
-
+        const s = res.data;
+        if (s.bankAccount || s.bank_account) {
+          const b = s.bankAccount || s.bank_account;
           setBankInfo({
-            accountHolderName: sa.account_holder_name || sa.accountHolderName || p.business_name || "Nursery Partner",
-            bankName: sa.bank_name || sa.bankName || "State Bank of India",
-            accountNumber: masked,
-            ifscCode: (sa.ifsc_code || sa.ifscCode || "SBIN0001234").toUpperCase(),
-            accountType: sa.account_type === "Savings" ? "Savings" : "Current",
-            isVerified: p.status === "approved" || p.status === "active",
+            accountHolderName: b.holderName || b.account_holder_name || s.businessName || "Verified Nursery",
+            bankName: b.bankName || b.bank_name || "Commercial Bank",
+            accountNumber: b.accountNumber ? `••••••••${b.accountNumber.slice(-4)}` : "••••••••5678",
+            ifscCode: b.ifsc || b.ifsc_code || "HDFC0001234",
+            accountType: (b.accountType || b.account_type || "Current") as any,
+            isVerified: true,
           });
         }
       }
     } catch (err) {
-      console.warn("[SettlementAccountScreen] Fetch warning:", err);
+      console.warn("[SettlementAccount] Load error:", err);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchSettlementDetails();
-  }, [fetchSettlementDetails, seller?.id]);
+    loadSettlementDetails();
+  }, [loadSettlementDetails]);
 
   const openEditModal = () => {
-    setFormHolder(bankInfo.accountHolderName || seller?.businessName || "");
-    setFormBank(bankInfo.bankName || "");
+    setFormHolder(bankInfo.accountHolderName);
+    setFormBank(bankInfo.bankName);
     setFormAccount("");
     setFormConfirmAccount("");
-    setFormIfsc(bankInfo.ifscCode || "");
+    setFormIfsc(bankInfo.ifscCode);
     setFormType(bankInfo.accountType);
     setEditModalVisible(true);
   };
 
   const handleSaveBankDetails = async () => {
-    if (!formHolder.trim() || !formBank.trim() || !formAccount.trim() || !formIfsc.trim()) {
-      Alert.alert("Required Fields", "Please complete all bank account details.");
+    if (!formHolder.trim()) {
+      Alert.alert("Required", "Please enter account holder name.");
       return;
     }
-    if (formAccount.trim() !== formConfirmAccount.trim()) {
-      Alert.alert("Mismatch", "The account numbers entered do not match.");
+    if (!formBank.trim()) {
+      Alert.alert("Required", "Please enter bank name.");
       return;
     }
-    if (formIfsc.trim().length < 8) {
-      Alert.alert("Invalid IFSC", "Please enter a valid 11-character bank IFSC code.");
+    if (!formAccount.trim() || formAccount.length < 8) {
+      Alert.alert("Invalid Account", "Please enter a valid bank account number.");
+      return;
+    }
+    if (formAccount !== formConfirmAccount) {
+      Alert.alert("Mismatch", "Account numbers do not match.");
+      return;
+    }
+    if (!formIfsc.trim() || formIfsc.length !== 11) {
+      Alert.alert("Invalid IFSC", "IFSC code must be exactly 11 characters.");
       return;
     }
 
     try {
       setSaving(true);
-      const settlementData = {
-        account_holder_name: formHolder.trim(),
-        bank_name: formBank.trim(),
-        account_number: formAccount.trim(),
-        ifsc_code: formIfsc.trim().toUpperCase(),
-        account_type: formType,
-      };
-
       const res = await api.updateSellerProfile({
-        settlement_account: settlementData,
+        bank_account: {
+          account_holder_name: formHolder.trim(),
+          bank_name: formBank.trim(),
+          account_number: formAccount.trim(),
+          ifsc_code: formIfsc.trim().toUpperCase(),
+          account_type: formType,
+        },
       });
 
       if (res.success) {
-        await refreshProfile();
-        await fetchSettlementDetails();
+        showSuccess("Settlement bank details updated.");
+        setBankInfo({
+          accountHolderName: formHolder.trim(),
+          bankName: formBank.trim(),
+          accountNumber: `••••••••${formAccount.trim().slice(-4)}`,
+          ifscCode: formIfsc.trim().toUpperCase(),
+          accountType: formType,
+          isVerified: true,
+        });
         setEditModalVisible(false);
-        showSuccess("Settlement account updated successfully.");
       } else {
         const msg = res.error?.message || "Failed to update settlement account.";
         showError(msg);
-        Alert.alert("Update Failed", msg);
+        Alert.alert("Error", msg);
       }
     } catch (err: any) {
-      const msg = err.message || "Failed to update bank details.";
+      const msg = err.message || "An unexpected error occurred.";
       showError(msg);
       Alert.alert("Error", msg);
     } finally {
@@ -151,19 +158,6 @@ export default function SettlementAccountScreen() {
 
   return (
     <View style={styles.screen}>
-      {/* Top Bar Header */}
-      <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-          activeOpacity={0.7}
-        >
-          <FloriaIcon name="arrow_left" size={20} color={Colors.forest} />
-        </TouchableOpacity>
-        <Text style={styles.topBarTitle}>Settlement Account</Text>
-        <View style={{ width: 36 }} />
-      </View>
-
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.forest} />
@@ -192,7 +186,7 @@ export default function SettlementAccountScreen() {
           <View style={styles.bankCard}>
             <View style={styles.bankCardHeader}>
               <View style={styles.bankIconWrap}>
-                <FloriaIcon name="credit_card" size={22} color={Colors.forest} />
+                <FloriaIcon name="wallet" size={22} color={Colors.forest} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.bankName}>{bankInfo.bankName}</Text>
@@ -231,7 +225,7 @@ export default function SettlementAccountScreen() {
               onPress={openEditModal}
               style={styles.updateBankBtn}
             >
-              <FloriaIcon name="edit" size={16} color={Colors.forest} />
+              <FloriaIcon name="storefront" size={16} color={Colors.forest} />
               <Text style={styles.updateBankBtnText}>Update Bank Account</Text>
             </TouchableOpacity>
           </View>

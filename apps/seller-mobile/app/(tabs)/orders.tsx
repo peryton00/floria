@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { FloriaIcon } from "@floria/icons";
+import { FloriaIcon } from "../../components/ui/FloriaIcon";
 import { api } from "../../lib/api";
 import { useSellerAuth } from "../../lib/contexts/SellerAuthContext";
 import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
@@ -120,10 +120,7 @@ export default function SellerOrdersScreen() {
 
   if (!isApproved) {
     return (
-      <View style={[styles.screen, { paddingTop: insets.top }]}>
-        <View style={styles.topBar}>
-          <Text style={styles.pageTitle}>Orders</Text>
-        </View>
+      <View style={styles.screen}>
         <SellerPendingVerificationShield
           seller={seller}
           featureName="Orders Management"
@@ -195,12 +192,7 @@ export default function SellerOrdersScreen() {
   };
 
   return (
-    <View style={[styles.screen, { paddingTop: insets.top }]}>
-      {/* ── Screen Header ── */}
-      <View style={styles.topBar}>
-        <Text style={styles.pageTitle}>Orders Fulfillment</Text>
-      </View>
-
+    <View style={styles.screen}>
       {/* ── Search Bar ── */}
       <View style={styles.searchContainer}>
         <View style={styles.searchInputWrap}>

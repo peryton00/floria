@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { FloriaIcon } from "@floria/icons";
+import { FloriaIcon } from "./FloriaIcon";
 import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
 import { Button } from "./Button";
 
@@ -16,7 +16,7 @@ export function ErrorState({
   return (
     <View style={styles.container}>
       <View style={styles.iconCircle}>
-        <FloriaIcon name="warning" size={28} color={Colors.terracotta} />
+        <FloriaIcon name="warning" size={28} color={Colors.terracotta} weight="regular" />
       </View>
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.message}>{message}</Text>

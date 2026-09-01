@@ -7,9 +7,8 @@ import {
   RefreshControl,
   StyleSheet,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { FloriaIcon } from "@floria/icons";
 import { api } from "../../lib/api";
+import { FloriaIcon } from "../../components/ui/FloriaIcon";
 import { useSellerAuth } from "../../lib/contexts/SellerAuthContext";
 import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
 import { formatINR } from "../../lib/format";
@@ -26,7 +25,6 @@ const RANGES = [
 ];
 
 export default function SellerAnalyticsScreen() {
-  const insets = useSafeAreaInsets();
   const { seller } = useSellerAuth();
 
   const [activeRange, setActiveRange] = useState<string>("30d");
@@ -65,10 +63,7 @@ export default function SellerAnalyticsScreen() {
 
   if (!isApproved) {
     return (
-      <View style={[styles.screen, { paddingTop: insets.top }]}>
-        <View style={styles.topBar}>
-          <Text style={styles.pageTitle}>Analytics</Text>
-        </View>
+      <View style={styles.screen}>
         <SellerPendingVerificationShield
           seller={seller}
           featureName="Business Analytics"
@@ -138,12 +133,7 @@ export default function SellerAnalyticsScreen() {
     topProducts.length > 0;
 
   return (
-    <View style={[styles.screen, { paddingTop: insets.top }]}>
-      {/* ── Screen Header ── */}
-      <View style={styles.topBar}>
-        <Text style={styles.pageTitle}>Analytics</Text>
-      </View>
-
+    <View style={styles.screen}>
       {/* ── Range Selector ── */}
       <View style={styles.rangeContainer}>
         {RANGES.map((range) => {

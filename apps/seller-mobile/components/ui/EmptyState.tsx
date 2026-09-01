@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { FloriaIcon } from "@floria/icons";
+import { FloriaIcon } from "./FloriaIcon";
 import { Colors, Typography, Spacing, BorderRadius } from "../../lib/theme";
 import { Button } from "./Button";
 
@@ -12,7 +12,7 @@ export function EmptyState({
   actionLabel,
   onAction,
 }: {
-  icon?: any;
+  icon?: string;
   title: string;
   message?: string;
   description?: string;
@@ -24,7 +24,7 @@ export function EmptyState({
   return (
     <View style={styles.container}>
       <View style={styles.iconCircle}>
-        <FloriaIcon name={icon} size={28} color={Colors.forest} />
+        <FloriaIcon name={icon} size={28} color={Colors.forest} weight="regular" />
       </View>
       <Text style={styles.title}>{title}</Text>
       {displayText ? <Text style={styles.message}>{displayText}</Text> : null}

@@ -27,7 +27,9 @@
     "format": "prettier --write \"**/*.{ts,tsx,md,json}\" --ignore-path .gitignore"
   },
   "devDependencies": {
+    "phosphor-react-native": "^3.0.6",
     "prettier": "^3.3.3",
+    "react-native-svg": "^15.15.5",
     "turbo": "^2.3.3"
   },
   "engines": {

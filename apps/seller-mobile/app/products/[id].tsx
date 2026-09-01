@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { FloriaIcon } from "@floria/icons";
+import { FloriaIcon } from "../../components/ui/FloriaIcon";
 import { api } from "../../lib/api";
 import { useSellerAuth } from "../../lib/contexts/SellerAuthContext";
 import { useSellerFeedback } from "../../lib/contexts/SellerFeedbackContext";
@@ -113,13 +113,7 @@ export default function EditProductScreen() {
 
   if (!isApproved) {
     return (
-      <View style={[styles.screen, { paddingTop: insets.top }]}>
-        <View style={styles.topBar}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <FloriaIcon name="arrow_left" size={20} color={Colors.forest} />
-          </TouchableOpacity>
-          <Text style={styles.pageTitle}>Edit Plant Listing</Text>
-        </View>
+      <View style={styles.screen}>
         <SellerPendingVerificationShield
           seller={seller}
           featureName="Edit Plant Listing"
@@ -161,31 +155,26 @@ export default function EditProductScreen() {
           is_primary: img.isPrimary,
         }));
 
-      const primaryUrl =
-        cleanImages.find((img) => img.is_primary)?.url ||
-        cleanImages[0]?.url ||
-        product?.image_url;
-
-      const updates: any = {
-        name: name.trim() || undefined,
-        price_paise: rupeesToPaise(priceNum),
+      const payload = {
+        name,
+        price_paise: Math.round(priceNum * 100),
         stock_quantity: stockNum,
         low_stock_threshold: threshNum,
         status,
         description: notes.trim() || undefined,
         images: cleanImages,
-        image_url: primaryUrl,
       };
 
-      const res = await api.updateSellerProduct(id, updates);
+      const res = await api.updateSellerProduct(id, payload);
+
       if (res.success) {
-        showSuccess("Plant listing updated successfully!");
+        showSuccess("Plant listing updated successfully.");
         router.back();
       } else {
-        showError(res.error?.message || "Failed to update plant listing.");
+        showError(res.error?.message || "Failed to save changes.");
       }
     } catch (err: any) {
-      showError(err.message || "Failed to update product.");
+      showError(err.message || "An unexpected error occurred.");
     } finally {
       setSaving(false);
     }
@@ -193,19 +182,18 @@ export default function EditProductScreen() {
 
   const handleDeleteListing = () => {
     confirmAction({
-      title: "Remove Botanical Listing",
-      message: `Are you sure you want to remove "${product?.name}" from your nursery? This will mark the listing inactive.`,
+      title: "Remove Listing",
+      message: `Are you sure you want to remove "${name}" from your active nursery catalog?`,
       confirmText: "Remove Listing",
       isDestructive: true,
       onConfirm: async () => {
-        if (!id) return;
         try {
           const res = await api.deleteSellerProduct(id);
           if (res.success) {
-            showSuccess("Plant removed from nursery catalog.");
+            showSuccess("Listing removed from your catalog.");
             router.replace("/(tabs)/products" as any);
           } else {
-            showError(res.error?.message || "Failed to delete product.");
+            showError(res.error?.message || "Could not delete listing.");
           }
         } catch (err: any) {
           showError(err.message || "Failed to delete product.");
@@ -216,7 +204,7 @@ export default function EditProductScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.centerScreen, { paddingTop: insets.top }]}>
+      <View style={styles.centerScreen}>
         <ActivityIndicator size="large" color={Colors.forest} />
         <Text style={styles.loadingText}>Loading plant details...</Text>
       </View>
@@ -225,7 +213,7 @@ export default function EditProductScreen() {
 
   if (!product) {
     return (
-      <View style={[styles.centerScreen, { paddingTop: insets.top }]}>
+      <View style={styles.centerScreen}>
         <FloriaIcon name="warning" size={48} color={Colors.inkMuted} />
         <Text style={styles.notFoundText}>Product not found</Text>
         <Button
@@ -373,7 +361,7 @@ export default function EditProductScreen() {
           onPress={handleDeleteListing}
           style={styles.deleteButton}
         >
-          <FloriaIcon name="delete" size={18} color={Colors.error} />
+          <FloriaIcon name="trash" size={18} color={Colors.error} />
           <Text style={styles.deleteButtonText}>Remove from Nursery Catalog</Text>
         </TouchableOpacity>
       </ScrollView>

@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { FloriaIcon } from "@floria/icons";
+import { FloriaIcon } from "../../components/ui/FloriaIcon";
 import { api } from "../../lib/api";
 import { useSellerAuth } from "../../lib/contexts/SellerAuthContext";
 import { useSellerFeedback } from "../../lib/contexts/SellerFeedbackContext";
@@ -32,64 +32,55 @@ export default function NurseryDetailsScreen() {
   const [businessName, setBusinessName] = useState("");
   const [contactName, setContactName] = useState("");
   const [phone, setPhone] = useState("");
-  const [description, setDescription] = useState("");
+  const [email, setEmail] = useState("");
   const [addressLine1, setAddressLine1] = useState("");
   const [addressLine2, setAddressLine2] = useState("");
   const [city, setCity] = useState("");
-  const [state, setState] = useState("");
+  const [stateVal, setStateVal] = useState("");
   const [postalCode, setPostalCode] = useState("");
   const [panNumber, setPanNumber] = useState("");
   const [gstin, setGstin] = useState("");
+  const [description, setDescription] = useState("");
+  const [specialties, setSpecialties] = useState("");
 
-  const populateForm = useCallback((data: any) => {
-    if (!data) return;
-    setBusinessName(data.businessName || data.business_name || "");
-    setContactName(data.contactName || data.contact_name || "");
-    setPhone(data.phone || data.contact_phone || "");
-    setDescription(data.description || data.business_description || "");
-
-    const addr = data.pickupAddress || data.pickup_address || {};
-    setAddressLine1(addr.line1 || addr.address_line1 || data.address || "");
-    setAddressLine2(addr.line2 || addr.address_line2 || "");
-    setCity(addr.city || data.city || "");
-    setState(addr.state || data.state || "");
-    setPostalCode(addr.pincode || addr.postal_code || data.postal_code || "");
-
-    setPanNumber(data.panNumber || data.pan_number || "");
-    setGstin(data.gstin || data.gst_number || "");
+  const loadProfile = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await api.getSellerProfile();
+      if (res.success && res.data) {
+        const s = res.data;
+        setBusinessName(s.businessName || s.business_name || "");
+        setContactName(s.contactName || s.contact_name || "");
+        setPhone(s.phone || "");
+        setEmail(s.email || "");
+        setAddressLine1(s.addressLine1 || s.address_line1 || "");
+        setAddressLine2(s.addressLine2 || s.address_line2 || "");
+        setCity(s.city || "");
+        setStateVal(s.state || "");
+        setPostalCode(s.postalCode || s.postal_code || "");
+        setPanNumber(s.panNumber || s.pan_number || "");
+        setGstin(s.gstin || s.gstNumber || s.gst_number || "");
+        setDescription(s.description || "");
+        setSpecialties(
+          Array.isArray(s.specialties)
+            ? s.specialties.join(", ")
+            : s.specialties || "",
+        );
+      }
+    } catch (err) {
+      console.warn("[NurseryDetails] Failed to load profile:", err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
-    async function loadFreshDetails() {
-      try {
-        setLoading(true);
-        const res = await api.getSellerProfile();
-        if (res.success && res.data) {
-          populateForm(res.data);
-        } else if (seller) {
-          populateForm(seller);
-        }
-      } catch (err) {
-        console.warn("[NurseryDetailsScreen] Profile fetch error:", err);
-        if (seller) populateForm(seller);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadFreshDetails();
-  }, [seller, populateForm]);
+    loadProfile();
+  }, [loadProfile]);
 
   const handleSave = async () => {
     if (!businessName.trim()) {
-      showError("Nursery Name is required.");
-      return;
-    }
-    if (!phone.trim()) {
-      showError("Contact Phone is required.");
-      return;
-    }
-    if (!addressLine1.trim() || !city.trim() || !postalCode.trim()) {
-      showError("Please fill out complete nursery address details.");
+      showError("Nursery/Business name is required.");
       return;
     }
 
@@ -97,26 +88,17 @@ export default function NurseryDetailsScreen() {
       setSaving(true);
       const payload = {
         business_name: businessName.trim(),
-        contact_name: contactName.trim() || undefined,
+        contact_name: contactName.trim(),
         phone: phone.trim(),
-        contact_phone: phone.trim(),
-        description: description.trim() || undefined,
-        business_description: description.trim() || undefined,
-        pickup_address: {
-          line1: addressLine1.trim(),
-          line2: addressLine2.trim() || undefined,
-          city: city.trim(),
-          state: state.trim(),
-          pincode: postalCode.trim(),
-        },
-        address: addressLine1.trim(),
+        address_line1: addressLine1.trim(),
         city: city.trim(),
-        state: state.trim(),
+        state: stateVal.trim(),
         postal_code: postalCode.trim(),
-        pincode: postalCode.trim(),
-        pan_number: panNumber.trim() || undefined,
-        gst_number: gstin.trim() || undefined,
-        gstin: gstin.trim() || undefined,
+        description: description.trim(),
+        specialties: specialties
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
       };
 
       const res = await api.updateSellerProfile(payload);
@@ -128,7 +110,7 @@ export default function NurseryDetailsScreen() {
         showError(res.error?.message || "Failed to update nursery details.");
       }
     } catch (err: any) {
-      showError(err.message || "Failed to update nursery details.");
+      showError(err.message || "An unexpected error occurred.");
     } finally {
       setSaving(false);
     }
@@ -142,18 +124,6 @@ export default function NurseryDetailsScreen() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.screen}
     >
-      <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-          activeOpacity={0.7}
-        >
-          <FloriaIcon name="arrow_left" size={20} color={Colors.forest} />
-        </TouchableOpacity>
-        <Text style={styles.topBarTitle}>Nursery Details</Text>
-        <View style={{ width: 32 }} />
-      </View>
-
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.forest} />
@@ -297,8 +267,8 @@ export default function NurseryDetailsScreen() {
                 <Text style={styles.label}>State *</Text>
                 <TextInput
                   style={styles.input}
-                  value={state}
-                  onChangeText={setState}
+                  value={stateVal}
+                  onChangeText={setStateVal}
                   placeholder="e.g. Karnataka"
                   placeholderTextColor={Colors.inkLight}
                 />

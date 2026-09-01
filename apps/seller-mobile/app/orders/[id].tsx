@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { FloriaIcon } from "@floria/icons";
+import { FloriaIcon } from "../../components/ui/FloriaIcon";
 import { api } from "../../lib/api";
 import { useSellerAuth } from "../../lib/contexts/SellerAuthContext";
 import { useSellerFeedback } from "../../lib/contexts/SellerFeedbackContext";
@@ -65,13 +65,7 @@ export default function SellerOrderDetailScreen() {
 
   if (!isApproved) {
     return (
-      <View style={[styles.screen, { paddingTop: insets.top }]}>
-        <View style={styles.topBar}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <FloriaIcon name="arrow_left" size={20} color={Colors.forest} />
-          </TouchableOpacity>
-          <Text style={styles.pageTitle}>Order Fulfillment</Text>
-        </View>
+      <View style={styles.screen}>
         <SellerPendingVerificationShield
           seller={seller}
           featureName="Order Fulfillment"
@@ -157,7 +151,7 @@ export default function SellerOrderDetailScreen() {
 
   if (loading && !refreshing) {
     return (
-      <View style={[styles.centerScreen, { paddingTop: insets.top }]}>
+      <View style={styles.centerScreen}>
         <ActivityIndicator size="large" color={Colors.forest} />
         <Text style={styles.loadingText}>Loading order details...</Text>
       </View>
@@ -166,7 +160,7 @@ export default function SellerOrderDetailScreen() {
 
   if (!order) {
     return (
-      <View style={[styles.centerScreen, { paddingTop: insets.top }]}>
+      <View style={styles.centerScreen}>
         <FloriaIcon name="warning" size={48} color={Colors.inkMuted} />
         <Text style={styles.notFoundText}>Order not found</Text>
         <Button
@@ -231,7 +225,7 @@ export default function SellerOrderDetailScreen() {
         <View style={styles.card}>
           <Text style={styles.cardHeader}>Delivery Information</Text>
           <View style={styles.infoRow}>
-            <FloriaIcon name="nursery" size={16} color={Colors.forest} />
+            <FloriaIcon name="user" size={16} color={Colors.forest} />
             <Text style={styles.infoText}>{customer.name || "Floria Customer"}</Text>
           </View>
           {customer.phone ? (
@@ -242,7 +236,7 @@ export default function SellerOrderDetailScreen() {
           ) : null}
           {customer.address ? (
             <View style={styles.infoRow}>
-              <FloriaIcon name="storefront" size={16} color={Colors.forest} />
+              <FloriaIcon name="nursery" size={16} color={Colors.forest} />
               <Text style={styles.infoText}>
                 {typeof customer.address === "string"
                   ? customer.address

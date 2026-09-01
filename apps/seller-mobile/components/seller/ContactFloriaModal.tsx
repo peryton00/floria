@@ -9,7 +9,7 @@ import {
   Platform,
   Alert,
 } from "react-native";
-import { FloriaIcon } from "@floria/icons";
+import { FloriaIcon } from "../ui/FloriaIcon";
 import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
 
 interface ContactFloriaModalProps {
@@ -108,7 +108,7 @@ export function ContactFloriaModal({
               onPress={handleWhatsApp}
             >
               <View style={[styles.actionIconCircle, { backgroundColor: "#E6F7ED" }]}>
-                <FloriaIcon name="phone" size={20} color={Colors.success} />
+                <FloriaIcon name="whatsapp" size={20} color={Colors.success} />
               </View>
               <View style={styles.actionTextContainer}>
                 <Text style={styles.actionTitle}>Chat on WhatsApp</Text>

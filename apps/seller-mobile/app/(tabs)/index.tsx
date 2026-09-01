@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { FloriaIcon } from "@floria/icons";
+import { FloriaIcon } from "../../components/ui/FloriaIcon";
 import { api } from "../../lib/api";
 import { useSellerAuth } from "../../lib/contexts/SellerAuthContext";
 import { useSellerNotifications } from "../../lib/contexts/SellerNotificationContext";
@@ -118,17 +118,7 @@ export default function SellerHomeScreen() {
 
   if (authLoading || (loading && !dashboardData && recentOrders.length === 0)) {
     return (
-      <View style={[styles.screen, { paddingTop: insets.top }]}>
-        <View style={styles.topHeader}>
-          <View style={styles.brandRow}>
-            <Image
-              source={require("../../assets/images/floria_mark.png")}
-              style={styles.logoMark}
-              resizeMode="contain"
-            />
-            <Text style={styles.brandTitle}>Floria</Text>
-          </View>
-        </View>
+      <View style={styles.screen}>
         <HomeSkeleton />
       </View>
     );
@@ -170,35 +160,7 @@ export default function SellerHomeScreen() {
     seller?.businessName || seller?.username || "Nursery Partner";
 
   return (
-    <View style={[styles.screen, { paddingTop: insets.top }]}>
-      {/* ── 1. Compact Header: [Floria Logo] Floria       [Notification] ── */}
-      <View style={styles.topHeader}>
-        <View style={styles.brandRow}>
-          <Image
-            source={require("../../assets/images/floria_mark.png")}
-            style={styles.logoMark}
-            resizeMode="contain"
-          />
-          <Text style={styles.brandTitle}>Floria</Text>
-        </View>
-
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={() => router.push("/notifications" as any)}
-          style={styles.notificationButton}
-          accessibilityLabel="Notifications"
-        >
-          <FloriaIcon name="bell" size={20} color={Colors.forest} />
-          {unreadCount > 0 && (
-            <View style={styles.unreadBadge}>
-              <Text style={styles.unreadBadgeText}>
-                {unreadCount > 9 ? "9+" : unreadCount}
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
-      </View>
-
+    <View style={styles.screen}>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -244,7 +206,7 @@ export default function SellerHomeScreen() {
             <View style={styles.todayCard}>
               <View style={styles.todayCardHeader}>
                 <Text style={styles.todayCardTitle}>SALES</Text>
-                <FloriaIcon name="receipt" size={16} color={Colors.sage} />
+                <FloriaIcon name="wallet" size={16} color={Colors.sage} />
               </View>
               <Text style={styles.todayCardValue} numberOfLines={1}>
                 {formatINR(todaySalesPaise)}
@@ -261,7 +223,7 @@ export default function SellerHomeScreen() {
           {toPrepareCount === 0 && lowStockCount === 0 ? (
             <View style={styles.attentionCleanCard}>
               <View style={styles.cleanCheckCircle}>
-                <FloriaIcon name="check" size={16} color={Colors.success} />
+                <FloriaIcon name="check_circle" size={16} color={Colors.success} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.cleanTitle}>You're all caught up</Text>

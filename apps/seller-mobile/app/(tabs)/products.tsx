@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -10,12 +10,17 @@ import {
   StyleSheet,
 } from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { FloriaIcon } from "@floria/icons";
+import {
+  MagnifyingGlass,
+  XCircle,
+  CaretRight,
+  Plus,
+} from "phosphor-react-native";
 import { api } from "../../lib/api";
 import { useSellerAuth } from "../../lib/contexts/SellerAuthContext";
 import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
 import { formatINR } from "../../lib/format";
+import { haptics } from "../../lib/haptics";
 import { ProductListSkeleton } from "../../components/ui/Skeletons";
 import { StatusBadge } from "../../components/ui/StatusBadge";
 import { EmptyState } from "../../components/ui/EmptyState";
@@ -30,7 +35,6 @@ const PRODUCT_FILTERS = [
 
 export default function SellerProductsScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { seller } = useSellerAuth();
 
   const [activeFilter, setActiveFilter] = useState<string>("all");
@@ -48,32 +52,20 @@ export default function SellerProductsScreen() {
     }
     try {
       setLoading(true);
-      let statusParam: string | undefined = undefined;
-      let stockParam: string | undefined = undefined;
-
-      if (activeFilter === "active") statusParam = "active";
-      else if (activeFilter === "low") stockParam = "low";
-      else if (activeFilter === "out") stockParam = "out";
-
-      const res = await api.getSellerProducts({
-        status: statusParam,
-        stock: stockParam,
-        search: searchQuery.trim() || undefined,
-      });
-
+      const res = await api.getSellerProducts();
       if (res.success && Array.isArray(res.data)) {
         setProducts(res.data);
       } else {
         setProducts([]);
       }
     } catch (err) {
-      console.warn("[SellerProducts] Load error:", err);
+      console.warn("[SellerProducts] Failed to fetch:", err);
       setProducts([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [activeFilter, searchQuery, isApproved]);
+  }, [isApproved]);
 
   useFocusEffect(
     useCallback(() => {
@@ -81,12 +73,40 @@ export default function SellerProductsScreen() {
     }, [fetchProducts]),
   );
 
+  const filteredProducts = useMemo(() => {
+    return products.filter((p) => {
+      const inv = Array.isArray(p.inventory) ? p.inventory[0] : p.inventory;
+      const stockQuantity =
+        inv?.stock_quantity ??
+        inv?.quantity ??
+        p.stock_quantity ??
+        p.quantity ??
+        0;
+      const lowStockThreshold =
+        inv?.low_stock_threshold ??
+        p.low_stock_threshold ??
+        5;
+      const isLowStock = stockQuantity > 0 && stockQuantity <= lowStockThreshold;
+      const isOutOfStock = stockQuantity <= 0;
+
+      if (activeFilter === "active" && p.status !== "active") return false;
+      if (activeFilter === "low" && !isLowStock) return false;
+      if (activeFilter === "out" && !isOutOfStock) return false;
+
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const matchesName = (p.name || "").toLowerCase().includes(q);
+        const matchesCategory = (p.category?.name || "").toLowerCase().includes(q);
+        const matchesId = (p.id || "").toLowerCase().includes(q);
+        if (!matchesName && !matchesCategory && !matchesId) return false;
+      }
+      return true;
+    });
+  }, [products, activeFilter, searchQuery]);
+
   if (!isApproved) {
     return (
-      <View style={[styles.screen, { paddingTop: insets.top }]}>
-        <View style={styles.topBar}>
-          <Text style={styles.pageTitle}>Products</Text>
-        </View>
+      <View style={styles.screen}>
         <SellerPendingVerificationShield
           seller={seller}
           featureName="Plant Catalog"
@@ -103,28 +123,38 @@ export default function SellerProductsScreen() {
   const renderProductItem = ({ item }: { item: any }) => {
     const productId = item.id;
     const name = item.name || "Botanical Specimen";
-    const pricePaise =
-      item.price_paise ??
-      item.inventory?.[0]?.price_paise ??
-      item.inventory?.price_paise ??
-      0;
+    const inv = Array.isArray(item.inventory) ? item.inventory[0] : item.inventory;
     const stockQuantity =
+      inv?.stock_quantity ??
+      inv?.quantity ??
       item.stock_quantity ??
-      item.inventory?.[0]?.stock_quantity ??
-      item.inventory?.stock_quantity ??
+      item.quantity ??
       0;
     const lowStockThreshold =
+      inv?.low_stock_threshold ??
       item.low_stock_threshold ??
-      item.inventory?.[0]?.low_stock_threshold ??
-      item.inventory?.low_stock_threshold ??
       5;
+    const pricePaise =
+      inv?.base_price_paise ??
+      inv?.price_paise ??
+      item.base_price_paise ??
+      item.price_paise ??
+      0;
+    const rawImage =
+      item.images?.[0] ||
+      item.primary_image_url ||
+      item.primary_image ||
+      item.image_url ||
+      item.image;
+    const imageUrl =
+      typeof rawImage === "string"
+        ? rawImage
+        : rawImage?.url || rawImage?.uri || "";
+    const hasValidImage =
+      typeof imageUrl === "string" &&
+      (imageUrl.startsWith("http://") || imageUrl.startsWith("https://"));
     const isLowStock = stockQuantity > 0 && stockQuantity <= lowStockThreshold;
     const isOutOfStock = stockQuantity <= 0;
-    const imageUrl =
-      item.primary_image_url ||
-      item.image_url ||
-      item.images?.[0]?.url ||
-      "/brand_logo.svg";
 
     return (
       <TouchableOpacity
@@ -134,12 +164,12 @@ export default function SellerProductsScreen() {
       >
         <Image
           source={
-            imageUrl.startsWith("http")
+            hasValidImage
               ? { uri: imageUrl }
               : require("../../assets/images/floria_mark.png")
           }
           style={styles.productImage}
-          resizeMode={imageUrl.startsWith("http") ? "cover" : "contain"}
+          resizeMode={hasValidImage ? "cover" : "contain"}
         />
 
         <View style={styles.productDetails}>
@@ -168,30 +198,17 @@ export default function SellerProductsScreen() {
           </View>
         </View>
 
-        <FloriaIcon name="chevron_right" size={16} color={Colors.inkMuted} style={styles.chevron} />
+        <CaretRight size={16} color={Colors.inkMuted} weight="bold" style={styles.chevron} />
       </TouchableOpacity>
     );
   };
 
   return (
-    <View style={[styles.screen, { paddingTop: insets.top }]}>
-      {/* ── Top Bar with List Product CTA ── */}
-      <View style={styles.topBar}>
-        <Text style={styles.pageTitle}>Products</Text>
-        <TouchableOpacity
-          activeOpacity={0.85}
-          onPress={() => router.push("/products/new" as any)}
-          style={styles.addPlantButton}
-        >
-          <FloriaIcon name="plus" size={16} color={Colors.white} />
-          <Text style={styles.addPlantButtonText}>List Product</Text>
-        </TouchableOpacity>
-      </View>
-
+    <View style={styles.screen}>
       {/* ── Search Bar ── */}
       <View style={styles.searchContainer}>
         <View style={styles.searchInputWrap}>
-          <FloriaIcon name="search" size={18} color={Colors.inkMuted} />
+          <MagnifyingGlass size={18} color={Colors.inkMuted} weight="bold" />
           <TextInput
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -202,7 +219,7 @@ export default function SellerProductsScreen() {
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={() => setSearchQuery("")}>
-              <FloriaIcon name="close" size={16} color={Colors.inkMuted} />
+              <XCircle size={16} color={Colors.inkMuted} weight="fill" />
             </TouchableOpacity>
           )}
         </View>
@@ -216,7 +233,10 @@ export default function SellerProductsScreen() {
             <TouchableOpacity
               key={tab.key}
               activeOpacity={0.8}
-              onPress={() => setActiveFilter(tab.key)}
+              onPress={() => {
+                haptics.selection();
+                setActiveFilter(tab.key);
+              }}
               style={[styles.tabButton, isActive && styles.activeTabButton]}
             >
               <Text style={[styles.tabButtonText, isActive && styles.activeTabText]}>
@@ -232,7 +252,7 @@ export default function SellerProductsScreen() {
         <ProductListSkeleton />
       ) : (
         <FlatList
-          data={products}
+          data={filteredProducts}
           keyExtractor={(item) => item.id}
           renderItem={renderProductItem}
           contentContainerStyle={styles.listContent}
@@ -263,6 +283,19 @@ export default function SellerProductsScreen() {
           }
         />
       )}
+
+      {/* ── Circular Floating Action Button (FAB) for List Product ── */}
+      <TouchableOpacity
+        activeOpacity={0.85}
+        onPress={() => {
+          haptics.medium();
+          router.push("/products/new" as any);
+        }}
+        style={styles.fabButton}
+        accessibilityLabel="List Product"
+      >
+        <Plus size={28} color={Colors.white} weight="bold" />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -355,7 +388,24 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: Spacing.md,
-    paddingBottom: Spacing.xxl,
+    paddingBottom: 88,
+  },
+  fabButton: {
+    position: "absolute",
+    right: 20,
+    bottom: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: Colors.forest,
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 6,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.28,
+    shadowRadius: 4,
+    zIndex: 99,
   },
   productCard: {
     flexDirection: "row",

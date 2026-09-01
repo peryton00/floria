@@ -2,7 +2,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
+import { Bell } from "phosphor-react-native";
 import { Colors, Typography, BorderRadius } from "../../lib/theme";
 import { useNotifications } from "../../lib/contexts/NotificationContext";
 import { PressableScale } from "../ui/PressableScale";
@@ -36,7 +36,7 @@ export function NotificationBell({
       style={styles.bellButton}
       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
     >
-      <Ionicons name="notifications-outline" size={size} color={color} />
+      <Bell size={size} color={color} weight="regular" />
       {unreadCount > 0 && (
         <View style={styles.badgeContainer}>
           <Text style={styles.badgeText}>{badgeText}</Text>

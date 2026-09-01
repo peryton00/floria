@@ -8,7 +8,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { FloriaIcon } from "@floria/icons";
+import { FloriaIcon } from "../../components/ui/FloriaIcon";
 import { useSellerNotifications } from "../../lib/contexts/SellerNotificationContext";
 import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
 import { formatDate } from "../../lib/format";
