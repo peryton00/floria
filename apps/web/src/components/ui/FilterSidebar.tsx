@@ -41,13 +41,18 @@ export function FilterSidebar({
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [nurseries, setNurseries] = useState<NurserySummary[]>([]);
+  const [loadingMeta, setLoadingMeta] = useState(true);
 
   useEffect(() => {
-    api.getCategories().then((res) => {
-      if (res.success && res.data) setCategories(res.data);
-    });
-    api.getRankedNurseries().then((res) => {
-      if (res.success && res.data) setNurseries(res.data);
+    Promise.all([
+      api.getCategories().then((res) => {
+        if (res.success && res.data) setCategories(res.data);
+      }),
+      api.getRankedNurseries().then((res) => {
+        if (res.success && res.data) setNurseries(res.data);
+      }),
+    ]).finally(() => {
+      setLoadingMeta(false);
     });
   }, []);
 
@@ -206,47 +211,63 @@ export function FilterSidebar({
         <h3 className="text-xs font-bold uppercase tracking-wider text-stone-900 mb-2.5 font-ui">
           Categories
         </h3>
-        <ul className="space-y-1 text-xs font-ui">
-          <li>
-            <button
-              type="button"
-              onClick={() => handleCategoryClick("all")}
-              className={[
-                "w-full text-left py-2 px-3 rounded-lg transition-all flex items-center justify-between group",
-                activeCategory === "all"
-                  ? "bg-forest-800 text-white font-bold shadow-2xs"
-                  : "text-stone-600 hover:bg-stone-50 hover:text-stone-900",
-              ].join(" ")}
-            >
-              <span>All Categories</span>
-              {activeCategory === "all" && (
-                <span className="w-1.5 h-1.5 rounded-full bg-white" />
-              )}
-            </button>
-          </li>
-          {categories.map((cat) => {
-            const isActive = activeCategory === cat.slug;
-            return (
-              <li key={cat.id}>
-                <button
-                  type="button"
-                  onClick={() => handleCategoryClick(cat.slug)}
-                  className={[
-                    "w-full text-left py-2 px-3 rounded-lg transition-all flex items-center justify-between group",
-                    isActive
-                      ? "bg-forest-800 text-white font-bold shadow-2xs"
-                      : "text-stone-600 hover:bg-stone-50 hover:text-stone-900",
-                  ].join(" ")}
-                >
-                  <span className="truncate">{cat.name}</span>
-                  {isActive && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-white flex-shrink-0" />
-                  )}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+        {loadingMeta && categories.length === 0 ? (
+          <div className="space-y-1.5 py-1" aria-busy="true">
+            {[75, 60, 85, 70, 80].map((w, idx) => (
+              <div
+                key={idx}
+                className="h-8 rounded-lg bg-stone-100 animate-pulse flex items-center px-3"
+              >
+                <div
+                  className="h-3 rounded bg-stone-200"
+                  style={{ width: `${w}%` }}
+                />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <ul className="space-y-1 text-xs font-ui">
+            <li>
+              <button
+                type="button"
+                onClick={() => handleCategoryClick("all")}
+                className={[
+                  "w-full text-left py-2 px-3 rounded-lg transition-all flex items-center justify-between group",
+                  activeCategory === "all"
+                    ? "bg-forest-800 text-white font-bold shadow-2xs"
+                    : "text-stone-600 hover:bg-stone-50 hover:text-stone-900",
+                ].join(" ")}
+              >
+                <span>All Categories</span>
+                {activeCategory === "all" && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                )}
+              </button>
+            </li>
+            {categories.map((cat) => {
+              const isActive = activeCategory === cat.slug;
+              return (
+                <li key={cat.id}>
+                  <button
+                    type="button"
+                    onClick={() => handleCategoryClick(cat.slug)}
+                    className={[
+                      "w-full text-left py-2 px-3 rounded-lg transition-all flex items-center justify-between group",
+                      isActive
+                        ? "bg-forest-800 text-white font-bold shadow-2xs"
+                        : "text-stone-600 hover:bg-stone-50 hover:text-stone-900",
+                    ].join(" ")}
+                  >
+                    <span className="truncate">{cat.name}</span>
+                    {isActive && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-white flex-shrink-0" />
+                    )}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
 
       <hr className="border-stone-100" />
@@ -256,47 +277,63 @@ export function FilterSidebar({
         <h3 className="text-xs font-bold uppercase tracking-wider text-stone-900 mb-2.5 font-ui">
           Nursery Source
         </h3>
-        <ul className="space-y-1 text-xs font-ui">
-          <li>
-            <button
-              type="button"
-              onClick={() => handleNurseryClick("all")}
-              className={[
-                "w-full text-left py-2 px-3 rounded-lg transition-all flex items-center justify-between",
-                activeNursery === "all"
-                  ? "bg-forest-800 text-white font-bold shadow-2xs"
-                  : "text-stone-600 hover:bg-stone-50 hover:text-stone-900",
-              ].join(" ")}
-            >
-              <span>All Nurseries</span>
-              {activeNursery === "all" && (
-                <span className="w-1.5 h-1.5 rounded-full bg-white" />
-              )}
-            </button>
-          </li>
-          {nurseries.map((seller) => {
-            const isActive = activeNursery === seller.id;
-            return (
-              <li key={seller.id}>
-                <button
-                  type="button"
-                  onClick={() => handleNurseryClick(seller.id)}
-                  className={[
-                    "w-full text-left py-2 px-3 rounded-lg transition-all flex items-center justify-between",
-                    isActive
-                      ? "bg-forest-800 text-white font-bold shadow-2xs"
-                      : "text-stone-600 hover:bg-stone-50 hover:text-stone-900",
-                  ].join(" ")}
-                >
-                  <span className="truncate">{seller.business_name}</span>
-                  {isActive && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-white flex-shrink-0" />
-                  )}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+        {loadingMeta && nurseries.length === 0 ? (
+          <div className="space-y-1.5 py-1" aria-busy="true">
+            {[65, 80, 55, 75].map((w, idx) => (
+              <div
+                key={idx}
+                className="h-8 rounded-lg bg-stone-100 animate-pulse flex items-center px-3"
+              >
+                <div
+                  className="h-3 rounded bg-stone-200"
+                  style={{ width: `${w}%` }}
+                />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <ul className="space-y-1 text-xs font-ui">
+            <li>
+              <button
+                type="button"
+                onClick={() => handleNurseryClick("all")}
+                className={[
+                  "w-full text-left py-2 px-3 rounded-lg transition-all flex items-center justify-between",
+                  activeNursery === "all"
+                    ? "bg-forest-800 text-white font-bold shadow-2xs"
+                    : "text-stone-600 hover:bg-stone-50 hover:text-stone-900",
+                ].join(" ")}
+              >
+                <span>All Nurseries</span>
+                {activeNursery === "all" && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                )}
+              </button>
+            </li>
+            {nurseries.map((seller) => {
+              const isActive = activeNursery === seller.id;
+              return (
+                <li key={seller.id}>
+                  <button
+                    type="button"
+                    onClick={() => handleNurseryClick(seller.id)}
+                    className={[
+                      "w-full text-left py-2 px-3 rounded-lg transition-all flex items-center justify-between",
+                      isActive
+                        ? "bg-forest-800 text-white font-bold shadow-2xs"
+                        : "text-stone-600 hover:bg-stone-50 hover:text-stone-900",
+                    ].join(" ")}
+                  >
+                    <span className="truncate">{seller.business_name}</span>
+                    {isActive && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-white flex-shrink-0" />
+                    )}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
 
       <hr className="border-stone-100" />

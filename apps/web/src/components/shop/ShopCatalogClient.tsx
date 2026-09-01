@@ -7,6 +7,7 @@ import { ProductCard } from "@/components/ui/ProductCard";
 import { FilterSidebar } from "@/components/ui/FilterSidebar";
 import { FilterAndSortControls } from "@/components/ui/FilterAndSortControls";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { ProductGridSkeleton } from "@/components/ui/loading/ProductGridSkeleton";
 import { getProductListings } from "@/lib/services/storefront";
 
 interface ShopCatalogClientProps {
@@ -235,16 +236,9 @@ export function ShopCatalogClient({
 
         {/* Dynamic Products Grid Section */}
         <div className="relative min-h-[300px]">
-          {isLoading && (
-            <div className="absolute inset-0 z-20 bg-white/60 backdrop-blur-[1px] rounded-xl flex items-center justify-center transition-opacity duration-200">
-              <div className="flex items-center gap-2.5 px-4 py-2 bg-stone-900 text-white rounded-full text-xs font-bold shadow-lg">
-                <div className="w-3.5 h-3.5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
-                <span>Updating plants...</span>
-              </div>
-            </div>
-          )}
-
-          {listings.length === 0 && !isLoading ? (
+          {isLoading ? (
+            <ProductGridSkeleton count={8} />
+          ) : listings.length === 0 ? (
             <EmptyState
               badge="No Matching Plants"
               title="No products match your filters"
@@ -265,7 +259,7 @@ export function ShopCatalogClient({
           ) : (
             <div
               className={`grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 transition-opacity duration-200 ${
-                isPending || isLoading ? "opacity-60" : "opacity-100"
+                isPending ? "opacity-60" : "opacity-100"
               }`}
               aria-label="Shop product listings"
             >
