@@ -32,6 +32,18 @@ interface AdminShellProps {
   children: React.ReactNode;
 }
 
+interface NavItem {
+  label: string;
+  href: string;
+  icon: React.ReactNode;
+  badge?: string;
+}
+
+interface NavGroup {
+  group: string;
+  items: NavItem[];
+}
+
 export function AdminShell({ children }: AdminShellProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -55,7 +67,9 @@ export function AdminShell({ children }: AdminShellProps) {
     async function checkAuth() {
       try {
         const supabase = getSupabaseBrowserClient();
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
 
         if (!session) {
           router.replace("/admin/login");
@@ -64,69 +78,83 @@ export function AdminShell({ children }: AdminShellProps) {
 
         const { data: profile } = await supabase
           .from("user_profiles")
-          .select("role, full_name")
+          .select("full_name, role")
           .eq("id", session.user.id)
           .maybeSingle();
 
-        const role = profile?.role || session.user.user_metadata?.role || "customer";
-        setUserRole(role);
-        setUserName(profile?.full_name || session.user.email || "Admin User");
-
-        if (role === "admin" || role === "super_admin") {
-          setAuthorized(true);
-        } else {
+        const role = profile?.role || session.user.user_metadata?.role;
+        if (role !== "admin" && role !== "super_admin") {
           setAuthorized(false);
+        } else {
+          setAuthorized(true);
+          setUserName(profile?.full_name || session.user.email?.split("@")[0] || "Admin");
+          setUserRole(role);
         }
       } catch (e) {
-        console.error("Admin auth check failed:", e);
+        console.error("Auth check failed:", e);
       } finally {
         setLoading(false);
       }
     }
+
     checkAuth();
   }, [router]);
 
   const handleLogout = async () => {
-    try {
-      await fetch("/api/auth/audit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "USER_LOGOUT", role: "admin" }),
-      });
-    } catch (e) {
-      console.warn("Failed to audit logout:", e);
-    }
     const supabase = getSupabaseBrowserClient();
     await supabase.auth.signOut();
     router.replace("/admin/login");
   };
 
-  const navLinks = [
-    { label: "Dashboard", href: "/admin/dashboard", icon: <GridIcon size={18} /> },
-    { label: "System Diagnostics", href: "/admin/system-health", icon: <AlertIcon size={18} /> },
-    { label: "Users", href: "/admin/users", icon: <UserGroupIcon size={18} /> },
-    { label: "Sellers", href: "/admin/sellers", icon: <LeafIcon size={18} /> },
-    { label: "Products", href: "/admin/products", icon: <SproutIcon size={18} /> },
-    { label: "Categories", href: "/admin/categories", icon: <PlanterIcon size={18} /> },
-    { label: "Media & Images", href: "/admin/media", icon: <ImageIcon size={18} /> },
-    { label: "Orders", href: "/admin/orders", icon: <OrderIcon size={18} /> },
-    { label: "Inventory", href: "/admin/inventory", icon: <ToolsIcon size={18} /> },
-    { label: "Finance & Commission", href: "/admin/finance", icon: <PayoutIcon size={18} /> },
-    { label: "Payouts", href: "/admin/payouts", icon: <PayoutIcon size={18} /> },
-    { label: "Operations Overview", href: "/admin/operations", icon: <GridIcon size={18} /> },
-    { label: "Reviews", href: "/admin/reviews", icon: <StarIcon size={18} /> },
-    { label: "Promotions", href: "/admin/promotions", icon: <VerifiedIcon size={18} /> },
-    { label: "Reports", href: "/admin/reports", icon: <AlertIcon size={18} /> },
-    { label: "Audit Logs", href: "/admin/audit-logs", icon: <ShieldIcon size={18} /> },
-    { label: "Business Rules & Policies", href: "/admin/settings", icon: <SettingsIcon size={18} /> },
+  // Structured Botanical Nav Groups
+  const navSections: NavGroup[] = [
+    {
+      group: "Core Control",
+      items: [
+        { label: "Dashboard", href: "/admin/dashboard", icon: <GridIcon size={16} /> },
+        { label: "System Diagnostics", href: "/admin/system-health", icon: <AlertIcon size={16} /> },
+        { label: "Operations Overview", href: "/admin/operations", icon: <GridIcon size={16} /> },
+      ],
+    },
+    {
+      group: "Catalog & Taxa",
+      items: [
+        { label: "Products", href: "/admin/products", icon: <SproutIcon size={16} /> },
+        { label: "Categories", href: "/admin/categories", icon: <PlanterIcon size={16} /> },
+        { label: "Media & Images", href: "/admin/media", icon: <ImageIcon size={16} /> },
+        { label: "Inventory", href: "/admin/inventory", icon: <ToolsIcon size={16} /> },
+      ],
+    },
+    {
+      group: "Commerce & Ledger",
+      items: [
+        { label: "Orders", href: "/admin/orders", icon: <OrderIcon size={16} /> },
+        { label: "Finance & Commission", href: "/admin/finance", icon: <PayoutIcon size={16} /> },
+        { label: "Payouts", href: "/admin/payouts", icon: <PayoutIcon size={16} /> },
+        { label: "Promotions", href: "/admin/promotions", icon: <VerifiedIcon size={16} /> },
+        { label: "Reviews", href: "/admin/reviews", icon: <StarIcon size={16} /> },
+      ],
+    },
+    {
+      group: "Directory & Policy",
+      items: [
+        { label: "Users", href: "/admin/users", icon: <UserGroupIcon size={16} /> },
+        { label: "Sellers", href: "/admin/sellers", icon: <LeafIcon size={16} /> },
+        { label: "Reports", href: "/admin/reports", icon: <AlertIcon size={16} /> },
+        { label: "Audit Logs", href: "/admin/audit-logs", icon: <ShieldIcon size={16} /> },
+        { label: "Business Policies", href: "/admin/settings", icon: <SettingsIcon size={16} /> },
+      ],
+    },
   ];
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#1A2B1A] text-white flex items-center justify-center font-ui">
+      <div className="min-h-screen bg-[#0A150F] text-white flex items-center justify-center font-sans">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-forest-400 border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs uppercase tracking-widest font-bold text-white/70">Verifying Admin Permissions...</p>
+          <div className="w-8 h-8 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs font-mono uppercase tracking-[0.2em] text-white/60">
+            Verifying Authority...
+          </p>
         </div>
       </div>
     );
@@ -134,29 +162,31 @@ export function AdminShell({ children }: AdminShellProps) {
 
   if (!authorized) {
     return (
-      <div className="min-h-screen bg-cream-50 flex items-center justify-center p-6 font-ui">
-        <div className="bg-white rounded-2xl border border-ink-100 p-8 max-w-md w-full text-center shadow-lg space-y-4">
-          <div className="w-12 h-12 rounded-full bg-error-50 text-error-600 flex items-center justify-center mx-auto">
-            <LockIcon size={24} />
-          </div>
-          <h1 className="font-serif text-xl font-bold text-ink-900">403 — Access Denied</h1>
-          <p className="text-xs text-ink-500">
-            Your account ({userRole}) does not have permission to access the Floria Admin Control Center.
-          </p>
-          <div className="pt-2 flex flex-col gap-2">
-            <Link
-              href="/"
-              className="px-4 py-2.5 rounded-lg bg-forest-700 hover:bg-forest-800 text-white font-bold text-xs uppercase tracking-wider transition-colors"
-            >
-              Return to Storefront
-            </Link>
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="px-4 py-2 text-xs font-semibold text-ink-500 hover:text-ink-900"
-            >
-              Sign out & Switch Account
-            </button>
+      <div className="min-h-screen bg-cream-50 flex items-center justify-center p-6 font-sans">
+        <div className="p-1.5 rounded-[2rem] bg-cream-200/80 border border-cream-400/60 shadow-2xl max-w-md w-full text-center">
+          <div className="bg-white rounded-[calc(2rem-0.375rem)] p-8 space-y-4">
+            <div className="w-14 h-14 rounded-2xl bg-error-50 text-error-600 border border-error-100 flex items-center justify-center mx-auto shadow-xs">
+              <LockIcon size={24} />
+            </div>
+            <h1 className="font-serif text-2xl font-semibold text-ink-900">403 — Restricted Entry</h1>
+            <p className="text-xs text-ink-600 leading-relaxed">
+              Your account ({userRole}) does not have administrative privileges in the Floria Database.
+            </p>
+            <div className="pt-3 flex flex-col gap-2.5">
+              <Link
+                href="/"
+                className="w-full py-2.5 rounded-full bg-forest-800 hover:bg-forest-900 text-white font-medium text-xs uppercase tracking-wider shadow-sm transition-all"
+              >
+                Return to Storefront
+              </Link>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="w-full py-2 text-xs font-mono text-ink-500 hover:text-ink-900 transition-colors"
+              >
+                Sign Out & Switch Account
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -165,121 +195,192 @@ export function AdminShell({ children }: AdminShellProps) {
 
   return (
     <div className="min-h-screen bg-[#F9F8F3] flex font-sans antialiased text-[#212529]">
-      {/* DESKTOP SIDEBAR — Fixed screen height sticky sidebar for PC */}
+      {/* DESKTOP SIDEBAR */}
       <aside
-        className="hidden md:flex w-64 h-screen sticky top-0 bg-[#1E3A2B] text-white/80 flex-col flex-shrink-0 border-r border-white/10 select-none z-20"
+        className="hidden md:flex w-64 h-screen sticky top-0 bg-[#122319] text-white flex-col flex-shrink-0 border-r border-white/[0.08] select-none z-20 shadow-[4px_0_24px_rgba(0,0,0,0.12)]"
         aria-label="Admin panel navigation"
       >
         {/* Brand Header */}
-        <div className="p-5 border-b border-white/10 flex items-center justify-between flex-shrink-0">
-          <Link href="/" className="flex items-center gap-2.5" aria-label="Admin dashboard home">
-            <div className="w-8 h-8 rounded bg-[#274D39] border border-[#DDE7DD]/20 flex items-center justify-center p-1.5 flex-shrink-0">
-              <Image src="/brand_logo.svg" alt="Floria Logo" width={6} height={8} className="w-auto h-5 object-contain brightness-0 invert" />
+        <div className="p-5 border-b border-white/[0.08] flex items-center justify-between flex-shrink-0 bg-white/[0.01]">
+          <Link href="/" className="flex items-center gap-3 group" aria-label="Admin dashboard home">
+            {/* Logo Emblem Capsule */}
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-forest-600 to-forest-800 border border-white/20 shadow-inner flex items-center justify-center p-2 flex-shrink-0 group-hover:border-emerald-400/40 transition-colors">
+              <Image
+                src="/brand_logo.svg"
+                alt="Floria Logo"
+                width={18}
+                height={18}
+                className="w-auto h-5 object-contain brightness-0 invert"
+              />
             </div>
             <div>
-              <span className="font-sans text-sm font-bold text-white tracking-tight block leading-tight">Floria Console</span>
-              <span className="font-mono text-[9px] uppercase tracking-wider text-[#DDE7DD] font-semibold block leading-none mt-0.5">Admin Cockpit v2</span>
+              <span className="font-serif text-base font-semibold text-white tracking-tight block leading-tight group-hover:text-emerald-300 transition-colors">
+                Floria Console
+              </span>
+              <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-emerald-400 font-semibold block leading-none mt-1">
+                Root Authority
+              </span>
             </div>
           </Link>
         </div>
 
-        {/* Navigation Links */}
-        <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto min-h-0">
-          {navLinks.map((link) => {
-            const isActive = pathname === link.href;
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={[
-                  "flex items-center gap-3 px-3 py-2 rounded text-xs font-semibold tracking-wide transition-all",
-                  isActive
-                    ? "bg-[#274D39] text-white font-bold shadow-xs border-l-2 border-[#DDE7DD]"
-                    : "hover:bg-white/10 hover:text-white",
-                ].join(" ")}
-              >
-                <span className={isActive ? "text-[#DDE7DD]" : "text-white/70"}>{link.icon}</span>
-                <span>{link.label}</span>
-              </Link>
-            );
-          })}
+        {/* Grouped Navigation Links */}
+        <nav className="flex-1 px-3 py-4 space-y-5 overflow-y-auto min-h-0 custom-scrollbar">
+          {navSections.map((sec) => (
+            <div key={sec.group} className="space-y-1">
+              {/* Group Eyebrow */}
+              <div className="px-3 py-1 text-[9px] font-mono font-semibold uppercase tracking-[0.2em] text-white/35">
+                {sec.group}
+              </div>
+
+              {/* Group Items */}
+              <div className="space-y-0.5">
+                {sec.items.map((link) => {
+                  const isActive = pathname === link.href;
+                  return (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      className={`group/nav relative flex items-center justify-between px-3 py-2 rounded-xl text-xs tracking-wide transition-all duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+                        isActive
+                          ? "bg-white/[0.12] text-white font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.15),0_2px_8px_rgba(0,0,0,0.2)] border border-white/10"
+                          : "text-white/65 hover:text-white hover:bg-white/[0.05]"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span
+                          className={`flex-shrink-0 transition-colors ${
+                            isActive ? "text-emerald-400" : "text-white/50 group-hover/nav:text-white/90"
+                          }`}
+                        >
+                          {link.icon}
+                        </span>
+                        <span className="truncate">{link.label}</span>
+                      </div>
+
+                      {isActive && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)] flex-shrink-0" />
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
 
-        {/* User Info Footer */}
-        <div className="p-4 border-t border-white/10 flex items-center justify-between bg-black/10 flex-shrink-0">
-          <div className="min-w-0 pr-2">
-            <p className="text-xs font-bold text-white truncate leading-tight">{userName}</p>
-            <p className="font-mono text-[9px] uppercase tracking-wider text-[#DDE7DD] font-medium truncate mt-0.5 leading-none">{userRole}</p>
+        {/* User Identity Footer Capsule */}
+        <div className="p-3 border-t border-white/[0.08] bg-black/20 flex-shrink-0">
+          <div className="p-2 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-between gap-2.5">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-700 to-forest-800 text-white font-serif font-bold text-xs flex items-center justify-center flex-shrink-0 border border-white/20">
+                {userName.charAt(0).toUpperCase()}
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-white truncate leading-snug">{userName}</p>
+                <p className="font-mono text-[9px] uppercase tracking-wider text-emerald-400 font-medium truncate">
+                  {userRole}
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              title="Log out"
+              className="p-1.5 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-colors cursor-pointer"
+            >
+              <LogoutIcon size={15} />
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={handleLogout}
-            title="Log out"
-            className="p-1.5 rounded hover:bg-white/10 text-white/70 hover:text-white transition-colors"
-          >
-            <LogoutIcon size={16} />
-          </button>
         </div>
       </aside>
 
       {/* MOBILE DRAWER OVERLAY */}
       {mobileDrawerOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs md:hidden flex">
-          <div className="w-72 bg-[#1E3A2B] text-white/80 flex flex-col h-full shadow-2xl">
-            <div className="p-5 border-b border-white/10 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs md:hidden flex animate-in fade-in duration-200">
+          <div className="w-72 bg-[#122319] text-white flex flex-col h-full shadow-2xl border-r border-white/10">
+            <div className="p-5 border-b border-white/[0.08] flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded bg-[#274D39] border border-[#DDE7DD]/20 flex items-center justify-center p-1.5">
-                  <Image src="/brand_logo.svg" alt="Floria Logo" width={6} height={8} className="w-auto h-5 object-contain brightness-0 invert" />
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-forest-600 to-forest-800 border border-white/20 flex items-center justify-center p-1.5">
+                  <Image
+                    src="/brand_logo.svg"
+                    alt="Floria Logo"
+                    width={18}
+                    height={18}
+                    className="w-auto h-5 object-contain brightness-0 invert"
+                  />
                 </div>
                 <div>
-                  <span className="font-sans text-sm font-bold text-white">Floria Console</span>
-                  <span className="font-mono text-[9px] uppercase tracking-wider text-[#DDE7DD] block mt-0.5">Admin Cockpit</span>
+                  <span className="font-serif text-sm font-semibold text-white">Floria Console</span>
+                  <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-emerald-400 block mt-0.5">
+                    Root Authority
+                  </span>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setMobileDrawerOpen(false)}
-                className="p-2 text-white/70 hover:text-white font-bold transition-colors"
+                className="p-2 text-white/70 hover:text-white transition-colors"
                 aria-label="Close navigation drawer"
               >
                 <CloseIcon size={18} />
               </button>
             </div>
 
-            <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
-              {navLinks.map((link) => {
-                const isActive = pathname === link.href;
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setMobileDrawerOpen(false)}
-                    className={[
-                      "flex items-center gap-3 px-3 py-2.5 rounded text-xs font-semibold tracking-wide transition-all",
-                      isActive
-                        ? "bg-[#274D39] text-white font-bold border-l-2 border-[#DDE7DD]"
-                        : "hover:bg-white/10 hover:text-white",
-                    ].join(" ")}
-                  >
-                    <span className={isActive ? "text-[#DDE7DD]" : "text-white/70"}>{link.icon}</span>
-                    <span>{link.label}</span>
-                  </Link>
-                );
-              })}
+            <nav className="flex-1 px-3 py-4 space-y-5 overflow-y-auto">
+              {navSections.map((sec) => (
+                <div key={sec.group} className="space-y-1">
+                  <div className="px-3 py-1 text-[9px] font-mono font-semibold uppercase tracking-[0.2em] text-white/35">
+                    {sec.group}
+                  </div>
+                  <div className="space-y-0.5">
+                    {sec.items.map((link) => {
+                      const isActive = pathname === link.href;
+                      return (
+                        <Link
+                          key={link.href}
+                          href={link.href}
+                          onClick={() => setMobileDrawerOpen(false)}
+                          className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs tracking-wide transition-all ${
+                            isActive
+                              ? "bg-white/[0.12] text-white font-semibold border border-white/10"
+                              : "text-white/65 hover:text-white hover:bg-white/[0.05]"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <span className={isActive ? "text-emerald-400" : "text-white/50"}>
+                              {link.icon}
+                            </span>
+                            <span>{link.label}</span>
+                          </div>
+                          {isActive && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                          )}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </nav>
 
-            <div className="p-4 border-t border-white/10 flex items-center justify-between bg-black/10">
-              <div className="min-w-0 pr-2">
-                <p className="text-xs font-bold text-white truncate">{userName}</p>
-                <p className="font-mono text-[9px] uppercase tracking-wider text-[#DDE7DD] truncate">{userRole}</p>
+            <div className="p-3 border-t border-white/[0.08] bg-black/20">
+              <div className="p-2 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-between">
+                <div className="min-w-0 pr-2">
+                  <p className="text-xs font-semibold text-white truncate">{userName}</p>
+                  <p className="font-mono text-[9px] uppercase tracking-wider text-emerald-400 truncate">
+                    {userRole}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="p-1.5 rounded-lg hover:bg-white/10 text-white/70 hover:text-white"
+                >
+                  <LogoutIcon size={16} />
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="p-1.5 rounded hover:bg-white/10 text-white/70 hover:text-white"
-              >
-                <LogoutIcon size={16} />
-              </button>
             </div>
           </div>
 
@@ -287,15 +388,15 @@ export function AdminShell({ children }: AdminShellProps) {
         </div>
       )}
 
-      {/* MAIN CONTENT AREA */}
+      {/* MAIN CONTENT VIEWPORT */}
       <div className="flex-1 flex flex-col min-w-0 bg-[#F9F8F3]">
-        {/* Header */}
-        <header className="h-14 bg-white border-b border-[#E2DDD5] flex items-center justify-between px-4 sm:px-6 z-10 sticky top-0 shadow-xs">
+        {/* Top App Header */}
+        <header className="h-14 bg-white/95 backdrop-blur-md border-b border-cream-400/60 flex items-center justify-between px-4 sm:px-6 z-10 sticky top-0 shadow-xs">
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setMobileDrawerOpen(true)}
-              className="md:hidden p-1.5 rounded border border-[#E2DDD5] text-[#212529] hover:bg-[#EFECE4]"
+              className="md:hidden p-1.5 rounded-lg border border-cream-400/80 text-ink-900 hover:bg-cream-100 transition-colors"
               aria-label="Open mobile navigation menu"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -304,22 +405,30 @@ export function AdminShell({ children }: AdminShellProps) {
                 <line x1="3" y1="18" x2="21" y2="18" />
               </svg>
             </button>
-            <span className={[
-              "px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider border",
-              isStaging
-                ? "bg-amber-50 text-amber-700 border-amber-200"
-                : "bg-emerald-50 text-[#1E3A2B] border-emerald-200"
-            ].join(" ")}>
-              ● {isStaging ? "Staging Sandbox" : "Production Node"}
+
+            <span
+              className={`px-3 py-1 rounded-full text-[10px] font-mono font-semibold uppercase tracking-wider border flex items-center gap-1.5 ${
+                isStaging
+                  ? "bg-amber-50 text-amber-800 border-amber-200"
+                  : "bg-emerald-50 text-emerald-800 border-emerald-200"
+              }`}
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  isStaging ? "bg-amber-500" : "bg-emerald-500 animate-pulse"
+                }`}
+              />
+              {isStaging ? "Staging Sandbox" : "Production Node"}
             </span>
           </div>
 
-          {/* Search bar on desktop */}
+          {/* Quick Search */}
           <div className="hidden md:flex items-center relative w-72 max-w-sm">
+            <SearchIcon size={14} className="absolute left-3 text-ink-400 pointer-events-none" />
             <input
               type="text"
               placeholder="Quick search orders, nurseries, SKUs..."
-              className="w-full pl-8 pr-3 py-1.5 text-xs rounded border border-[#E2DDD5] focus:outline-none focus:ring-1 focus:ring-[#1E3A2B] focus:border-[#1E3A2B] bg-[#EFECE4] font-sans placeholder:text-[#6C756F]"
+              className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl border border-cream-400/80 focus:outline-none focus:border-forest-700/60 focus:ring-4 focus:ring-forest-700/5 bg-cream-50/50 font-sans text-ink-900 placeholder:text-ink-400 transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]"
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   const target = e.currentTarget.value.trim();
@@ -329,17 +438,19 @@ export function AdminShell({ children }: AdminShellProps) {
                 }
               }}
             />
-            <SearchIcon size={12} className="absolute left-2.5 text-[#6C756F]" />
           </div>
 
+          {/* Top Right Status & Profile Capsule */}
           <div className="flex items-center gap-3.5">
             <NotificationBell userRole="admin" />
-            <div className="h-4 w-px bg-[#E2DDD5]" />
+            <div className="h-4 w-px bg-cream-300" />
             <div className="text-right hidden sm:block">
-              <p className="text-xs font-bold text-[#212529] leading-tight">{userName}</p>
-              <p className="font-mono text-[9px] text-[#1E3A2B] font-bold uppercase tracking-wider mt-0.5 leading-none">{userRole}</p>
+              <p className="text-xs font-semibold text-ink-900 leading-tight">{userName}</p>
+              <p className="font-mono text-[9px] text-forest-700 font-bold uppercase tracking-wider mt-0.5 leading-none">
+                {userRole}
+              </p>
             </div>
-            <div className="w-7 h-7 rounded bg-[#1E3A2B] text-white flex items-center justify-center font-bold text-xs shadow-xs">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-forest-800 to-forest-900 text-white flex items-center justify-center font-serif font-bold text-xs shadow-xs border border-forest-700">
               {userName.charAt(0).toUpperCase()}
             </div>
           </div>
