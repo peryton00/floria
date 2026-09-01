@@ -54,7 +54,11 @@ export class OrderRepository {
       .order("created_at", { ascending: false });
 
     if (filters?.status && filters.status !== "all") {
-      q = q.eq("status", filters.status.toLowerCase());
+      const s = filters.status.toLowerCase();
+      const sUnderscore = s.replace(/ /g, "_");
+      const sSpace = s.replace(/_/g, " ");
+      const candidates = Array.from(new Set([s, sUnderscore, sSpace, filters.status]));
+      q = q.in("status", candidates);
     }
 
     const { data, error } = await q;

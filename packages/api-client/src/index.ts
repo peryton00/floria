@@ -198,9 +198,20 @@ export class FloriaApiClient {
       }
     }
 
+    let token: string | null = null;
+    if (this.getAccessToken) {
+      try {
+        token = await this.getAccessToken();
+      } catch {
+        // Token retrieval error fallback
+      }
+    }
+
+    const dedupeKey = isGet ? `${url}::${token || "anon"}` : "";
+
     // Request deduplication for identical in-flight GET requests
-    if (isGet) {
-      const existing = this.pendingGetRequests.get(url);
+    if (isGet && dedupeKey) {
+      const existing = this.pendingGetRequests.get(dedupeKey);
       if (existing) {
         return existing as Promise<ApiResponse<T>>;
       }
@@ -212,22 +223,15 @@ export class FloriaApiClient {
         ...(options.headers as Record<string, string>),
       };
 
-      if (this.getAccessToken) {
-        try {
-          const token = await this.getAccessToken();
-          if (token) {
-            headers["Authorization"] = `Bearer ${token}`;
-          }
-        } catch {
-          // Token retrieval error fallback
-        }
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
       }
 
-      // Add 15s timeout to release browser socket pool on Render cold starts
+      // Add 30s timeout to release browser socket pool on Render cold starts
       const controller =
         typeof AbortController !== "undefined" ? new AbortController() : null;
       const timeoutId = controller
-        ? setTimeout(() => controller.abort(), 15000)
+        ? setTimeout(() => controller.abort(), 30000)
         : null;
 
       try {
@@ -271,15 +275,15 @@ export class FloriaApiClient {
           },
         };
       } finally {
-        if (isGet) {
-          this.pendingGetRequests.delete(url);
+        if (isGet && dedupeKey) {
+          this.pendingGetRequests.delete(dedupeKey);
         }
       }
     };
 
-    if (isGet) {
+    if (isGet && dedupeKey) {
       const promise = executeRequest();
-      this.pendingGetRequests.set(url, promise);
+      this.pendingGetRequests.set(dedupeKey, promise);
       return promise;
     }
 

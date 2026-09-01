@@ -166,17 +166,33 @@ export class ProductRepository {
     sellerId?: string;
   }): Promise<any[]> {
     const db = getAdminDb();
-    let q = db
-      .from("products")
-      .select(PRODUCT_LISTING_SELECT)
-      .neq("status", "deleted");
+    let q = db.from("products").select(PRODUCT_LISTING_SELECT);
 
     if (filters?.status && filters.status !== "all") {
       q = q.eq("status", filters.status);
+    } else {
+      q = q.or("status.neq.deleted,status.is.null");
     }
 
-    if (filters?.categoryId) {
-      q = q.eq("category_id", filters.categoryId);
+    if (filters?.categoryId && filters.categoryId !== "all") {
+      const isUuid =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          filters.categoryId,
+        );
+      if (isUuid) {
+        q = q.eq("category_id", filters.categoryId);
+      } else {
+        const { data: cat } = await db
+          .from("categories")
+          .select("id")
+          .eq("slug", filters.categoryId)
+          .maybeSingle();
+        if (cat?.id) {
+          q = q.eq("category_id", cat.id);
+        } else {
+          q = q.eq("category_id", filters.categoryId);
+        }
+      }
     }
 
     if (filters?.sellerId) {

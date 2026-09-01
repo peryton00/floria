@@ -137,38 +137,6 @@ export class SellerRepository {
 
   async findAll(status?: string): Promise<SellerProfile[]> {
     const db = getAdminDb();
-
-    // 1. Ensure any user with role = 'seller' in user_profiles has a seller_profiles row
-    try {
-      const { data: sellerUsers } = await db
-        .from("user_profiles")
-        .select("id, full_name, email")
-        .eq("role", "seller");
-
-      if (sellerUsers && sellerUsers.length > 0) {
-        for (const u of sellerUsers) {
-          const { data: existing } = await db
-            .from("seller_profiles")
-            .select("id")
-            .eq("user_id", u.id)
-            .maybeSingle();
-
-          if (!existing) {
-            await this.submitApplication(u.id, {
-              business_name: u.full_name || "Nursery Partner",
-              contact_email: u.email || "",
-              contact_phone: "",
-              address: "",
-              business_description: "Registered seller account.",
-            });
-          }
-        }
-      }
-    } catch (e) {
-      console.error("[SellerRepository] auto-sync seller profiles error:", e);
-    }
-
-    // 2. Query all seller profiles
     let query = db.from("seller_profiles").select("*");
     if (status) {
       query = query.eq("status", status);

@@ -30,24 +30,27 @@ export default function AdminInventoryPage() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [prodRes, catRes, sellerRes] = await Promise.all([
+      setError(null);
+      const results = await Promise.allSettled([
         api.getAdminProducts(),
         api.getAdminCategories(),
         api.getAdminSellers(),
       ]);
 
-      if (prodRes.success && prodRes.data) {
-        setProducts(prodRes.data);
-      } else {
-        setError(prodRes.error?.message || "Failed to load products inventory");
+      const [prodSettled, catSettled, sellerSettled] = results;
+
+      if (prodSettled.status === "fulfilled" && prodSettled.value?.success && prodSettled.value?.data) {
+        setProducts(prodSettled.value.data);
+      } else if (prodSettled.status === "fulfilled" && prodSettled.value?.error?.message) {
+        setError(prodSettled.value.error.message);
       }
 
-      if (catRes.success && catRes.data) {
-        setCategories(catRes.data);
+      if (catSettled.status === "fulfilled" && catSettled.value?.success && catSettled.value?.data) {
+        setCategories(catSettled.value.data);
       }
 
-      if (sellerRes.success && sellerRes.data) {
-        setSellers(sellerRes.data);
+      if (sellerSettled.status === "fulfilled" && sellerSettled.value?.success && sellerSettled.value?.data) {
+        setSellers(sellerSettled.value.data);
       }
     } catch (err: any) {
       setError(err.message || "Failed to connect to backend API");

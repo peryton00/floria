@@ -43,7 +43,8 @@ export default function AdminProductsPage() {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const [prodRes, catRes] = await Promise.all([
+      setError(null);
+      const results = await Promise.allSettled([
         api.getAdminProducts({
           search: search || undefined,
           status: statusFilter !== "all" ? statusFilter : undefined,
@@ -52,14 +53,16 @@ export default function AdminProductsPage() {
         api.getAdminCategories(),
       ]);
 
-      if (prodRes.success && prodRes.data) {
-        setProducts(prodRes.data);
-      } else {
-        setError(prodRes.error?.message || "Failed to load products");
+      const [prodSettled, catSettled] = results;
+
+      if (prodSettled.status === "fulfilled" && prodSettled.value?.success && prodSettled.value?.data) {
+        setProducts(prodSettled.value.data);
+      } else if (prodSettled.status === "fulfilled" && prodSettled.value?.error?.message) {
+        setError(prodSettled.value.error.message);
       }
 
-      if (catRes.success && catRes.data) {
-        setCategories(catRes.data);
+      if (catSettled.status === "fulfilled" && catSettled.value?.success && catSettled.value?.data) {
+        setCategories(catSettled.value.data);
       }
     } catch (e: any) {
       setError(e.message || "Failed to connect to API");

@@ -29,29 +29,32 @@ export default function AdminDashboardPage() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const [dashRes, ordersRes, analRes, sellersRes] = await Promise.all([
+      setError(null);
+      const results = await Promise.allSettled([
         api.getAdminDashboard(),
         api.getAdminOrders(),
         api.getAdminAnalytics({ range: dateRange }),
         api.getAdminSellers(),
       ]);
 
-      if (dashRes.success && dashRes.data) {
-        setStats(dashRes.data);
-      } else {
-        setError(dashRes.error?.message || "Failed to load dashboard metrics");
+      const [dashSettled, ordersSettled, analSettled, sellersSettled] = results;
+
+      if (dashSettled.status === "fulfilled" && dashSettled.value?.success && dashSettled.value?.data) {
+        setStats(dashSettled.value.data);
+      } else if (dashSettled.status === "fulfilled" && dashSettled.value?.error?.message) {
+        setError(dashSettled.value.error.message);
       }
 
-      if (ordersRes.success && ordersRes.data) {
-        setRecentOrders(ordersRes.data.slice(0, 5));
+      if (ordersSettled.status === "fulfilled" && ordersSettled.value?.success && ordersSettled.value?.data) {
+        setRecentOrders(ordersSettled.value.data.slice(0, 5));
       }
 
-      if (analRes.success && analRes.data) {
-        setAnalytics(analRes.data);
+      if (analSettled.status === "fulfilled" && analSettled.value?.success && analSettled.value?.data) {
+        setAnalytics(analSettled.value.data);
       }
 
-      if (sellersRes.success && Array.isArray(sellersRes.data)) {
-        const pending = sellersRes.data.filter(
+      if (sellersSettled.status === "fulfilled" && sellersSettled.value?.success && Array.isArray(sellersSettled.value?.data)) {
+        const pending = sellersSettled.value.data.filter(
           (s: any) =>
             s.status === "under_review" ||
             s.status === "pending" ||
