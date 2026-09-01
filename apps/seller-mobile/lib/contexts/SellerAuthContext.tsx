@@ -7,8 +7,12 @@ import React, {
 } from "react";
 import { supabase } from "../supabase";
 import { api } from "../api";
-import { getSellerMobileToken, setSellerMobileToken } from "../token";
-export { getSellerMobileToken, setSellerMobileToken };
+import {
+  getSellerMobileToken,
+  setSellerMobileToken,
+  initSellerMobileToken,
+} from "../token";
+export { getSellerMobileToken, setSellerMobileToken, initSellerMobileToken };
 import type { SellerStatus } from "@floria/types";
 
 export type SellerOnboardingStatus =
@@ -39,7 +43,7 @@ export interface SellerProfileData {
   onboardingStatus: SellerOnboardingStatus;
   correctionReason?: string;
   statusMessage?: string;
-  role: string;
+  role: "seller";
   isActive: boolean;
   productCount?: number;
 }
@@ -71,7 +75,7 @@ export function SellerAuthProvider({
   const refreshProfile = useCallback(async () => {
     try {
       setIsLoading(true);
-      const token = getSellerMobileToken();
+      const token = getSellerMobileToken() || (await initSellerMobileToken());
 
       if (!token) {
         setSeller(null);
@@ -143,7 +147,7 @@ export function SellerAuthProvider({
       } else {
         // If profile fetch fails or token expired, clear invalid session
         if (profileRes.status === "fulfilled" && profileRes.value.error?.code === "UNAUTHORIZED") {
-          setSellerMobileToken(null);
+          await setSellerMobileToken(null);
         }
         setSeller(null);
       }
@@ -156,13 +160,14 @@ export function SellerAuthProvider({
   }, []);
 
   useEffect(() => {
-    const token = getSellerMobileToken();
-    if (token) {
-      refreshProfile();
-    } else {
-      setSeller(null);
-      setIsLoading(false);
-    }
+    initSellerMobileToken().then((token) => {
+      if (token) {
+        refreshProfile();
+      } else {
+        setSeller(null);
+        setIsLoading(false);
+      }
+    });
   }, [refreshProfile]);
 
   const signIn = async (
@@ -177,7 +182,7 @@ export function SellerAuthProvider({
       if (res.success && res.data) {
         const { token } = res.data;
         if (token) {
-          setSellerMobileToken(token);
+          await setSellerMobileToken(token);
         }
         await refreshProfile();
         return { success: true };
@@ -214,7 +219,7 @@ export function SellerAuthProvider({
 
   const signOut = async () => {
     try {
-      setSellerMobileToken(null);
+      await setSellerMobileToken(null);
       await supabase.auth.signOut();
     } finally {
       setSeller(null);

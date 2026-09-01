@@ -1,34 +1,36 @@
 // Floria Seller Mobile — Secure Resilient Auth Token Store
-const TOKEN_STORAGE_KEY = "@floria_seller_token_v1";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const TOKEN_KEY = "@floria_seller_token_v1";
 let memorySellerToken: string | null = null;
 
-// Initialize from storage synchronously if available
-if (typeof globalThis !== "undefined" && (globalThis as any).localStorage) {
+export async function initSellerMobileToken(): Promise<string | null> {
+  if (memorySellerToken) return memorySellerToken;
   try {
-    const persisted = (globalThis as any).localStorage.getItem(TOKEN_STORAGE_KEY);
-    if (persisted) {
-      memorySellerToken = persisted;
+    const persisted = await AsyncStorage.getItem(TOKEN_KEY);
+    if (persisted && persisted.trim()) {
+      memorySellerToken = persisted.trim();
+      return memorySellerToken;
     }
   } catch {
-    // Ignore storage read errors on unsupported environments
+    // Ignore storage read error
   }
+  return null;
 }
 
 export function getSellerMobileToken(): string | null {
   return memorySellerToken;
 }
 
-export function setSellerMobileToken(token: string | null) {
+export async function setSellerMobileToken(token: string | null): Promise<void> {
   memorySellerToken = token;
-  if (typeof globalThis !== "undefined" && (globalThis as any).localStorage) {
-    try {
-      if (token) {
-        (globalThis as any).localStorage.setItem(TOKEN_STORAGE_KEY, token);
-      } else {
-        (globalThis as any).localStorage.removeItem(TOKEN_STORAGE_KEY);
-      }
-    } catch {
-      // Ignore write errors
+  try {
+    if (token) {
+      await AsyncStorage.setItem(TOKEN_KEY, token);
+    } else {
+      await AsyncStorage.removeItem(TOKEN_KEY);
     }
+  } catch {
+    // Ignore storage write error
   }
 }

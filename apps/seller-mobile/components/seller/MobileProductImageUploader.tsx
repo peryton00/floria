@@ -11,6 +11,7 @@ import {
   StyleSheet,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system";
 import {
   Star,
   Check,
@@ -76,99 +77,132 @@ export function MobileProductImageUploader({
   const [pickerModalVisible, setPickerModalVisible] = useState(false);
   const [activeUploading, setActiveUploading] = useState(false);
 
-  // Single file upload worker with Backend Image Engine WebP Transcoding
-  const uploadSingleAsset = async (
+  // Helper to read local file to base64 DataURI
+  const readAssetAsDataUri = async (
     localUri: string,
-    filename: string,
-    rawMime: string | undefined,
-    rawBase64: string | undefined | null,
-    currentImagesRef: MobileProductImage[],
-    indexInBatch: number,
-  ) => {
-    const mimeType = resolveImageMimeType(filename, rawMime);
-    const isFirst = currentImagesRef.length === 0 && indexInBatch === 0;
-
-    const tempItem: MobileProductImage = {
-      assetId: "",
-      url: localUri,
-      localUri,
-      filename,
-      mimeType,
-      isPrimary: isFirst,
-      status: "UPLOADING",
-    };
-
-    currentImagesRef.push(tempItem);
-    onChange([...currentImagesRef]);
-
-    try {
-      // 1. Prepare Base64 payload (State: UPLOADING)
-      let base64Data = rawBase64 || "";
-      if (!base64Data) {
+    rawBase64?: string | null,
+    mimeType: string = "image/jpeg",
+  ): Promise<string> => {
+    let base64 = rawBase64 || "";
+    if (!base64) {
+      try {
+        base64 = await FileSystem.readAsStringAsync(localUri, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+      } catch {
         const response = await fetch(localUri);
         const arrayBuffer = await response.arrayBuffer();
-
         if (arrayBuffer.byteLength > MAX_IMAGE_SIZE_BYTES) {
           throw new Error(
             `Image exceeds 10 MB maximum limit (${(arrayBuffer.byteLength / (1024 * 1024)).toFixed(1)} MB).`,
           );
         }
-
-        base64Data = arrayBufferToBase64(arrayBuffer);
+        base64 = arrayBufferToBase64(arrayBuffer);
       }
-
-      if (!base64Data) {
-        throw new Error("Unable to read image data from device.");
-      }
-
-      // 2. Dispatch to Floria Image Engine (State: PROCESSING)
-      tempItem.status = "PROCESSING";
-      onChange([...currentImagesRef]);
-
-      const cleanFilename = filename || `plant_${Date.now()}.jpg`;
-
-      // Quick visual transition to OPTIMIZING state before response resolve
-      setTimeout(() => {
-        if (tempItem.status === "PROCESSING") {
-          tempItem.status = "OPTIMIZING";
-          onChange([...currentImagesRef]);
-        }
-      }, 300);
-
-      const res = await api.uploadMediaDirect({
-        filename: cleanFilename,
-        mimeType: mimeType,
-        base64Data: base64Data,
-        profile: "PRODUCT",
-      });
-
-      if (!res.success || !res.data) {
-        throw new Error(res.error?.message || "Image engine processing failed on backend.");
-      }
-
-      // 3. Attach authoritative backend WebP variant URL (State: COMPLETED)
-      const { assetId, variants, url } = res.data;
-      const resolvedWebpUrl =
-        url ||
-        variants?.medium ||
-        variants?.large ||
-        variants?.thumbnail ||
-        localUri;
-
-      tempItem.assetId = assetId;
-      tempItem.url = resolvedWebpUrl;
-      tempItem.status = "COMPLETED";
-      onChange([...currentImagesRef]);
-    } catch (err: any) {
-      console.warn("[MobileProductImageUploader] Upload error:", err?.message || err);
-      tempItem.status = "FAILED";
-      tempItem.errorMessage = err.message || "Upload failed";
-      onChange([...currentImagesRef]);
-      Alert.alert("Upload Error", err.message || "Image processing failed on image engine.");
     }
+
+    if (!base64) {
+      throw new Error("Unable to read image binary from device filesystem.");
+    }
+
+    return base64.startsWith("data:")
+      ? base64
+      : `data:${mimeType};base64,${base64}`;
   };
 
-  // Multiple selection from gallery with 4:3 aspect ratio and 5 image limit
+  // Process a batch of picked assets sequentially one-by-one
+  const processAssetBatch = async (
+    newAssets: { uri: string; fileName?: string | null; mimeType?: string | null; base64?: string | null }[],
+  ) => {
+    if (newAssets.length === 0) return;
+    setActiveUploading(true);
+
+    const startIndex = images.length;
+    // 1. Append placeholder items immediately for instant UI feedback
+    const placeholders: MobileProductImage[] = newAssets.map((asset, idx) => ({
+      assetId: "",
+      url: asset.uri,
+      localUri: asset.uri,
+      filename: asset.fileName || `specimen_${Date.now()}_${idx}.jpg`,
+      mimeType: resolveImageMimeType(asset.fileName || "specimen.jpg", asset.mimeType || undefined),
+      isPrimary: startIndex === 0 && idx === 0,
+      status: "UPLOADING",
+    }));
+
+    let workingList = [...images, ...placeholders];
+    onChange(workingList);
+
+    // 2. Upload sequentially one by one
+    for (let i = 0; i < newAssets.length; i++) {
+      const targetIndex = startIndex + i;
+      const asset = newAssets[i];
+      const filename = workingList[targetIndex]?.filename || `plant_${Date.now()}_${i}.jpg`;
+      const mimeType = workingList[targetIndex]?.mimeType || "image/jpeg";
+
+      try {
+        // Update status to PROCESSING
+        workingList = workingList.map((item, idx) =>
+          idx === targetIndex ? { ...item, status: "PROCESSING" as const } : item,
+        );
+        onChange([...workingList]);
+
+        // Convert to standard Data URI (identical to seller-web FileReader)
+        const base64DataUri = await readAssetAsDataUri(asset.uri, asset.base64, mimeType);
+
+        // Upload to Floria backend image engine
+        const uploadRes = await api.uploadMediaDirect({
+          filename,
+          mimeType,
+          base64Data: base64DataUri,
+          profile: "PRODUCT",
+        });
+
+        if (!uploadRes.success || !uploadRes.data) {
+          throw new Error(uploadRes.error?.message || "Backend image processing failed.");
+        }
+
+        const { assetId, variants, url } = uploadRes.data;
+        const resolvedUrl =
+          url ||
+          variants?.medium ||
+          variants?.large ||
+          variants?.thumbnail;
+
+        if (!resolvedUrl) {
+          throw new Error("Backend did not return a valid public image URL.");
+        }
+
+        // Attach authoritative URL & assetId
+        workingList = workingList.map((item, idx) =>
+          idx === targetIndex
+            ? {
+                ...item,
+                assetId,
+                url: resolvedUrl,
+                status: "COMPLETED" as const,
+              }
+            : item,
+        );
+        onChange([...workingList]);
+      } catch (err: any) {
+        console.warn(`[MobileProductImageUploader] Upload error for item ${targetIndex}:`, err?.message || err);
+        workingList = workingList.map((item, idx) =>
+          idx === targetIndex
+            ? {
+                ...item,
+                status: "FAILED" as const,
+                errorMessage: err?.message || "Upload failed",
+              }
+            : item,
+        );
+        onChange([...workingList]);
+      }
+    }
+
+    setActiveUploading(false);
+  };
+
+  // Multiple selection from gallery with 4:3 aspect ratio
   const handlePickFromGallery = async () => {
     setPickerModalVisible(false);
     const availableSlots = maxImages - images.length;
@@ -192,30 +226,14 @@ export function MobileProductImageUploader({
         allowsMultipleSelection: true,
         selectionLimit: availableSlots,
         allowsEditing: availableSlots === 1,
-        aspect: [4, 3], // 4:3 Botanical ratio
+        aspect: [4, 3],
         quality: 0.85,
-        base64: true, // Direct base64 for instant backend upload
+        base64: true,
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
-        setActiveUploading(true);
-        const currentList = [...images];
         const selectedAssets = result.assets.slice(0, availableSlots);
-
-        // Upload selected images concurrently
-        await Promise.all(
-          selectedAssets.map((asset, idx) =>
-            uploadSingleAsset(
-              asset.uri,
-              asset.fileName || `plant_${Date.now()}_${idx}.jpg`,
-              asset.mimeType || "image/jpeg",
-              asset.base64,
-              currentList,
-              idx,
-            ),
-          ),
-        );
-        setActiveUploading(false);
+        await processAssetBatch(selectedAssets);
       }
     } catch (err: any) {
       setActiveUploading(false);
@@ -244,29 +262,72 @@ export function MobileProductImageUploader({
 
       const result = await ImagePicker.launchCameraAsync({
         mediaTypes: ["images"],
-        allowsEditing: true, // Crop option with exact 4:3 dimension
-        aspect: [4, 3], // Perfect 4:3 ratio matching Floria product card specs
+        allowsEditing: true,
+        aspect: [4, 3],
         quality: 0.85,
         base64: true,
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
-        setActiveUploading(true);
-        const currentList = [...images];
-        const asset = result.assets[0];
-        await uploadSingleAsset(
-          asset.uri,
-          `camera_plant_${Date.now()}.jpg`,
-          asset.mimeType || "image/jpeg",
-          asset.base64,
-          currentList,
-          0,
-        );
-        setActiveUploading(false);
+        await processAssetBatch([result.assets[0]]);
       }
     } catch (err: any) {
       setActiveUploading(false);
       Alert.alert("Camera Error", err.message || "Failed to open device camera.");
+    }
+  };
+
+  // Retry upload for a failed single image
+  const handleRetry = async (index: number) => {
+    const item = images[index];
+    if (!item || !item.localUri) return;
+
+    try {
+      const updated = images.map((img, idx) =>
+        idx === index ? { ...img, status: "PROCESSING" as const } : img,
+      );
+      onChange(updated);
+
+      const mimeType = item.mimeType || "image/jpeg";
+      const base64DataUri = await readAssetAsDataUri(item.localUri, null, mimeType);
+
+      const res = await api.uploadMediaDirect({
+        filename: item.filename || "retry.jpg",
+        mimeType,
+        base64Data: base64DataUri,
+        profile: "PRODUCT",
+      });
+
+      if (!res.success || !res.data) {
+        throw new Error(res.error?.message || "Retry failed.");
+      }
+
+      const { assetId, variants, url } = res.data;
+      const resolvedUrl = url || variants?.medium || variants?.large || variants?.thumbnail;
+
+      const completed = images.map((img, idx) =>
+        idx === index
+          ? {
+              ...img,
+              assetId,
+              url: resolvedUrl,
+              status: "COMPLETED" as const,
+              errorMessage: undefined,
+            }
+          : img,
+      );
+      onChange(completed);
+    } catch (err: any) {
+      const failed = images.map((img, idx) =>
+        idx === index
+          ? {
+              ...img,
+              status: "FAILED" as const,
+              errorMessage: err?.message || "Retry failed",
+            }
+          : img,
+      );
+      onChange(failed);
     }
   };
 
@@ -284,24 +345,6 @@ export function MobileProductImageUploader({
       filtered[0].isPrimary = true;
     }
     onChange(filtered);
-  };
-
-  const handleRetry = async (index: number) => {
-    const item = images[index];
-    if (!item || !item.localUri) return;
-
-    const listCopy = [...images];
-    listCopy.splice(index, 1);
-    onChange(listCopy);
-
-    await uploadSingleAsset(
-      item.localUri,
-      item.filename || "retry.jpg",
-      item.mimeType,
-      null,
-      listCopy,
-      index,
-    );
   };
 
   return (
@@ -326,7 +369,11 @@ export function MobileProductImageUploader({
 
           return (
             <View key={index} style={styles.imageCard}>
-              <Image source={{ uri: item.url }} style={styles.thumbnail} />
+              <Image
+                source={{ uri: item.localUri || item.url }}
+                style={styles.thumbnail}
+                resizeMode="cover"
+              />
 
               {/* Cover Badge */}
               {item.isPrimary && !isInProgress && (

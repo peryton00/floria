@@ -141,7 +141,7 @@ export default function NewProductListingScreen() {
     const validThreshold = isNaN(parsedThreshold) ? 5 : parsedThreshold;
 
     const isUploadingImages = images.some(
-      (img) => img.status === "UPLOADING" || img.status === "PROCESSING",
+      (img) => img.status === "UPLOADING" || img.status === "PROCESSING" || img.status === "OPTIMIZING",
     );
     if (isUploadingImages) {
       toast.warning(
@@ -151,13 +151,22 @@ export default function NewProductListingScreen() {
       return;
     }
 
-    // Cleaned images payload
+    const hasFailedImages = images.some((img) => img.status === "FAILED");
+    if (hasFailedImages) {
+      toast.error(
+        "Image Upload Incomplete",
+        "One or more images failed to upload. Please remove or retry them before publishing.",
+      );
+      return;
+    }
+
+    // Cleaned images payload with verified public URLs and asset IDs
     const cleanImages = images
-      .filter((img) => img.status !== "FAILED" && !img.url.startsWith("blob:"))
+      .filter((img) => img.status === "COMPLETED" || img.status === "READY" || (img.url && !img.url.startsWith("file://") && !img.url.startsWith("blob:")))
       .map((img) => ({
         asset_id: img.assetId && img.assetId.trim().length > 10 ? img.assetId : undefined,
         url: img.url,
-        is_primary: img.isPrimary,
+        is_primary: Boolean(img.isPrimary),
       }));
 
     const primaryImage =

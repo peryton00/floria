@@ -22,11 +22,24 @@ function getApiBaseUrl(): string {
   return process.env.EXPO_PUBLIC_API_URL || "http://localhost:4000";
 }
 
-import { getSellerMobileToken } from "./token";
+import { getSellerMobileToken, initSellerMobileToken } from "./token";
 
 export const api = new FloriaApiClient({
   baseUrl: getApiBaseUrl(),
   getAccessToken: async () => {
-    return getSellerMobileToken() || null;
+    let token = getSellerMobileToken();
+    if (!token) {
+      token = await initSellerMobileToken();
+    }
+    if (token) return token;
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      return session?.access_token || null;
+    } catch {
+      return null;
+    }
   },
 });
