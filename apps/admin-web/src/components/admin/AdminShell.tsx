@@ -21,7 +21,6 @@ import {
   SettingsIcon,
   AlertIcon,
   SearchIcon,
-  BellIcon,
   LockIcon,
   LogoutIcon,
   ImageIcon,
@@ -52,13 +51,22 @@ export function AdminShell({ children }: AdminShellProps) {
   const [userName, setUserName] = useState("Admin User");
   const [userRole, setUserRole] = useState<string>("admin");
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
-  const [isStaging, setIsStaging] = useState(false);
+  const [envLabel, setEnvLabel] = useState<"production" | "staging" | "local">("production");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       const host = window.location.hostname;
-      if (host.includes("localhost") || host.includes("vercel.app") || host.includes("staging")) {
-        setIsStaging(true);
+      const explicitEnv = process.env.NEXT_PUBLIC_ENVIRONMENT || process.env.NEXT_PUBLIC_APP_ENV;
+
+      if (explicitEnv === "production") {
+        setEnvLabel("production");
+      } else if (explicitEnv === "staging" || host.startsWith("staging.") || host.startsWith("sandbox.") || host.includes("-preview")) {
+        setEnvLabel("staging");
+      } else if (host === "localhost" || host === "127.0.0.1") {
+        setEnvLabel("local");
+      } else {
+        // Any deployed domain defaults to Production Node unless explicitly staging/preview
+        setEnvLabel("production");
       }
     }
   }, []);
@@ -149,7 +157,7 @@ export function AdminShell({ children }: AdminShellProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0A150F] text-white flex items-center justify-center font-sans">
+      <div className="min-h-screen bg-[#0E1B13] text-white flex items-center justify-center font-sans">
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
           <p className="text-xs font-mono uppercase tracking-[0.2em] text-white/60">
@@ -182,7 +190,7 @@ export function AdminShell({ children }: AdminShellProps) {
               <button
                 type="button"
                 onClick={handleLogout}
-                className="w-full py-2 text-xs font-mono text-ink-500 hover:text-ink-900 transition-colors"
+                className="w-full py-2 text-xs font-mono text-ink-500 hover:text-ink-900 transition-colors cursor-pointer"
               >
                 Sign Out & Switch Account
               </button>
@@ -195,16 +203,20 @@ export function AdminShell({ children }: AdminShellProps) {
 
   return (
     <div className="min-h-screen bg-[#F9F8F3] flex font-sans antialiased text-[#212529]">
-      {/* DESKTOP SIDEBAR */}
+      {/* DESKTOP SIDEBAR — Machined Botanical Luxury Enclosure */}
       <aside
-        className="hidden md:flex w-64 h-screen sticky top-0 bg-[#122319] text-white flex-col flex-shrink-0 border-r border-white/[0.08] select-none z-20 shadow-[4px_0_24px_rgba(0,0,0,0.12)]"
+        className="hidden md:flex w-64 h-screen sticky top-0 bg-[#0E1B13] text-white flex-col flex-shrink-0 border-r border-emerald-950/60 shadow-[8px_0_32px_-8px_rgba(0,0,0,0.35)] select-none z-20"
         aria-label="Admin panel navigation"
       >
         {/* Brand Header */}
-        <div className="p-5 border-b border-white/[0.08] flex items-center justify-between flex-shrink-0 bg-white/[0.01]">
-          <Link href="/" className="flex items-center gap-3 group" aria-label="Admin dashboard home">
-            {/* Logo Emblem Capsule */}
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-forest-600 to-forest-800 border border-white/20 shadow-inner flex items-center justify-center p-2 flex-shrink-0 group-hover:border-emerald-400/40 transition-colors">
+        <div className="p-4 border-b border-white/[0.06] flex items-center justify-between flex-shrink-0 bg-white/[0.015]">
+          <Link
+            href="/"
+            className="group flex items-center gap-3 w-full p-2 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:border-emerald-400/30 hover:bg-white/[0.06] transition-all duration-300 shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)]"
+            aria-label="Admin dashboard home"
+          >
+            {/* Medallion Logo Frame */}
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-forest-600 via-forest-700 to-forest-900 border border-white/20 shadow-[0_2px_8px_rgba(0,0,0,0.3),inset_0_1px_1px_rgba(255,255,255,0.25)] flex items-center justify-center p-2 flex-shrink-0 group-hover:scale-105 transition-transform duration-300">
               <Image
                 src="/brand_logo.svg"
                 alt="Floria Logo"
@@ -213,8 +225,8 @@ export function AdminShell({ children }: AdminShellProps) {
                 className="w-auto h-5 object-contain brightness-0 invert"
               />
             </div>
-            <div>
-              <span className="font-serif text-base font-semibold text-white tracking-tight block leading-tight group-hover:text-emerald-300 transition-colors">
+            <div className="min-w-0">
+              <span className="font-serif text-[15px] font-semibold text-white tracking-tight block leading-tight group-hover:text-emerald-300 transition-colors">
                 Floria Console
               </span>
               <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-emerald-400 font-semibold block leading-none mt-1">
@@ -225,11 +237,11 @@ export function AdminShell({ children }: AdminShellProps) {
         </div>
 
         {/* Grouped Navigation Links */}
-        <nav className="flex-1 px-3 py-4 space-y-5 overflow-y-auto min-h-0 custom-scrollbar">
+        <nav className="flex-1 px-3 py-3 space-y-4 overflow-y-auto min-h-0 custom-scrollbar">
           {navSections.map((sec) => (
             <div key={sec.group} className="space-y-1">
               {/* Group Eyebrow */}
-              <div className="px-3 py-1 text-[9px] font-mono font-semibold uppercase tracking-[0.2em] text-white/35">
+              <div className="px-3 pt-2 pb-1 text-[9px] font-mono font-medium uppercase tracking-[0.22em] text-emerald-200/40">
                 {sec.group}
               </div>
 
@@ -241,9 +253,9 @@ export function AdminShell({ children }: AdminShellProps) {
                     <Link
                       key={link.href}
                       href={link.href}
-                      className={`group/nav relative flex items-center justify-between px-3 py-2 rounded-xl text-xs tracking-wide transition-all duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+                      className={`group/nav relative flex items-center justify-between px-3.5 py-2 rounded-xl text-xs tracking-wide transition-all duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] ${
                         isActive
-                          ? "bg-white/[0.12] text-white font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.15),0_2px_8px_rgba(0,0,0,0.2)] border border-white/10"
+                          ? "bg-gradient-to-r from-emerald-500/15 via-white/[0.08] to-transparent text-white font-semibold shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_4px_12px_rgba(0,0,0,0.2)] border-l-2 border-emerald-400"
                           : "text-white/65 hover:text-white hover:bg-white/[0.05]"
                       }`}
                     >
@@ -270,10 +282,10 @@ export function AdminShell({ children }: AdminShellProps) {
         </nav>
 
         {/* User Identity Footer Capsule */}
-        <div className="p-3 border-t border-white/[0.08] bg-black/20 flex-shrink-0">
-          <div className="p-2 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-between gap-2.5">
+        <div className="p-3 border-t border-white/[0.06] bg-black/25 flex-shrink-0">
+          <div className="p-2 rounded-xl bg-white/[0.03] border border-white/[0.06] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] flex items-center justify-between gap-2.5">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-700 to-forest-800 text-white font-serif font-bold text-xs flex items-center justify-center flex-shrink-0 border border-white/20">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-700 to-forest-800 text-white font-serif font-bold text-xs flex items-center justify-center flex-shrink-0 border border-white/20 shadow-xs">
                 {userName.charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0">
@@ -288,7 +300,7 @@ export function AdminShell({ children }: AdminShellProps) {
               type="button"
               onClick={handleLogout}
               title="Log out"
-              className="p-1.5 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-all active:scale-95 cursor-pointer"
             >
               <LogoutIcon size={15} />
             </button>
@@ -298,9 +310,9 @@ export function AdminShell({ children }: AdminShellProps) {
 
       {/* MOBILE DRAWER OVERLAY */}
       {mobileDrawerOpen && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs md:hidden flex animate-in fade-in duration-200">
-          <div className="w-72 bg-[#122319] text-white flex flex-col h-full shadow-2xl border-r border-white/10">
-            <div className="p-5 border-b border-white/[0.08] flex items-center justify-between">
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs md:hidden flex animate-in fade-in duration-200">
+          <div className="w-72 bg-[#0E1B13] text-white flex flex-col h-full shadow-2xl border-r border-white/10">
+            <div className="p-4 border-b border-white/[0.08] flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-forest-600 to-forest-800 border border-white/20 flex items-center justify-center p-1.5">
                   <Image
@@ -321,17 +333,17 @@ export function AdminShell({ children }: AdminShellProps) {
               <button
                 type="button"
                 onClick={() => setMobileDrawerOpen(false)}
-                className="p-2 text-white/70 hover:text-white transition-colors"
+                className="p-2 text-white/70 hover:text-white transition-colors cursor-pointer"
                 aria-label="Close navigation drawer"
               >
                 <CloseIcon size={18} />
               </button>
             </div>
 
-            <nav className="flex-1 px-3 py-4 space-y-5 overflow-y-auto">
+            <nav className="flex-1 px-3 py-3 space-y-4 overflow-y-auto">
               {navSections.map((sec) => (
                 <div key={sec.group} className="space-y-1">
-                  <div className="px-3 py-1 text-[9px] font-mono font-semibold uppercase tracking-[0.2em] text-white/35">
+                  <div className="px-3 pt-2 pb-1 text-[9px] font-mono font-medium uppercase tracking-[0.22em] text-emerald-200/40">
                     {sec.group}
                   </div>
                   <div className="space-y-0.5">
@@ -342,9 +354,9 @@ export function AdminShell({ children }: AdminShellProps) {
                           key={link.href}
                           href={link.href}
                           onClick={() => setMobileDrawerOpen(false)}
-                          className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs tracking-wide transition-all ${
+                          className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs tracking-wide transition-all ${
                             isActive
-                              ? "bg-white/[0.12] text-white font-semibold border border-white/10"
+                              ? "bg-gradient-to-r from-emerald-500/20 via-white/[0.08] to-transparent text-white font-semibold border-l-2 border-emerald-400"
                               : "text-white/65 hover:text-white hover:bg-white/[0.05]"
                           }`}
                         >
@@ -365,7 +377,7 @@ export function AdminShell({ children }: AdminShellProps) {
               ))}
             </nav>
 
-            <div className="p-3 border-t border-white/[0.08] bg-black/20">
+            <div className="p-3 border-t border-white/[0.08] bg-black/25">
               <div className="p-2 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-between">
                 <div className="min-w-0 pr-2">
                   <p className="text-xs font-semibold text-white truncate">{userName}</p>
@@ -376,7 +388,7 @@ export function AdminShell({ children }: AdminShellProps) {
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="p-1.5 rounded-lg hover:bg-white/10 text-white/70 hover:text-white"
+                  className="p-1.5 rounded-lg hover:bg-white/10 text-white/70 hover:text-white cursor-pointer"
                 >
                   <LogoutIcon size={16} />
                 </button>
@@ -396,7 +408,7 @@ export function AdminShell({ children }: AdminShellProps) {
             <button
               type="button"
               onClick={() => setMobileDrawerOpen(true)}
-              className="md:hidden p-1.5 rounded-lg border border-cream-400/80 text-ink-900 hover:bg-cream-100 transition-colors"
+              className="md:hidden p-1.5 rounded-lg border border-cream-400/80 text-ink-900 hover:bg-cream-100 transition-colors cursor-pointer"
               aria-label="Open mobile navigation menu"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -406,20 +418,44 @@ export function AdminShell({ children }: AdminShellProps) {
               </svg>
             </button>
 
-            <span
-              className={`px-3 py-1 rounded-full text-[10px] font-mono font-semibold uppercase tracking-wider border flex items-center gap-1.5 ${
-                isStaging
-                  ? "bg-amber-50 text-amber-800 border-amber-200"
-                  : "bg-emerald-50 text-emerald-800 border-emerald-200"
+            {/* Environmental Indicator Badge */}
+            <div
+              className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[10px] font-mono font-semibold uppercase tracking-[0.16em] shadow-[inset_0_1px_1px_rgba(255,255,255,0.8)] ${
+                envLabel === "production"
+                  ? "bg-emerald-50 text-emerald-900 border-emerald-300/70"
+                  : envLabel === "staging"
+                  ? "bg-amber-50 text-amber-900 border-amber-300/70"
+                  : "bg-sage-50 text-forest-900 border-forest-200/80"
               }`}
             >
-              <span
-                className={`w-1.5 h-1.5 rounded-full ${
-                  isStaging ? "bg-amber-500" : "bg-emerald-500 animate-pulse"
-                }`}
-              />
-              {isStaging ? "Staging Sandbox" : "Production Node"}
-            </span>
+              <span className="relative flex h-2 w-2 items-center justify-center">
+                <span
+                  className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
+                    envLabel === "production"
+                      ? "bg-emerald-400"
+                      : envLabel === "staging"
+                      ? "bg-amber-400"
+                      : "bg-forest-400"
+                  }`}
+                />
+                <span
+                  className={`relative inline-flex rounded-full h-1.5 w-1.5 ${
+                    envLabel === "production"
+                      ? "bg-emerald-600"
+                      : envLabel === "staging"
+                      ? "bg-amber-600"
+                      : "bg-forest-600"
+                  }`}
+                />
+              </span>
+              <span>
+                {envLabel === "production"
+                  ? "Production Node"
+                  : envLabel === "staging"
+                  ? "Staging Sandbox"
+                  : "Local Node"}
+              </span>
+            </div>
           </div>
 
           {/* Quick Search */}
