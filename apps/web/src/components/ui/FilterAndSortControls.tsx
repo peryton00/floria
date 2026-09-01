@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { FilterSidebar } from "@/components/ui/FilterSidebar";
 import { FilterIcon } from "@/components/ui/Icons";
+import { api } from "@/lib/api";
+import type { NurserySummary } from "@/lib/api";
+import type { Category } from "@floria/types";
 
 interface FilterAndSortControlsProps {
   totalCount: number;
@@ -43,6 +46,17 @@ export function FilterAndSortControls({
   const searchParams = useSearchParams();
 
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
+  const [nurseries, setNurseries] = useState<NurserySummary[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    api.getRankedNurseries().then((res) => {
+      if (res.success && res.data) setNurseries(res.data);
+    });
+    api.getCategories().then((res) => {
+      if (res.success && res.data) setCategories(res.data);
+    });
+  }, []);
 
   const activeSort = propActiveSort ?? searchParams.get("sort") ?? "featured";
   const activeNursery = propActiveNursery ?? searchParams.get("nursery");
@@ -50,6 +64,15 @@ export function FilterAndSortControls({
   const activeMaxPrice = propActiveMaxPrice ?? searchParams.get("maxPrice");
   const activeInStock = propActiveInStock !== undefined ? propActiveInStock : searchParams.get("inStock") === "true";
   const activeQuery = searchParams.get("q");
+
+  // Dynamically resolve real Nursery and Category Names
+  const nurseryName = activeNursery && activeNursery !== "all"
+    ? nurseries.find((n) => n.id === activeNursery)?.business_name || activeNursery
+    : null;
+
+  const categoryName = currentCategorySlug && currentCategorySlug !== "all" && !pathname.startsWith("/categories/")
+    ? categories.find((c) => c.slug === currentCategorySlug)?.name || currentCategorySlug
+    : null;
 
   const handleSortChange = (newSort: string) => {
     if (onSortChange) {
@@ -91,9 +114,6 @@ export function FilterAndSortControls({
       router.push(queryStr ? `${pathname}?${queryStr}` : pathname);
     }
   };
-
-  // Resolve Nursery Name
-  const nurseryName = activeNursery ? "Selected Nursery" : null;
 
   return (
     <div className="space-y-3 mb-5">
@@ -200,7 +220,8 @@ export function FilterAndSortControls({
       </div>
 
       {/* Active Filter Badges */}
-      {(nurseryName ||
+      {(categoryName ||
+        nurseryName ||
         activeMinPrice ||
         activeMaxPrice ||
         activeInStock ||
@@ -210,6 +231,20 @@ export function FilterAndSortControls({
             Active Filters:
           </span>
 
+          {categoryName && (
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-forest-800 bg-forest-50 px-2.5 py-0.5 rounded-full border border-forest-200/80 shadow-2xs">
+              Category: {categoryName}
+              <button
+                type="button"
+                onClick={() => removeFilter("category")}
+                className="hover:text-red-700 font-bold ml-0.5"
+                aria-label="Remove category filter"
+              >
+                ✕
+              </button>
+            </span>
+          )}
+
           {activeQuery && (
             <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-forest-800 bg-forest-50 px-2.5 py-0.5 rounded-full border border-forest-200/80 shadow-2xs">
               &quot;{activeQuery}&quot;
@@ -217,6 +252,7 @@ export function FilterAndSortControls({
                 type="button"
                 onClick={() => removeFilter("q")}
                 className="hover:text-red-700 font-bold ml-0.5"
+                aria-label="Remove search query"
               >
                 ✕
               </button>
@@ -230,6 +266,7 @@ export function FilterAndSortControls({
                 type="button"
                 onClick={() => removeFilter("nursery")}
                 className="hover:text-red-700 font-bold ml-0.5"
+                aria-label="Remove nursery filter"
               >
                 ✕
               </button>
@@ -242,10 +279,12 @@ export function FilterAndSortControls({
               <button
                 type="button"
                 onClick={() => {
+                  removeFilter("price");
                   removeFilter("minPrice");
                   removeFilter("maxPrice");
                 }}
                 className="hover:text-red-700 font-bold ml-0.5"
+                aria-label="Remove price filter"
               >
                 ✕
               </button>
@@ -259,11 +298,25 @@ export function FilterAndSortControls({
                 type="button"
                 onClick={() => removeFilter("inStock")}
                 className="hover:text-red-700 font-bold ml-0.5"
+                aria-label="Remove stock filter"
               >
                 ✕
               </button>
             </span>
           )}
+
+          <button
+            type="button"
+            onClick={() => {
+              if (onClearAll) onClearAll();
+              else {
+                router.push(pathname);
+              }
+            }}
+            className="text-[10px] text-stone-500 hover:text-stone-900 font-semibold underline underline-offset-2 ml-1"
+          >
+            Clear all
+          </button>
         </div>
       )}
 
