@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -38,6 +38,18 @@ export default function InventoryManagementScreen() {
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
+  const debounceTimersRef = useRef<Record<string, any>>({});
+  const baseStockRef = useRef<Record<string, number>>({});
+
+  useEffect(() => {
+    return () => {
+      // Clear any pending debounce timers on unmount
+      Object.values(debounceTimersRef.current).forEach((timer) => {
+        if (timer) clearTimeout(timer);
+      });
+    };
+  }, []);
+
   if (!isApproved) {
     return (
       <View style={styles.screen}>
@@ -76,11 +88,23 @@ export default function InventoryManagementScreen() {
     fetchInventory();
   };
 
-  const handleUpdateStock = async (productId: string, newStock: number) => {
-    // 1. Optimistic Update
-    const previousInventory = [...inventory];
-    setInventory((prev) =>
-      prev.map((item) => {
+  const handleUpdateStock = (productId: string, newStock: number, productName?: string) => {
+    // 1. Optimistic UI update immediately
+    setInventory((prev) => {
+      // Save baseline stock before first click in this debounce batch
+      const currentItem = prev.find((item) => {
+        const itemPId = item.product_id || item.product?.id || item.id;
+        return itemPId === productId || item.id === productId;
+      });
+      if (currentItem && baseStockRef.current[productId] === undefined) {
+        baseStockRef.current[productId] =
+          currentItem.stock_quantity ??
+          currentItem.product?.stock_quantity ??
+          currentItem.quantity ??
+          0;
+      }
+
+      return prev.map((item) => {
         const itemPId = item.product_id || item.product?.id || item.id;
         if (itemPId === productId || item.id === productId) {
           return {
@@ -93,26 +117,75 @@ export default function InventoryManagementScreen() {
           };
         }
         return item;
-      }),
-    );
-
-    // 2. Server-Authoritative Mutation
-    try {
-      const res = await api.updateSellerInventory(productId, {
-        stock_quantity: newStock,
       });
-      if (res.success) {
-        showSuccess("Inventory stock updated.");
-      } else {
-        // Rollback
-        setInventory(previousInventory);
-        showError(res.error?.message || "Failed to update inventory.");
-      }
-    } catch (err: any) {
-      // Rollback
-      setInventory(previousInventory);
-      showError(err.message || "Failed to update inventory.");
+    });
+
+    // 2. Clear existing debounce timer for this product
+    if (debounceTimersRef.current[productId]) {
+      clearTimeout(debounceTimersRef.current[productId]);
     }
+
+    // 3. Debounce the network request (800ms)
+    debounceTimersRef.current[productId] = setTimeout(async () => {
+      delete debounceTimersRef.current[productId];
+      const fallbackQty = baseStockRef.current[productId];
+
+      try {
+        const res = await api.updateSellerInventory(productId, {
+          stock_quantity: newStock,
+        });
+
+        if (res.success) {
+          delete baseStockRef.current[productId];
+          const label = productName ? `${productName}: ` : "";
+          showSuccess(`${label}Stock updated to ${newStock}`);
+        } else {
+          // Rollback on error
+          if (fallbackQty !== undefined) {
+            setInventory((prev) =>
+              prev.map((item) => {
+                const itemPId = item.product_id || item.product?.id || item.id;
+                if (itemPId === productId || item.id === productId) {
+                  return {
+                    ...item,
+                    stock_quantity: fallbackQty,
+                    quantity: fallbackQty,
+                    product: item.product
+                      ? { ...item.product, stock_quantity: fallbackQty }
+                      : item.product,
+                  };
+                }
+                return item;
+              }),
+            );
+          }
+          delete baseStockRef.current[productId];
+          showError(res.error?.message || "Failed to update inventory.");
+        }
+      } catch (err: any) {
+        // Rollback on network error
+        if (fallbackQty !== undefined) {
+          setInventory((prev) =>
+            prev.map((item) => {
+              const itemPId = item.product_id || item.product?.id || item.id;
+              if (itemPId === productId || item.id === productId) {
+                return {
+                  ...item,
+                  stock_quantity: fallbackQty,
+                  quantity: fallbackQty,
+                  product: item.product
+                    ? { ...item.product, stock_quantity: fallbackQty }
+                    : item.product,
+                };
+              }
+              return item;
+            }),
+          );
+        }
+        delete baseStockRef.current[productId];
+        showError(err.message || "Failed to update inventory.");
+      }
+    }, 800);
   };
 
   const filteredInventory = inventory.filter((item) => {
@@ -200,7 +273,7 @@ export default function InventoryManagementScreen() {
                 pricePaise={price}
                 stockQuantity={stock}
                 lowStockThreshold={thresh}
-                onUpdateStock={(newQty) => handleUpdateStock(pId, newQty)}
+                onUpdateStock={(newQty) => handleUpdateStock(pId, newQty, name)}
               />
             );
           }}
