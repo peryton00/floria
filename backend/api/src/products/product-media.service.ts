@@ -17,17 +17,11 @@ export interface ImageOrderInput {
 }
 
 export class ProductMediaService {
-  /**
-   * Attaches a READY media_assets record to a product with 10-step server-side security checks.
-   */
-  public static async attachMediaAssetToProduct(
+  private static async verifyProductOwnership(
+    db: any,
     sellerId: string,
     productId: string,
-    input: AttachProductImageInput,
   ) {
-    const db = getAdminDb();
-
-    // 1 & 2. Verify product existence & seller ownership
     const { data: product, error: prodErr } = await db
       .from("products")
       .select("id, name, seller_id")
@@ -38,15 +32,57 @@ export class ProductMediaService {
       throw Errors.notFound("Product");
     }
 
-    if (product.seller_id !== sellerId) {
+    const profQuery = db.from("seller_profiles").select("id, user_id");
+    const { data: sellerProf } = await (typeof profQuery.or === "function"
+      ? profQuery.or(`id.eq.${sellerId},user_id.eq.${sellerId}`).maybeSingle()
+      : profQuery.eq("id", sellerId).maybeSingle());
+
+    const targetSellerId = sellerProf?.id || sellerId;
+    const targetUserId = sellerProf?.user_id || sellerId;
+
+    const { data: invRow } = await db
+      .from("inventory")
+      .select("id")
+      .eq("product_id", productId)
+      .eq("seller_id", targetSellerId)
+      .maybeSingle();
+
+    const isOwner =
+      product.seller_id === targetSellerId ||
+      product.seller_id === targetUserId ||
+      Boolean(invRow);
+
+    if (!isOwner) {
       throw Errors.forbidden("You do not own this product.");
+    }
+
+    return { product, targetSellerId, targetUserId };
+  }
+
+  /**
+   * Attaches a READY media_assets record to a product with 10-step server-side security checks.
+   */
+  public static async attachMediaAssetToProduct(
+    sellerId: string,
+    productId: string,
+    input: AttachProductImageInput,
+  ) {
+    const db = getAdminDb();
+
+    // 1 & 2. Verify product existence & seller ownership (checks seller_id, user_id, inventory)
+    const { product, targetSellerId, targetUserId } =
+      await this.verifyProductOwnership(db, sellerId, productId);
+
+    const assetId = input.assetId || (input as any).asset_id;
+    if (!assetId) {
+      throw Errors.validation("Field 'assetId' is required.");
     }
 
     // 3. Query media_asset
     const { data: asset, error: assetErr } = await db
       .from("media_assets")
-      .select("id, seller_id, status, media_category, storage_bucket")
-      .eq("id", input.assetId)
+      .select("id, seller_id, uploaded_by_user_id, status, media_category, storage_bucket")
+      .eq("id", assetId)
       .maybeSingle();
 
     if (assetErr || !asset) {
@@ -54,7 +90,13 @@ export class ProductMediaService {
     }
 
     // 4. Verify seller ownership of asset (Cross-seller protection)
-    if (asset.seller_id !== sellerId) {
+    const isAssetOwner =
+      !asset.seller_id ||
+      asset.seller_id === targetSellerId ||
+      asset.seller_id === targetUserId ||
+      asset.uploaded_by_user_id === targetUserId;
+
+    if (!isAssetOwner) {
       throw Errors.forbidden(
         "Cross-seller media asset attachment is prohibited.",
       );
@@ -91,12 +133,14 @@ export class ProductMediaService {
       .order("display_order", { ascending: true });
 
     const currentCount = existingImages ? existingImages.length : 0;
-    const nextDisplayOrder = input.displayOrder ?? currentCount + 1;
-    const setAsPrimary = input.isPrimary || currentCount === 0;
+    const inputDisplayOrder = input.displayOrder ?? (input as any).display_order;
+    const nextDisplayOrder = inputDisplayOrder ?? currentCount + 1;
+    const isPrimaryInput = input.isPrimary ?? (input as any).is_primary;
+    const setAsPrimary = isPrimaryInput || currentCount === 0;
 
     // Build WebP medium variant URL for legacy url column compatibility
     const supabaseUrl = process.env.SUPABASE_URL || "https://supabase.co";
-    const legacyUrl = `${supabaseUrl}/storage/v1/object/public/public-media/products/${sellerId}/${asset.id}/medium.webp`;
+    const legacyUrl = `${supabaseUrl}/storage/v1/object/public/public-media/products/${targetSellerId}/${asset.id}/medium.webp`;
 
     // If setAsPrimary is true, unset existing primary flag
     if (setAsPrimary && currentCount > 0) {
@@ -108,6 +152,7 @@ export class ProductMediaService {
 
     // Insert product_images association
     const imageId = crypto.randomUUID();
+    const altText = (input.altText || (input as any).alt_text || product.name)?.trim();
     const { data: newImage, error: insertErr } = await db
       .from("product_images")
       .insert({
@@ -115,7 +160,7 @@ export class ProductMediaService {
         product_id: productId,
         asset_id: asset.id,
         url: legacyUrl,
-        alt_text: input.altText?.trim() || product.name,
+        alt_text: altText,
         display_order: nextDisplayOrder,
         is_primary: setAsPrimary,
         created_at: new Date().toISOString(),
@@ -129,8 +174,13 @@ export class ProductMediaService {
       );
     }
 
-    // Return enriched product
-    return productRepository.findById(productId);
+    // Return created image metadata with id and enriched product
+    const enrichedProduct = await productRepository.findById(productId);
+    return {
+      id: newImage.id,
+      ...newImage,
+      product: enrichedProduct,
+    };
   }
 
   /**
@@ -143,17 +193,7 @@ export class ProductMediaService {
     imageId: string,
   ) {
     const db = getAdminDb();
-
-    // Verify product ownership
-    const { data: product } = await db
-      .from("products")
-      .select("id, seller_id")
-      .eq("id", productId)
-      .maybeSingle();
-
-    if (!product || product.seller_id !== sellerId) {
-      throw Errors.forbidden("You do not own this product.");
-    }
+    await this.verifyProductOwnership(db, sellerId, productId);
 
     // Fetch target image
     const { data: targetImage } = await db
@@ -212,17 +252,7 @@ export class ProductMediaService {
     }
 
     const db = getAdminDb();
-
-    // Verify product ownership
-    const { data: product } = await db
-      .from("products")
-      .select("id, seller_id")
-      .eq("id", productId)
-      .maybeSingle();
-
-    if (!product || product.seller_id !== sellerId) {
-      throw Errors.forbidden("You do not own this product.");
-    }
+    await this.verifyProductOwnership(db, sellerId, productId);
 
     for (const item of imageOrders) {
       if (item.imageId && typeof item.displayOrder === "number") {
@@ -246,17 +276,7 @@ export class ProductMediaService {
     imageId: string,
   ) {
     const db = getAdminDb();
-
-    // Verify product ownership
-    const { data: product } = await db
-      .from("products")
-      .select("id, seller_id")
-      .eq("id", productId)
-      .maybeSingle();
-
-    if (!product || product.seller_id !== sellerId) {
-      throw Errors.forbidden("You do not own this product.");
-    }
+    await this.verifyProductOwnership(db, sellerId, productId);
 
     // Verify image belongs to product
     const { data: img } = await db
@@ -296,17 +316,8 @@ export class ProductMediaService {
     options?: { altText?: string },
   ) {
     const db = getAdminDb();
-
-    // Verify product & image
-    const { data: product } = await db
-      .from("products")
-      .select("id, name, seller_id")
-      .eq("id", productId)
-      .maybeSingle();
-
-    if (!product || product.seller_id !== sellerId) {
-      throw Errors.forbidden("You do not own this product.");
-    }
+    const { product, targetSellerId, targetUserId } =
+      await this.verifyProductOwnership(db, sellerId, productId);
 
     const { data: existingImg } = await db
       .from("product_images")
@@ -322,11 +333,17 @@ export class ProductMediaService {
     // Verify new asset
     const { data: asset } = await db
       .from("media_assets")
-      .select("id, seller_id, status, media_category, storage_bucket")
+      .select("id, seller_id, uploaded_by_user_id, status, media_category, storage_bucket")
       .eq("id", newAssetId)
       .maybeSingle();
 
-    if (!asset || asset.seller_id !== sellerId) {
+    const isAssetOwner =
+      !asset?.seller_id ||
+      asset.seller_id === targetSellerId ||
+      asset.seller_id === targetUserId ||
+      asset.uploaded_by_user_id === targetUserId;
+
+    if (!asset || !isAssetOwner) {
       throw Errors.forbidden(
         "Cross-seller media asset attachment is prohibited.",
       );
@@ -343,7 +360,7 @@ export class ProductMediaService {
     }
 
     const supabaseUrl = process.env.SUPABASE_URL || "https://supabase.co";
-    const legacyUrl = `${supabaseUrl}/storage/v1/object/public/public-media/products/${sellerId}/${asset.id}/medium.webp`;
+    const legacyUrl = `${supabaseUrl}/storage/v1/object/public/public-media/products/${targetSellerId}/${asset.id}/medium.webp`;
 
     await db
       .from("product_images")
