@@ -140,7 +140,13 @@ export function DeliveryAuthProvider({
   }, []);
 
   const isAuthorizedCourier = useMemo(() => {
-    return role === "operations" || role === "admin" || role === "super_admin";
+    return (
+      role === "operations" ||
+      role === "admin" ||
+      role === "super_admin" ||
+      role === "courier" ||
+      role === "delivery_partner"
+    );
   }, [role]);
 
   const value = useMemo(

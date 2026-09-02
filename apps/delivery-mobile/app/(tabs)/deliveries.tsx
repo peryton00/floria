@@ -1,16 +1,18 @@
-// Floria Delivery Mobile — Deliveries Queue Operational Workflow (Step 5B.2.1)
+// Floria Delivery Mobile — Deliveries Queue Operational Workflow
 import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
+  TextInput,
   TouchableOpacity,
   RefreshControl,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useDeliveries } from "../../lib/hooks/useDeliveries";
 import { theme } from "../../lib/theme";
+import { FloriaIcon } from "../../components/ui/FloriaIcon";
 import { LoadingState, ErrorState, EmptyState } from "../../components/ui";
 import { DeliveryCard } from "../../components/delivery/DeliveryCard";
 import type { DeliveryAssignment } from "@floria/types";
@@ -25,6 +27,7 @@ const FILTER_TABS = [
 export default function DeliveriesScreen() {
   const router = useRouter();
   const [activeFilter, setActiveFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const { deliveries, loading, error, refresh } = useDeliveries();
 
   // Filter deliveries deterministically client-side from the authoritative response
@@ -41,6 +44,24 @@ export default function DeliveriesScreen() {
       result = result.filter((d) => d.status === "delivered");
     }
 
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      result = result.filter((d) => {
+        const orderId = (d.order_id || (d as any).orderId || "").toLowerCase();
+        const city = (
+          (d as any).dropoffAddress?.city ||
+          (d as any).dropoff_address_snapshot?.city ||
+          ""
+        ).toLowerCase();
+        const name = (
+          (d as any).dropoffAddress?.fullName ||
+          (d as any).dropoff_address_snapshot?.full_name ||
+          ""
+        ).toLowerCase();
+        return orderId.includes(q) || city.includes(q) || name.includes(q);
+      });
+    }
+
     // Sort order: Active (out_for_delivery, picked_up, assigned) first, then delivered
     return result.sort((a, b) => {
       const score = (st: string) => {
@@ -53,16 +74,17 @@ export default function DeliveriesScreen() {
       const diff = score(b.status) - score(a.status);
       if (diff !== 0) return diff;
       return (
-        new Date(b.assigned_at).getTime() - new Date(a.assigned_at).getTime()
+        new Date(b.assigned_at || (b as any).assignedAt || 0).getTime() -
+        new Date(a.assigned_at || (a as any).assignedAt || 0).getTime()
       );
     });
-  }, [deliveries, activeFilter]);
+  }, [deliveries, activeFilter, searchQuery]);
 
   const renderItem = ({ item }: { item: DeliveryAssignment }) => {
     return (
       <DeliveryCard
         delivery={item}
-        onPress={() => router.push(`/deliveries/${item.id}`)}
+        onPress={() => router.push(`/deliveries/${item.id}` as any)}
         isPriority={item.status === "out_for_delivery"}
       />
     );
@@ -70,6 +92,26 @@ export default function DeliveriesScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Search Input Bar */}
+      <View style={styles.searchBarWrapper}>
+        <View style={styles.searchInputWrap}>
+          <FloriaIcon name="search" size={16} color={theme.colors.muted} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search by order #, city, customer..."
+            placeholderTextColor={theme.colors.muted}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            returnKeyType="search"
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery("")}>
+              <FloriaIcon name="close" size={16} color={theme.colors.muted} />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
       {/* Horizontal Filter Tabs */}
       <View style={styles.filterBar}>
         <FlatList
@@ -116,8 +158,12 @@ export default function DeliveriesScreen() {
         <View style={styles.emptyContainer}>
           <EmptyState
             title="No Deliveries Found"
-            subtitle={`There are no delivery assignments matching the "${activeFilter.replace(/_/g, " ").toUpperCase()}" filter.`}
-            iconName="inbox"
+            subtitle={
+              searchQuery
+                ? `No delivery assignments match "${searchQuery}".`
+                : `There are no delivery assignments matching the "${activeFilter.replace(/_/g, " ").toUpperCase()}" filter.`
+            }
+            iconName="package"
             actionLabel="REFRESH MANIFEST"
             onAction={refresh}
           />
@@ -128,6 +174,7 @@ export default function DeliveriesScreen() {
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
               refreshing={loading}
@@ -147,25 +194,44 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.cream,
   },
+  searchBarWrapper: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.md,
+    paddingBottom: theme.spacing.xs,
+  },
+  searchInputWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: theme.colors.sand,
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.divider,
+    paddingHorizontal: theme.spacing.md,
+    height: 42,
+    gap: theme.spacing.xs,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 13,
+    color: theme.colors.charcoal,
+  },
   filterBar: {
-    backgroundColor: theme.colors.linen,
+    backgroundColor: theme.colors.cream,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.divider,
     paddingVertical: theme.spacing.sm,
   },
   filterScroll: {
     paddingHorizontal: theme.spacing.lg,
-    gap: theme.spacing.sm,
+    gap: theme.spacing.xs,
   },
   filterChip: {
     paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.xs + 2,
-    borderRadius: theme.radius.sm,
-    backgroundColor: theme.colors.inputSand,
+    paddingVertical: 6,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.sand,
     borderWidth: 1,
     borderColor: theme.colors.divider,
-    minHeight: 36,
-    justifyContent: "center",
   },
   filterChipActive: {
     backgroundColor: theme.colors.forest,
@@ -175,19 +241,18 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "700",
     color: theme.colors.muted,
-    letterSpacing: 0.5,
+    letterSpacing: 0.6,
   },
   filterTextActive: {
     color: theme.colors.white,
   },
   listContent: {
     padding: theme.spacing.lg,
-    gap: theme.spacing.xs,
     paddingBottom: theme.spacing.xxxl,
   },
   emptyContainer: {
     flex: 1,
-    padding: theme.spacing.lg,
     justifyContent: "center",
+    padding: theme.spacing.xl,
   },
 });

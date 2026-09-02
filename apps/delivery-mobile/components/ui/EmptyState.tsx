@@ -1,14 +1,14 @@
-// Floria Delivery Mobile — EmptyState Primitive (Botanical aesthetic)
+// Floria Delivery Mobile — EmptyState Primitive with Phosphor Icons
 import React from "react";
 import { View, Text, StyleSheet, StyleProp, ViewStyle } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
 import { theme } from "../../lib/theme";
+import { FloriaIcon, FloriaIconName } from "./FloriaIcon";
 import { Button } from "./Button";
 
 interface EmptyStateProps {
   title: string;
   subtitle: string;
-  iconName?: keyof typeof MaterialIcons.glyphMap;
+  iconName?: FloriaIconName | string;
   actionLabel?: string;
   onAction?: () => void;
   style?: StyleProp<ViewStyle>;
@@ -17,7 +17,7 @@ interface EmptyStateProps {
 export function EmptyState({
   title,
   subtitle,
-  iconName = "eco",
+  iconName = "package",
   actionLabel,
   onAction,
   style,
@@ -25,7 +25,12 @@ export function EmptyState({
   return (
     <View style={[styles.container, style]}>
       <View style={styles.iconCircle}>
-        <MaterialIcons name={iconName} size={32} color={theme.colors.forest} />
+        <FloriaIcon
+          name={iconName}
+          size={32}
+          color={theme.colors.forest}
+          weight="bold"
+        />
       </View>
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.subtitle}>{subtitle}</Text>
@@ -62,18 +67,20 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md,
   },
   title: {
-    ...theme.typography.title,
     fontSize: 16,
+    fontWeight: "700",
     color: theme.colors.forest,
     marginBottom: theme.spacing.xs,
     textAlign: "center",
   },
   subtitle: {
-    ...theme.typography.subtitle,
-    textAlign: "center",
+    fontSize: 13,
     color: theme.colors.muted,
+    textAlign: "center",
+    lineHeight: 18,
+    marginBottom: theme.spacing.lg,
   },
   actionBtn: {
-    marginTop: theme.spacing.lg,
+    minWidth: 140,
   },
 });

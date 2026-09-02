@@ -1,8 +1,8 @@
-// Floria Delivery Mobile — ErrorState Primitive (Calm, actionable)
+// Floria Delivery Mobile — ErrorState Primitive with Phosphor Icons
 import React from "react";
 import { View, Text, StyleSheet, StyleProp, ViewStyle } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
 import { theme } from "../../lib/theme";
+import { FloriaIcon } from "./FloriaIcon";
 import { Button } from "./Button";
 
 interface ErrorStateProps {
@@ -21,10 +21,11 @@ export function ErrorState({
   return (
     <View style={[styles.container, style]} accessibilityRole="alert">
       <View style={styles.iconCircle}>
-        <MaterialIcons
-          name="info-outline"
-          size={28}
+        <FloriaIcon
+          name="warning"
+          size={26}
           color={theme.colors.terracotta}
+          weight="bold"
         />
       </View>
       <Text style={styles.title}>{title}</Text>
@@ -63,19 +64,20 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md,
   },
   title: {
-    ...theme.typography.title,
     fontSize: 16,
-    color: theme.colors.charcoal,
+    fontWeight: "700",
+    color: theme.colors.terracotta,
     marginBottom: theme.spacing.xs,
     textAlign: "center",
   },
   message: {
-    ...theme.typography.subtitle,
-    textAlign: "center",
-    marginBottom: theme.spacing.lg,
+    fontSize: 13,
     color: theme.colors.muted,
+    textAlign: "center",
+    lineHeight: 18,
+    marginBottom: theme.spacing.lg,
   },
   retryBtn: {
-    minWidth: 120,
+    minWidth: 140,
   },
 });

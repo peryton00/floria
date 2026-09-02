@@ -1,5 +1,5 @@
-// Floria Delivery Mobile — Today Screen Operational Workflow (Step 5B.2.1)
-import React, { useMemo } from "react";
+// Floria Delivery Mobile — Operational Dispatch Dashboard (Home)
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -7,27 +7,31 @@ import {
   ScrollView,
   RefreshControl,
   TouchableOpacity,
+  Linking,
+  Platform,
+  Image,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { MaterialIcons } from "@expo/vector-icons";
 import { useDeliveries } from "../../lib/hooks/useDeliveries";
 import { useDeliveryAuth } from "../../lib/contexts/DeliveryAuthContext";
 import { theme } from "../../lib/theme";
-import {
-  Card,
-  Button,
-  StatusBadge,
-  LoadingState,
-  ErrorState,
-  EmptyState,
-} from "../../components/ui";
+import { FloriaIcon } from "../../components/ui/FloriaIcon";
+import { StatusBadge } from "../../components/ui/StatusBadge";
 import { DeliveryCard } from "../../components/delivery/DeliveryCard";
 import type { DeliveryAssignment } from "@floria/types";
+
+function getTimeGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
 
 export default function TodayScreen() {
   const router = useRouter();
   const { user } = useDeliveryAuth();
   const { deliveries, loading, error, refresh } = useDeliveries();
+  const [onDuty, setOnDuty] = useState(true);
 
   // Compute live operational metrics from authoritative server deliveries
   const {
@@ -35,6 +39,7 @@ export default function TodayScreen() {
     inTransitCount,
     deliveredCount,
     activeDelivery,
+    todayEarnings,
     nextDeliveries,
   } = useMemo(() => {
     const assigned = deliveries.filter((d) => d.status === "assigned");
@@ -56,23 +61,72 @@ export default function TodayScreen() {
         const diff = score(b.status) - score(a.status);
         if (diff !== 0) return diff;
         return (
-          new Date(a.assigned_at).getTime() - new Date(b.assigned_at).getTime()
+          new Date(a.assigned_at || (a as any).createdAt || 0).getTime() -
+          new Date(b.assigned_at || (b as any).createdAt || 0).getTime()
         );
       });
+
+    const earnings = delivered.reduce((acc, d) => {
+      const items = (d as any).packagesCount || (d as any).orderItemCount || 1;
+      return acc + (80 + (items > 1 ? (items - 1) * 20 : 0));
+    }, 0);
 
     return {
       assignedCount: assigned.length,
       inTransitCount: inTransit.length,
       deliveredCount: delivered.length,
       activeDelivery: sortedActive[0] || null,
+      todayEarnings: earnings,
       nextDeliveries: sortedActive.slice(1),
     };
   }, [deliveries]);
+
+  const courierName =
+    user?.user_metadata?.full_name ||
+    user?.email?.split("@")[0] ||
+    "Courier";
+
+  const handleNavigate = (addressStr?: string) => {
+    if (!addressStr) return;
+    const query = encodeURIComponent(addressStr);
+    const url = Platform.select({
+      ios: `maps:0,0?q=${query}`,
+      android: `geo:0,0?q=${query}`,
+      default: `https://www.google.com/maps/search/?api=1&query=${query}`,
+    });
+    Linking.openURL(url).catch(() => {});
+  };
+
+  const activeOrderId =
+    activeDelivery?.order_id?.slice(0, 8).toUpperCase() ||
+    (activeDelivery as any)?.orderId?.slice(0, 8).toUpperCase() ||
+    "FLR-DISPATCH";
+
+  const pickupName =
+    (activeDelivery as any)?.pickupAddress?.fullName ||
+    (activeDelivery as any)?.pickup_address_snapshot?.full_name ||
+    "Botanical Nursery Hub";
+
+  const pickupAddr =
+    (activeDelivery as any)?.pickupAddress?.addressLine1 ||
+    (activeDelivery as any)?.pickup_address_snapshot?.address_line1 ||
+    "Regional Plant Facility";
+
+  const dropoffName =
+    (activeDelivery as any)?.dropoffAddress?.fullName ||
+    (activeDelivery as any)?.dropoff_address_snapshot?.full_name ||
+    "Customer Destination";
+
+  const dropoffAddr =
+    (activeDelivery as any)?.dropoffAddress?.addressLine1 ||
+    (activeDelivery as any)?.dropoff_address_snapshot?.address_line1 ||
+    "Customer Drop-off Address";
 
   return (
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl
           refreshing={loading}
@@ -82,137 +136,215 @@ export default function TodayScreen() {
         />
       }
     >
-      {/* Courier Header Banner */}
-      <View style={styles.courierBanner}>
+      {/* ── 1. Header Greeting & Online Status ── */}
+      <View style={styles.headerRow}>
         <View style={styles.courierInfo}>
-          <Text style={styles.courierLabel}>DISPATCH ROSTER</Text>
-          <Text style={styles.courierEmail} numberOfLines={1}>
-            {user?.email || "Active Courier"}
+          <View style={styles.logoBadgeRow}>
+            <Image
+              source={require("../../assets/images/floria_mark.png")}
+              style={styles.floriaMark}
+              resizeMode="contain"
+            />
+            <Text style={styles.greetingPre}>{getTimeGreeting()},</Text>
+          </View>
+          <Text style={styles.courierName} numberOfLines={1}>
+            {courierName}
           </Text>
         </View>
-        <View
-          style={styles.dutyPill}
-          accessibilityRole="text"
-          accessibilityLabel="Duty Status: Active On Duty"
+
+        {/* Duty Toggle Pill */}
+        <TouchableOpacity
+          activeOpacity={0.8}
+          style={[styles.dutyPill, onDuty ? styles.dutyPillOn : styles.dutyPillOff]}
+          onPress={() => setOnDuty(!onDuty)}
         >
-          <View style={styles.dutyDot} />
-          <Text style={styles.dutyText}>ON DUTY</Text>
+          <View
+            style={[
+              styles.dutyDot,
+              onDuty ? styles.dutyDotOn : styles.dutyDotOff,
+            ]}
+          />
+          <Text style={[styles.dutyText, onDuty ? styles.dutyTextOn : styles.dutyTextOff]}>
+            {onDuty ? "ONLINE" : "OFFLINE"}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* ── 2. TODAY Summary KPIs ── */}
+      <View style={styles.todaySection}>
+        <Text style={styles.sectionLabel}>TODAY'S ACTIVITY</Text>
+        <View style={styles.kpiGrid}>
+          <View style={styles.kpiCard}>
+            <Text style={styles.kpiNumber}>{assignedCount}</Text>
+            <Text style={styles.kpiDesc}>Assigned</Text>
+          </View>
+          <View style={styles.kpiCard}>
+            <Text style={[styles.kpiNumber, { color: theme.colors.forest }]}>
+              {deliveredCount}
+            </Text>
+            <Text style={styles.kpiDesc}>Completed</Text>
+          </View>
+          <View style={styles.kpiCard}>
+            <Text style={[styles.kpiNumber, { color: theme.colors.terracotta }]}>
+              ₹{todayEarnings.toFixed(0)}
+            </Text>
+            <Text style={styles.kpiDesc}>Earnings</Text>
+          </View>
         </View>
       </View>
 
-      {/* KPI Performance Row */}
-      <View style={styles.kpiRow}>
-        <View style={styles.kpiBox}>
-          <Text style={styles.kpiNumber}>{assignedCount}</Text>
-          <Text style={styles.kpiLabel}>Assigned</Text>
-        </View>
-        <View style={styles.kpiBox}>
-          <Text style={styles.kpiNumber}>{inTransitCount}</Text>
-          <Text style={styles.kpiLabel}>In Transit</Text>
-        </View>
-        <View style={styles.kpiBox}>
-          <Text style={styles.kpiNumber}>{deliveredCount}</Text>
-          <Text style={styles.kpiLabel}>Delivered</Text>
-        </View>
-      </View>
-
-      {/* Content Rendering */}
-      {loading && deliveries.length === 0 ? (
-        <LoadingState message="Loading today's route manifest..." />
-      ) : error ? (
-        <ErrorState
-          title="Manifest Sync Failed"
-          message={error}
-          onRetry={refresh}
-        />
-      ) : activeDelivery ? (
-        <>
-          {/* Priority Stop Section */}
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>CURRENT PRIORITY STOP</Text>
+      {/* ── 3. Current Delivery (Primary Operational Hero) ── */}
+      <View style={styles.currentSection}>
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionLabel}>CURRENT DELIVERY</Text>
+          {activeDelivery && (
             <TouchableOpacity
-              onPress={() => router.push("/(tabs)/deliveries")}
-              accessibilityRole="button"
-              accessibilityLabel="View full delivery queue"
+              onPress={() => router.push(`/(tabs)/deliveries`)}
             >
-              <Text style={styles.viewAllText}>
-                QUEUE ({deliveries.length})
+              <Text style={styles.viewQueueText}>
+                Queue ({deliveries.length})
               </Text>
             </TouchableOpacity>
-          </View>
+          )}
+        </View>
 
-          <Card style={styles.priorityCard} variant="elevated">
-            <View style={styles.cardHeader}>
-              <View style={styles.orderBadgeWrapper}>
-                <MaterialIcons
-                  name="local-shipping"
-                  size={18}
-                  color={theme.colors.forest}
-                />
-                <Text style={styles.orderId}>
-                  Order #{activeDelivery.order_id}
+        {activeDelivery ? (
+          <View style={styles.activeCard}>
+            {/* Card Header */}
+            <View style={styles.activeHeader}>
+              <View style={styles.activeOrderInfo}>
+                <Text style={styles.activeOrderLabel}>ORDER DISPATCH</Text>
+                <Text style={styles.activeOrderId}>
+                  #{activeOrderId}
                 </Text>
               </View>
               <StatusBadge status={activeDelivery.status} />
             </View>
 
-            <Text style={styles.cardDetail}>
-              {activeDelivery.status === "out_for_delivery"
-                ? "Package in vehicle — proceeding to customer address"
-                : activeDelivery.status === "picked_up"
-                  ? "Nursery order verified — ready to initiate delivery transit"
-                  : `Assigned at ${new Date(activeDelivery.assigned_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} — pending nursery pickup`}
-            </Text>
-
-            <View style={styles.cardDivider} />
-
-            <Button
-              label={
-                activeDelivery.status === "assigned"
-                  ? "PROCEED TO PICKUP"
-                  : activeDelivery.status === "picked_up"
-                    ? "PROCEED TO TRANSIT"
-                    : "PROCEED TO DROP-OFF"
-              }
-              onPress={() => router.push(`/deliveries/${activeDelivery.id}`)}
-              variant="primary"
-              size="md"
-              icon={
-                <MaterialIcons
-                  name="arrow-forward"
-                  size={16}
-                  color={theme.colors.white}
-                />
-              }
-            />
-          </Card>
-
-          {/* Upcoming Stops List */}
-          {nextDeliveries.length > 0 && (
-            <>
-              <View style={[styles.sectionHeader, styles.upcomingHeader]}>
-                <Text style={styles.sectionTitle}>
-                  UPCOMING STOPS ({nextDeliveries.length})
-                </Text>
+            {/* Stops Timeline */}
+            <View style={styles.stopsTimeline}>
+              {/* Pickup Stop */}
+              <View style={styles.stopRow}>
+                <View style={styles.stopIconCircle}>
+                  <FloriaIcon name="hub" size={14} color={theme.colors.forest} />
+                </View>
+                <View style={styles.stopDetails}>
+                  <Text style={styles.stopTypeLabel}>1. NURSERY PICKUP</Text>
+                  <Text style={styles.stopName} numberOfLines={1}>
+                    {pickupName}
+                  </Text>
+                  <Text style={styles.stopAddress} numberOfLines={1}>
+                    {pickupAddr}
+                  </Text>
+                </View>
               </View>
-              {nextDeliveries.map((d: DeliveryAssignment) => (
-                <DeliveryCard
-                  key={d.id}
-                  delivery={d}
-                  onPress={() => router.push(`/deliveries/${d.id}`)}
+
+              <View style={styles.timelineConnector} />
+
+              {/* Drop-off Stop */}
+              <View style={styles.stopRow}>
+                <View
+                  style={[
+                    styles.stopIconCircle,
+                    { backgroundColor: theme.colors.botanicalGreen },
+                  ]}
+                >
+                  <FloriaIcon name="map_pin" size={14} color={theme.colors.forest} />
+                </View>
+                <View style={styles.stopDetails}>
+                  <Text style={styles.stopTypeLabel}>2. CUSTOMER DROP-OFF</Text>
+                  <Text style={styles.stopName} numberOfLines={1}>
+                    {dropoffName}
+                  </Text>
+                  <Text style={styles.stopAddress} numberOfLines={1}>
+                    {dropoffAddr}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Action Buttons */}
+            <View style={styles.activeActionsRow}>
+              {/* Navigate Action */}
+              <TouchableOpacity
+                activeOpacity={0.85}
+                style={styles.navigateBtn}
+                onPress={() => {
+                  const targetAddress =
+                    activeDelivery.status === "assigned"
+                      ? pickupAddr
+                      : dropoffAddr;
+                  handleNavigate(targetAddress);
+                }}
+              >
+                <FloriaIcon
+                  name="navigation"
+                  size={16}
+                  color={theme.colors.forest}
+                  weight="bold"
                 />
-              ))}
-            </>
-          )}
-        </>
-      ) : (
-        <EmptyState
-          title="All Deliveries Completed"
-          subtitle="You have completed all assigned deliveries for today or the queue is currently clear."
-          iconName="check-circle"
-          actionLabel="REFRESH DISPATCH"
-          onAction={refresh}
-        />
+                <Text style={styles.navigateBtnText}>
+                  {activeDelivery.status === "assigned"
+                    ? "NAVIGATE TO PICKUP"
+                    : "NAVIGATE TO CUSTOMER"}
+                </Text>
+              </TouchableOpacity>
+
+              {/* View / Update Action */}
+              <TouchableOpacity
+                activeOpacity={0.85}
+                style={styles.openDetailBtn}
+                onPress={() =>
+                  router.push(`/deliveries/${activeDelivery.id}` as any)
+                }
+              >
+                <Text style={styles.openDetailBtnText}>
+                  {activeDelivery.status === "assigned"
+                    ? "ACCEPT / ARRIVE"
+                    : activeDelivery.status === "picked_up"
+                    ? "START ROUTE"
+                    : "COMPLETE (POD)"}
+                </Text>
+                <FloriaIcon
+                  name="chevron_right"
+                  size={14}
+                  color={theme.colors.white}
+                  weight="bold"
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : (
+          <View style={styles.emptyHeroCard}>
+            <FloriaIcon name="check_circle" size={36} color={theme.colors.success} />
+            <Text style={styles.emptyHeroTitle}>All Caught Up!</Text>
+            <Text style={styles.emptyHeroDesc}>
+              No active deliveries in progress. New assigned plant deliveries from nearby regional nurseries will appear here.
+            </Text>
+          </View>
+        )}
+      </View>
+
+      {/* ── 4. Next In Queue List ── */}
+      {nextDeliveries.length > 0 && (
+        <View style={styles.queueSection}>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionLabel}>UPCOMING STOPS ({nextDeliveries.length})</Text>
+            <TouchableOpacity onPress={() => router.push("/(tabs)/deliveries")}>
+              <Text style={styles.viewQueueText}>View All</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.queueList}>
+            {nextDeliveries.slice(0, 3).map((item) => (
+              <DeliveryCard
+                key={item.id}
+                delivery={item}
+                onPress={() => router.push(`/deliveries/${item.id}` as any)}
+              />
+            ))}
+          </View>
+        </View>
       )}
     </ScrollView>
   );
@@ -227,129 +359,261 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
     paddingBottom: theme.spacing.xxxl,
   },
-  courierBanner: {
+  headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: theme.colors.linen,
-    borderRadius: theme.radius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.divider,
-    padding: theme.spacing.lg,
     marginBottom: theme.spacing.lg,
-    ...theme.shadows.sm,
   },
   courierInfo: {
     flex: 1,
-    marginRight: theme.spacing.md,
   },
-  courierLabel: {
-    ...theme.typography.sectionLabel,
-    fontSize: 9,
+  logoBadgeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
     marginBottom: 2,
   },
-  courierEmail: {
-    fontSize: 14,
+  floriaMark: {
+    width: 14,
+    height: 18,
+  },
+  greetingPre: {
+    fontSize: 12,
+    color: theme.colors.muted,
+    fontWeight: "500",
+  },
+  courierName: {
+    fontSize: 20,
     fontWeight: "700",
     color: theme.colors.forest,
+    fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
   },
   dutyPill: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: theme.colors.botanicalGreen,
     paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.xs + 2,
+    paddingVertical: 6,
     borderRadius: theme.radius.full,
+    borderWidth: 1,
     gap: 6,
+  },
+  dutyPillOn: {
+    backgroundColor: theme.colors.botanicalGreen,
+    borderColor: theme.colors.forest,
+  },
+  dutyPillOff: {
+    backgroundColor: theme.colors.sand,
+    borderColor: theme.colors.divider,
   },
   dutyDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: theme.colors.success,
+  },
+  dutyDotOn: {
+    backgroundColor: theme.colors.forest,
+  },
+  dutyDotOff: {
+    backgroundColor: theme.colors.muted,
   },
   dutyText: {
-    fontSize: 10,
-    fontWeight: "700",
-    color: theme.colors.forest,
-    letterSpacing: 0.5,
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 0.6,
   },
-  kpiRow: {
+  dutyTextOn: {
+    color: theme.colors.forest,
+  },
+  dutyTextOff: {
+    color: theme.colors.muted,
+  },
+  todaySection: {
+    marginBottom: theme.spacing.lg,
+  },
+  sectionLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: theme.colors.muted,
+    letterSpacing: 0.8,
+    marginBottom: theme.spacing.xs,
+  },
+  kpiGrid: {
     flexDirection: "row",
     gap: theme.spacing.sm,
-    marginBottom: theme.spacing.xl,
   },
-  kpiBox: {
+  kpiCard: {
     flex: 1,
     backgroundColor: theme.colors.linen,
+    borderRadius: theme.radius.lg,
+    padding: theme.spacing.md,
     borderWidth: 1,
     borderColor: theme.colors.divider,
-    borderRadius: theme.radius.md,
-    padding: theme.spacing.md,
     alignItems: "center",
     ...theme.shadows.sm,
   },
   kpiNumber: {
-    fontSize: 22,
+    fontSize: 20,
+    fontWeight: "800",
+    color: theme.colors.charcoal,
+    marginBottom: 2,
+  },
+  kpiDesc: {
+    fontSize: 11,
+    color: theme.colors.muted,
+    fontWeight: "500",
+  },
+  currentSection: {
+    marginBottom: theme.spacing.lg,
+  },
+  sectionHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: theme.spacing.xs,
+  },
+  viewQueueText: {
+    fontSize: 12,
     fontWeight: "700",
     color: theme.colors.forest,
   },
-  kpiLabel: {
-    ...theme.typography.caption,
+  activeCard: {
+    backgroundColor: theme.colors.linen,
+    borderRadius: theme.radius.xl,
+    padding: theme.spacing.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.divider,
+    ...theme.shadows.md,
+  },
+  activeHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: theme.spacing.md,
+    paddingBottom: theme.spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.divider,
+  },
+  activeOrderInfo: {
+    gap: 2,
+  },
+  activeOrderLabel: {
     fontSize: 10,
     fontWeight: "700",
-    textTransform: "uppercase",
+    color: theme.colors.muted,
+    letterSpacing: 0.8,
+  },
+  activeOrderId: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: theme.colors.charcoal,
+  },
+  stopsTimeline: {
+    gap: theme.spacing.xs,
+    marginBottom: theme.spacing.lg,
+  },
+  stopRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: theme.spacing.sm,
+  },
+  stopIconCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: theme.colors.sand,
+    alignItems: "center",
+    justifyContent: "center",
     marginTop: 2,
   },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: theme.spacing.md,
+  stopDetails: {
+    flex: 1,
   },
-  upcomingHeader: {
-    marginTop: theme.spacing.lg,
+  stopTypeLabel: {
+    fontSize: 9,
+    fontWeight: "800",
+    color: theme.colors.forest,
+    letterSpacing: 0.6,
   },
-  sectionTitle: {
-    ...theme.typography.sectionLabel,
-  },
-  viewAllText: {
-    fontSize: 11,
+  stopName: {
+    fontSize: 14,
     fontWeight: "700",
-    color: theme.colors.terracotta,
+    color: theme.colors.charcoal,
+    marginTop: 1,
+  },
+  stopAddress: {
+    fontSize: 12,
+    color: theme.colors.muted,
+  },
+  timelineConnector: {
+    width: 2,
+    height: 14,
+    backgroundColor: theme.colors.divider,
+    marginLeft: 13,
+  },
+  activeActionsRow: {
+    flexDirection: "row",
+    gap: theme.spacing.sm,
+  },
+  navigateBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: theme.spacing.sm + 4,
+    backgroundColor: theme.colors.sand,
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.forest,
+  },
+  navigateBtnText: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: theme.colors.forest,
     letterSpacing: 0.5,
   },
-  priorityCard: {
-    padding: theme.spacing.lg,
-    borderWidth: 1.5,
-    borderColor: theme.colors.forest,
-    marginBottom: theme.spacing.md,
-  },
-  cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: theme.spacing.sm,
-  },
-  orderBadgeWrapper: {
+  openDetailBtn: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    justifyContent: "center",
+    gap: 4,
+    paddingVertical: theme.spacing.sm + 4,
+    backgroundColor: theme.colors.terracotta,
+    borderRadius: theme.radius.md,
   },
-  orderId: {
+  openDetailBtnText: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: theme.colors.white,
+    letterSpacing: 0.5,
+  },
+  emptyHeroCard: {
+    backgroundColor: theme.colors.linen,
+    borderRadius: theme.radius.xl,
+    padding: theme.spacing.xl,
+    borderWidth: 1,
+    borderColor: theme.colors.divider,
+    alignItems: "center",
+    gap: theme.spacing.xs,
+  },
+  emptyHeroTitle: {
     fontSize: 16,
     fontWeight: "700",
     color: theme.colors.forest,
+    marginTop: theme.spacing.xs,
   },
-  cardDetail: {
-    ...theme.typography.subtitle,
+  emptyHeroDesc: {
     fontSize: 12,
-    marginBottom: theme.spacing.md,
-    lineHeight: 18,
+    color: theme.colors.muted,
+    textAlign: "center",
+    lineHeight: 16,
   },
-  cardDivider: {
-    height: 1,
-    backgroundColor: theme.colors.divider,
-    marginBottom: theme.spacing.md,
+  queueSection: {
+    gap: theme.spacing.xs,
+  },
+  queueList: {
+    gap: theme.spacing.xs,
   },
 });

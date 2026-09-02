@@ -1,9 +1,9 @@
-// Floria Delivery Mobile — Bottom Tabs Layout Shell (Step 5B.2)
+// Floria Delivery Mobile — Bottom Tabs Layout Shell with Phosphor Icons
 import React from "react";
 import { Tabs } from "expo-router";
 import { Platform } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
 import { theme } from "../../lib/theme";
+import { FloriaIcon } from "../../components/ui/FloriaIcon";
 
 export default function TabLayout() {
   return (
@@ -26,7 +26,7 @@ export default function TabLayout() {
           letterSpacing: 0.3,
         },
         tabBarItemStyle: {
-          minHeight: 44, // Minimum accessible touch target
+          minHeight: 44,
         },
         headerStyle: {
           backgroundColor: theme.colors.forest,
@@ -45,12 +45,17 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Today",
+          title: "Home",
           tabBarLabel: "Today",
           headerTitle: "Today's Dispatch",
           tabBarAccessibilityLabel: "Today's Dispatch Overview",
-          tabBarIcon: ({ color, size }: { color?: any; size?: number }) => (
-            <MaterialIcons name="today" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <FloriaIcon
+              name="home"
+              size={22}
+              color={color}
+              weight={focused ? "fill" : "regular"}
+            />
           ),
         }}
       />
@@ -61,20 +66,47 @@ export default function TabLayout() {
           tabBarLabel: "Deliveries",
           headerTitle: "Delivery Queue",
           tabBarAccessibilityLabel: "All Deliveries Queue",
-          tabBarIcon: ({ color, size }: { color?: any; size?: number }) => (
-            <MaterialIcons name="local-shipping" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <FloriaIcon
+              name="package"
+              size={22}
+              color={color}
+              weight={focused ? "fill" : "regular"}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="earnings"
+        options={{
+          title: "Earnings",
+          tabBarLabel: "Earnings",
+          headerTitle: "Courier Earnings",
+          tabBarAccessibilityLabel: "Courier Earnings and Payouts",
+          tabBarIcon: ({ color, focused }) => (
+            <FloriaIcon
+              name="wallet"
+              size={22}
+              color={color}
+              weight={focused ? "fill" : "regular"}
+            />
           ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: "Profile",
-          tabBarLabel: "Profile",
-          headerTitle: "Courier Account",
+          title: "Account",
+          tabBarLabel: "Account",
+          headerTitle: "Courier Profile",
           tabBarAccessibilityLabel: "Courier Account and Settings",
-          tabBarIcon: ({ color, size }: { color?: any; size?: number }) => (
-            <MaterialIcons name="person" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <FloriaIcon
+              name="account"
+              size={22}
+              color={color}
+              weight={focused ? "fill" : "regular"}
+            />
           ),
         }}
       />

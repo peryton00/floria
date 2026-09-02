@@ -1,4 +1,4 @@
-// Floria Delivery Mobile — Delivery Detail & POD Completion Screen (Step 5B.3)
+// Floria Delivery Mobile — Delivery Detail & POD Completion Screen
 import React, { useState } from "react";
 import {
   View,
@@ -11,10 +11,11 @@ import {
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
+  Linking,
+  Platform,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
-import { MaterialIcons } from "@expo/vector-icons";
 import { useDeliveryDetail } from "../../lib/hooks/useDeliveries";
 import { api } from "../../lib/api";
 import { supabase } from "../../lib/supabase";
@@ -26,6 +27,7 @@ import {
   LoadingState,
   ErrorState,
 } from "../../components/ui";
+import { FloriaIcon } from "../../components/ui/FloriaIcon";
 import type {
   DeliveryAssignmentStatus,
   DeliveryPodDetails,
@@ -108,7 +110,7 @@ export default function DeliveryDetailScreen() {
       // A. Fetch local image binary
       const response = await fetch(capturedPhotoUri);
       const blob = await response.blob();
-      const fileSize = blob.size || 1024 * 500; // fallback estimate
+      const fileSize = blob.size || 1024 * 500;
 
       // B. Create upload session in media-staging
       setUploadProgressText("Requesting secure upload session...");
@@ -179,8 +181,7 @@ export default function DeliveryDetailScreen() {
       Alert.alert(
         "Delivery Completion Failed",
         err.message ||
-          "An unexpected error occurred while uploading POD. Tap Retry to try again without retaking the photo.",
-        [{ text: "OK" }],
+          "Could not finalize proof of delivery. Please check network and retry.",
       );
     } finally {
       setUploadingPod(false);
@@ -188,45 +189,24 @@ export default function DeliveryDetailScreen() {
     }
   };
 
-  // 3. View POD Signed URL Receipt
-  const handleViewPodReceipt = async () => {
-    try {
-      setLoadingPodReceipt(true);
-      const res = await getPod();
-      if (res.success && res.data) {
-        setPodDetails(res.data);
-        setViewPodModalVisible(true);
-      } else {
-        Alert.alert(
-          "Error",
-          res.error || "Could not load proof of delivery receipt.",
-        );
-      }
-    } catch (err: any) {
-      Alert.alert("Error", err.message || "Network error loading receipt.");
-    } finally {
-      setLoadingPodReceipt(false);
-    }
-  };
-
-  // 4. Standard Intermediate Transitions (assigned -> picked_up -> out_for_delivery)
-  const handleActionPress = () => {
+  // 3. State Machine Transition Dispatcher
+  const handleActionPress = async () => {
     if (!delivery) return;
 
     if (delivery.status === "assigned") {
       Alert.alert(
         "Confirm Nursery Pickup",
-        "Have you collected and verified all botanical items for this order from the nursery partner?",
+        "Confirm that you have arrived at the nursery, inspected botanical specimen packages, and safely loaded them for dispatch?",
         [
           { text: "Cancel", style: "cancel" },
           {
-            text: "Confirm",
+            text: "Confirm Pickup",
             onPress: async () => {
               const res = await updateStatus("picked_up");
               if (!res.success) {
                 Alert.alert(
                   "Status Update Failed",
-                  res.error || "Transition rejected",
+                  res.error || "Server rejected pickup transition.",
                 );
               }
             },
@@ -235,18 +215,18 @@ export default function DeliveryDetailScreen() {
       );
     } else if (delivery.status === "picked_up") {
       Alert.alert(
-        "Start Delivery Transit",
-        "Are you ready to depart for the customer's delivery destination?",
+        "Depart for Customer",
+        "Set order status to 'Out for Delivery' and notify customer of courier arrival?",
         [
           { text: "Cancel", style: "cancel" },
           {
-            text: "Confirm",
+            text: "Start Out for Delivery",
             onPress: async () => {
               const res = await updateStatus("out_for_delivery");
               if (!res.success) {
                 Alert.alert(
                   "Status Update Failed",
-                  res.error || "Transition rejected",
+                  res.error || "Server rejected transit transition.",
                 );
               }
             },
@@ -258,6 +238,40 @@ export default function DeliveryDetailScreen() {
     }
   };
 
+  // 4. View Saved POD Receipt
+  const handleViewPodReceipt = async () => {
+    try {
+      setLoadingPodReceipt(true);
+      const res = await getPod();
+      if (res.success && res.data) {
+        setPodDetails(res.data);
+        setViewPodModalVisible(true);
+      } else {
+        Alert.alert(
+          "Receipt Unavailable",
+          res.error || "Could not retrieve proof of delivery asset metadata.",
+        );
+      }
+    } catch (err: any) {
+      Alert.alert("Receipt Error", err.message || "Failed to load receipt.");
+    } finally {
+      setLoadingPodReceipt(false);
+    }
+  };
+
+  const handleNavigateAddress = (addressStr?: string) => {
+    if (!addressStr) return;
+    const query = encodeURIComponent(addressStr);
+    const url = Platform.select({
+      ios: `maps:0,0?q=${query}`,
+      android: `geo:0,0?q=${query}`,
+      default: `https://www.google.com/maps/search/?api=1&query=${query}`,
+    });
+    Linking.openURL(url).catch(() => {
+      Alert.alert("Navigation Error", "Could not launch map application.");
+    });
+  };
+
   if (loading) {
     return (
       <View style={styles.centerContainer}>
@@ -266,7 +280,7 @@ export default function DeliveryDetailScreen() {
     );
   }
 
-  if (error || !delivery) {
+  if (!delivery) {
     return (
       <View style={styles.centerContainer}>
         <ErrorState
@@ -281,23 +295,61 @@ export default function DeliveryDetailScreen() {
     );
   }
 
-  const assignedDate = new Date(delivery.assigned_at).toLocaleString([], {
+  const assignedDate = new Date(
+    delivery.assigned_at || (delivery as any).createdAt || Date.now(),
+  ).toLocaleString([], {
     dateStyle: "medium",
     timeStyle: "short",
   });
 
+  const orderId =
+    delivery.order_id?.slice(0, 8).toUpperCase() ||
+    (delivery as any).orderId?.slice(0, 8).toUpperCase() ||
+    "DISPATCH";
+
+  const pickupFullName =
+    (delivery as any).pickupAddress?.fullName ||
+    (delivery as any).pickup_address_snapshot?.full_name ||
+    "Botanical Nursery Hub";
+
+  const pickupLine1 =
+    (delivery as any).pickupAddress?.addressLine1 ||
+    (delivery as any).pickup_address_snapshot?.address_line1 ||
+    "Nursery Dispatch Facility";
+
+  const pickupCity =
+    (delivery as any).pickupAddress?.city ||
+    (delivery as any).pickup_address_snapshot?.city ||
+    "";
+
+  const dropoffFullName =
+    (delivery as any).dropoffAddress?.fullName ||
+    (delivery as any).dropoff_address_snapshot?.full_name ||
+    "Customer Destination";
+
+  const dropoffLine1 =
+    (delivery as any).dropoffAddress?.addressLine1 ||
+    (delivery as any).dropoff_address_snapshot?.address_line1 ||
+    "Customer Delivery Address";
+
+  const dropoffCity =
+    (delivery as any).dropoffAddress?.city ||
+    (delivery as any).dropoff_address_snapshot?.city ||
+    "";
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Primary Detail Card */}
-      <Card style={styles.detailCard} variant="elevated">
+      {/* ── 1. Primary Order Header Card ── */}
+      <View style={styles.detailCard}>
         <View style={styles.cardHeader}>
           <View style={styles.titleGroup}>
-            <MaterialIcons
-              name="local-shipping"
+            <FloriaIcon
+              name="shipping"
               size={20}
               color={theme.colors.forest}
+              weight="bold"
             />
-            <Text style={styles.orderTitle}>Order #{delivery.order_id}</Text>
+            <Text style={styles.orderTitle}>Order #{orderId}</Text>
           </View>
           <StatusBadge status={delivery.status} />
         </View>
@@ -312,52 +364,9 @@ export default function DeliveryDetailScreen() {
         </View>
 
         <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Assigned Courier</Text>
-          <Text style={styles.infoValue} numberOfLines={1}>
-            {delivery.assigned_to}
-          </Text>
-        </View>
-
-        <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Assigned At</Text>
           <Text style={styles.infoValue}>{assignedDate}</Text>
         </View>
-
-        {delivery.picked_up_at && (
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Picked Up At</Text>
-            <Text style={styles.infoValue}>
-              {new Date(delivery.picked_up_at).toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </Text>
-          </View>
-        )}
-
-        {delivery.out_for_delivery_at && (
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>In Transit Since</Text>
-            <Text style={styles.infoValue}>
-              {new Date(delivery.out_for_delivery_at).toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </Text>
-          </View>
-        )}
-
-        {delivery.delivered_at && (
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Delivered At</Text>
-            <Text style={styles.infoValue}>
-              {new Date(delivery.delivered_at).toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </Text>
-          </View>
-        )}
 
         {delivery.recipient_name && (
           <View style={styles.infoRow}>
@@ -365,19 +374,71 @@ export default function DeliveryDetailScreen() {
             <Text style={styles.infoValue}>{delivery.recipient_name}</Text>
           </View>
         )}
+      </View>
 
-        {delivery.pod_notes && (
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Delivery Notes</Text>
-            <Text style={styles.infoValue}>{delivery.pod_notes}</Text>
+      {/* ── 2. Route Stops & Navigation ── */}
+      {/* Pickup Nursery Card */}
+      <View style={styles.stopCard}>
+        <View style={styles.stopCardHeader}>
+          <View style={styles.stopIconCircle}>
+            <FloriaIcon name="hub" size={16} color={theme.colors.forest} />
           </View>
-        )}
-      </Card>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.stopBadgeText}>ORIGIN: NURSERY PICKUP</Text>
+            <Text style={styles.stopTitle}>{pickupFullName}</Text>
+            <Text style={styles.stopSub}>
+              {pickupLine1}
+              {pickupCity ? `, ${pickupCity}` : ""}
+            </Text>
+          </View>
+        </View>
 
-      {/* State Machine Status Guidance */}
+        <TouchableOpacity
+          activeOpacity={0.85}
+          style={styles.mapActionBtn}
+          onPress={() => {
+            const addr = `${pickupLine1}, ${pickupCity}`;
+            handleNavigateAddress(addr);
+          }}
+        >
+          <FloriaIcon name="navigation" size={16} color={theme.colors.forest} weight="bold" />
+          <Text style={styles.mapActionBtnText}>NAVIGATE TO PICKUP</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Drop-off Customer Destination Card */}
+      <View style={styles.stopCard}>
+        <View style={styles.stopCardHeader}>
+          <View style={[styles.stopIconCircle, { backgroundColor: theme.colors.botanicalGreen }]}>
+            <FloriaIcon name="map_pin" size={16} color={theme.colors.forest} weight="fill" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.stopBadgeText}>DESTINATION: CUSTOMER DROP-OFF</Text>
+            <Text style={styles.stopTitle}>{dropoffFullName}</Text>
+            <Text style={styles.stopSub}>
+              {dropoffLine1}
+              {dropoffCity ? `, ${dropoffCity}` : ""}
+            </Text>
+          </View>
+        </View>
+
+        <TouchableOpacity
+          activeOpacity={0.85}
+          style={styles.mapActionBtn}
+          onPress={() => {
+            const addr = `${dropoffLine1}, ${dropoffCity}`;
+            handleNavigateAddress(addr);
+          }}
+        >
+          <FloriaIcon name="navigation" size={16} color={theme.colors.forest} weight="bold" />
+          <Text style={styles.mapActionBtnText}>NAVIGATE TO CUSTOMER</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* ── 3. State Machine Status Guidance & Primary Action ── */}
       <View style={styles.guidanceBox}>
-        <MaterialIcons
-          name={delivery.status === "delivered" ? "verified" : "info-outline"}
+        <FloriaIcon
+          name={delivery.status === "delivered" ? "check_circle" : "info"}
           size={18}
           color={
             delivery.status === "delivered"
@@ -389,89 +450,89 @@ export default function DeliveryDetailScreen() {
           {delivery.status === "assigned"
             ? "Next step: Visit the nursery partner to inspect and pick up the plant package."
             : delivery.status === "picked_up"
-              ? "Package is verified. Tap below when departing for customer address."
-              : delivery.status === "out_for_delivery"
-                ? "You are en route. Take a Proof of Delivery photo to complete customer hand-off."
-                : delivery.status === "delivered"
-                  ? "This delivery is finalized with verified Proof of Delivery."
-                  : "This assignment is closed."}
+            ? "Package is verified. Tap below when departing for customer address."
+            : delivery.status === "out_for_delivery"
+            ? "You are en route. Take a Proof of Delivery photo to complete customer hand-off."
+            : delivery.status === "delivered"
+            ? "This delivery is finalized with verified Proof of Delivery."
+            : "This assignment is closed."}
         </Text>
       </View>
 
-      {/* Action Affordance */}
+      {/* State Action Buttons */}
       {delivery.status === "assigned" && (
-        <Button
-          label="CONFIRM NURSERY PICKUP"
+        <TouchableOpacity
+          activeOpacity={0.85}
+          style={styles.primaryActionBtn}
           onPress={handleActionPress}
-          variant="primary"
-          size="lg"
-          loading={updating}
           disabled={updating}
-          icon={
-            <MaterialIcons
-              name="storefront"
-              size={18}
-              color={theme.colors.white}
-            />
-          }
-        />
+        >
+          {updating ? (
+            <ActivityIndicator size="small" color={theme.colors.white} />
+          ) : (
+            <>
+              <FloriaIcon name="hub" size={18} color={theme.colors.white} />
+              <Text style={styles.primaryActionBtnText}>CONFIRM NURSERY PICKUP</Text>
+            </>
+          )}
+        </TouchableOpacity>
       )}
 
       {delivery.status === "picked_up" && (
-        <Button
-          label="START OUT FOR DELIVERY"
+        <TouchableOpacity
+          activeOpacity={0.85}
+          style={styles.primaryActionBtn}
           onPress={handleActionPress}
-          variant="primary"
-          size="lg"
-          loading={updating}
           disabled={updating}
-          icon={
-            <MaterialIcons
-              name="directions-bike"
-              size={18}
-              color={theme.colors.white}
-            />
-          }
-        />
+        >
+          {updating ? (
+            <ActivityIndicator size="small" color={theme.colors.white} />
+          ) : (
+            <>
+              <FloriaIcon name="scooter" size={18} color={theme.colors.white} />
+              <Text style={styles.primaryActionBtnText}>START OUT FOR DELIVERY</Text>
+            </>
+          )}
+        </TouchableOpacity>
       )}
 
       {delivery.status === "out_for_delivery" && (
-        <Button
-          label="CAPTURE PROOF OF DELIVERY"
+        <TouchableOpacity
+          activeOpacity={0.85}
+          style={styles.primaryActionBtn}
           onPress={handleActionPress}
-          variant="primary"
-          size="lg"
-          loading={updating}
           disabled={updating}
-          icon={
-            <MaterialIcons
-              name="photo-camera"
-              size={18}
-              color={theme.colors.white}
-            />
-          }
-        />
+        >
+          {updating ? (
+            <ActivityIndicator size="small" color={theme.colors.white} />
+          ) : (
+            <>
+              <FloriaIcon name="camera" size={18} color={theme.colors.white} />
+              <Text style={styles.primaryActionBtnText}>CAPTURE PROOF OF DELIVERY (POD)</Text>
+            </>
+          )}
+        </TouchableOpacity>
       )}
 
-      {delivery.status === "delivered" && delivery.pod_asset_id && (
-        <Button
-          label="VIEW PROOF OF DELIVERY RECEIPT"
+      {delivery.status === "delivered" && (
+        <TouchableOpacity
+          activeOpacity={0.85}
+          style={styles.receiptActionBtn}
           onPress={handleViewPodReceipt}
-          variant="secondary"
-          size="md"
-          loading={loadingPodReceipt}
           disabled={loadingPodReceipt}
-          icon={
-            <MaterialIcons
-              name="receipt-long"
-              size={18}
-              color={theme.colors.forest}
-            />
-          }
-        />
+        >
+          {loadingPodReceipt ? (
+            <ActivityIndicator size="small" color={theme.colors.forest} />
+          ) : (
+            <>
+              <FloriaIcon name="orders" size={18} color={theme.colors.forest} />
+              <Text style={styles.receiptActionBtnText}>VIEW PROOF OF DELIVERY RECEIPT</Text>
+            </>
+          )}
+        </TouchableOpacity>
       )}
 
-      {/* ── MODAL 1: PROOF OF DELIVERY PREVIEW & CONFIRMATION ──────────────── */}
+      {/* ── MODAL 1: PROOF OF DELIVERY PREVIEW & CONFIRMATION ── */}
       <Modal
         visible={podModalVisible}
         animationType="slide"
@@ -484,11 +545,7 @@ export default function DeliveryDetailScreen() {
               <Text style={styles.modalTitle}>Proof of Delivery</Text>
               {!uploadingPod && (
                 <TouchableOpacity onPress={() => setPodModalVisible(false)}>
-                  <MaterialIcons
-                    name="close"
-                    size={24}
-                    color={theme.colors.muted}
-                  />
+                  <FloriaIcon name="close" size={20} color={theme.colors.muted} />
                 </TouchableOpacity>
               )}
             </View>
@@ -506,166 +563,188 @@ export default function DeliveryDetailScreen() {
                     onPress={handleLaunchCamera}
                     disabled={uploadingPod}
                   >
-                    <MaterialIcons
-                      name="refresh"
-                      size={16}
-                      color={theme.colors.forest}
-                    />
+                    <FloriaIcon name="camera" size={14} color={theme.colors.forest} />
                     <Text style={styles.retakeText}>RETAKE</Text>
                   </TouchableOpacity>
                 </View>
               )}
 
               {/* Recipient Preset Chips */}
-              <Text style={styles.fieldLabel}>
-                RECIPIENT / DROP-OFF LOCATION
-              </Text>
-              <View style={styles.presetRow}>
-                {RECIPIENT_PRESETS.map((preset) => (
-                  <TouchableOpacity
-                    key={preset}
-                    style={[
-                      styles.presetChip,
-                      recipientName === preset && styles.presetChipActive,
-                    ]}
-                    onPress={() => setRecipientName(preset)}
-                    disabled={uploadingPod}
-                  >
-                    <Text
+              <Text style={styles.fieldLabel}>RECIPIENT / HAND-OFF TO</Text>
+              <View style={styles.chipRow}>
+                {RECIPIENT_PRESETS.map((preset) => {
+                  const isSelected = recipientName === preset;
+                  return (
+                    <TouchableOpacity
+                      key={preset}
                       style={[
-                        styles.presetChipText,
-                        recipientName === preset && styles.presetChipTextActive,
+                        styles.chip,
+                        isSelected && styles.chipSelected,
                       ]}
+                      onPress={() => setRecipientName(preset)}
+                      disabled={uploadingPod}
                     >
-                      {preset}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                      <Text
+                        style={[
+                          styles.chipText,
+                          isSelected && styles.chipTextSelected,
+                        ]}
+                      >
+                        {preset}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
 
-              {/* Custom Recipient Name Input */}
               <TextInput
-                style={styles.textInput}
-                placeholder="Or type custom recipient name..."
+                style={styles.input}
+                placeholder="Or type recipient name..."
                 placeholderTextColor={theme.colors.muted}
                 value={recipientName}
                 onChangeText={setRecipientName}
                 editable={!uploadingPod}
               />
 
-              {/* Delivery Notes */}
-              <Text style={styles.fieldLabel}>DELIVERY NOTES (OPTIONAL)</Text>
+              {/* Optional Notes */}
+              <Text style={[styles.fieldLabel, { marginTop: theme.spacing.md }]}>
+                DELIVERY NOTES (OPTIONAL)
+              </Text>
               <TextInput
-                style={[styles.textInput, styles.textArea]}
-                placeholder="e.g. Left behind potted ficus by front porch gate..."
+                style={[styles.input, styles.textArea]}
+                placeholder="e.g. Left with building security gate, customer verified specimen..."
                 placeholderTextColor={theme.colors.muted}
-                value={deliveryNotes}
-                onChangeText={setDeliveryNotes}
                 multiline
                 numberOfLines={3}
+                value={deliveryNotes}
+                onChangeText={setDeliveryNotes}
                 editable={!uploadingPod}
               />
 
-              {/* Uploading Activity Indicator */}
-              {uploadingPod ? (
-                <View style={styles.uploadProgressContainer}>
-                  <ActivityIndicator size="small" color={theme.colors.forest} />
-                  <Text style={styles.uploadProgressText}>
+              {/* Upload Progress Indicator */}
+              {uploadingPod && (
+                <View style={styles.progressContainer}>
+                  <ActivityIndicator
+                    size="small"
+                    color={theme.colors.forest}
+                  />
+                  <Text style={styles.progressText}>
                     {uploadProgressText}
                   </Text>
                 </View>
-              ) : (
-                <Button
-                  label="CONFIRM & COMPLETE DROP-OFF"
-                  onPress={handleConfirmAndCompleteDropoff}
-                  variant="primary"
-                  size="lg"
-                  style={styles.submitDropoffBtn}
-                  icon={
-                    <MaterialIcons
-                      name="check-circle"
-                      size={18}
-                      color={theme.colors.white}
-                    />
-                  }
-                />
               )}
+
+              {/* Confirmation CTA */}
+              <TouchableOpacity
+                activeOpacity={0.85}
+                style={[
+                  styles.primaryActionBtn,
+                  { marginTop: theme.spacing.lg },
+                  uploadingPod && { opacity: 0.7 },
+                ]}
+                onPress={handleConfirmAndCompleteDropoff}
+                disabled={uploadingPod}
+              >
+                {uploadingPod ? (
+                  <ActivityIndicator size="small" color={theme.colors.white} />
+                ) : (
+                  <>
+                    <FloriaIcon name="check_circle" size={18} color={theme.colors.white} />
+                    <Text style={styles.primaryActionBtnText}>
+                      SUBMIT PROOF & COMPLETE
+                    </Text>
+                  </>
+                )}
+              </TouchableOpacity>
             </ScrollView>
           </View>
         </View>
       </Modal>
 
-      {/* ── MODAL 2: VIEW PROOF OF DELIVERY RECEIPT ────────────────────────── */}
+      {/* ── MODAL 2: VIEW PROOF OF DELIVERY RECEIPT ── */}
       <Modal
         visible={viewPodModalVisible}
-        animationType="fade"
+        animationType="slide"
         transparent={true}
         onRequestClose={() => setViewPodModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.receiptCard}>
+          <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Verified Proof of Delivery</Text>
-              <TouchableOpacity onPress={() => setViewPodModalVisible(false)}>
-                <MaterialIcons
-                  name="close"
-                  size={24}
-                  color={theme.colors.muted}
-                />
+              <Text style={styles.modalTitle}>Proof of Delivery Record</Text>
+              <TouchableOpacity
+                onPress={() => setViewPodModalVisible(false)}
+              >
+                <FloriaIcon name="close" size={20} color={theme.colors.muted} />
               </TouchableOpacity>
             </View>
 
-            {podDetails?.signedUrl ? (
+            {podDetails && (
               <ScrollView showsVerticalScrollIndicator={false}>
-                <Image
-                  source={{ uri: podDetails.signedUrl }}
-                  style={styles.receiptImage}
-                  resizeMode="cover"
-                />
-
-                <View style={styles.receiptMetaBox}>
-                  {podDetails.recipientName && (
-                    <View style={styles.receiptMetaRow}>
-                      <Text style={styles.receiptLabel}>Handed To:</Text>
-                      <Text style={styles.receiptValue}>
-                        {podDetails.recipientName}
-                      </Text>
-                    </View>
-                  )}
-                  {podDetails.deliveredAt && (
-                    <View style={styles.receiptMetaRow}>
-                      <Text style={styles.receiptLabel}>Completed At:</Text>
-                      <Text style={styles.receiptValue}>
-                        {new Date(podDetails.deliveredAt).toLocaleString([], {
-                          dateStyle: "medium",
-                          timeStyle: "short",
-                        })}
-                      </Text>
-                    </View>
-                  )}
-                  {podDetails.notes && (
-                    <View style={styles.receiptMetaRow}>
-                      <Text style={styles.receiptLabel}>Notes:</Text>
-                      <Text style={styles.receiptValue}>
-                        {podDetails.notes}
-                      </Text>
-                    </View>
-                  )}
-                  <View style={styles.receiptMetaRow}>
-                    <Text style={styles.receiptLabel}>
-                      Signed Token Expiry:
+                {podDetails.signedUrl ? (
+                  <Image
+                    source={{ uri: podDetails.signedUrl }}
+                    style={styles.podReceiptImage}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <View style={styles.receiptPlaceholder}>
+                    <FloriaIcon
+                      name="check_circle"
+                      size={48}
+                      color={theme.colors.success}
+                    />
+                    <Text style={styles.receiptPlaceholderText}>
+                      Proof photo archived on Floria Media CDN
                     </Text>
+                  </View>
+                )}
+
+                <View style={styles.receiptMetadata}>
+                  <View style={styles.receiptRow}>
+                    <Text style={styles.receiptLabel}>Status</Text>
+                    <Text style={styles.receiptValueSuccess}>
+                      VERIFIED DELIVERED
+                    </Text>
+                  </View>
+                  <View style={styles.receiptDivider} />
+                  <View style={styles.receiptRow}>
+                    <Text style={styles.receiptLabel}>Recipient</Text>
                     <Text style={styles.receiptValue}>
-                      {new Date(podDetails.expiresAt).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
+                      {podDetails.recipientName || "Authorized Recipient"}
+                    </Text>
+                  </View>
+                  <View style={styles.receiptDivider} />
+                  <View style={styles.receiptRow}>
+                    <Text style={styles.receiptLabel}>Timestamp</Text>
+                    <Text style={styles.receiptValue}>
+                      {new Date(podDetails.deliveredAt || Date.now()).toLocaleString([], {
+                        dateStyle: "medium",
+                        timeStyle: "short",
                       })}
                     </Text>
                   </View>
+                  {podDetails.notes ? (
+                    <>
+                      <View style={styles.receiptDivider} />
+                      <View style={styles.receiptRow}>
+                        <Text style={styles.receiptLabel}>Notes</Text>
+                        <Text style={styles.receiptValue}>
+                          {podDetails.notes}
+                        </Text>
+                      </View>
+                    </>
+                  ) : null}
                 </View>
+
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  style={[styles.primaryActionBtn, { marginTop: theme.spacing.lg }]}
+                  onPress={() => setViewPodModalVisible(false)}
+                >
+                  <Text style={styles.primaryActionBtnText}>DONE</Text>
+                </TouchableOpacity>
               </ScrollView>
-            ) : (
-              <LoadingState message="Loading POD photo..." />
             )}
           </View>
         </View>
@@ -691,8 +770,13 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
   },
   detailCard: {
-    padding: theme.spacing.lg,
-    marginBottom: theme.spacing.lg,
+    backgroundColor: theme.colors.linen,
+    borderRadius: theme.radius.xl,
+    padding: theme.spacing.xl,
+    borderWidth: 1,
+    borderColor: theme.colors.divider,
+    marginBottom: theme.spacing.md,
+    ...theme.shadows.md,
   },
   cardHeader: {
     flexDirection: "row",
@@ -702,11 +786,12 @@ const styles = StyleSheet.create({
   titleGroup: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: theme.spacing.xs,
   },
   orderTitle: {
-    ...theme.typography.title,
     fontSize: 18,
+    fontWeight: "800",
+    color: theme.colors.charcoal,
   },
   divider: {
     height: 1,
@@ -717,39 +802,128 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: theme.spacing.xs + 2,
+    marginBottom: theme.spacing.xs,
   },
   infoLabel: {
-    ...theme.typography.caption,
-    fontWeight: "600",
+    fontSize: 13,
+    color: theme.colors.muted,
   },
   infoValue: {
-    fontSize: 12,
-    fontWeight: "600",
+    fontSize: 13,
+    fontWeight: "700",
     color: theme.colors.charcoal,
-    maxWidth: 200,
+  },
+  stopCard: {
+    backgroundColor: theme.colors.linen,
+    borderRadius: theme.radius.lg,
+    padding: theme.spacing.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.divider,
+    marginBottom: theme.spacing.md,
+  },
+  stopCardHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: theme.spacing.sm,
+    marginBottom: theme.spacing.md,
+  },
+  stopIconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: theme.colors.sand,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 2,
+  },
+  stopBadgeText: {
+    fontSize: 9,
+    fontWeight: "800",
+    color: theme.colors.forest,
+    letterSpacing: 0.6,
+    marginBottom: 2,
+  },
+  stopTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: theme.colors.charcoal,
+  },
+  stopSub: {
+    fontSize: 12,
+    color: theme.colors.muted,
+    marginTop: 2,
+  },
+  mapActionBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: theme.spacing.sm + 2,
+    backgroundColor: theme.colors.sand,
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.forest,
+  },
+  mapActionBtnText: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: theme.colors.forest,
+    letterSpacing: 0.5,
   },
   guidanceBox: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    backgroundColor: theme.colors.linen,
+    alignItems: "center",
+    backgroundColor: theme.colors.sand,
+    padding: theme.spacing.md,
     borderRadius: theme.radius.md,
+    gap: theme.spacing.sm,
+    marginBottom: theme.spacing.lg,
     borderWidth: 1,
     borderColor: theme.colors.divider,
-    padding: theme.spacing.md,
-    gap: theme.spacing.sm,
-    marginBottom: theme.spacing.xl,
   },
   guidanceText: {
     flex: 1,
-    ...theme.typography.caption,
     fontSize: 12,
+    color: theme.colors.muted,
     lineHeight: 17,
-    color: theme.colors.charcoal,
+  },
+  primaryActionBtn: {
+    backgroundColor: theme.colors.terracotta,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: theme.spacing.xs,
+    paddingVertical: theme.spacing.md,
+    borderRadius: theme.radius.md,
+    marginBottom: theme.spacing.md,
+  },
+  primaryActionBtnText: {
+    color: theme.colors.white,
+    fontSize: 13,
+    fontWeight: "800",
+    letterSpacing: 0.6,
+  },
+  receiptActionBtn: {
+    backgroundColor: theme.colors.linen,
+    borderWidth: 1,
+    borderColor: theme.colors.forest,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: theme.spacing.xs,
+    paddingVertical: theme.spacing.md,
+    borderRadius: theme.radius.md,
+    marginBottom: theme.spacing.md,
+  },
+  receiptActionBtnText: {
+    color: theme.colors.forest,
+    fontSize: 13,
+    fontWeight: "800",
+    letterSpacing: 0.6,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(30, 58, 43, 0.65)",
+    backgroundColor: "rgba(30, 58, 43, 0.55)",
     justifyContent: "flex-end",
   },
   modalCard: {
@@ -757,15 +931,8 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: theme.radius.xl,
     borderTopRightRadius: theme.radius.xl,
     padding: theme.spacing.xl,
-    maxHeight: "88%",
-  },
-  receiptCard: {
-    backgroundColor: theme.colors.linen,
-    borderRadius: theme.radius.xl,
-    padding: theme.spacing.xl,
-    margin: theme.spacing.lg,
-    maxHeight: "85%",
-    ...theme.shadows.lg,
+    paddingBottom: theme.spacing.xxxl,
+    maxHeight: "92%",
   },
   modalHeader: {
     flexDirection: "row",
@@ -774,130 +941,148 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.lg,
   },
   modalTitle: {
-    ...theme.typography.title,
     fontSize: 18,
+    fontWeight: "800",
+    color: theme.colors.forest,
   },
   thumbnailWrapper: {
     position: "relative",
-    borderRadius: theme.radius.lg,
-    overflow: "hidden",
     marginBottom: theme.spacing.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.divider,
+    borderRadius: theme.radius.md,
+    overflow: "hidden",
   },
   thumbnail: {
     width: "100%",
-    height: 220,
+    height: 180,
+    backgroundColor: theme.colors.sand,
   },
   retakeFloatingBtn: {
     position: "absolute",
     bottom: theme.spacing.sm,
     right: theme.spacing.sm,
+    backgroundColor: theme.colors.white,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: theme.colors.white,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.xs + 2,
-    borderRadius: theme.radius.full,
     gap: 4,
-    ...theme.shadows.sm,
+    paddingHorizontal: theme.spacing.sm + 2,
+    paddingVertical: 4,
+    borderRadius: theme.radius.sm,
   },
   retakeText: {
-    fontSize: 11,
-    fontWeight: "700",
+    fontSize: 10,
+    fontWeight: "800",
     color: theme.colors.forest,
   },
   fieldLabel: {
-    ...theme.typography.sectionLabel,
-    fontSize: 10,
+    fontSize: 11,
+    fontWeight: "700",
+    color: theme.colors.forest,
+    letterSpacing: 0.6,
     marginBottom: theme.spacing.xs,
-    marginTop: theme.spacing.sm,
   },
-  presetRow: {
+  chipRow: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: theme.spacing.xs,
     marginBottom: theme.spacing.sm,
   },
-  presetChip: {
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.xs + 2,
+  chip: {
+    paddingHorizontal: theme.spacing.sm + 4,
+    paddingVertical: 6,
     borderRadius: theme.radius.full,
-    backgroundColor: theme.colors.inputSand,
+    backgroundColor: theme.colors.sand,
     borderWidth: 1,
     borderColor: theme.colors.divider,
   },
-  presetChipActive: {
+  chipSelected: {
     backgroundColor: theme.colors.forest,
     borderColor: theme.colors.forest,
   },
-  presetChipText: {
+  chipText: {
     fontSize: 11,
     fontWeight: "600",
     color: theme.colors.charcoal,
   },
-  presetChipTextActive: {
+  chipTextSelected: {
     color: theme.colors.white,
   },
-  textInput: {
-    backgroundColor: theme.colors.inputSand,
+  input: {
+    backgroundColor: theme.colors.sand,
     borderWidth: 1,
     borderColor: theme.colors.divider,
     borderRadius: theme.radius.md,
     paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
+    paddingVertical: theme.spacing.sm + 2,
     fontSize: 13,
     color: theme.colors.charcoal,
-    marginBottom: theme.spacing.md,
   },
   textArea: {
-    height: 70,
+    minHeight: 64,
     textAlignVertical: "top",
   },
-  uploadProgressContainer: {
+  progressContainer: {
+    flexDirection: "row",
     alignItems: "center",
-    paddingVertical: theme.spacing.lg,
     gap: theme.spacing.sm,
-  },
-  uploadProgressText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: theme.colors.forest,
-  },
-  submitDropoffBtn: {
     marginTop: theme.spacing.md,
-    marginBottom: theme.spacing.lg,
+    padding: theme.spacing.sm,
+    backgroundColor: theme.colors.sand,
+    borderRadius: theme.radius.sm,
   },
-  receiptImage: {
+  progressText: {
+    fontSize: 12,
+    color: theme.colors.forest,
+    fontWeight: "600",
+  },
+  podReceiptImage: {
     width: "100%",
-    height: 240,
-    borderRadius: theme.radius.lg,
+    height: 220,
+    borderRadius: theme.radius.md,
     marginBottom: theme.spacing.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.divider,
   },
-  receiptMetaBox: {
-    backgroundColor: theme.colors.inputSand,
+  receiptPlaceholder: {
+    height: 160,
+    backgroundColor: theme.colors.sand,
+    borderRadius: theme.radius.md,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: theme.spacing.lg,
+    gap: theme.spacing.xs,
+  },
+  receiptPlaceholderText: {
+    fontSize: 12,
+    color: theme.colors.muted,
+  },
+  receiptMetadata: {
+    backgroundColor: theme.colors.sand,
+    padding: theme.spacing.md,
     borderRadius: theme.radius.md,
     borderWidth: 1,
     borderColor: theme.colors.divider,
-    padding: theme.spacing.md,
-    gap: theme.spacing.xs,
   },
-  receiptMetaRow: {
+  receiptRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    paddingVertical: 4,
   },
   receiptLabel: {
-    ...theme.typography.caption,
-    fontSize: 11,
-    fontWeight: "600",
+    fontSize: 12,
+    color: theme.colors.muted,
   },
   receiptValue: {
     fontSize: 12,
-    fontWeight: "700",
+    fontWeight: "600",
     color: theme.colors.charcoal,
-    maxWidth: 180,
+  },
+  receiptValueSuccess: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: theme.colors.success,
+  },
+  receiptDivider: {
+    height: 1,
+    backgroundColor: theme.colors.divider,
+    marginVertical: 4,
   },
 });
