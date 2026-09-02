@@ -111,19 +111,12 @@ export default function EditProductScreen() {
     fetchProduct();
   }, [fetchProduct, seller?.id]);
 
-  if (!isApproved) {
-    return (
-      <View style={styles.screen}>
-        <SellerPendingVerificationShield
-          seller={seller}
-          featureName="Edit Plant Listing"
-        />
-      </View>
-    );
-  }
-
   const handleSave = async () => {
     if (!id) return;
+    if (!isApproved) {
+      showError("Your nursery account is under review. Changes cannot be saved yet.");
+      return;
+    }
     const priceNum = parseFloat(priceRupees);
     if (isNaN(priceNum) || priceNum <= 0) {
       showError("Please enter a valid price in ₹.");
@@ -235,6 +228,16 @@ export default function EditProductScreen() {
         contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 90 }]}
         showsVerticalScrollIndicator={false}
       >
+        {!isApproved && (
+          <View style={{ marginBottom: Spacing.md }}>
+            <SellerPendingVerificationShield
+              seller={seller}
+              inline={true}
+              featureName="Edit Plant Listing"
+            />
+          </View>
+        )}
+
         {/* Specimen Header Card */}
         <View style={styles.specimenCard}>
           <View style={styles.specimenInfo}>

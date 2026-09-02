@@ -80,11 +80,20 @@ export default function InventoryManagementScreen() {
     // 1. Optimistic Update
     const previousInventory = [...inventory];
     setInventory((prev) =>
-      prev.map((item) =>
-        item.id === productId || item.product_id === productId
-          ? { ...item, stock_quantity: newStock, quantity: newStock }
-          : item,
-      ),
+      prev.map((item) => {
+        const itemPId = item.product_id || item.product?.id || item.id;
+        if (itemPId === productId || item.id === productId) {
+          return {
+            ...item,
+            stock_quantity: newStock,
+            quantity: newStock,
+            product: item.product
+              ? { ...item.product, stock_quantity: newStock }
+              : item.product,
+          };
+        }
+        return item;
+      }),
     );
 
     // 2. Server-Authoritative Mutation
@@ -107,8 +116,15 @@ export default function InventoryManagementScreen() {
   };
 
   const filteredInventory = inventory.filter((item) => {
-    const qty = item.stock_quantity ?? item.quantity ?? 0;
-    const thresh = item.low_stock_threshold ?? 5;
+    const qty =
+      item.stock_quantity ??
+      item.product?.stock_quantity ??
+      item.quantity ??
+      0;
+    const thresh =
+      item.low_stock_threshold ??
+      item.product?.low_stock_threshold ??
+      5;
     if (activeFilter === "low") return qty > 0 && qty <= thresh;
     if (activeFilter === "out") return qty <= 0;
     if (activeFilter === "in") return qty > thresh;
@@ -142,7 +158,7 @@ export default function InventoryManagementScreen() {
       ) : (
         <FlatList
           data={filteredInventory}
-          keyExtractor={(item) => item.id || item.product_id}
+          keyExtractor={(item) => item.product_id || item.product?.id || item.id}
           contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom + 40 }]}
           refreshControl={
             <RefreshControl
@@ -153,16 +169,34 @@ export default function InventoryManagementScreen() {
             />
           }
           renderItem={({ item }) => {
-            const pId = item.id || item.product_id;
-            const price = item.price_paise ?? item.price ?? 0;
-            const stock = item.stock_quantity ?? item.quantity ?? 0;
-            const thresh = item.low_stock_threshold ?? 5;
+            const pId = item.product_id || item.product?.id || item.id;
+            const name =
+              item.product?.name ||
+              item.name ||
+              "Botanical Specimen";
+            const price =
+              item.base_price_paise ??
+              item.price_paise ??
+              item.product?.base_price_paise ??
+              item.product?.price_paise ??
+              item.price ??
+              0;
+            const stock =
+              item.stock_quantity ??
+              item.product?.stock_quantity ??
+              item.quantity ??
+              0;
+            const thresh =
+              item.low_stock_threshold ??
+              item.product?.low_stock_threshold ??
+              5;
+            const sku = item.sku || item.product?.sku || "";
 
             return (
               <InventoryStockRow
                 productId={pId}
-                name={item.name || "Botanical Specimen"}
-                sku={item.sku}
+                name={name}
+                sku={sku}
                 pricePaise={price}
                 stockQuantity={stock}
                 lowStockThreshold={thresh}

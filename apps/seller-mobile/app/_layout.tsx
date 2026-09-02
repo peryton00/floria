@@ -52,7 +52,7 @@ export default function RootLayout() {
             />
             <Stack.Screen
               name="products/[id]"
-              options={{ title: "Edit Plant Listing" }}
+              options={{ title: "Edit Plant Listing" , headerShown: true}}
             />
             <Stack.Screen
               name="inventory/index"

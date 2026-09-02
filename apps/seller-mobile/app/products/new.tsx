@@ -213,16 +213,6 @@ export default function NewProductListingScreen() {
     }
   };
 
-  if (!isApproved) {
-    return (
-      <View style={styles.screen}>
-        <View style={{ padding: Spacing.md }}>
-          <SellerPendingVerificationShield seller={seller} inline={true} />
-        </View>
-      </View>
-    );
-  }
-
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -235,6 +225,12 @@ export default function NewProductListingScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
+        {!isApproved && (
+          <View style={{ marginBottom: Spacing.md }}>
+            <SellerPendingVerificationShield seller={seller} inline={true} />
+          </View>
+        )}
+
         {/* ── 1. Botanical Specimen Photos ── */}
         <View style={styles.fieldSection}>
           <Text style={styles.fieldLabel}>PLANT SPECIMEN PHOTOS</Text>

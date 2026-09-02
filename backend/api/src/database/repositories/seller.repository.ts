@@ -617,17 +617,26 @@ export class SellerRepository {
       if (updates.sku !== undefined)
         invPayload["sku"] = updates.sku?.trim() || null;
 
-      const { data: existingInv } = await db
+      let { data: existingInv } = await db
         .from("inventory")
         .select("id")
         .eq("product_id", productId)
         .or(`seller_id.eq.${targetSellerId},seller_id.eq.${targetUserId}`)
         .maybeSingle();
 
+      if (!existingInv) {
+        const { data: anyInv } = await db
+          .from("inventory")
+          .select("id")
+          .eq("product_id", productId)
+          .maybeSingle();
+        existingInv = anyInv;
+      }
+
       if (existingInv) {
         await db
           .from("inventory")
-          .update(invPayload)
+          .update({ ...invPayload, seller_id: targetSellerId })
           .eq("id", existingInv.id);
       } else {
         await db.from("inventory").insert({
@@ -712,10 +721,18 @@ export class SellerRepository {
   // ── Inventory ─────────────────────────────────────────────────────────────
   async findSellerInventory(sellerId: string): Promise<any[]> {
     const db = getAdminDb();
+    const profQuery = db.from("seller_profiles").select("id, user_id");
+    const { data: sellerProf } = await (typeof profQuery.or === "function"
+      ? profQuery.or(`id.eq.${sellerId},user_id.eq.${sellerId}`).maybeSingle()
+      : profQuery.eq("id", sellerId).maybeSingle());
+
+    const targetSellerId = sellerProf?.id || sellerId;
+    const targetUserId = sellerProf?.user_id || sellerId;
+
     const { data, error } = await db
       .from("inventory")
       .select("*, product:products(*)")
-      .eq("seller_id", sellerId);
+      .or(`seller_id.eq.${targetSellerId},seller_id.eq.${targetUserId}`);
 
     if (error || !data) return [];
     return data;

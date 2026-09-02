@@ -1,5 +1,14 @@
-import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  TextInput,
+  Modal,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 import { Colors, Typography, BorderRadius, Spacing } from "../../lib/theme";
 import { formatINR } from "../../lib/format";
 
@@ -20,8 +29,24 @@ export function InventoryStockRow({
   lowStockThreshold?: number;
   onUpdateStock: (newStock: number) => void;
 }) {
+  const [modalVisible, setModalVisible] = useState(false);
+  const [editQty, setEditQty] = useState(String(stockQuantity));
+
   const isLowStock = stockQuantity > 0 && stockQuantity <= lowStockThreshold;
   const isOutOfStock = stockQuantity <= 0;
+
+  const handleOpenModal = () => {
+    setEditQty(String(stockQuantity));
+    setModalVisible(true);
+  };
+
+  const handleSaveModal = () => {
+    const val = parseInt(editQty, 10);
+    if (!isNaN(val) && val >= 0) {
+      onUpdateStock(val);
+    }
+    setModalVisible(false);
+  };
 
   return (
     <View style={styles.container}>
@@ -62,7 +87,13 @@ export function InventoryStockRow({
           <Text style={styles.stepperBtnText}>−</Text>
         </TouchableOpacity>
 
-        <Text style={styles.quantityVal}>{stockQuantity}</Text>
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={handleOpenModal}
+          style={styles.qtyTouchWrap}
+        >
+          <Text style={styles.quantityVal}>{stockQuantity}</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity
           activeOpacity={0.8}
@@ -72,6 +103,53 @@ export function InventoryStockRow({
           <Text style={styles.stepperBtnText}>+</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Direct Stock Edit Modal */}
+      <Modal
+        visible={modalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          style={styles.modalOverlay}
+        >
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Update Stock Quantity</Text>
+            <Text style={styles.modalSubtitle} numberOfLines={1}>
+              {name}
+            </Text>
+
+            <TextInput
+              value={editQty}
+              onChangeText={setEditQty}
+              keyboardType="number-pad"
+              style={styles.modalInput}
+              autoFocus
+              selectTextOnFocus
+            />
+
+            <View style={styles.modalBtnRow}>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => setModalVisible(false)}
+                style={styles.modalCancelBtn}
+              >
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={handleSaveModal}
+                style={styles.modalSaveBtn}
+              >
+                <Text style={styles.modalSaveText}>Save Stock</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </View>
   );
 }
@@ -170,12 +248,87 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: Colors.ink,
   },
+  qtyTouchWrap: {
+    minWidth: 36,
+    height: 36,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 4,
+  },
   quantityVal: {
     fontSize: Typography.fontSizes.sm,
     fontWeight: "bold",
-    paddingHorizontal: 8,
     color: Colors.ink,
-    minWidth: 28,
     textAlign: "center",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: Spacing.lg,
+  },
+  modalCard: {
+    width: "100%",
+    maxWidth: 320,
+    backgroundColor: Colors.white,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: Typography.fontSizes.md,
+    fontWeight: "bold",
+    color: Colors.ink,
+  },
+  modalSubtitle: {
+    fontSize: Typography.fontSizes.xs,
+    color: Colors.inkMuted,
+    marginTop: 2,
+    marginBottom: Spacing.md,
+    textAlign: "center",
+  },
+  modalInput: {
+    width: "100%",
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: BorderRadius.md,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    fontSize: 20,
+    fontWeight: "bold",
+    color: Colors.ink,
+    textAlign: "center",
+    backgroundColor: Colors.sand,
+    marginBottom: Spacing.md,
+  },
+  modalBtnRow: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+    width: "100%",
+  },
+  modalCancelBtn: {
+    flex: 1,
+    paddingVertical: Spacing.sm,
+    alignItems: "center",
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.linen,
+  },
+  modalCancelText: {
+    fontSize: Typography.fontSizes.sm,
+    color: Colors.inkMuted,
+    fontWeight: "600",
+  },
+  modalSaveBtn: {
+    flex: 1,
+    paddingVertical: Spacing.sm,
+    alignItems: "center",
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.forest,
+  },
+  modalSaveText: {
+    fontSize: Typography.fontSizes.sm,
+    color: Colors.white,
+    fontWeight: "bold",
   },
 });
