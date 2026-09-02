@@ -262,6 +262,7 @@ export default function EditProductScreen() {
             images={images}
             onChange={setImages}
             maxImages={5}
+            productId={id}
           />
         </View>
 

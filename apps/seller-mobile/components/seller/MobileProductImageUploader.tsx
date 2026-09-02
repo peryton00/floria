@@ -43,6 +43,7 @@ interface MobileProductImageUploaderProps {
   images: MobileProductImage[];
   onChange: (images: MobileProductImage[]) => void;
   maxImages?: number; // Default 5
+  productId?: string;
 }
 
 function resolveImageMimeType(filename: string, rawMime?: string): string {
@@ -73,6 +74,7 @@ export function MobileProductImageUploader({
   images,
   onChange,
   maxImages = 5,
+  productId,
 }: MobileProductImageUploaderProps) {
   const [pickerModalVisible, setPickerModalVisible] = useState(false);
   const [activeUploading, setActiveUploading] = useState(false);
@@ -172,11 +174,27 @@ export function MobileProductImageUploader({
           throw new Error("Backend did not return a valid public image URL.");
         }
 
+        let attachedImageId: string | undefined;
+
+        // If editing existing product, attach immediately via API
+        if (productId) {
+          const attachRes = await api.attachProductImage(productId, {
+            assetId,
+            altText: filename,
+            isPrimary: workingList[targetIndex]?.isPrimary,
+          });
+
+          if (attachRes.success && (attachRes.data?.id || attachRes.data?.image?.id)) {
+            attachedImageId = attachRes.data.id || attachRes.data.image?.id;
+          }
+        }
+
         // Attach authoritative URL & assetId
         workingList = workingList.map((item, idx) =>
           idx === targetIndex
             ? {
                 ...item,
+                id: attachedImageId || item.id,
                 assetId,
                 url: resolvedUrl,
                 status: "COMPLETED" as const,
@@ -305,10 +323,23 @@ export function MobileProductImageUploader({
       const { assetId, variants, url } = res.data;
       const resolvedUrl = url || variants?.medium || variants?.large || variants?.thumbnail;
 
+      let attachedId: string | undefined;
+      if (productId) {
+        const attachRes = await api.attachProductImage(productId, {
+          assetId,
+          altText: item.filename || "retry.jpg",
+          isPrimary: item.isPrimary,
+        });
+        if (attachRes.success && (attachRes.data?.id || attachRes.data?.image?.id)) {
+          attachedId = attachRes.data.id || attachRes.data.image?.id;
+        }
+      }
+
       const completed = images.map((img, idx) =>
         idx === index
           ? {
               ...img,
+              id: attachedId || img.id,
               assetId,
               url: resolvedUrl,
               status: "COMPLETED" as const,
@@ -331,7 +362,23 @@ export function MobileProductImageUploader({
     }
   };
 
-  const handleSetPrimary = (index: number) => {
+  const handleSetPrimary = async (index: number) => {
+    const target = images[index];
+    if (!target) return;
+
+    if (productId && target.id) {
+      try {
+        const res = await api.setPrimaryProductImage(productId, target.id);
+        if (!res.success) {
+          Alert.alert("Error", res.error?.message || "Failed to set primary image");
+          return;
+        }
+      } catch (err: any) {
+        Alert.alert("Error", err.message || "Failed to set primary image");
+        return;
+      }
+    }
+
     const updated = images.map((img, idx) => ({
       ...img,
       isPrimary: idx === index,
@@ -339,7 +386,23 @@ export function MobileProductImageUploader({
     onChange(updated);
   };
 
-  const handleRemove = (index: number) => {
+  const handleRemove = async (index: number) => {
+    const target = images[index];
+    if (!target) return;
+
+    if (productId && target.id) {
+      try {
+        const res = await api.removeProductImage(productId, target.id);
+        if (!res.success) {
+          Alert.alert("Error", res.error?.message || "Failed to remove image");
+          return;
+        }
+      } catch (err: any) {
+        Alert.alert("Error", err.message || "Failed to remove image");
+        return;
+      }
+    }
+
     const filtered = images.filter((_, idx) => idx !== index);
     if (filtered.length > 0 && !filtered.some((img) => img.isPrimary)) {
       filtered[0].isPrimary = true;
