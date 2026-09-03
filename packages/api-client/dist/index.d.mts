@@ -259,6 +259,8 @@ declare class FloriaApiClient {
     createSellerProduct(data: any): Promise<ApiResponse<any>>;
     updateSellerProduct(id: string, data: any): Promise<ApiResponse<any>>;
     deleteSellerProduct(id: string): Promise<ApiResponse<any>>;
+    restoreSellerProduct(id: string): Promise<ApiResponse<any>>;
+    permanentlyDeleteSellerProduct(id: string): Promise<ApiResponse<any>>;
     updateSellerProductStatus(id: string, status: "active" | "draft" | "inactive"): Promise<ApiResponse<any>>;
     createMediaUploadSession(params: {
         profile: string;

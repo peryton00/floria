@@ -204,7 +204,12 @@ export class SellerRepository {
       }
     }
 
-    if (filters?.status && filters.status !== "all") {
+    const isArchivedQuery =
+      filters?.status === "archived" || filters?.status === "deleted";
+
+    if (isArchivedQuery) {
+      q = q.eq("status", "deleted");
+    } else if (filters?.status && filters.status !== "all") {
       q = q.eq("status", filters.status);
     }
 
@@ -219,7 +224,11 @@ export class SellerRepository {
       : q);
 
     let results = data || [];
-    results = results.filter((p: any) => p.status !== "deleted");
+    if (isArchivedQuery) {
+      results = results.filter((p: any) => p.status === "deleted");
+    } else {
+      results = results.filter((p: any) => p.status !== "deleted");
+    }
 
     // Attach seller-specific inventory record if multiple sellers list the same canonical product
     const invMap = new Map<string, any>();
@@ -709,20 +718,166 @@ export class SellerRepository {
 
   async deleteProduct(sellerId: string, productId: string): Promise<boolean> {
     const db = getAdminDb();
+    const profQuery = db.from("seller_profiles").select("id, user_id");
+    const { data: sellerProf } = await (typeof profQuery.or === "function"
+      ? profQuery.or(`id.eq.${sellerId},user_id.eq.${sellerId}`).maybeSingle()
+      : profQuery.eq("id", sellerId).maybeSingle());
+
+    const targetSellerId = sellerProf?.id || sellerId;
+    const targetUserId = sellerProf?.user_id || sellerId;
+
     const { error } = await db
       .from("products")
       .update({ status: "deleted", updated_at: new Date().toISOString() })
       .eq("id", productId)
-      .eq("seller_id", sellerId);
+      .or(`seller_id.eq.${targetSellerId},seller_id.eq.${targetUserId}`);
 
     // Also remove from inventory so ghost inventory rows do not linger
     await db
       .from("inventory")
       .delete()
       .eq("product_id", productId)
-      .eq("seller_id", sellerId);
+      .or(`seller_id.eq.${targetSellerId},seller_id.eq.${targetUserId}`);
 
     return !error;
+  }
+
+  async restoreProduct(sellerId: string, productId: string): Promise<any | null> {
+    const db = getAdminDb();
+    const profQuery = db.from("seller_profiles").select("id, user_id");
+    const { data: sellerProf } = await (typeof profQuery.or === "function"
+      ? profQuery.or(`id.eq.${sellerId},user_id.eq.${sellerId}`).maybeSingle()
+      : profQuery.eq("id", sellerId).maybeSingle());
+
+    const targetSellerId = sellerProf?.id || sellerId;
+    const targetUserId = sellerProf?.user_id || sellerId;
+
+    // Check ownership of the deleted product
+    const { data: prod } = await db
+      .from("products")
+      .select("id, seller_id, name")
+      .eq("id", productId)
+      .or(`seller_id.eq.${targetSellerId},seller_id.eq.${targetUserId}`)
+      .maybeSingle();
+
+    if (!prod) return null;
+
+    const now = new Date().toISOString();
+    // Restore product back to draft so seller can review before publishing
+    await db
+      .from("products")
+      .update({ status: "draft", updated_at: now })
+      .eq("id", productId);
+
+    // Re-create default inventory row if missing
+    const { data: existingInv } = await db
+      .from("inventory")
+      .select("id")
+      .eq("product_id", productId)
+      .eq("seller_id", targetSellerId)
+      .maybeSingle();
+
+    if (!existingInv) {
+      await db.from("inventory").insert({
+        product_id: productId,
+        seller_id: targetSellerId,
+        price_paise: 0,
+        stock_quantity: 0,
+        low_stock_threshold: 5,
+        sku: null,
+        updated_at: now,
+      });
+    }
+
+    return this.findSellerProductById(targetSellerId, productId);
+  }
+
+  async permanentlyDeleteProduct(
+    sellerId: string,
+    productId: string,
+  ): Promise<{ success: boolean; reason?: string }> {
+    const db = getAdminDb();
+    const profQuery = db.from("seller_profiles").select("id, user_id");
+    const { data: sellerProf } = await (typeof profQuery.or === "function"
+      ? profQuery.or(`id.eq.${sellerId},user_id.eq.${sellerId}`).maybeSingle()
+      : profQuery.eq("id", sellerId).maybeSingle());
+
+    const targetSellerId = sellerProf?.id || sellerId;
+    const targetUserId = sellerProf?.user_id || sellerId;
+
+    // Verify ownership
+    const { data: prod } = await db
+      .from("products")
+      .select("id, name, seller_id")
+      .eq("id", productId)
+      .or(`seller_id.eq.${targetSellerId},seller_id.eq.${targetUserId}`)
+      .maybeSingle();
+
+    if (!prod) {
+      return { success: false, reason: "Product not found or not owned by your nursery." };
+    }
+
+    // Check financial integrity constraint: order_items (ON DELETE RESTRICT)
+    const { data: orderItems } = await db
+      .from("order_items")
+      .select("id")
+      .eq("product_id", productId)
+      .limit(1);
+
+    if (orderItems && orderItems.length > 0) {
+      return {
+        success: false,
+        reason:
+          "This product cannot be permanently deleted because it exists in past completed customer orders. It must remain archived to preserve order history and receipts.",
+      };
+    }
+
+    // 1. Fetch all product images to purge files from Supabase Storage
+    const { data: images } = await db
+      .from("product_images")
+      .select("id, url, asset_id")
+      .eq("product_id", productId);
+
+    if (images && images.length > 0) {
+      const storagePaths: string[] = [];
+      for (const img of images) {
+        if (img.asset_id) {
+          storagePaths.push(`products/${targetSellerId}/${img.asset_id}/medium.webp`);
+          storagePaths.push(`products/${targetSellerId}/${img.asset_id}/thumbnail.webp`);
+          storagePaths.push(`products/${targetSellerId}/${img.asset_id}/large.webp`);
+          storagePaths.push(`products/${targetSellerId}/${img.asset_id}/original.webp`);
+        }
+        if (typeof img.url === "string" && img.url.includes("/public-media/")) {
+          const parts = img.url.split("/public-media/");
+          if (parts[1]) storagePaths.push(parts[1]);
+        }
+      }
+
+      if (storagePaths.length > 0) {
+        try {
+          await db.storage.from("public-media").remove(storagePaths);
+        } catch (storageErr) {
+          console.warn("[SellerRepo] Storage media cleanup non-fatal error:", storageErr);
+        }
+      }
+    }
+
+    // 2. Delete cascaded records in correct relational order
+    await db.from("product_images").delete().eq("product_id", productId);
+    await db.from("inventory").delete().eq("product_id", productId);
+    await db.from("product_pricing").delete().eq("product_id", productId);
+    await db.from("product_rating_summary").delete().eq("product_id", productId);
+    await db.from("cart_items").delete().eq("product_id", productId);
+    await db.from("wishlist_items").delete().eq("product_id", productId);
+    await db.from("product_reviews").delete().eq("product_id", productId);
+
+    // 3. Delete from products table
+    const { error: delErr } = await db.from("products").delete().eq("id", productId);
+    if (delErr) {
+      return { success: false, reason: delErr.message };
+    }
+
+    return { success: true };
   }
 
   // ── Inventory ─────────────────────────────────────────────────────────────

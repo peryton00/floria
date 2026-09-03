@@ -109,6 +109,20 @@ router.delete(
   requireApprovedSeller,
   sellersController.deleteProduct,
 );
+router.post(
+  "/products/:id/restore",
+  authenticateToken,
+  sellerFulfillmentRateLimiter,
+  requireApprovedSeller,
+  sellersController.restoreProduct,
+);
+router.delete(
+  "/products/:id/permanent",
+  authenticateToken,
+  sellerFulfillmentRateLimiter,
+  requireApprovedSeller,
+  sellersController.permanentlyDeleteProduct,
+);
 
 // Seller Product Media Asset Management
 router.post(

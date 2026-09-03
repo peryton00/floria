@@ -388,6 +388,16 @@ var FloriaApiClient = class {
       method: "DELETE"
     });
   }
+  async restoreSellerProduct(id) {
+    return this.request(`/api/v1/seller/products/${id}/restore`, {
+      method: "POST"
+    });
+  }
+  async permanentlyDeleteSellerProduct(id) {
+    return this.request(`/api/v1/seller/products/${id}/permanent`, {
+      method: "DELETE"
+    });
+  }
   async updateSellerProductStatus(id, status) {
     return this.request(`/api/v1/seller/products/${id}/status`, {
       method: "PATCH",

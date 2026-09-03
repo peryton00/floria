@@ -10,7 +10,7 @@ import { GridIcon, SearchIcon, AlertIcon } from "@/components/ui/Icons";
 import { useToast } from "@/lib/contexts/ToastContext";
 import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
 
-type FilterTab = "all" | "active" | "draft" | "low_stock" | "out_of_stock";
+type FilterTab = "all" | "active" | "draft" | "low_stock" | "out_of_stock" | "archived";
 
 export default function SellerProductsPage() {
   const { toast } = useToast();
@@ -21,14 +21,27 @@ export default function SellerProductsPage() {
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
+  const [archivedCount, setArchivedCount] = useState<number>(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [editingStockId, setEditingStockId] = useState<string | null>(null);
   const [stockInput, setStockInput] = useState<number>(0);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [permanentDeleteId, setPermanentDeleteId] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchProducts = useCallback(async (pageNum = 1) => {
+  const fetchArchivedCount = useCallback(async () => {
+    try {
+      const res = await api.getSellerProducts({ status: "archived" });
+      if (res.success && res.data) {
+        setArchivedCount(res.data.length);
+      }
+    } catch {
+      // Ignored
+    }
+  }, []);
+
+  const fetchProducts = useCallback(async (pageNum = 1, tab = activeTab) => {
     try {
       if (pageNum === 1) {
         setLoading(true);
@@ -39,6 +52,7 @@ export default function SellerProductsPage() {
       const res = await api.getSellerProducts({
         limit: 24,
         page: pageNum,
+        status: tab === "archived" ? "archived" : undefined,
       });
       if (res.success && res.data) {
         const rows = res.data;
@@ -68,12 +82,12 @@ export default function SellerProductsPage() {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, []);
+  }, [activeTab]);
 
   const loadMoreProducts = useCallback(() => {
     if (loading || loadingMore || !hasMore) return;
-    void fetchProducts(page + 1);
-  }, [loading, loadingMore, hasMore, page, fetchProducts]);
+    void fetchProducts(page + 1, activeTab);
+  }, [loading, loadingMore, hasMore, page, activeTab, fetchProducts]);
 
   const { sentinelRef } = useInfiniteScroll({
     onLoadMore: loadMoreProducts,
@@ -82,8 +96,9 @@ export default function SellerProductsPage() {
   });
 
   useEffect(() => {
-    void fetchProducts(1);
-  }, [fetchProducts]);
+    void fetchProducts(1, activeTab);
+    void fetchArchivedCount();
+  }, [fetchProducts, fetchArchivedCount, activeTab]);
 
   const activeListings = products.filter((l) => l.status !== "deleted");
 
@@ -101,7 +116,23 @@ export default function SellerProductsPage() {
     return qty === 0;
   }).length;
 
-  const filteredListings = activeListings.filter((l) => {
+  const displayListings =
+    activeTab === "archived"
+      ? products
+      : products.filter((l) => l.status !== "deleted");
+
+  const filteredListings = displayListings.filter((l) => {
+    if (activeTab === "archived") {
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const pName = l.name?.toLowerCase() || "";
+        const cName = l.category?.name?.toLowerCase() || "";
+        const pId = l.id?.toLowerCase() || "";
+        return pName.includes(q) || cName.includes(q) || pId.includes(q);
+      }
+      return true;
+    }
+
     const qty = l.inventory?.[0]?.stock_quantity ?? l.inventory?.stock_quantity ?? 0;
     const thresh = l.inventory?.[0]?.low_stock_threshold ?? l.inventory?.low_stock_threshold ?? 5;
 
@@ -126,7 +157,7 @@ export default function SellerProductsPage() {
       const res = await api.updateSellerProductStatus(productId, nextStatus);
       if (res.success) {
         toast.success("Status updated", `Product listing set to ${nextStatus}.`);
-        await fetchProducts();
+        await fetchProducts(1, activeTab);
       } else {
         toast.error("Status update failed", res.error?.message || `Failed to change status to ${nextStatus}`);
       }
@@ -144,7 +175,7 @@ export default function SellerProductsPage() {
       if (res.success) {
         toast.success("Stock updated", "Stock quantity saved successfully.");
         setEditingStockId(null);
-        await fetchProducts();
+        await fetchProducts(1, activeTab);
       } else {
         toast.error("Stock update failed", res.error?.message || "Failed to update stock");
       }
@@ -162,12 +193,50 @@ export default function SellerProductsPage() {
       if (res.success) {
         toast.success("Product archived", "Product listing archived successfully.");
         setDeleteConfirmId(null);
-        await fetchProducts();
+        await fetchProducts(1, activeTab);
+        void fetchArchivedCount();
       } else {
         toast.error("Archive failed", res.error?.message || "Failed to archive product");
       }
     } catch (err: any) {
       toast.error("Archive failed", err.message || "Error deleting product");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleRestore = async (productId: string) => {
+    try {
+      setActionLoading(true);
+      const res = await api.restoreSellerProduct(productId);
+      if (res.success) {
+        toast.success("Product restored", "Product listing restored to Draft status.");
+        await fetchProducts(1, activeTab);
+        void fetchArchivedCount();
+      } else {
+        toast.error("Restore failed", res.error?.message || "Failed to restore product");
+      }
+    } catch (err: any) {
+      toast.error("Restore failed", err.message || "Error restoring product");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handlePermanentDelete = async (productId: string) => {
+    try {
+      setActionLoading(true);
+      const res = await api.permanentlyDeleteSellerProduct(productId);
+      if (res.success) {
+        toast.success("Product deleted", "Product and media permanently removed.");
+        setPermanentDeleteId(null);
+        await fetchProducts(1, activeTab);
+        void fetchArchivedCount();
+      } else {
+        toast.error("Deletion rejected", res.error?.message || "Failed to delete product");
+      }
+    } catch (err: any) {
+      toast.error("Deletion rejected", err.message || "Cannot delete product");
     } finally {
       setActionLoading(false);
     }
@@ -179,6 +248,7 @@ export default function SellerProductsPage() {
     { key: "draft", label: "Drafts", count: countDraft },
     { key: "low_stock", label: "Low Stock", count: countLowStock },
     { key: "out_of_stock", label: "Out of Stock", count: countOutOfStock },
+    { key: "archived", label: "Archived", count: archivedCount },
   ];
 
   return (
@@ -207,7 +277,7 @@ export default function SellerProductsPage() {
       {error && (
         <div className="bg-red-50 border border-red-200 rounded p-4 text-xs font-semibold text-red-700 flex justify-between items-center">
           <span>{error}</span>
-          <button type="button" onClick={() => void fetchProducts(1)} className="font-bold underline text-red-900">Retry</button>
+          <button type="button" onClick={() => void fetchProducts(1, activeTab)} className="font-bold underline text-red-900">Retry</button>
         </div>
       )}
 
@@ -232,7 +302,10 @@ export default function SellerProductsPage() {
               <button
                 key={t.key}
                 type="button"
-                onClick={() => setActiveTab(t.key)}
+                onClick={() => {
+                  setActiveTab(t.key);
+                  void fetchProducts(1, t.key);
+                }}
                 className={[
                   "px-3 py-1 rounded text-[11px] font-mono font-bold uppercase tracking-wider transition-all whitespace-nowrap flex items-center gap-1.5",
                   isActive
@@ -353,36 +426,69 @@ export default function SellerProductsPage() {
                       </td>
 
                       <td className="p-3.5">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider border ${l.status === "active" ? "bg-emerald-50 text-emerald-800 border-emerald-200" : "bg-slate-100 text-slate-600 border-slate-200"}`}>
-                          {l.status}
+                        <span
+                          className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider border ${
+                            l.status === "active"
+                              ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                              : l.status === "deleted"
+                              ? "bg-slate-100 text-slate-700 border-slate-300"
+                              : "bg-slate-100 text-slate-600 border-slate-200"
+                          }`}
+                        >
+                          {l.status === "deleted" ? "Archived" : l.status}
                         </span>
                       </td>
 
                       <td className="p-3.5 text-right space-x-2 whitespace-nowrap">
-                        <button
-                          type="button"
-                          disabled={!isApproved || actionLoading}
-                          onClick={() => handleToggleStatus(l.id, l.status)}
-                          className="px-2.5 py-1 rounded border border-[#E2E8F0] hover:bg-[#F8FAFC] text-slate-700 font-bold text-[10px] uppercase tracking-wider disabled:opacity-40 transition-colors"
-                        >
-                          {l.status === "active" ? "Set Draft" : "Publish"}
-                        </button>
+                        {l.status === "deleted" ? (
+                          <>
+                            <button
+                              type="button"
+                              disabled={!isApproved || actionLoading}
+                              onClick={() => handleRestore(l.id)}
+                              style={{ color: "#ffffff" }}
+                              className="px-2.5 py-1 rounded bg-[#1B4D3E] hover:bg-[#153e31] !text-white font-bold text-[10px] uppercase tracking-wider disabled:opacity-40 transition-colors shadow-xs"
+                            >
+                              Restore
+                            </button>
 
-                        <Link
-                          href={`/seller/products/${l.id}`}
-                          className="px-2.5 py-1 rounded border border-[#E2E8F0] hover:bg-[#F8FAFC] text-slate-700 font-bold text-[10px] uppercase tracking-wider inline-block transition-colors"
-                        >
-                          Edit
-                        </Link>
+                            <button
+                              type="button"
+                              disabled={!isApproved || actionLoading}
+                              onClick={() => setPermanentDeleteId(l.id)}
+                              className="px-2.5 py-1 rounded border border-red-300 hover:bg-red-50 text-red-700 font-bold text-[10px] uppercase tracking-wider disabled:opacity-40 transition-colors"
+                            >
+                              Delete Permanently
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              disabled={!isApproved || actionLoading}
+                              onClick={() => handleToggleStatus(l.id, l.status)}
+                              className="px-2.5 py-1 rounded border border-[#E2E8F0] hover:bg-[#F8FAFC] text-slate-700 font-bold text-[10px] uppercase tracking-wider disabled:opacity-40 transition-colors"
+                            >
+                              {l.status === "active" ? "Set Draft" : "Publish"}
+                            </button>
 
-                        <button
-                          type="button"
-                          disabled={!isApproved || actionLoading}
-                          onClick={() => setDeleteConfirmId(l.id)}
-                          className="px-2.5 py-1 rounded border border-red-200 hover:bg-red-50 text-red-700 font-bold text-[10px] uppercase tracking-wider disabled:opacity-40 transition-colors"
-                        >
-                          Archive
-                        </button>
+                            <Link
+                              href={`/seller/products/${l.id}`}
+                              className="px-2.5 py-1 rounded border border-[#E2E8F0] hover:bg-[#F8FAFC] text-slate-700 font-bold text-[10px] uppercase tracking-wider inline-block transition-colors"
+                            >
+                              Edit
+                            </Link>
+
+                            <button
+                              type="button"
+                              disabled={!isApproved || actionLoading}
+                              onClick={() => setDeleteConfirmId(l.id)}
+                              className="px-2.5 py-1 rounded border border-red-200 hover:bg-red-50 text-red-700 font-bold text-[10px] uppercase tracking-wider disabled:opacity-40 transition-colors"
+                            >
+                              Archive
+                            </button>
+                          </>
+                        )}
                       </td>
                     </tr>
                   );
@@ -414,7 +520,7 @@ export default function SellerProductsPage() {
         )}
       </div>
 
-      {/* Delete Confirmation Modal */}
+      {/* Archive Confirmation Modal */}
       {deleteConfirmId && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded border border-[#E2E8F0] p-6 max-w-sm w-full shadow-2xl space-y-4">
@@ -436,6 +542,44 @@ export default function SellerProductsPage() {
               <button
                 type="button"
                 onClick={() => setDeleteConfirmId(null)}
+                className="px-4 py-2 rounded border border-[#E2E8F0] text-slate-700 font-bold text-xs uppercase tracking-wider hover:bg-[#F8FAFC]"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Permanent Delete Confirmation Modal */}
+      {permanentDeleteId && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded border border-[#E2E8F0] p-6 max-w-sm w-full shadow-2xl space-y-4">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-600" />
+              <h3 className="font-sans text-sm font-bold text-[#0F172A]">Permanently Delete Product</h3>
+            </div>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              This will permanently remove this botanical listing along with its pricing, inventory, and all uploaded media files. <strong>This action cannot be undone.</strong>
+            </p>
+            <div className="bg-amber-50 border border-amber-200 rounded p-2.5 text-[11px] text-amber-800 leading-normal">
+              Note: Listings with past completed customer orders cannot be deleted to preserve order history and receipts.
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                disabled={actionLoading}
+                onClick={() => handlePermanentDelete(permanentDeleteId)}
+                style={{ color: "#ffffff" }}
+                className="flex-1 py-2 rounded bg-red-700 hover:bg-red-800 !text-white font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-50"
+              >
+                {actionLoading ? "Deleting..." : "Permanently Delete"}
+              </button>
+              <button
+                type="button"
+                disabled={actionLoading}
+                onClick={() => setPermanentDeleteId(null)}
                 className="px-4 py-2 rounded border border-[#E2E8F0] text-slate-700 font-bold text-xs uppercase tracking-wider hover:bg-[#F8FAFC]"
               >
                 Cancel

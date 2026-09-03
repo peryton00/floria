@@ -715,6 +715,18 @@ export class FloriaApiClient {
     });
   }
 
+  public async restoreSellerProduct(id: string): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/v1/seller/products/${id}/restore`, {
+      method: "POST",
+    });
+  }
+
+  public async permanentlyDeleteSellerProduct(id: string): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/v1/seller/products/${id}/permanent`, {
+      method: "DELETE",
+    });
+  }
+
   public async updateSellerProductStatus(
     id: string,
     status: "active" | "draft" | "inactive",

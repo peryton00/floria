@@ -414,6 +414,59 @@ export class SellersService {
     return { success: true };
   }
 
+  async restoreProduct(sellerProfile: SellerProfile, productId: string) {
+    if (sellerProfile.status !== "approved") {
+      throw Errors.forbidden(
+        "Pending or suspended sellers cannot restore products",
+      );
+    }
+    const restored = await sellerRepository.restoreProduct(
+      sellerProfile.id,
+      productId,
+    );
+    if (!restored) throw Errors.notFound("Product");
+
+    await auditRepository.log({
+      actor_user_id: sellerProfile.user_id,
+      actor_role: "seller",
+      action: "SELLER_PRODUCT_RESTORED",
+      resource_type: "product",
+      resource_id: productId,
+    });
+
+    return restored;
+  }
+
+  async permanentlyDeleteProduct(
+    sellerProfile: SellerProfile,
+    productId: string,
+  ) {
+    if (sellerProfile.status !== "approved") {
+      throw Errors.forbidden(
+        "Pending or suspended sellers cannot permanently delete products",
+      );
+    }
+
+    const result = await sellerRepository.permanentlyDeleteProduct(
+      sellerProfile.id,
+      productId,
+    );
+
+    if (!result.success) {
+      throw Errors.conflict(result.reason || "Failed to permanently delete product");
+    }
+
+    await auditRepository.log({
+      actor_user_id: sellerProfile.user_id,
+      actor_role: "seller",
+      action: "SELLER_PRODUCT_PERMANENTLY_DELETED",
+      resource_type: "product",
+      resource_id: productId,
+    });
+
+    return { success: true };
+  }
+
   async attachProductImage(
     sellerProfile: SellerProfile,
     productId: string,

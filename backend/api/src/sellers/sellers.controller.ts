@@ -300,6 +300,40 @@ export class SellersController {
     }
   }
 
+  async restoreProduct(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      const profile = await sellersService.getProfile(getTargetSellerId(req));
+      const result = await sellersService.restoreProduct(
+        profile,
+        req.params.id as string,
+      );
+      res.json({ success: true, data: result });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async permanentlyDeleteProduct(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      const profile = await sellersService.getProfile(getTargetSellerId(req));
+      const result = await sellersService.permanentlyDeleteProduct(
+        profile,
+        req.params.id as string,
+      );
+      res.json({ success: true, data: result });
+    } catch (err) {
+      next(err);
+    }
+  }
+
   async attachProductImage(
     req: Request,
     res: Response,

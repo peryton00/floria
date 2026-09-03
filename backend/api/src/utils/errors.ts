@@ -4,6 +4,7 @@ export type ApiErrorCode =
   | "FORBIDDEN"
   | "RESOURCE_NOT_FOUND"
   | "VALIDATION_ERROR"
+  | "CONFLICT"
   | "RATE_LIMITED"
   | "OUT_OF_STOCK"
   | "PRICE_CHANGED"
@@ -33,6 +34,7 @@ export const Errors = {
   notFound: (resource = "Resource") =>
     new ApiError("RESOURCE_NOT_FOUND", `${resource} not found.`, 404),
   validation: (msg: string) => new ApiError("VALIDATION_ERROR", msg, 422),
+  conflict: (msg: string) => new ApiError("CONFLICT", msg, 409),
   rateLimited: (msg = "Too many requests. Please slow down.") =>
     new ApiError("RATE_LIMITED", msg, 429),
   outOfStock: (name?: string) =>
