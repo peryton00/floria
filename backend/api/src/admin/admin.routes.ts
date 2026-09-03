@@ -152,6 +152,7 @@ router.patch("/orders/:id", adminController.updateOrder);
 
 // Audit Logging Visibility
 router.get("/audit-logs", adminController.getAuditLogs);
+router.get("/audit-logs/:id", adminController.getAuditLogById);
 
 // Platform Settings & Financial Engine Governance
 router.get("/settings/platform", adminController.getSettings);

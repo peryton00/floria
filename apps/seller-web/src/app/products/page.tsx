@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { formatINR } from "@/lib/format";
 import { GridIcon, SearchIcon, AlertIcon } from "@/components/ui/Icons";
 import { useToast } from "@/lib/contexts/ToastContext";
+import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
 
 type FilterTab = "all" | "active" | "draft" | "low_stock" | "out_of_stock";
 
@@ -16,6 +17,9 @@ export default function SellerProductsPage() {
   const { isApproved } = useSeller();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(1);
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [editingStockId, setEditingStockId] = useState<string | null>(null);
@@ -24,25 +28,61 @@ export default function SellerProductsPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchProducts = useCallback(async () => {
+  const fetchProducts = useCallback(async (pageNum = 1) => {
     try {
-      setLoading(true);
-      setError(null);
-      const res = await api.getSellerProducts();
-      if (res.success && res.data) {
-        setProducts(res.data);
+      if (pageNum === 1) {
+        setLoading(true);
+        setError(null);
       } else {
-        setError(res.error?.message || "Failed to load nursery product listings");
+        setLoadingMore(true);
+      }
+      const res = await api.getSellerProducts({
+        limit: 24,
+        page: pageNum,
+      });
+      if (res.success && res.data) {
+        const rows = res.data;
+        if (pageNum === 1) {
+          setProducts(rows);
+        } else {
+          setProducts((prev) => {
+            const existing = new Set(prev.map((p) => p.id));
+            const fresh = rows.filter((p: any) => !existing.has(p.id));
+            return [...prev, ...fresh];
+          });
+        }
+        setPage(pageNum);
+        setHasMore(rows.length === 24);
+      } else {
+        if (pageNum === 1) {
+          setError(
+            res.error?.message || "Failed to load nursery product listings",
+          );
+        }
       }
     } catch (e: any) {
-      setError(e.message || "Failed to connect to API");
+      if (pageNum === 1) {
+        setError(e.message || "Failed to connect to API");
+      }
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   }, []);
 
+  const loadMoreProducts = useCallback(() => {
+    if (loading || loadingMore || !hasMore) return;
+    void fetchProducts(page + 1);
+  }, [loading, loadingMore, hasMore, page, fetchProducts]);
+
+  const { sentinelRef } = useInfiniteScroll({
+    onLoadMore: loadMoreProducts,
+    hasMore,
+    isLoading: loading || loadingMore,
+  });
+
   useEffect(() => {
-    fetchProducts();
+    void fetchProducts(1);
   }, [fetchProducts]);
 
   const activeListings = products.filter((l) => l.status !== "deleted");
@@ -167,7 +207,7 @@ export default function SellerProductsPage() {
       {error && (
         <div className="bg-red-50 border border-red-200 rounded p-4 text-xs font-semibold text-red-700 flex justify-between items-center">
           <span>{error}</span>
-          <button type="button" onClick={fetchProducts} className="font-bold underline text-red-900">Retry</button>
+          <button type="button" onClick={() => void fetchProducts(1)} className="font-bold underline text-red-900">Retry</button>
         </div>
       )}
 
@@ -349,6 +389,27 @@ export default function SellerProductsPage() {
                 })}
               </tbody>
             </table>
+
+            {/* Infinite Scroll Sentinel */}
+            <div
+              ref={sentinelRef}
+              className="py-4 flex items-center justify-center text-slate-400"
+            >
+              {loadingMore ? (
+                <div className="flex items-center gap-2 text-xs font-mono text-emerald-800">
+                  <span className="w-4 h-4 border-2 border-emerald-700 border-t-transparent rounded-full animate-spin" />
+                  <span>Loading more nursery inventory...</span>
+                </div>
+              ) : hasMore ? (
+                <span className="text-[11px] text-slate-400 font-mono">
+                  Scroll to load more listings
+                </span>
+              ) : products.length > 0 ? (
+                <span className="text-[11px] text-slate-400 font-mono">
+                  All listings loaded ({products.length} total)
+                </span>
+              ) : null}
+            </div>
           </div>
         )}
       </div>

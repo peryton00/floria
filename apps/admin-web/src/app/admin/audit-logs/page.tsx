@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { api } from "@/lib/api";
 import { FloriaIcon } from "@floria/icons";
+import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
 
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 
@@ -12,21 +13,38 @@ type CategoryFilter = "all" | "auth" | "changes" | "security";
 export default function AdminAuditLogsPage() {
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [roleFilter, setRoleFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLog, setSelectedLog] = useState<any | null>(null);
+  const [inspectLoading, setInspectLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLive, setIsLive] = useState(true);
 
-  const fetchLogs = async () => {
+  const fetchInitialLogs = async () => {
     try {
       setLoading(true);
       setError(null);
-      const res = await api.getAuditLogs(roleFilter !== "all" ? { role: roleFilter } : undefined);
+      const res = await api.getAuditLogs({
+        role: roleFilter !== "all" ? roleFilter : undefined,
+        limit: 25,
+      });
 
       if (res.success && res.data) {
         setLogs(res.data);
+        const pagination = (res as any).pagination;
+        setHasMore(
+          pagination ? Boolean(pagination.hasMore) : res.data.length === 25,
+        );
+        setNextCursor(
+          pagination?.nextCursor ??
+            (res.data.length > 0
+              ? res.data[res.data.length - 1].created_at
+              : null),
+        );
       } else {
         setError(res.error?.message || "Failed to load audit logs");
       }
@@ -37,8 +55,64 @@ export default function AdminAuditLogsPage() {
     }
   };
 
+  const loadMoreLogs = async () => {
+    if (loading || loadingMore || !hasMore || !nextCursor) return;
+    try {
+      setLoadingMore(true);
+      const res = await api.getAuditLogs({
+        role: roleFilter !== "all" ? roleFilter : undefined,
+        before: nextCursor,
+        limit: 25,
+      });
+
+      if (res.success && res.data) {
+        const rows = res.data;
+        setLogs((prev) => {
+          const existing = new Set(prev.map((l) => l.id));
+          const fresh = rows.filter((l: any) => !existing.has(l.id));
+          return [...prev, ...fresh];
+        });
+        const pagination = (res as any).pagination;
+        setHasMore(
+          pagination ? Boolean(pagination.hasMore) : rows.length === 25,
+        );
+        setNextCursor(
+          pagination?.nextCursor ??
+            (rows.length > 0 ? rows[rows.length - 1].created_at : null),
+        );
+      }
+    } catch {
+      // Graceful fail
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const { sentinelRef } = useInfiniteScroll({
+    onLoadMore: loadMoreLogs,
+    hasMore,
+    isLoading: loading || loadingMore,
+  });
+
+  const handleInspectLog = async (log: any) => {
+    setSelectedLog(log);
+    if (!log.metadata || Object.keys(log.metadata).length === 0) {
+      try {
+        setInspectLoading(true);
+        const res = await api.getAuditLogById(log.id);
+        if (res.success && res.data) {
+          setSelectedLog(res.data);
+        }
+      } catch {
+        // Keep existing preview
+      } finally {
+        setInspectLoading(false);
+      }
+    }
+  };
+
   useEffect(() => {
-    fetchLogs();
+    fetchInitialLogs();
 
     // Real-time log streaming from Supabase
     try {
@@ -141,7 +215,7 @@ export default function AdminAuditLogsPage() {
               </span>
             )}
             <button
-              onClick={fetchLogs}
+              onClick={() => fetchInitialLogs()}
               className="px-3 py-1.5 rounded-lg border border-ink-200 hover:bg-cream-100 text-xs font-bold text-ink-700 transition-colors flex items-center gap-1.5"
             >
               <FloriaIcon name="refresh" size="xs" />
@@ -293,7 +367,7 @@ export default function AdminAuditLogsPage() {
                       <td className="py-3 px-4 text-right">
                         <button
                           type="button"
-                          onClick={() => setSelectedLog(log)}
+                          onClick={() => handleInspectLog(log)}
                           className="px-3 py-1 rounded-lg border border-ink-200 hover:bg-cream-100 text-ink-800 font-bold text-[10px] uppercase tracking-wider transition-colors shadow-2xs"
                         >
                           Inspect Payload
@@ -303,6 +377,27 @@ export default function AdminAuditLogsPage() {
                   ))}
                 </tbody>
               </table>
+
+              {/* Infinite Scroll Sentinel */}
+              <div
+                ref={sentinelRef}
+                className="py-4 flex items-center justify-center text-ink-400"
+              >
+                {loadingMore ? (
+                  <div className="flex items-center gap-2 text-xs font-mono">
+                    <span className="w-4 h-4 border-2 border-forest-500 border-t-transparent rounded-full animate-spin" />
+                    <span>Loading older logs...</span>
+                  </div>
+                ) : hasMore ? (
+                  <span className="text-[11px] text-ink-400">
+                    Scroll to load older records
+                  </span>
+                ) : logs.length > 0 ? (
+                  <span className="text-[11px] text-ink-400">
+                    All audit logs loaded ({logs.length} total)
+                  </span>
+                ) : null}
+              </div>
             </div>
           )}
         </div>
@@ -349,10 +444,19 @@ export default function AdminAuditLogsPage() {
               </div>
 
               <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-ink-700 mb-1.5">Metadata Payload</p>
-                <pre className="p-4 bg-ink-900 text-emerald-300 rounded-xl text-[11px] font-mono overflow-x-auto max-h-56 shadow-inner leading-relaxed">
-                  {JSON.stringify(selectedLog.metadata || {}, null, 2)}
-                </pre>
+                <p className="text-xs font-bold uppercase tracking-wider text-ink-700 mb-1.5">
+                  Metadata Payload
+                </p>
+                {inspectLoading ? (
+                  <div className="p-8 bg-ink-900 rounded-xl flex items-center justify-center gap-2 text-emerald-400 font-mono text-xs">
+                    <span className="w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+                    <span>Fetching complete log payload...</span>
+                  </div>
+                ) : (
+                  <pre className="p-4 bg-ink-900 text-emerald-300 rounded-xl text-[11px] font-mono overflow-x-auto max-h-56 shadow-inner leading-relaxed">
+                    {JSON.stringify(selectedLog.metadata || {}, null, 2)}
+                  </pre>
+                )}
               </div>
 
               <div className="pt-2 flex justify-end">

@@ -33,6 +33,9 @@ export class OrderRepository {
   async findAllMasterOrders(filters?: {
     status?: string;
     search?: string;
+    limit?: number;
+    page?: number;
+    offset?: number;
   }): Promise<any[]> {
     const db = getAdminDb();
     let q = db
@@ -61,6 +64,14 @@ export class OrderRepository {
       q = q.in("status", candidates);
     }
 
+    if (!filters?.search && filters?.limit) {
+      const limit = filters.limit;
+      const offset =
+        filters.offset ??
+        (filters.page && filters.page > 1 ? (filters.page - 1) * limit : 0);
+      q = q.range(offset, offset + limit - 1);
+    }
+
     const { data, error } = await q;
     if (error || !data) return [];
 
@@ -74,7 +85,15 @@ export class OrderRepository {
             .toLowerCase()
             .includes(queryStr),
       );
+      if (filters?.limit) {
+        const limit = filters.limit;
+        const offset =
+          filters.offset ??
+          (filters.page && filters.page > 1 ? (filters.page - 1) * limit : 0);
+        results = results.slice(offset, offset + limit);
+      }
     }
+
     return results;
   }
 

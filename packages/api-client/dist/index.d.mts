@@ -362,6 +362,7 @@ declare class FloriaApiClient {
     getAdminOrders(params?: QueryParams): Promise<ApiResponse<any[]>>;
     getAdminOrderById(id: string): Promise<ApiResponse<any>>;
     getAuditLogs(params?: QueryParams): Promise<ApiResponse<any[]>>;
+    getAuditLogById(id: string): Promise<ApiResponse<any>>;
     getPlatformSettings(): Promise<ApiResponse<{
         commissionRate: number;
     }>>;

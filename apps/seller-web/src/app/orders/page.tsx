@@ -9,6 +9,7 @@ import { api } from "@/lib/api";
 import { formatINR } from "@/lib/format";
 import { OrderIcon, SearchIcon, AlertIcon, LeafIcon } from "@/components/ui/Icons";
 import { useToast } from "@/lib/contexts/ToastContext";
+import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
 
 function getStatusBadgeStyle(status: string) {
   switch (status) {
@@ -69,29 +70,66 @@ function OrdersContent() {
   const statusParam = searchParams.get("status") || "all";
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (pageNum = 1) => {
     try {
-      setLoading(true);
-      setError(null);
-      const res = await api.getSellerOrders();
-      if (res.success && res.data) {
-        setOrders(res.data);
+      if (pageNum === 1) {
+        setLoading(true);
+        setError(null);
       } else {
-        setError(res.error?.message || "Failed to load seller orders");
+        setLoadingMore(true);
+      }
+      const res = await api.getSellerOrders({
+        limit: 25,
+        page: pageNum,
+      });
+      if (res.success && res.data) {
+        const rows = res.data;
+        if (pageNum === 1) {
+          setOrders(rows);
+        } else {
+          setOrders((prev) => {
+            const existing = new Set(prev.map((o) => o.masterOrderId));
+            const fresh = rows.filter((o: any) => !existing.has(o.masterOrderId));
+            return [...prev, ...fresh];
+          });
+        }
+        setPage(pageNum);
+        setHasMore(rows.length === 25);
+      } else {
+        if (pageNum === 1) {
+          setError(res.error?.message || "Failed to load seller orders");
+        }
       }
     } catch (e: any) {
-      setError(e.message || "Failed to connect to API");
+      if (pageNum === 1) {
+        setError(e.message || "Failed to connect to API");
+      }
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
+  const loadMoreOrders = () => {
+    if (loading || loadingMore || !hasMore) return;
+    void fetchOrders(page + 1);
+  };
+
+  const { sentinelRef } = useInfiniteScroll({
+    onLoadMore: loadMoreOrders,
+    hasMore,
+    isLoading: loading || loadingMore,
+  });
+
   useEffect(() => {
-    fetchOrders();
+    void fetchOrders(1);
   }, []);
 
   const handleTabChange = (newStatus: string) => {
@@ -191,7 +229,7 @@ function OrdersContent() {
       {error && (
         <div className="bg-red-50 border border-red-200 rounded p-4 text-xs font-semibold text-red-700 flex justify-between items-center">
           <span>{error}</span>
-          <button type="button" onClick={fetchOrders} className="font-bold underline text-red-900">Retry</button>
+          <button type="button" onClick={() => void fetchOrders(1)} className="font-bold underline text-red-900">Retry</button>
         </div>
       )}
 
@@ -244,7 +282,8 @@ function OrdersContent() {
           No customer orders found in this fulfillment status.
         </div>
       ) : (
-        <div className="space-y-4">
+        <>
+          <div className="space-y-4">
           {filteredOrders.map((order) => {
             const nextStatus = getNextSellerStatus(order.status);
             const actionLabel = getSellerActionLabel(order.status);
@@ -312,6 +351,28 @@ function OrdersContent() {
             );
           })}
         </div>
+
+        {/* Infinite Scroll Sentinel */}
+        <div
+          ref={sentinelRef}
+          className="py-4 flex items-center justify-center text-slate-400"
+        >
+          {loadingMore ? (
+            <div className="flex items-center gap-2 text-xs font-mono text-emerald-800">
+              <span className="w-4 h-4 border-2 border-emerald-700 border-t-transparent rounded-full animate-spin" />
+              <span>Loading more nursery fulfillments...</span>
+            </div>
+          ) : hasMore ? (
+            <span className="text-[11px] text-slate-400 font-mono">
+              Scroll to load older orders
+            </span>
+          ) : orders.length > 0 ? (
+            <span className="text-[11px] text-slate-400 font-mono">
+              All orders loaded ({orders.length} total)
+            </span>
+          ) : null}
+        </div>
+        </>
       )}
     </div>
   );

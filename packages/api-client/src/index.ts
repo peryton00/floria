@@ -1251,6 +1251,10 @@ export class FloriaApiClient {
     );
   }
 
+  public async getAuditLogById(id: string): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/v1/admin/audit-logs/${id}`);
+  }
+
   public async getPlatformSettings(): Promise<
     ApiResponse<{ commissionRate: number }>
   > {

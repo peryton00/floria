@@ -8,6 +8,7 @@ import { SearchIcon, CloseIcon } from "@/components/ui/Icons";
 import { OrderFinancialBreakdown } from "@/components/admin/OrderFinancialBreakdown";
 import { useToast } from "@/lib/contexts/ToastContext";
 import { TableSkeleton } from "@/components/ui/loading";
+import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
 
 function formatOrderStatusDisplay(status: string): string {
   if (!status) return "Order Placed";
@@ -28,39 +29,77 @@ export default function AdminOrdersPage() {
   const { toast } = useToast();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (pageNum = 1) => {
     try {
-      setLoading(true);
+      if (pageNum === 1) {
+        setLoading(true);
+        setError(null);
+      } else {
+        setLoadingMore(true);
+      }
+
       const res = await api.getAdminOrders({
         search: search || undefined,
         status: statusFilter !== "all" ? statusFilter : undefined,
+        limit: 25,
+        page: pageNum,
       });
 
       if (res.success && res.data) {
-        setOrders(res.data);
+        const rows = res.data;
+        if (pageNum === 1) {
+          setOrders(rows);
+        } else {
+          setOrders((prev) => {
+            const existing = new Set(prev.map((o) => o.id));
+            const fresh = rows.filter((o: any) => !existing.has(o.id));
+            return [...prev, ...fresh];
+          });
+        }
+        setPage(pageNum);
+        setHasMore(rows.length === 25);
       } else {
-        setError(res.error?.message || "Failed to load master orders");
+        if (pageNum === 1) {
+          setError(res.error?.message || "Failed to load master orders");
+        }
       }
     } catch (e: any) {
-      setError(e.message || "Failed to connect to API");
+      if (pageNum === 1) {
+        setError(e.message || "Failed to connect to API");
+      }
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
+  const loadMoreOrders = () => {
+    if (loading || loadingMore || !hasMore) return;
+    fetchOrders(page + 1);
+  };
+
+  const { sentinelRef } = useInfiniteScroll({
+    onLoadMore: loadMoreOrders,
+    hasMore,
+    isLoading: loading || loadingMore,
+  });
+
   useEffect(() => {
-    fetchOrders();
+    fetchOrders(1);
   }, [statusFilter]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    fetchOrders();
+    fetchOrders(1);
   };
 
   const handleUpdateStatus = async (newStatus: string) => {
@@ -155,7 +194,8 @@ export default function AdminOrdersPage() {
             No master orders found matching the filter criteria.
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {orders.map((o) => {
               const itemsCount = o.order_items?.length || 0;
               const fulfillmentsCount = o.seller_order_fulfillments?.length || 1;
@@ -200,6 +240,28 @@ export default function AdminOrdersPage() {
               );
             })}
           </div>
+
+          {/* Infinite Scroll Sentinel */}
+          <div
+            ref={sentinelRef}
+            className="py-6 flex items-center justify-center text-ink-400"
+          >
+            {loadingMore ? (
+              <div className="flex items-center gap-2 text-xs font-mono text-forest-700">
+                <span className="w-4 h-4 border-2 border-forest-600 border-t-transparent rounded-full animate-spin" />
+                <span>Loading more master orders...</span>
+              </div>
+            ) : hasMore ? (
+              <span className="text-[11px] text-ink-400 font-mono">
+                Scroll to load older orders
+              </span>
+            ) : orders.length > 0 ? (
+              <span className="text-[11px] text-ink-400 font-mono">
+                All master orders loaded ({orders.length} total)
+              </span>
+            ) : null}
+          </div>
+          </>
         )}
 
         {/* Modal: Master Order Detail View & Edit Status */}

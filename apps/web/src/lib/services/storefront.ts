@@ -111,6 +111,8 @@ export interface ListingFilterOptions {
   maxPrice?: number;
   inStockOnly?: boolean;
   searchQuery?: string;
+  page?: number;
+  limit?: number;
   sort?:
     | "featured"
     | "top-rated"
@@ -227,6 +229,8 @@ export async function getProductListings(
     const params: Record<string, string> = {};
     if (categoryId) params["category_id"] = categoryId;
     if (options.searchQuery) params["search"] = options.searchQuery;
+    if (options.page) params["page"] = String(options.page);
+    if (options.limit) params["limit"] = String(options.limit);
 
     const res = await api.getProducts(params, { next: { revalidate: 180 } });
     if (res.success && res.data) {

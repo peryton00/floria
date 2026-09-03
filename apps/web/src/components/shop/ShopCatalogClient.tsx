@@ -9,6 +9,7 @@ import { FilterAndSortControls } from "@/components/ui/FilterAndSortControls";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ProductGridSkeleton } from "@/components/ui/loading/ProductGridSkeleton";
 import { getProductListings } from "@/lib/services/storefront";
+import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
 
 interface ShopCatalogClientProps {
   initialListings: ProductListing[];
@@ -52,6 +53,9 @@ export function ShopCatalogClient({
   const [searchQuery, setSearchQuery] = useState<string>(initialQuery);
 
   const [listings, setListings] = useState<ProductListing[]>(initialListings);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(initialListings.length >= 24);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -79,10 +83,14 @@ export function ShopCatalogClient({
           inStockOnly: inStock,
           sort: sort as any,
           searchQuery: query || undefined,
+          page: 1,
+          limit: 24,
         });
 
         startTransition(() => {
           setListings(results);
+          setPage(1);
+          setHasMore(results.length >= 24);
         });
 
         // Update URL query string shallowly without re-rendering layout
@@ -191,6 +199,66 @@ export function ShopCatalogClient({
     fetchFilteredProducts(nextCat, "all", undefined, undefined, false, "featured", "");
   };
 
+  const loadMoreProducts = useCallback(async () => {
+    if (isLoading || loadingMore || !hasMore) return;
+    try {
+      setLoadingMore(true);
+      const effectiveCategory =
+        activeCategory !== "all" ? activeCategory : undefined;
+      const effectiveNursery =
+        activeNursery !== "all" ? activeNursery : undefined;
+
+      const nextPage = page + 1;
+      const results = await getProductListings(undefined, {
+        categorySlug: effectiveCategory,
+        nurseryId: effectiveNursery,
+        minPrice,
+        maxPrice,
+        inStockOnly,
+        sort: activeSort as any,
+        searchQuery: searchQuery || undefined,
+        page: nextPage,
+        limit: 24,
+      });
+
+      if (results && results.length > 0) {
+        startTransition(() => {
+          setListings((prev) => {
+            const existingIds = new Set(prev.map((l) => l.product.id));
+            const fresh = results.filter((l) => !existingIds.has(l.product.id));
+            return [...prev, ...fresh];
+          });
+          setPage(nextPage);
+          setHasMore(results.length >= 24);
+        });
+      } else {
+        setHasMore(false);
+      }
+    } catch {
+      // Graceful fail
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [
+    isLoading,
+    loadingMore,
+    hasMore,
+    activeCategory,
+    activeNursery,
+    minPrice,
+    maxPrice,
+    inStockOnly,
+    activeSort,
+    searchQuery,
+    page,
+  ]);
+
+  const { sentinelRef } = useInfiniteScroll({
+    onLoadMore: loadMoreProducts,
+    hasMore,
+    isLoading: isLoading || loadingMore,
+  });
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-8 items-start">
       {/* Desktop Sidebar with Independent Scroll */}
@@ -257,21 +325,44 @@ export function ShopCatalogClient({
               }))}
             />
           ) : (
-            <div
-              className={`grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 transition-opacity duration-200 ${
-                isPending ? "opacity-60" : "opacity-100"
-              }`}
-              aria-label="Shop product listings"
-            >
-              {listings.map((listing, i) => (
-                <ProductCard
-                  key={listing.product.id}
-                  listing={listing}
-                  showBestSeller={i === 0}
-                  discountPercent={i === 1 ? 15 : undefined}
-                />
-              ))}
-            </div>
+            <>
+              <div
+                className={`grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 transition-opacity duration-200 ${
+                  isPending ? "opacity-60" : "opacity-100"
+                }`}
+                aria-label="Shop product listings"
+              >
+                {listings.map((listing, i) => (
+                  <ProductCard
+                    key={listing.product.id}
+                    listing={listing}
+                    showBestSeller={i === 0}
+                    discountPercent={i === 1 ? 15 : undefined}
+                  />
+                ))}
+              </div>
+
+              {/* Infinite Scroll Sentinel */}
+              <div
+                ref={sentinelRef}
+                className="py-8 flex items-center justify-center text-forest-700"
+              >
+                {loadingMore ? (
+                  <div className="flex items-center gap-2.5 text-xs font-medium font-sans">
+                    <span className="w-4 h-4 border-2 border-forest-600 border-t-transparent rounded-full animate-spin" />
+                    <span>Discovering more plants from local nurseries...</span>
+                  </div>
+                ) : hasMore ? (
+                  <span className="text-[11px] text-ink-400">
+                    Scroll down for more botanical treasures
+                  </span>
+                ) : listings.length > 0 ? (
+                  <span className="text-[11px] text-ink-400">
+                    You have viewed all {listings.length} plants in this category
+                  </span>
+                ) : null}
+              </div>
+            </>
           )}
         </div>
       </div>

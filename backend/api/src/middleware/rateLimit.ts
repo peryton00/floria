@@ -55,7 +55,7 @@ export const sellerFulfillmentRateLimiter = rateLimit({
 
 export const adminRateLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 60,
+  max: 300,
   keyGenerator: (req) => req.user?.id || req.ip || "unknown",
   standardHeaders: true,
   legacyHeaders: false,

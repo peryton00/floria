@@ -9,6 +9,7 @@ import {
   FlatList,
   RefreshControl,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -61,6 +62,9 @@ export default function CustomerExploreScreen() {
   const [loadingProducts, setLoadingProducts] = useState(
     Boolean(params.category && params.category !== "all") || Boolean(params.search),
   );
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -155,7 +159,8 @@ export default function CustomerExploreScreen() {
           category: catObj?.slug || (selectedCategory !== "all" ? selectedCategory : undefined),
           categoryId: catObj?.id,
           search: searchQuery.trim() || undefined,
-          limit: 50,
+          limit: 20,
+          page: 1,
         });
 
         if (prodRes.success && Array.isArray(prodRes.data)) {
@@ -177,8 +182,11 @@ export default function CustomerExploreScreen() {
               : prodRes.data;
 
           setProducts(strictProducts);
+          setPage(1);
+          setHasMore(strictProducts.length >= 20);
         } else {
           setProducts([]);
+          setHasMore(false);
         }
       }
     } catch (err: any) {
@@ -189,6 +197,70 @@ export default function CustomerExploreScreen() {
       setRefreshing(false);
     }
   }, [selectedCategory, searchQuery]);
+
+  const loadMoreProducts = async () => {
+    if (loadingProducts || loadingMore || !hasMore) return;
+    try {
+      setLoadingMore(true);
+      const isViewingCategory =
+        selectedCategory !== "all" || searchQuery.trim().length > 0;
+      if (!isViewingCategory) return;
+
+      const catObj = categories.find(
+        (c: any) => c.slug === selectedCategory || c.id === selectedCategory,
+      );
+
+      const nextPage = page + 1;
+      const prodRes = await api.getProducts({
+        category:
+          catObj?.slug ||
+          (selectedCategory !== "all" ? selectedCategory : undefined),
+        categoryId: catObj?.id,
+        search: searchQuery.trim() || undefined,
+        limit: 20,
+        page: nextPage,
+      });
+
+      if (prodRes.success && Array.isArray(prodRes.data)) {
+        const strictProducts =
+          selectedCategory !== "all" && catObj
+            ? prodRes.data.filter((p: any) => {
+                const prod = p.product || p;
+                const pCatId = prod.category_id || p.category_id;
+                const pCatSlug = p.category?.slug || prod.category?.slug;
+                const pCatName = p.category?.name || prod.category?.name;
+                return (
+                  pCatId === catObj.id ||
+                  pCatSlug === catObj.slug ||
+                  (pCatName &&
+                    catObj.name &&
+                    pCatName.toLowerCase() === catObj.name.toLowerCase())
+                );
+              })
+            : prodRes.data;
+
+        if (strictProducts.length > 0) {
+          setProducts((prev) => {
+            const existing = new Set(prev.map((p) => p.id || p.product?.id));
+            const fresh = strictProducts.filter(
+              (p: any) => !existing.has(p.id || p.product?.id),
+            );
+            return [...prev, ...fresh];
+          });
+          setPage(nextPage);
+          setHasMore(strictProducts.length >= 20);
+        } else {
+          setHasMore(false);
+        }
+      } else {
+        setHasMore(false);
+      }
+    } catch {
+      // Handled
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   useEffect(() => {
     fetchCatalog();
@@ -402,6 +474,15 @@ export default function CustomerExploreScreen() {
                   onRefresh={onRefresh}
                   colors={[Colors.forest]}
                 />
+              }
+              onEndReached={loadMoreProducts}
+              onEndReachedThreshold={0.4}
+              ListFooterComponent={
+                loadingMore ? (
+                  <View style={{ paddingVertical: 20, alignItems: "center" }}>
+                    <ActivityIndicator size="small" color={Colors.forest} />
+                  </View>
+                ) : null
               }
               renderItem={({ item }) => {
                 const prod = item.product || item;

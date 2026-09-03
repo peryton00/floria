@@ -175,6 +175,9 @@ export class ProductRepository {
     status?: string;
     categoryId?: string;
     sellerId?: string;
+    limit?: number;
+    page?: number;
+    offset?: number;
   }): Promise<any[]> {
     const db = getAdminDb();
     let q = db.from("products").select(PRODUCT_LISTING_SELECT);
@@ -216,7 +219,17 @@ export class ProductRepository {
       );
     }
 
-    const { data, error } = await q.order("created_at", { ascending: false });
+    q = q.order("created_at", { ascending: false });
+
+    if (filters?.limit) {
+      const limit = filters.limit;
+      const offset =
+        filters.offset ??
+        (filters.page && filters.page > 1 ? (filters.page - 1) * limit : 0);
+      q = q.range(offset, offset + limit - 1);
+    }
+
+    const { data, error } = await q;
     if (error || !data) return [];
     return this.enrichProductImages(data);
   }

@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/Icons";
 import { useToast } from "@/lib/contexts/ToastContext";
 import { TableSkeleton } from "@/components/ui/loading";
+import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
 
 export default function AdminUsersPage() {
   const { toast } = useToast();
@@ -36,25 +37,68 @@ export default function AdminUsersPage() {
   const [editPhone, setEditPhone] = useState("");
   const [editRole, setEditRole] = useState("customer");
 
-  const fetchUsers = async () => {
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  const fetchUsers = async (pageNum = 1) => {
     try {
-      setLoading(true);
-      const res = await api.getAdminUsers();
-      if (res.success && res.data) {
-        setUsers(res.data);
+      if (pageNum === 1) {
+        setLoading(true);
+        setError(null);
       } else {
-        setError(res.error?.message || "Failed to load users");
+        setLoadingMore(true);
+      }
+
+      const res = await api.getAdminUsers({
+        limit: 30,
+        page: pageNum,
+        role: roleFilter !== "all" ? roleFilter : undefined,
+        search: search.trim() || undefined,
+      });
+
+      if (res.success && res.data) {
+        const rows = res.data;
+        if (pageNum === 1) {
+          setUsers(rows);
+        } else {
+          setUsers((prev) => {
+            const existing = new Set(prev.map((u) => u.id));
+            const fresh = rows.filter((u: any) => !existing.has(u.id));
+            return [...prev, ...fresh];
+          });
+        }
+        setPage(pageNum);
+        setHasMore(rows.length === 30);
+      } else {
+        if (pageNum === 1) {
+          setError(res.error?.message || "Failed to load users");
+        }
       }
     } catch (e: any) {
-      setError(e.message || "Failed to connect to API");
+      if (pageNum === 1) {
+        setError(e.message || "Failed to connect to API");
+      }
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
+  const loadMoreUsers = () => {
+    if (loading || loadingMore || !hasMore) return;
+    fetchUsers(page + 1);
+  };
+
+  const { sentinelRef } = useInfiniteScroll({
+    onLoadMore: loadMoreUsers,
+    hasMore,
+    isLoading: loading || loadingMore,
+  });
+
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    fetchUsers(1);
+  }, [roleFilter]);
 
   const handleOpenManage = (u: any) => {
     setSelectedUser(u);
@@ -172,7 +216,7 @@ export default function AdminUsersPage() {
           <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={fetchUsers}
+              onClick={() => fetchUsers(1)}
               className="p-3 rounded-full bg-white border border-cream-400/60 text-ink-600 hover:text-ink-900 hover:bg-cream-100/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.96] focus:outline-none focus:ring-4 focus:ring-forest-700/10 cursor-pointer select-none"
               title="Refresh users"
             >
@@ -320,7 +364,8 @@ export default function AdminUsersPage() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {filteredUsers.map((u) => {
               const isSuspended = u.status === "suspended";
               const isCopied = copiedId === u.id;
@@ -427,6 +472,28 @@ export default function AdminUsersPage() {
               );
             })}
           </div>
+
+          {/* Infinite Scroll Sentinel */}
+          <div
+            ref={sentinelRef}
+            className="py-6 flex items-center justify-center text-ink-400"
+          >
+            {loadingMore ? (
+              <div className="flex items-center gap-2 text-xs font-mono text-forest-700">
+                <span className="w-4 h-4 border-2 border-forest-600 border-t-transparent rounded-full animate-spin" />
+                <span>Loading more directory members...</span>
+              </div>
+            ) : hasMore ? (
+              <span className="text-[11px] text-ink-400 font-mono">
+                Scroll to load more users
+              </span>
+            ) : users.length > 0 ? (
+              <span className="text-[11px] text-ink-400 font-mono">
+                End of member directory ({users.length} total)
+              </span>
+            ) : null}
+          </div>
+          </>
         )}
 
         {/* Modal: User Editor Drawer */}

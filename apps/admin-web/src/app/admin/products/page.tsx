@@ -7,6 +7,7 @@ import { formatINR } from "@/lib/format";
 import { SearchIcon, LeafIcon, CloseIcon } from "@/components/ui/Icons";
 import { useToast } from "@/lib/contexts/ToastContext";
 import { ProductGridSkeleton } from "@/components/ui/loading";
+import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
 
 import { ProductFinancialBreakdown } from "@/components/admin/ProductFinancialBreakdown";
 
@@ -22,6 +23,9 @@ export default function AdminProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -40,36 +44,75 @@ export default function AdminProductsPage() {
   const [editStock, setEditStock] = useState("0");
   const [editSku, setEditSku] = useState("");
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (pageNum = 1) => {
     try {
-      setLoading(true);
-      const [prodRes, catRes] = await Promise.all([
+      if (pageNum === 1) {
+        setLoading(true);
+        setError(null);
+      } else {
+        setLoadingMore(true);
+      }
+
+      const promises: [Promise<any>, Promise<any>?] = [
         api.getAdminProducts({
           search: search || undefined,
           status: statusFilter !== "all" ? statusFilter : undefined,
           categoryId: categoryFilter !== "all" ? categoryFilter : undefined,
+          limit: 25,
+          page: pageNum,
         }),
-        api.getAdminCategories(),
-      ]);
+      ];
 
-      if (prodRes.success && prodRes.data) {
-        setProducts(prodRes.data);
-      } else {
-        setError(prodRes.error?.message || "Failed to load products");
+      if (pageNum === 1 && categories.length === 0) {
+        promises.push(api.getAdminCategories());
       }
 
-      if (catRes.success && catRes.data) {
+      const [prodRes, catRes] = await Promise.all(promises);
+
+      if (prodRes.success && prodRes.data) {
+        if (pageNum === 1) {
+          setProducts(prodRes.data);
+        } else {
+          setProducts((prev) => {
+            const existing = new Set(prev.map((p) => p.id));
+            const fresh = prodRes.data.filter((p: any) => !existing.has(p.id));
+            return [...prev, ...fresh];
+          });
+        }
+        setPage(pageNum);
+        setHasMore(prodRes.data.length === 25);
+      } else {
+        if (pageNum === 1) {
+          setError(prodRes.error?.message || "Failed to load products");
+        }
+      }
+
+      if (catRes?.success && catRes.data) {
         setCategories(catRes.data);
       }
     } catch (e: any) {
-      setError(e.message || "Failed to connect to API");
+      if (pageNum === 1) {
+        setError(e.message || "Failed to connect to API");
+      }
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
+  const loadMoreProducts = () => {
+    if (loading || loadingMore || !hasMore) return;
+    fetchProducts(page + 1);
+  };
+
+  const { sentinelRef } = useInfiniteScroll({
+    onLoadMore: loadMoreProducts,
+    hasMore,
+    isLoading: loading || loadingMore,
+  });
+
   useEffect(() => {
-    fetchProducts();
+    fetchProducts(1);
   }, [search, statusFilter, categoryFilter]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -230,7 +273,8 @@ export default function AdminProductsPage() {
             No products matching the selected criteria.
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {products.map((p) => {
               const pricePaise = p.inventory?.[0]?.price_paise ?? p.inventory?.price_paise ?? 0;
               const customerPricePaise = p.pricing?.sellingPricePaise ?? p.pricing?.customerPricePaise ?? pricePaise;
@@ -289,6 +333,28 @@ export default function AdminProductsPage() {
               );
             })}
           </div>
+
+          {/* Infinite Scroll Sentinel */}
+          <div
+            ref={sentinelRef}
+            className="py-6 flex items-center justify-center text-ink-400"
+          >
+            {loadingMore ? (
+              <div className="flex items-center gap-2 text-xs font-mono text-forest-700">
+                <span className="w-4 h-4 border-2 border-forest-600 border-t-transparent rounded-full animate-spin" />
+                <span>Loading more catalog products...</span>
+              </div>
+            ) : hasMore ? (
+              <span className="text-[11px] text-ink-400 font-mono">
+                Scroll to load more products
+              </span>
+            ) : products.length > 0 ? (
+              <span className="text-[11px] text-ink-400 font-mono">
+                All catalog products loaded ({products.length} total)
+              </span>
+            ) : null}
+          </div>
+          </>
         )}
 
         {/* Modal: Moderation Editor Drawer */}

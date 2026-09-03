@@ -108,8 +108,14 @@ export class AdminService {
   }
 
   // ── Users Management ─────────────────────────────────────────────────────
-  async getUsers() {
-    return userRepository.findAll();
+  async getUsers(options?: {
+    limit?: number;
+    offset?: number;
+    page?: number;
+    role?: string;
+    search?: string;
+  }) {
+    return userRepository.findAll(options?.limit, options?.offset, options);
   }
 
   async getUserById(id: string) {
@@ -416,7 +422,13 @@ export class AdminService {
   // ── Orders Oversight ──────────────────────────────────────────────────────
   async getOrders(
     _adminUserId: string,
-    filters?: { status?: string; search?: string },
+    filters?: {
+      status?: string;
+      search?: string;
+      limit?: number;
+      page?: number;
+      offset?: number;
+    },
   ) {
     return orderRepository.findAllMasterOrders(filters);
   }
@@ -432,19 +444,19 @@ export class AdminService {
     actorId?: string;
     role?: string;
     action?: string;
+    search?: string;
+    before?: string;
+    page?: number;
+    limit?: number;
+    includeMetadata?: boolean;
   }) {
-    const logs = await auditRepository.findAll();
-    let results = logs;
-    if (filters?.role) {
-      results = results.filter((l: any) => l.actor_role === filters.role);
-    }
-    if (filters?.action) {
-      results = results.filter((l: any) => l.action === filters.action);
-    }
-    if (filters?.actorId) {
-      results = results.filter((l: any) => l.actor_user_id === filters.actorId);
-    }
-    return results;
+    return auditRepository.findAll(filters);
+  }
+
+  async getAuditLogById(id: string) {
+    const log = await auditRepository.findById(id);
+    if (!log) throw Errors.notFound("Audit log");
+    return log;
   }
 
   async getAnalytics(filters?: { range?: string }) {

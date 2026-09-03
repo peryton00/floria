@@ -744,6 +744,9 @@ var FloriaApiClient = class {
       `/api/v1/admin/audit-logs${buildQueryString(params)}`
     );
   }
+  async getAuditLogById(id) {
+    return this.request(`/api/v1/admin/audit-logs/${id}`);
+  }
   async getPlatformSettings() {
     return this.request(
       "/api/v1/admin/settings/platform"

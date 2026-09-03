@@ -183,12 +183,32 @@ export class AdminController {
   }
 
   async getUsers(
-    _req: Request,
+    req: Request,
     res: Response,
     next: NextFunction,
   ): Promise<void> {
     try {
-      const users = await adminService.getUsers();
+      const role =
+        typeof req.query.role === "string" ? req.query.role : undefined;
+      const search =
+        typeof req.query.search === "string" ? req.query.search : undefined;
+      const limit = req.query.limit
+        ? parseInt(String(req.query.limit), 10)
+        : 50;
+      const page = req.query.page
+        ? parseInt(String(req.query.page), 10)
+        : undefined;
+      const offset = req.query.offset
+        ? parseInt(String(req.query.offset), 10)
+        : undefined;
+
+      const users = await adminService.getUsers({
+        role,
+        search,
+        limit,
+        page,
+        offset,
+      });
       res.json({ success: true, data: users });
     } catch (err) {
       next(err);
@@ -548,9 +568,22 @@ export class AdminController {
         typeof req.query.search === "string" ? req.query.search : undefined;
       const status =
         typeof req.query.status === "string" ? req.query.status : undefined;
+      const limit = req.query.limit
+        ? parseInt(String(req.query.limit), 10)
+        : undefined;
+      const page = req.query.page
+        ? parseInt(String(req.query.page), 10)
+        : undefined;
+      const offset = req.query.offset
+        ? parseInt(String(req.query.offset), 10)
+        : undefined;
+
       const orders = await adminService.getOrders(req.user!.id, {
         search,
         status,
+        limit,
+        page,
+        offset,
       });
       res.json({ success: true, data: orders });
     } catch (err) {
@@ -586,9 +619,50 @@ export class AdminController {
         typeof req.query.action === "string" ? req.query.action : undefined;
       const actorId =
         typeof req.query.actorId === "string" ? req.query.actorId : undefined;
+      const search =
+        typeof req.query.search === "string" ? req.query.search : undefined;
+      const before =
+        typeof req.query.before === "string" ? req.query.before : undefined;
+      const limit = req.query.limit
+        ? parseInt(String(req.query.limit), 10)
+        : 25;
+      const page = req.query.page
+        ? parseInt(String(req.query.page), 10)
+        : undefined;
 
-      const logs = await adminService.getAuditLogs({ role, action, actorId });
-      res.json({ success: true, data: logs });
+      const result = await adminService.getAuditLogs({
+        role,
+        action,
+        actorId,
+        search,
+        before,
+        limit,
+        page,
+      });
+
+      res.json({
+        success: true,
+        data: result.items,
+        pagination: {
+          hasMore: result.hasMore,
+          nextCursor: result.nextCursor,
+          limit: result.limit,
+        },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async getAuditLogById(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      const id = req.params.id as string;
+      const log = await adminService.getAuditLogById(id);
+      res.json({ success: true, data: log });
     } catch (err) {
       next(err);
     }

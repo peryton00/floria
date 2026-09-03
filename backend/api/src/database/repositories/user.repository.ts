@@ -15,14 +15,31 @@ export class UserRepository {
     return data as UserProfile;
   }
 
-  async findAll(limit = 1000, offset = 0): Promise<UserProfile[]> {
+  async findAll(
+    limit = 50,
+    offset = 0,
+    filters?: { role?: string; search?: string; page?: number },
+  ): Promise<UserProfile[]> {
     const db = getAdminDb();
-    const { data, error } = await db
+    let q = db
       .from("user_profiles")
       .select("*")
-      .order("created_at", { ascending: false })
-      .range(offset, offset + limit - 1);
+      .order("created_at", { ascending: false });
 
+    if (filters?.role && filters.role !== "all") {
+      q = q.eq("role", filters.role);
+    }
+    if (filters?.search) {
+      q = q.or(
+        `full_name.ilike.%${filters.search}%,email.ilike.%${filters.search}%,phone.ilike.%${filters.search}%`,
+      );
+    }
+
+    const calcOffset =
+      filters?.page && filters.page > 1 ? (filters.page - 1) * limit : offset;
+    q = q.range(calcOffset, calcOffset + limit - 1);
+
+    const { data, error } = await q;
     if (error || !data) return [];
     return data as UserProfile[];
   }
