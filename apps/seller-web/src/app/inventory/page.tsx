@@ -82,7 +82,11 @@ export default function SellerInventoryPage() {
     }
   };
 
-  const filteredItems = inventory.filter((item: any) => {
+  const validInventory = inventory.filter(
+    (item: any) => item.product && item.product.status !== "deleted",
+  );
+
+  const filteredItems = validInventory.filter((item: any) => {
     const qty = item.stock_quantity;
     const thresh = item.low_stock_threshold || 5;
     
@@ -101,10 +105,10 @@ export default function SellerInventoryPage() {
     return true;
   });
 
-  const countAll = inventory.length;
-  const countInStock = inventory.filter((i) => i.stock_quantity > 0).length;
-  const countLowStock = inventory.filter((i) => i.stock_quantity > 0 && i.stock_quantity <= (i.low_stock_threshold || 5)).length;
-  const countOutOfStock = inventory.filter((i) => i.stock_quantity <= 0).length;
+  const countAll = validInventory.length;
+  const countInStock = validInventory.filter((i) => i.stock_quantity > 0).length;
+  const countLowStock = validInventory.filter((i) => i.stock_quantity > 0 && i.stock_quantity <= (i.low_stock_threshold || 5)).length;
+  const countOutOfStock = validInventory.filter((i) => i.stock_quantity <= 0).length;
 
   return (
     <div className="space-y-6 font-sans antialiased text-[#212529]">

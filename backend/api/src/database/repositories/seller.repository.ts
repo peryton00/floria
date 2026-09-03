@@ -715,6 +715,13 @@ export class SellerRepository {
       .eq("id", productId)
       .eq("seller_id", sellerId);
 
+    // Also remove from inventory so ghost inventory rows do not linger
+    await db
+      .from("inventory")
+      .delete()
+      .eq("product_id", productId)
+      .eq("seller_id", sellerId);
+
     return !error;
   }
 
@@ -735,7 +742,10 @@ export class SellerRepository {
       .or(`seller_id.eq.${targetSellerId},seller_id.eq.${targetUserId}`);
 
     if (error || !data) return [];
-    return data;
+    // Only return inventory for active/existing products (exclude deleted or missing products)
+    return data.filter(
+      (item: any) => item.product && item.product.status !== "deleted",
+    );
   }
 
   // ── Orders & Fulfillment ──────────────────────────────────────────────────
