@@ -5,6 +5,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { api } from "@/lib/api";
 import { formatINR } from "@/lib/format";
 import { SearchIcon, CloseIcon } from "@/components/ui/Icons";
+import { RefreshButton } from "@/components/ui/RefreshButton";
 import { OrderFinancialBreakdown } from "@/components/admin/OrderFinancialBreakdown";
 import { useToast } from "@/lib/contexts/ToastContext";
 import { TableSkeleton } from "@/components/ui/loading";
@@ -95,7 +96,12 @@ export default function AdminOrdersPage() {
             <p className="text-xs text-slate-500 mt-1">Platform-wide visibility across nationwide multi-nursery split shipments, tracking, and fulfillment.</p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <RefreshButton
+              onRefresh={fetchOrders}
+              isLoading={loading}
+              title="Refresh master orders"
+            />
             <span className="font-mono text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded px-3 py-1">
               {orders.length} Master Orders
             </span>

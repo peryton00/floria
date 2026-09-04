@@ -16,6 +16,7 @@ import {
   PayoutIcon,
   UserIcon,
 } from "@/components/ui/Icons";
+import { RefreshButton } from "@/components/ui/RefreshButton";
 
 export default function SellerDashboardPage() {
   const { toast } = useToast();
@@ -194,6 +195,11 @@ export default function SellerDashboardPage() {
         </div>
 
         <div className="flex items-center gap-3">
+          <RefreshButton
+            onRefresh={fetchDashboard}
+            isLoading={loading}
+            title="Refresh dashboard telemetry"
+          />
           <SellerStatusBadge status={sellerStatus} size="sm" />
           <Link
             href="/seller/profile"

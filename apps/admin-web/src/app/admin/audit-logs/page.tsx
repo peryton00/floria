@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { api } from "@/lib/api";
 import { FloriaIcon } from "@floria/icons";
+import { RefreshButton } from "@/components/ui/RefreshButton";
 import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
 
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
@@ -207,20 +208,18 @@ export default function AdminAuditLogsPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {isLive && (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 text-[11px] font-bold border border-emerald-200">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 Live Stream
               </span>
             )}
-            <button
-              onClick={() => fetchInitialLogs()}
-              className="px-3 py-1.5 rounded-lg border border-ink-200 hover:bg-cream-100 text-xs font-bold text-ink-700 transition-colors flex items-center gap-1.5"
-            >
-              <FloriaIcon name="refresh" size="xs" />
-              <span>Refresh</span>
-            </button>
+            <RefreshButton
+              onRefresh={fetchInitialLogs}
+              isLoading={loading}
+              title="Refresh audit logs"
+            />
             <span className="px-3 py-1.5 rounded-lg bg-forest-50 text-forest-700 font-bold text-xs border border-forest-100">
               {filteredLogs.length} / {logs.length} Entries
             </span>

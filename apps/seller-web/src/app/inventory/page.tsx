@@ -6,6 +6,7 @@ import { formatINR } from "@/lib/format";
 import { useSeller } from "@/lib/contexts/SellerContext";
 import { useToast } from "@/lib/contexts/ToastContext";
 import { FloriaIcon } from "@floria/icons";
+import { RefreshButton } from "@/components/ui/RefreshButton";
 
 export default function SellerInventoryPage() {
   const { toast } = useToast();
@@ -122,7 +123,12 @@ export default function SellerInventoryPage() {
           <p className="text-xs text-slate-500 mt-1">Adjust price points, update live plant stocks, and define low stock threshold limits.</p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <RefreshButton
+            onRefresh={fetchInventory}
+            isLoading={loading}
+            title="Refresh nursery inventory"
+          />
           <span className="font-mono text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded px-3 py-1">
             {inventory.length} Stock Units
           </span>

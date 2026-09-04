@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { api } from "@/lib/api";
 import { TruckIcon, CloseIcon, SearchIcon, CheckIcon, AlertIcon, ShieldIcon } from "@/components/ui/Icons";
+import { RefreshButton } from "@/components/ui/RefreshButton";
 import { useToast } from "@/lib/contexts/ToastContext";
 import type { DeliveryPartnerApplication, DeliveryPartner, DeliveryPayout, DeliveryRateCard } from "@floria/types";
 
@@ -253,48 +254,56 @@ export default function AdminDeliveryPartnersPage() {
             </p>
           </div>
 
-          {/* Primary View Selector Tabs */}
-          <div className="flex items-center bg-cream-100 p-1 rounded-xl border border-cream-200 shadow-xs">
-            <button
-              onClick={() => { setActiveTab("applications"); setSearchQuery(""); }}
-              className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
-                activeTab === "applications"
-                  ? "bg-forest-800 text-white shadow-xs"
-                  : "text-ink-600 hover:text-ink-900"
-              }`}
-            >
-              Applications
-            </button>
-            <button
-              onClick={() => { setActiveTab("directory"); setSearchQuery(""); }}
-              className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
-                activeTab === "directory"
-                  ? "bg-forest-800 text-white shadow-xs"
-                  : "text-ink-600 hover:text-ink-900"
-              }`}
-            >
-              Fleet Directory
-            </button>
-            <button
-              onClick={() => { setActiveTab("payouts"); setSearchQuery(""); }}
-              className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
-                activeTab === "payouts"
-                  ? "bg-forest-800 text-white shadow-xs"
-                  : "text-ink-600 hover:text-ink-900"
-              }`}
-            >
-              Payouts Ledger
-            </button>
-            <button
-              onClick={() => { setActiveTab("rate_cards"); setSearchQuery(""); }}
-              className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
-                activeTab === "rate_cards"
-                  ? "bg-forest-800 text-white shadow-xs"
-                  : "text-ink-600 hover:text-ink-900"
-              }`}
-            >
-              Rate Cards & Payoff
-            </button>
+          {/* Actions & Primary View Selector Tabs */}
+          <div className="flex items-center gap-3">
+            <RefreshButton
+              onRefresh={loadData}
+              isLoading={loading}
+              title="Refresh delivery partner data"
+            />
+
+            <div className="flex items-center bg-cream-100 p-1 rounded-xl border border-cream-200 shadow-xs">
+              <button
+                onClick={() => { setActiveTab("applications"); setSearchQuery(""); }}
+                className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+                  activeTab === "applications"
+                    ? "bg-forest-800 text-white shadow-xs"
+                    : "text-ink-600 hover:text-ink-900"
+                }`}
+              >
+                Applications
+              </button>
+              <button
+                onClick={() => { setActiveTab("directory"); setSearchQuery(""); }}
+                className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+                  activeTab === "directory"
+                    ? "bg-forest-800 text-white shadow-xs"
+                    : "text-ink-600 hover:text-ink-900"
+                }`}
+              >
+                Fleet Directory
+              </button>
+              <button
+                onClick={() => { setActiveTab("payouts"); setSearchQuery(""); }}
+                className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+                  activeTab === "payouts"
+                    ? "bg-forest-800 text-white shadow-xs"
+                    : "text-ink-600 hover:text-ink-900"
+                }`}
+              >
+                Payouts Ledger
+              </button>
+              <button
+                onClick={() => { setActiveTab("rate_cards"); setSearchQuery(""); }}
+                className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+                  activeTab === "rate_cards"
+                    ? "bg-forest-800 text-white shadow-xs"
+                    : "text-ink-600 hover:text-ink-900"
+                }`}
+              >
+                Rate Cards &amp; Payoff
+              </button>
+            </div>
           </div>
         </div>
 

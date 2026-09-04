@@ -8,6 +8,7 @@ import { useSeller } from "@/lib/contexts/SellerContext";
 import { api } from "@/lib/api";
 import { formatINR } from "@/lib/format";
 import { OrderIcon, SearchIcon, AlertIcon, LeafIcon } from "@/components/ui/Icons";
+import { RefreshButton } from "@/components/ui/RefreshButton";
 import { useToast } from "@/lib/contexts/ToastContext";
 import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
 
@@ -219,7 +220,12 @@ function OrdersContent() {
           <p className="text-xs text-slate-500 mt-1">Manage and advance customer plant orders assigned to your nursery.</p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <RefreshButton
+            onRefresh={() => fetchOrders(1)}
+            isLoading={loading}
+            title="Refresh fulfillment queue"
+          />
           <span className="font-mono text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded px-3 py-1">
             {orders.length} Nursery Orders
           </span>

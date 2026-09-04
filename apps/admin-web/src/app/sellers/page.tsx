@@ -5,6 +5,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { api } from "@/lib/api";
 import { SellerStatusBadge } from "@/components/seller/SellerStatusBadge";
 import { LeafIcon, CloseIcon } from "@/components/ui/Icons";
+import { RefreshButton } from "@/components/ui/RefreshButton";
 import { useToast } from "@/lib/contexts/ToastContext";
 import { NurseryGridSkeleton } from "@/components/ui/loading";
 
@@ -152,13 +153,13 @@ export default function AdminSellersPage() {
               Review seller registrations, verify GST details, approve active partners, and handle onboarding lifecycle.
             </p>
           </div>
-          <button
-            onClick={() => fetchSellers(activeTab)}
-            disabled={loading}
-            className="px-4 py-2 bg-[#2D5A3C] hover:bg-[#1E4D2B] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-colors disabled:opacity-50"
-          >
-            {loading ? "Refreshing..." : "Refresh"}
-          </button>
+          <div className="flex items-center gap-3">
+            <RefreshButton
+              onRefresh={() => fetchSellers(activeTab)}
+              isLoading={loading}
+              title="Refresh nurseries list"
+            />
+          </div>
         </div>
 
         {/* Status Filter Tabs */}
