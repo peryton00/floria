@@ -405,6 +405,19 @@ declare class FloriaApiClient {
         success: boolean;
         message: string;
     }>>;
+    loginDeliveryPartner(identifier: string, password: string): Promise<ApiResponse<{
+        user: {
+            id: string;
+            email: string;
+            role: string;
+            deliveryPartnerId: string;
+            publicPartnerId: string;
+            fullName: string;
+            status: string;
+        };
+        partner: _floria_types.DeliveryPartner;
+        token: string;
+    }>>;
     requestDeliveryPartnerPasswordReset(email: string): Promise<ApiResponse<{
         success: boolean;
         message: string;

@@ -60,6 +60,26 @@ export class DeliveryPartnersController {
     }
   }
 
+  async login(req: Request, res: Response, next: NextFunction) {
+    try {
+      const identifier = req.body.identifier || req.body.email || req.body.username || req.body.public_partner_id;
+      const password = req.body.password;
+
+      if (!identifier || !password) {
+        throw Errors.validation("Email/Courier ID and password are required.");
+      }
+
+      const result = await deliveryPartnersService.login(identifier, password);
+      res.json({
+        success: true,
+        data: result,
+        message: "Courier authenticated successfully.",
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
   // ── Courier Authenticated Actions ─────────────────────────────────────────
 
   async getMyProfile(req: Request, res: Response, next: NextFunction) {

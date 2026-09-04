@@ -77,7 +77,7 @@ export class SellerAuthService {
     const email = appData.email.trim().toLowerCase();
     const username = appData.username.trim().toLowerCase();
 
-    // 2. Validate uniqueness
+    // 2. Validate uniqueness & Mutual Exclusion with Delivery Partners
     const [existingEmail, existingUsername] = await Promise.all([
       sellerAuthRepository.findCredentialByEmail(email),
       sellerAuthRepository.findCredentialByUsername(username),
@@ -90,29 +90,66 @@ export class SellerAuthService {
       throw Errors.validation("This Seller ID / username is already taken.");
     }
 
+    // Check if email is already registered as a Delivery Partner (active or pending)
+    try {
+      const db = getAdminDb();
+      const [courierRes, courierAppRes] = await Promise.all([
+        db.from("delivery_partners").select("id, email, status").ilike("email", email).maybeSingle(),
+        db.from("delivery_partner_applications").select("id, email, status").ilike("email", email).maybeSingle(),
+      ]);
+      if (courierRes?.data || courierAppRes?.data) {
+        throw Errors.validation(
+          "This email is already registered as a Delivery Partner. An account cannot be both a delivery partner and a seller.",
+        );
+      }
+    } catch (mErr: any) {
+      if (mErr.statusCode === 422 || mErr.code === "VALIDATION_ERROR") throw mErr;
+    }
+
     // 3. Securely hash password
     const { hash, salt } = await this.hashPassword(appData.password);
 
     // 4. Generate public seller ID
     const publicSellerId = this.generatePublicSellerId();
 
-    // 5. Create or link Supabase Auth user if available
+    // 5. Create or link Supabase Auth user (smart sync for existing customer accounts)
     let authUserId: string | undefined;
     try {
       const db = getAdminDb();
-      const { data: userRecord, error: userError } = await db.auth.admin.createUser({
-        email,
-        password: appData.password,
-        email_confirm: true,
-        user_metadata: {
-          role: "seller",
-          username,
-          public_seller_id: publicSellerId,
-          business_name: appData.business_name,
-        },
-      });
-      if (!userError && userRecord?.user) {
-        authUserId = userRecord.user.id;
+      // Check if user already exists (e.g. from customer Google OAuth or signup)
+      const { data: existingUser } = await db
+        .from("user_profiles")
+        .select("id, email, role")
+        .ilike("email", email)
+        .maybeSingle();
+
+      if (existingUser?.id) {
+        authUserId = existingUser.id;
+        await db.auth.admin.updateUserById(existingUser.id, {
+          password: appData.password,
+          email_confirm: true,
+          user_metadata: {
+            role: "seller",
+            username,
+            public_seller_id: publicSellerId,
+            business_name: appData.business_name,
+          },
+        });
+      } else {
+        const { data: userRecord, error: userError } = await db.auth.admin.createUser({
+          email,
+          password: appData.password,
+          email_confirm: true,
+          user_metadata: {
+            role: "seller",
+            username,
+            public_seller_id: publicSellerId,
+            business_name: appData.business_name,
+          },
+        });
+        if (!userError && userRecord?.user) {
+          authUserId = userRecord.user.id;
+        }
       }
     } catch {
       // Supabase admin user creation optional fallback

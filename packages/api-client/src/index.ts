@@ -1482,6 +1482,42 @@ export class FloriaApiClient {
     );
   }
 
+  public async loginDeliveryPartner(
+    identifier: string,
+    password: string,
+  ): Promise<
+    ApiResponse<{
+      user: {
+        id: string;
+        email: string;
+        role: string;
+        deliveryPartnerId: string;
+        publicPartnerId: string;
+        fullName: string;
+        status: string;
+      };
+      partner: import("@floria/types").DeliveryPartner;
+      token: string;
+    }>
+  > {
+    return this.request<{
+      user: {
+        id: string;
+        email: string;
+        role: string;
+        deliveryPartnerId: string;
+        publicPartnerId: string;
+        fullName: string;
+        status: string;
+      };
+      partner: import("@floria/types").DeliveryPartner;
+      token: string;
+    }>(`/api/v1/delivery-partners/auth/login`, {
+      method: "POST",
+      body: JSON.stringify({ identifier, password }),
+    });
+  }
+
   public async requestDeliveryPartnerPasswordReset(
     email: string,
   ): Promise<ApiResponse<{ success: boolean; message: string }>> {

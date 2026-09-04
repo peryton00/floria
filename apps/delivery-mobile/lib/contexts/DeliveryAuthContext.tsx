@@ -103,10 +103,33 @@ export function DeliveryAuthProvider({
   }, [fetchProfile]);
 
   const signIn = useCallback(
-    async (email: string, password: string) => {
+    async (emailOrId: string, password: string) => {
       try {
+        // 1. Primary: Authenticate via dedicated delivery partner login API
+        const res = await api.loginDeliveryPartner(emailOrId.trim(), password);
+        if (res.success && res.data) {
+          const { user: courierUser } = res.data;
+          // Attempt client Supabase auth session sync
+          try {
+            await supabase.auth.signInWithPassword({
+              email: courierUser.email,
+              password,
+            });
+          } catch {
+            // Client session will rely on token
+          }
+          setRole("delivery_partner");
+          await fetchProfile(courierUser.id);
+          return { success: true };
+        }
+
+        if (res.error?.message) {
+          return { success: false, error: res.error.message };
+        }
+
+        // 2. Fallback: Direct Supabase Auth
         const { data, error } = await supabase.auth.signInWithPassword({
-          email,
+          email: emailOrId.trim(),
           password,
         });
         if (error) return { success: false, error: error.message };

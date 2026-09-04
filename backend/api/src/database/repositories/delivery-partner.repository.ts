@@ -202,6 +202,30 @@ export class DeliveryPartnerRepository {
     return data as DeliveryPartner;
   }
 
+  async findPartnerByPublicId(publicId: string): Promise<DeliveryPartner | null> {
+    const db = getAdminDb();
+    const { data, error } = await db
+      .from("delivery_partners")
+      .select("*")
+      .ilike("public_partner_id", publicId.trim())
+      .maybeSingle();
+
+    if (error || !data) return null;
+    return data as DeliveryPartner;
+  }
+
+  async findCredentialsByPartnerId(partnerId: string): Promise<any | null> {
+    const db = getAdminDb();
+    const { data, error } = await db
+      .from("delivery_partner_credentials")
+      .select("*")
+      .eq("partner_id", partnerId)
+      .maybeSingle();
+
+    if (error || !data) return null;
+    return data;
+  }
+
   async findPartners(filters?: {
     status?: string;
     on_duty?: boolean;

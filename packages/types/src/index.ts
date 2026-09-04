@@ -763,6 +763,7 @@ export type DeliveryPartnerStatus = "active" | "suspended" | "inactive";
 
 export interface DeliveryPartnerApplication {
   id: UUID;
+  user_id?: UUID | null;
   full_name: string;
   email: string;
   phone: string;
@@ -770,6 +771,8 @@ export interface DeliveryPartnerApplication {
   vehicle_type: string;
   vehicle_number: string;
   driving_license: string;
+  password_hash?: string | null;
+  password_salt?: string | null;
   status: DeliveryApplicationStatus;
   rejection_reason?: string | null;
   submitted_documents?: any[];

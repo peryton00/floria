@@ -891,6 +891,12 @@ var FloriaApiClient = class {
       }
     );
   }
+  async loginDeliveryPartner(identifier, password) {
+    return this.request(`/api/v1/delivery-partners/auth/login`, {
+      method: "POST",
+      body: JSON.stringify({ identifier, password })
+    });
+  }
   async requestDeliveryPartnerPasswordReset(email) {
     return this.request(
       `/api/v1/delivery-partners/auth/forgot-password`,

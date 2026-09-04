@@ -76,7 +76,23 @@ export class DeliveryPartnersService {
 
     const email = input.email.toLowerCase().trim();
 
-    // 2. Prevent duplicate pending applications
+    // 2. Mutual Exclusion: Block if already registered as a Seller (active or pending)
+    try {
+      const db = getAdminDb();
+      const [sellerProfileRes, sellerAppRes] = await Promise.all([
+        db.from("seller_profiles").select("id, contact_email, status").ilike("contact_email", email).maybeSingle(),
+        db.from("seller_applications").select("id, email, status").ilike("email", email).maybeSingle(),
+      ]);
+      if (sellerProfileRes?.data || sellerAppRes?.data) {
+        throw Errors.validation(
+          "This email is already registered as a Nursery Seller. An account cannot be both a seller and a delivery partner.",
+        );
+      }
+    } catch (mErr: any) {
+      if (mErr.statusCode === 422 || mErr.code === "VALIDATION_ERROR") throw mErr;
+    }
+
+    // 3. Prevent duplicate pending applications
     const existing = await deliveryPartnerRepository.findApplicationByEmail(email);
     if (existing && existing.status === "pending") {
       throw Errors.conflict(
@@ -88,7 +104,7 @@ export class DeliveryPartnersService {
     let passwordSalt: string | undefined;
     let authUserId: string | undefined;
 
-    // 3. Password handling if provided at registration
+    // 4. Password handling & smart Supabase user sync
     if (input.password) {
       if (input.password.length < 8) {
         throw Errors.validation("Password must be at least 8 characters.");
@@ -99,22 +115,43 @@ export class DeliveryPartnersService {
 
       try {
         const db = getAdminDb();
-        const { data: userRecord } = await db.auth.admin.createUser({
-          email,
-          password: input.password,
-          email_confirm: true,
-          user_metadata: {
-            role: "delivery_partner",
-            full_name: input.full_name,
-            phone: input.phone,
-            application_status: "pending",
-          },
-        });
-        if (userRecord?.user) {
-          authUserId = userRecord.user.id;
+        // Check if user already exists (e.g. from customer Google OAuth or signup)
+        const { data: existingUser } = await db
+          .from("user_profiles")
+          .select("id, email, role")
+          .ilike("email", email)
+          .maybeSingle();
+
+        if (existingUser?.id) {
+          authUserId = existingUser.id;
+          await db.auth.admin.updateUserById(existingUser.id, {
+            password: input.password,
+            email_confirm: true,
+            user_metadata: {
+              role: "delivery_partner",
+              full_name: input.full_name,
+              phone: input.phone,
+              application_status: "pending",
+            },
+          });
+        } else {
+          const { data: userRecord } = await db.auth.admin.createUser({
+            email,
+            password: input.password,
+            email_confirm: true,
+            user_metadata: {
+              role: "delivery_partner",
+              full_name: input.full_name,
+              phone: input.phone,
+              application_status: "pending",
+            },
+          });
+          if (userRecord?.user) {
+            authUserId = userRecord.user.id;
+          }
         }
       } catch {
-        // Continue if admin create user is unavailable in current mode
+        // Continue if admin auth user sync is unavailable in current mode
       }
     }
 
@@ -131,7 +168,7 @@ export class DeliveryPartnersService {
       user_id: authUserId,
     });
 
-    // 4. Audit Log
+    // 5. Audit Log
     await auditRepository.log({
       actor_user_id: application.id,
       actor_role: "delivery_partner",
@@ -689,6 +726,154 @@ export class DeliveryPartnersService {
 
   async listPayouts(filters?: { partner_id?: string }): Promise<DeliveryPayout[]> {
     return deliveryPartnerRepository.findPayouts(filters);
+  }
+
+  /**
+   * Delivery Partner Login: Authenticates by Email or Public Partner ID (FLR-DRV-XXXXXX) + Password.
+   * Enforces status gating: only active / approved couriers can log in.
+   */
+  async login(
+    identifier: string,
+    pass: string,
+  ): Promise<{
+    user: {
+      id: string;
+      email: string;
+      role: string;
+      deliveryPartnerId: string;
+      publicPartnerId: string;
+      fullName: string;
+      status: DeliveryPartnerStatus;
+    };
+    partner: DeliveryPartner;
+    token: string;
+  }> {
+    const cleanId = identifier.trim();
+    const isEmail = cleanId.includes("@");
+    const db = getAdminDb();
+
+    // 1. Look up courier partner record
+    let partner: DeliveryPartner | null = null;
+    if (isEmail) {
+      partner = await deliveryPartnerRepository.findPartnerByEmail(cleanId);
+    } else {
+      partner = await deliveryPartnerRepository.findPartnerByPublicId(cleanId);
+    }
+
+    // 2. If no approved partner record, check if there is an application
+    if (!partner) {
+      const app = isEmail
+        ? await deliveryPartnerRepository.findApplicationByEmail(cleanId)
+        : null;
+
+      if (app) {
+        if (app.status === "pending") {
+          const err: any = new Error("Your delivery partner application is currently under review.");
+          err.statusCode = 403;
+          err.code = "DELIVERY_APPLICATION_PENDING";
+          err.data = { status: "pending", submittedAt: app.submitted_at };
+          throw err;
+        } else if (app.status === "rejected") {
+          const err: any = new Error("Your delivery partner application was not approved.");
+          err.statusCode = 403;
+          err.code = "DELIVERY_APPLICATION_REJECTED";
+          err.data = { status: "rejected", reason: app.rejection_reason };
+          throw err;
+        }
+      }
+
+      throw Errors.authRequired("Incorrect email/Courier ID or password.");
+    }
+
+    // 3. Status gating
+    if (partner.status === "suspended" || partner.status === "inactive") {
+      const err: any = new Error("Your delivery partner account is currently suspended.");
+      err.statusCode = 403;
+      err.code = "DELIVERY_PARTNER_SUSPENDED";
+      throw err;
+    }
+
+    // 4. Verify password against delivery_partner_credentials or delivery_partner_applications
+    let isValid = false;
+    let supabaseToken: string | undefined;
+
+    // Check credentials table
+    const cred = await deliveryPartnerRepository.findCredentialsByPartnerId(partner.id);
+    if (cred?.password_hash && cred?.password_salt) {
+      isValid = await this.verifyPassword(pass, cred.password_hash, cred.password_salt);
+    }
+
+    // If not verified via credentials, check application password hash
+    if (!isValid) {
+      const app = await deliveryPartnerRepository.findApplicationByEmail(partner.email);
+      if (app?.password_hash && app?.password_salt) {
+        isValid = await this.verifyPassword(pass, app.password_hash, app.password_salt);
+      }
+    }
+
+    // If still not verified, attempt Supabase Auth directly
+    if (!isValid) {
+      try {
+        const anonDb = getAnonDb();
+        const { data: authData, error: authErr } = await anonDb.auth.signInWithPassword({
+          email: partner.email,
+          password: pass,
+        });
+        if (!authErr && authData?.session?.access_token) {
+          isValid = true;
+          supabaseToken = authData.session.access_token;
+        }
+      } catch {
+        // Fallback handled below
+      }
+    }
+
+    if (!isValid) {
+      throw Errors.authRequired("Incorrect email/Courier ID or password.");
+    }
+
+    // 5. Generate / obtain access token
+    let token = supabaseToken || "";
+    if (!token) {
+      try {
+        const { data: sessionData, error: sessionErr } = await db.auth.signInWithPassword({
+          email: partner.email,
+          password: pass,
+        });
+        if (!sessionErr && sessionData?.session?.access_token) {
+          token = sessionData.session.access_token;
+        }
+      } catch {
+        // Fallback token creation
+      }
+    }
+
+    if (!token) {
+      const sessionPayload = {
+        sub: partner.user_id || partner.id,
+        delivery_partner_id: partner.id,
+        public_partner_id: partner.public_partner_id,
+        email: partner.email,
+        role: "delivery_partner",
+        iat: Math.floor(Date.now() / 1000),
+        exp: Math.floor(Date.now() / 1000) + 7 * 24 * 3600,
+      };
+      token = Buffer.from(JSON.stringify(sessionPayload)).toString("base64url");
+    }
+
+    return {
+      user: {
+        id: partner.user_id || partner.id,
+        email: partner.email,
+        role: "delivery_partner",
+        deliveryPartnerId: partner.id,
+        publicPartnerId: partner.public_partner_id,
+        fullName: partner.full_name,
+        status: partner.status,
+      },
+      partner,
+      token,
+    };
   }
 }
 

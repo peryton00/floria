@@ -12,6 +12,7 @@ router.post("/applications", deliveryPartnersController.submitApplication);
 router.get("/applications/status", deliveryPartnersController.getApplicationStatus);
 router.get("/applications/:id/status", deliveryPartnersController.getApplicationStatus);
 router.post("/auth/activate", deliveryPartnersController.activateAccount);
+router.post("/auth/login", deliveryPartnersController.login);
 router.post("/auth/forgot-password", deliveryPartnersController.forgotPassword);
 router.post("/auth/reset-password", deliveryPartnersController.resetPassword);
 
