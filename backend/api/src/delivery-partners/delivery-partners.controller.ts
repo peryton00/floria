@@ -21,8 +21,11 @@ export class DeliveryPartnersController {
 
   async getApplicationStatus(req: Request, res: Response, next: NextFunction) {
     try {
-      const id = String(req.params.id);
-      const application = await deliveryPartnersService.getApplicationStatus(id);
+      const identifier = String(req.params.id || req.query.email || req.query.id || "");
+      if (!identifier) {
+        throw Errors.validation("Application ID or Email is required.");
+      }
+      const application = await deliveryPartnersService.getApplicationStatus(identifier);
       res.json({ success: true, data: application });
     } catch (err) {
       next(err);

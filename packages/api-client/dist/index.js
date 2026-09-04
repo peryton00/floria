@@ -877,10 +877,10 @@ var FloriaApiClient = class {
       }
     );
   }
-  async getDeliveryApplicationStatus(id) {
-    return this.request(
-      `/api/v1/delivery-partners/applications/${id}/status`
-    );
+  async getDeliveryApplicationStatus(idOrEmail) {
+    const isEmail = idOrEmail.includes("@");
+    const path = isEmail ? `/api/v1/delivery-partners/applications/status?email=${encodeURIComponent(idOrEmail)}` : `/api/v1/delivery-partners/applications/${encodeURIComponent(idOrEmail)}/status`;
+    return this.request(path);
   }
   async activateDeliveryPartner(data) {
     return this.request(

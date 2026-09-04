@@ -1461,11 +1461,13 @@ export class FloriaApiClient {
   }
 
   public async getDeliveryApplicationStatus(
-    id: string,
+    idOrEmail: string,
   ): Promise<ApiResponse<import("@floria/types").DeliveryPartnerApplication>> {
-    return this.request<import("@floria/types").DeliveryPartnerApplication>(
-      `/api/v1/delivery-partners/applications/${id}/status`,
-    );
+    const isEmail = idOrEmail.includes("@");
+    const path = isEmail
+      ? `/api/v1/delivery-partners/applications/status?email=${encodeURIComponent(idOrEmail)}`
+      : `/api/v1/delivery-partners/applications/${encodeURIComponent(idOrEmail)}/status`;
+    return this.request<import("@floria/types").DeliveryPartnerApplication>(path);
   }
 
   public async activateDeliveryPartner(

@@ -20,10 +20,13 @@ export class DeliveryPartnerRepository {
     vehicle_type: string;
     vehicle_number: string;
     driving_license: string;
+    password_hash?: string;
+    password_salt?: string;
+    user_id?: string;
     submitted_documents?: any[];
   }): Promise<DeliveryPartnerApplication> {
     const db = getAdminDb();
-    const payload = {
+    const payload: any = {
       full_name: data.full_name,
       email: data.email.toLowerCase().trim(),
       phone: data.phone.trim(),
@@ -31,6 +34,9 @@ export class DeliveryPartnerRepository {
       vehicle_type: data.vehicle_type,
       vehicle_number: data.vehicle_number.toUpperCase().trim(),
       driving_license: data.driving_license.toUpperCase().trim(),
+      password_hash: data.password_hash || null,
+      password_salt: data.password_salt || null,
+      user_id: data.user_id || null,
       submitted_documents: data.submitted_documents || [],
       status: "pending",
       submitted_at: new Date().toISOString(),

@@ -400,7 +400,7 @@ declare class FloriaApiClient {
     completeDeliveryWithPod(id: string, data: _floria_types.CompleteDeliveryPayload): Promise<ApiResponse<_floria_types.DeliveryAssignment>>;
     getDeliveryPod(id: string): Promise<ApiResponse<_floria_types.DeliveryPodDetails>>;
     submitDeliveryApplication(data: _floria_types.SubmitDeliveryApplicationInput): Promise<ApiResponse<_floria_types.DeliveryPartnerApplication>>;
-    getDeliveryApplicationStatus(id: string): Promise<ApiResponse<_floria_types.DeliveryPartnerApplication>>;
+    getDeliveryApplicationStatus(idOrEmail: string): Promise<ApiResponse<_floria_types.DeliveryPartnerApplication>>;
     activateDeliveryPartner(data: _floria_types.ActivateDeliveryPartnerInput): Promise<ApiResponse<{
         success: boolean;
         message: string;

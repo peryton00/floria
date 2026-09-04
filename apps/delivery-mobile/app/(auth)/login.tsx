@@ -21,7 +21,9 @@ import { theme } from "../../lib/theme";
 import { FloriaIcon } from "../../components/ui/FloriaIcon";
 import { ForgotPasswordModal } from "../../components/auth/ForgotPasswordModal";
 import { JoinPartnerModal } from "../../components/auth/JoinPartnerModal";
+import { ApplicationStatusModal } from "../../components/auth/ApplicationStatusModal";
 import { DeliveryIllustration } from "../../components/auth/DeliveryIllustration";
+import { api } from "../../lib/api";
 
 export default function CourierLoginScreen() {
   const router = useRouter();
@@ -39,6 +41,7 @@ export default function CourierLoginScreen() {
   // Modals
   const [forgotModalVisible, setForgotModalVisible] = useState(false);
   const [joinModalVisible, setJoinModalVisible] = useState(false);
+  const [statusModalVisible, setStatusModalVisible] = useState(false);
 
   // Determine scaling based on screen height so all content fits on the first screen without scrolling
   const isCompact = screenHeight < 760;
@@ -64,6 +67,26 @@ export default function CourierLoginScreen() {
       if (res.success) {
         router.replace("/(tabs)");
       } else {
+        // Check if user has a pending application awaiting admin review
+        try {
+          const appRes = await api.getDeliveryApplicationStatus(identifier.trim());
+          if (appRes.success && appRes.data) {
+            if (appRes.data.status === "pending") {
+              setError(
+                "Your application is under review by Floria Operations Dispatch. You will be able to log in as soon as it is approved.",
+              );
+              return;
+            } else if (appRes.data.status === "rejected") {
+              setError(
+                `Application not approved: ${appRes.data.rejection_reason || "Verification criteria not met."}`,
+              );
+              return;
+            }
+          }
+        } catch {
+          // Ignore status lookup failure and show auth error
+        }
+
         setError(
           res.error ||
             "Invalid courier credentials. Please verify your email/ID and password.",
@@ -297,6 +320,16 @@ export default function CourierLoginScreen() {
             </TouchableOpacity>
           </View>
 
+          {/* ── 3b. Check Application Status Link ── */}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            style={styles.statusLinkBtn}
+            onPress={() => setStatusModalVisible(true)}
+          >
+            <FloriaIcon name="clock" size={13} color="#2E5B42" />
+            <Text style={styles.statusLinkText}>Applied earlier? Check Application Status</Text>
+          </TouchableOpacity>
+
           {/* ── 4. Trust & Compliance Footer ── */}
           <View style={[styles.footer, isCompact && styles.footerCompact]}>
             <View style={styles.trustBadge}>
@@ -329,6 +362,14 @@ export default function CourierLoginScreen() {
       <JoinPartnerModal
         visible={joinModalVisible}
         onClose={() => setJoinModalVisible(false)}
+      />
+
+      <ApplicationStatusModal
+        visible={statusModalVisible}
+        onClose={() => setStatusModalVisible(false)}
+        onProceedToLogin={(email) => {
+          setIdentifier(email);
+        }}
       />
     </View>
   );
@@ -623,6 +664,21 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#2E5B42",
     letterSpacing: 0.4,
+  },
+  statusLinkBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 8,
+    marginTop: 6,
+    marginHorizontal: 16,
+  },
+  statusLinkText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#2E5B42",
+    textDecorationLine: "underline",
   },
   footer: {
     alignItems: "center",

@@ -806,6 +806,7 @@ export interface SubmitDeliveryApplicationInput {
   vehicle_type: string;
   vehicle_number: string;
   driving_license: string;
+  password?: string;
 }
 
 export interface ActivateDeliveryPartnerInput {

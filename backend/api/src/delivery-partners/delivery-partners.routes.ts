@@ -9,6 +9,7 @@ const router = Router();
 // ── Public Onboarding & Credentials ─────────────────────────────────────────
 
 router.post("/applications", deliveryPartnersController.submitApplication);
+router.get("/applications/status", deliveryPartnersController.getApplicationStatus);
 router.get("/applications/:id/status", deliveryPartnersController.getApplicationStatus);
 router.post("/auth/activate", deliveryPartnersController.activateAccount);
 router.post("/auth/forgot-password", deliveryPartnersController.forgotPassword);

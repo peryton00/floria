@@ -32,6 +32,10 @@ export function JoinPartnerModal({ visible, onClose }: JoinPartnerModalProps) {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [city, setCity] = useState("Bangalore");
   const [vehicleType, setVehicleType] = useState("two_wheeler");
   const [vehicleNumber, setVehicleNumber] = useState("");
@@ -48,6 +52,14 @@ export function JoinPartnerModal({ visible, onClose }: JoinPartnerModalProps) {
       }
       if (phone.trim().length < 10) {
         setError("Please enter a valid 10-digit mobile number.");
+        return;
+      }
+      if (!password || password.length < 8) {
+        setError("Please create a password of at least 8 characters.");
+        return;
+      }
+      if (password !== confirmPassword) {
+        setError("Passwords do not match.");
         return;
       }
       setError(null);
@@ -74,6 +86,7 @@ export function JoinPartnerModal({ visible, onClose }: JoinPartnerModalProps) {
         vehicle_type: vehicleType,
         vehicle_number: vehicleNumber.toUpperCase().trim(),
         driving_license: drivingLicense.toUpperCase().trim(),
+        password: password,
       });
 
       if (res.success && res.data) {
@@ -92,6 +105,8 @@ export function JoinPartnerModal({ visible, onClose }: JoinPartnerModalProps) {
   const handleResetAndClose = () => {
     setStep(1);
     setSubmitted(false);
+    setPassword("");
+    setConfirmPassword("");
     setError(null);
     onClose();
   };
@@ -183,6 +198,58 @@ export function JoinPartnerModal({ visible, onClose }: JoinPartnerModalProps) {
                     value={city}
                     onChangeText={setCity}
                   />
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>CREATE LOGIN PASSWORD (MIN 8 CHARS) *</Text>
+                  <View style={styles.passwordRow}>
+                    <TextInput
+                      style={[styles.input, { flex: 1, borderWidth: 0 }]}
+                      placeholder="••••••••"
+                      placeholderTextColor={theme.colors.muted}
+                      value={password}
+                      onChangeText={setPassword}
+                      secureTextEntry={!showPassword}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                    />
+                    <TouchableOpacity
+                      style={styles.eyeBtn}
+                      onPress={() => setShowPassword(!showPassword)}
+                    >
+                      <FloriaIcon
+                        name={showPassword ? "visibility_off" : "visibility"}
+                        size={18}
+                        color={theme.colors.muted}
+                      />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>CONFIRM LOGIN PASSWORD *</Text>
+                  <View style={styles.passwordRow}>
+                    <TextInput
+                      style={[styles.input, { flex: 1, borderWidth: 0 }]}
+                      placeholder="••••••••"
+                      placeholderTextColor={theme.colors.muted}
+                      value={confirmPassword}
+                      onChangeText={setConfirmPassword}
+                      secureTextEntry={!showConfirmPassword}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                    />
+                    <TouchableOpacity
+                      style={styles.eyeBtn}
+                      onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                      <FloriaIcon
+                        name={showConfirmPassword ? "visibility_off" : "visibility"}
+                        size={18}
+                        color={theme.colors.muted}
+                      />
+                    </TouchableOpacity>
+                  </View>
                 </View>
 
                 <TouchableOpacity
@@ -533,5 +600,17 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 16,
     marginBottom: theme.spacing.lg,
+  },
+  passwordRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: theme.colors.sand,
+    borderWidth: 1,
+    borderColor: theme.colors.divider,
+    borderRadius: theme.radius.md,
+    paddingRight: theme.spacing.sm,
+  },
+  eyeBtn: {
+    padding: theme.spacing.xs,
   },
 });

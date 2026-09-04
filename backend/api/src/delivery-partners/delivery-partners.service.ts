@@ -84,6 +84,40 @@ export class DeliveryPartnersService {
       );
     }
 
+    let passwordHash: string | undefined;
+    let passwordSalt: string | undefined;
+    let authUserId: string | undefined;
+
+    // 3. Password handling if provided at registration
+    if (input.password) {
+      if (input.password.length < 8) {
+        throw Errors.validation("Password must be at least 8 characters.");
+      }
+      const hashed = await this.hashPassword(input.password);
+      passwordHash = hashed.hash;
+      passwordSalt = hashed.salt;
+
+      try {
+        const db = getAdminDb();
+        const { data: userRecord } = await db.auth.admin.createUser({
+          email,
+          password: input.password,
+          email_confirm: true,
+          user_metadata: {
+            role: "delivery_partner",
+            full_name: input.full_name,
+            phone: input.phone,
+            application_status: "pending",
+          },
+        });
+        if (userRecord?.user) {
+          authUserId = userRecord.user.id;
+        }
+      } catch {
+        // Continue if admin create user is unavailable in current mode
+      }
+    }
+
     const application = await deliveryPartnerRepository.createApplication({
       full_name: input.full_name.trim(),
       email,
@@ -92,9 +126,12 @@ export class DeliveryPartnersService {
       vehicle_type: input.vehicle_type || "two_wheeler",
       vehicle_number: input.vehicle_number.toUpperCase().trim(),
       driving_license: input.driving_license.toUpperCase().trim(),
+      password_hash: passwordHash,
+      password_salt: passwordSalt,
+      user_id: authUserId,
     });
 
-    // 3. Audit Log
+    // 4. Audit Log
     await auditRepository.log({
       actor_user_id: application.id,
       actor_role: "delivery_partner",
@@ -108,7 +145,7 @@ export class DeliveryPartnersService {
       },
     });
 
-    // 4. Notification to Admin / Operations
+    // 5. Notification to Admin / Operations
     try {
       const { notificationService } = await import(
         "../notifications/notification.service.js"
@@ -129,8 +166,13 @@ export class DeliveryPartnersService {
     return application;
   }
 
-  async getApplicationStatus(id: string): Promise<DeliveryPartnerApplication> {
-    const app = await deliveryPartnerRepository.findApplicationById(id);
+  async getApplicationStatus(identifier: string): Promise<DeliveryPartnerApplication> {
+    let app: DeliveryPartnerApplication | null = null;
+    if (identifier.includes("@")) {
+      app = await deliveryPartnerRepository.findApplicationByEmail(identifier);
+    } else {
+      app = await deliveryPartnerRepository.findApplicationById(identifier);
+    }
     if (!app) throw Errors.notFound("Delivery Partner Application");
     return app;
   }
@@ -488,8 +530,12 @@ export class DeliveryPartnersService {
       Date.now() + 48 * 60 * 60 * 1000,
     ).toISOString(); // 48 hours
 
+    const hasPreSetPassword = Boolean((app as any).password_hash);
+    const authUserId = (app as any).user_id || undefined;
+
     // 1. Create delivery partner profile
     const partner = await deliveryPartnerRepository.createPartner({
+      user_id: authUserId,
       public_partner_id: publicPartnerId,
       full_name: app.full_name,
       email: app.email,
@@ -501,15 +547,35 @@ export class DeliveryPartnersService {
       status: "active",
     });
 
-    // 2. Create credential record with activation token
+    // 2. Create credential record
     await deliveryPartnerRepository.createCredential({
       partner_id: partner.id,
+      user_id: authUserId,
       email: partner.email,
       public_partner_id: publicPartnerId,
-      activation_token_hash: activationTokenHash,
-      activation_expires_at: activationExpiresAt,
-      is_activated: false,
+      password_hash: (app as any).password_hash || null,
+      password_salt: (app as any).password_salt || null,
+      activation_token_hash: hasPreSetPassword ? null : activationTokenHash,
+      activation_expires_at: hasPreSetPassword ? null : activationExpiresAt,
+      is_activated: hasPreSetPassword,
     });
+
+    // 2b. If authUserId exists, ensure user_profile has role 'delivery_partner'
+    if (authUserId) {
+      try {
+        const adminDb = getAdminDb();
+        await adminDb.from("user_profiles").upsert(
+          {
+            id: authUserId,
+            role: "delivery_partner",
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "id" },
+        );
+      } catch {
+        // Optional profile sync
+      }
+    }
 
     // 3. Update application status
     const updatedApp = await deliveryPartnerRepository.updateApplication(id, {
@@ -529,20 +595,24 @@ export class DeliveryPartnersService {
         applicationId: id,
         partnerId: partner.id,
         publicPartnerId,
+        hasPreSetPassword,
       },
     });
 
-    // 5. Dispatch notification
+    // 5. Dispatch notification to courier
     try {
       const { notificationService } = await import(
         "../notifications/notification.service.js"
       );
+      const recipientId = authUserId || partner.id;
       await notificationService.createNotification({
-        user_id: partner.id,
+        user_id: recipientId,
         role: "admin",
         type: "DELIVERY_PARTNER_APPROVED",
         title: "Courier Application Approved",
-        message: `Courier ${partner.full_name} (${publicPartnerId}) approved by admin.`,
+        message: hasPreSetPassword
+          ? `Welcome to Floria! Your courier account (${publicPartnerId}) has been approved. You can now log in with your email and password.`
+          : `Courier ${partner.full_name} (${publicPartnerId}) approved by admin.`,
         source_type: "delivery_partner",
         source_id: partner.id,
       });
