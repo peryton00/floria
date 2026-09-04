@@ -13,6 +13,14 @@ import {
   UserIcon,
   RefreshIcon,
   UserGroupIcon,
+  TruckIcon,
+  BagIcon,
+  OrderIcon,
+  MapPinIcon,
+  NurseryIcon,
+  WalletIcon,
+  AlertIcon,
+  LeafIcon,
 } from "@/components/ui/Icons";
 import { useToast } from "@/lib/contexts/ToastContext";
 import { TableSkeleton } from "@/components/ui/loading";
@@ -26,13 +34,15 @@ export default function AdminUsersPage() {
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
+  const [fullUserDetails, setFullUserDetails] = useState<any | null>(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [activeModalTab, setActiveModalTab] = useState<"overview" | "access" | "edit">("overview");
   const [rationale, setRationale] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Edit fields
-  const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState("");
   const [editPhone, setEditPhone] = useState("");
   const [editRole, setEditRole] = useState("customer");
@@ -100,12 +110,25 @@ export default function AdminUsersPage() {
     fetchUsers(1);
   }, [roleFilter]);
 
-  const handleOpenManage = (u: any) => {
+  const handleOpenManage = async (u: any) => {
     setSelectedUser(u);
+    setFullUserDetails(null);
     setEditName(u.full_name || "");
     setEditPhone(u.phone || "");
     setEditRole(u.role || "customer");
-    setIsEditing(false);
+    setActiveModalTab("overview");
+    setRationale("");
+    try {
+      setDetailsLoading(true);
+      const res = await api.getAdminUserById(u.id);
+      if (res.success && res.data) {
+        setFullUserDetails(res.data);
+      }
+    } catch {
+      // Non-blocking fallback
+    } finally {
+      setDetailsLoading(false);
+    }
   };
 
   const handleUpdateStatus = async (user: any, newStatus: "active" | "suspended") => {
@@ -496,30 +519,51 @@ export default function AdminUsersPage() {
           </>
         )}
 
-        {/* Modal: User Editor Drawer */}
+        {/* Modal: User Editor & Ecosystem Intelligence Drawer */}
         {selectedUser && (
-          <div className="fixed inset-0 z-50 bg-ink-900/40 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="p-1.5 rounded-[2rem] bg-cream-200/90 border border-white/60 shadow-2xl max-w-lg w-full animate-in fade-in zoom-in-95 duration-300">
-              <div className="bg-white rounded-[calc(2rem-0.375rem)] border border-white p-6 sm:p-7 space-y-5 max-h-[85vh] overflow-y-auto">
+          <div className="fixed inset-0 z-50 bg-ink-900/50 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+            <div className="p-1.5 rounded-[2rem] bg-cream-200/95 border border-white/60 shadow-2xl max-w-2xl sm:max-w-3xl w-full animate-in fade-in zoom-in-95 duration-200 my-auto">
+              <div className="bg-white rounded-[calc(2rem-0.375rem)] border border-white p-5 sm:p-7 space-y-5 max-h-[88vh] overflow-y-auto font-ui scrollbar-thin">
                 
                 {/* Modal Header */}
                 <div className="flex justify-between items-start border-b border-cream-200/80 pb-4">
-                  <div>
-                    <div className="inline-flex items-center gap-1.5 text-forest-700 font-mono text-[9px] uppercase tracking-[0.2em] font-semibold mb-1">
+                  <div className="space-y-1 min-w-0">
+                    <div className="inline-flex items-center gap-1.5 text-forest-700 font-mono text-[9px] uppercase tracking-[0.2em] font-semibold">
                       <ShieldIcon size={12} />
-                      Member Management
+                      Member Management &amp; Intelligence
                     </div>
-                    <h3 className="font-serif text-xl sm:text-2xl font-medium text-ink-900">
-                      Manage User Account
-                    </h3>
-                    <p className="text-[10px] text-ink-400 font-mono mt-0.5 truncate">
-                      UUID: {selectedUser.id}
-                    </p>
+                    <div className="flex items-center gap-3">
+                      <h3 className="font-serif text-xl sm:text-2xl font-bold text-ink-900 truncate">
+                        {selectedUser.full_name || "User Account"}
+                      </h3>
+                      <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider border shadow-2xs ${getRoleBadgeStyle(selectedUser.role)}`}>
+                        {selectedUser.role || "customer"}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                      <span className="text-[11px] text-ink-600 font-sans font-medium">
+                        {selectedUser.email || "No email"}
+                      </span>
+                      <span className="text-ink-300">•</span>
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard(selectedUser.id, `modal-${selectedUser.id}`)}
+                        className="group/uuid inline-flex items-center gap-1 font-mono text-[10px] text-ink-400 hover:text-forest-800 transition-colors"
+                        title="Copy User UUID"
+                      >
+                        <span>UUID: {selectedUser.id?.slice(0, 14)}…</span>
+                        {copiedId === `modal-${selectedUser.id}` ? (
+                          <CheckIcon size={11} className="text-emerald-600" />
+                        ) : (
+                          <CopyIcon size={11} className="text-ink-400 group-hover/uuid:text-forest-700" />
+                        )}
+                      </button>
+                    </div>
                   </div>
                   <button
                     type="button"
                     onClick={() => setSelectedUser(null)}
-                    className="p-2 rounded-full hover:bg-cream-100 text-ink-400 hover:text-ink-900 transition-colors"
+                    className="p-2 rounded-full hover:bg-cream-100 text-ink-400 hover:text-ink-900 transition-colors flex-shrink-0"
                     aria-label="Close modal"
                   >
                     <CloseIcon size={18} />
@@ -527,32 +571,424 @@ export default function AdminUsersPage() {
                 </div>
 
                 {/* Tab Navigation */}
-                <div className="flex border-b border-cream-200/80 gap-6 text-xs font-mono font-medium uppercase tracking-wider">
+                <div className="flex border-b border-cream-200/80 gap-2 sm:gap-6 text-xs font-mono font-medium uppercase tracking-wider overflow-x-auto">
                   <button
                     type="button"
-                    onClick={() => setIsEditing(false)}
-                    className={`pb-2.5 border-b-2 transition-all cursor-pointer ${
-                      !isEditing
-                        ? "border-forest-800 text-forest-900 font-semibold"
+                    onClick={() => setActiveModalTab("overview")}
+                    className={`pb-2.5 border-b-2 transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                      activeModalTab === "overview"
+                        ? "border-forest-800 text-forest-900 font-bold"
                         : "border-transparent text-ink-400 hover:text-ink-700"
                     }`}
                   >
-                    Access Guards
+                    <UserIcon size={13} />
+                    <span>Ecosystem Intelligence</span>
                   </button>
                   <button
                     type="button"
-                    onClick={() => setIsEditing(true)}
-                    className={`pb-2.5 border-b-2 transition-all cursor-pointer ${
-                      isEditing
-                        ? "border-forest-800 text-forest-900 font-semibold"
+                    onClick={() => setActiveModalTab("access")}
+                    className={`pb-2.5 border-b-2 transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                      activeModalTab === "access"
+                        ? "border-forest-800 text-forest-900 font-bold"
                         : "border-transparent text-ink-400 hover:text-ink-700"
                     }`}
                   >
-                    Edit Profile Fields
+                    <ShieldIcon size={13} />
+                    <span>Access Guards</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveModalTab("edit")}
+                    className={`pb-2.5 border-b-2 transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                      activeModalTab === "edit"
+                        ? "border-forest-800 text-forest-900 font-bold"
+                        : "border-transparent text-ink-400 hover:text-ink-700"
+                    }`}
+                  >
+                    <EditIcon size={13} />
+                    <span>Edit Profile Fields</span>
                   </button>
                 </div>
 
-                {!isEditing ? (
+                {/* TAB 1: ECOSYSTEM INTELLIGENCE */}
+                {activeModalTab === "overview" && (
+                  <div className="space-y-6">
+                    {detailsLoading ? (
+                      <div className="py-12 flex flex-col items-center justify-center space-y-2">
+                        <div className="w-8 h-8 border-2 border-forest-600 border-t-transparent rounded-full animate-spin" />
+                        <span className="text-xs text-ink-500 font-medium font-mono">
+                          Loading user intelligence &amp; ecosystem activity...
+                        </span>
+                      </div>
+                    ) : (
+                      <>
+                        {/* 1. Account Summary Profile Card */}
+                        <div className="bg-cream-50/70 border border-cream-200 rounded-2xl p-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                          <div>
+                            <span className="text-[10px] font-mono uppercase text-ink-400 font-bold block">
+                              Email Address
+                            </span>
+                            <span className="font-medium text-ink-900 truncate block" title={fullUserDetails?.email || selectedUser.email || "N/A"}>
+                              {fullUserDetails?.email || selectedUser.email || "N/A"}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-mono uppercase text-ink-400 font-bold block">
+                              Phone Number
+                            </span>
+                            <span className="font-mono text-ink-900 font-medium">
+                              {fullUserDetails?.phone || selectedUser.phone || "N/A"}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-mono uppercase text-ink-400 font-bold block">
+                              Account Role
+                            </span>
+                            <span className="font-bold text-forest-800 uppercase text-[11px]">
+                              {selectedUser.role}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-mono uppercase text-ink-400 font-bold block">
+                              System Status
+                            </span>
+                            <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase ${selectedUser.status === "suspended" ? "bg-rose-100 text-rose-800" : "bg-emerald-100 text-emerald-800"}`}>
+                              {selectedUser.status || "active"}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* 2. CUSTOMER DOMAIN: Saved Addresses & Orders */}
+                        {(selectedUser.role === "customer" || (fullUserDetails?.customer?.orders?.length ?? 0) > 0 || (fullUserDetails?.customer?.addresses?.length ?? 0) > 0) && (
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between border-b border-cream-200 pb-2">
+                              <h4 className="font-serif font-bold text-base text-ink-900 flex items-center gap-2">
+                                <BagIcon size={16} className="text-forest-700" />
+                                Customer Orders &amp; Transportation
+                              </h4>
+                              <span className="text-xs font-mono text-ink-500 font-bold">
+                                {fullUserDetails?.customer?.orders?.length || 0} Orders • {fullUserDetails?.customer?.addresses?.length || 0} Addresses
+                              </span>
+                            </div>
+
+                            {/* Saved Shipping Addresses */}
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-1.5 text-xs font-bold text-ink-700">
+                                <MapPinIcon size={13} className="text-forest-700" />
+                                <span>Saved Delivery Addresses</span>
+                              </div>
+                              {(!fullUserDetails?.customer?.addresses || fullUserDetails.customer.addresses.length === 0) ? (
+                                <p className="text-xs text-ink-400 italic bg-cream-50/50 p-3 rounded-xl border border-cream-200/60">
+                                  No delivery addresses saved by this customer yet.
+                                </p>
+                              ) : (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                  {fullUserDetails.customer.addresses.map((addr: any) => (
+                                    <div key={addr.id} className="p-3 rounded-xl bg-white border border-cream-200 text-xs space-y-1 shadow-2xs">
+                                      <div className="flex justify-between items-center">
+                                        <span className="font-bold text-ink-900">{addr.full_name || "Recipient"}</span>
+                                        {addr.is_default && (
+                                          <span className="px-2 py-0.5 rounded-full bg-forest-50 text-forest-700 border border-forest-200 text-[9px] font-bold uppercase font-mono">
+                                            Default
+                                          </span>
+                                        )}
+                                      </div>
+                                      <p className="text-ink-600 text-[11px]">
+                                        {[addr.address_line1, addr.address_line2, addr.city, addr.state, addr.postal_code].filter(Boolean).join(", ")}
+                                      </p>
+                                      {addr.phone && (
+                                        <p className="text-ink-400 font-mono text-[10px]">Phone: {addr.phone}</p>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Recent Customer Orders */}
+                            <div className="space-y-2 pt-2">
+                              <div className="flex items-center justify-between text-xs font-bold text-ink-700">
+                                <div className="flex items-center gap-1.5">
+                                  <TruckIcon size={13} className="text-forest-700" />
+                                  <span>Order History &amp; Delivery Logistics</span>
+                                </div>
+                              </div>
+                              {(!fullUserDetails?.customer?.orders || fullUserDetails.customer.orders.length === 0) ? (
+                                <p className="text-xs text-ink-400 italic bg-cream-50/50 p-3 rounded-xl border border-cream-200/60">
+                                  No placed orders recorded for this customer.
+                                </p>
+                              ) : (
+                                <div className="space-y-2 max-h-56 overflow-y-auto scrollbar-thin pr-1">
+                                  {fullUserDetails.customer.orders.map((ord: any) => (
+                                    <div key={ord.id} className="p-3 rounded-xl bg-white border border-cream-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-2xs hover:border-forest-300 transition-colors">
+                                      <div className="space-y-0.5">
+                                        <div className="flex items-center gap-2">
+                                          <span className="font-mono font-bold text-ink-900">
+                                            #{ord.id.slice(0, 10)}
+                                          </span>
+                                          <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase bg-amber-50 text-amber-800 border border-amber-200">
+                                            {ord.status}
+                                          </span>
+                                          {ord.payment_status && (
+                                            <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                              {ord.payment_status}
+                                            </span>
+                                          )}
+                                        </div>
+                                        <p className="text-[10px] text-ink-400 font-mono">
+                                          {new Date(ord.created_at).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
+                                        </p>
+                                      </div>
+                                      <div className="text-left sm:text-right">
+                                        <span className="font-mono font-bold text-forest-800 text-sm">
+                                          ₹{Number(ord.total_amount || 0).toLocaleString("en-IN")}
+                                        </span>
+                                        <p className="text-[10px] text-ink-500">
+                                          {ord.order_items?.length || 0} items
+                                        </p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 3. SELLER / NURSERY DOMAIN: Nursery Profile, Catalog, Fulfillments */}
+                        {(selectedUser.role === "seller" || fullUserDetails?.seller) && (
+                          <div className="space-y-4 pt-2">
+                            <div className="flex items-center justify-between border-b border-cream-200 pb-2">
+                              <h4 className="font-serif font-bold text-base text-ink-900 flex items-center gap-2">
+                                <NurseryIcon size={16} className="text-forest-700" />
+                                Seller &amp; Nursery Partner Intelligence
+                              </h4>
+                              <span className="text-xs font-mono text-forest-700 font-bold">
+                                {fullUserDetails?.seller?.profile?.public_seller_id || "Nursery Partner"}
+                              </span>
+                            </div>
+
+                            {fullUserDetails?.seller?.profile && (
+                              <div className="p-3.5 rounded-xl bg-forest-50/50 border border-forest-100 text-xs space-y-2">
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <p className="font-bold text-forest-900 text-sm">
+                                      {fullUserDetails.seller.profile.business_name || "Nursery Partner"}
+                                    </p>
+                                    <p className="text-ink-500 text-[11px] mt-0.5">
+                                      {fullUserDetails.seller.profile.business_description || "No description provided."}
+                                    </p>
+                                  </div>
+                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase bg-white text-forest-800 border border-forest-200">
+                                    {fullUserDetails.seller.profile.status || "approved"}
+                                  </span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 text-[11px] text-ink-600 pt-1 border-t border-forest-100/80">
+                                  <p><span className="text-ink-400 font-mono uppercase text-[9px]">Contact Email:</span> {fullUserDetails.seller.profile.contact_email || "N/A"}</p>
+                                  <p><span className="text-ink-400 font-mono uppercase text-[9px]">Contact Phone:</span> {fullUserDetails.seller.profile.contact_phone || "N/A"}</p>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Nursery Products Catalog Preview */}
+                            <div className="space-y-2">
+                              <div className="flex justify-between items-center text-xs font-bold text-ink-700">
+                                <span className="flex items-center gap-1.5">
+                                  <LeafIcon size={13} className="text-forest-700" />
+                                  Nursery Catalog Products ({fullUserDetails?.seller?.products?.length || 0})
+                                </span>
+                              </div>
+                              {(!fullUserDetails?.seller?.products || fullUserDetails.seller.products.length === 0) ? (
+                                <p className="text-xs text-ink-400 italic bg-cream-50/50 p-3 rounded-xl border border-cream-200/60">
+                                  No catalog products listed by this nursery yet.
+                                </p>
+                              ) : (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto scrollbar-thin">
+                                  {fullUserDetails.seller.products.map((prod: any) => (
+                                    <div key={prod.id} className="p-2.5 rounded-xl bg-white border border-cream-200 text-xs flex justify-between items-center">
+                                      <div className="min-w-0 pr-2">
+                                        <p className="font-bold text-ink-900 truncate">{prod.name}</p>
+                                        <p className="text-[10px] text-ink-400 font-mono">Stock: {prod.inventory?.stock_quantity ?? "—"}</p>
+                                      </div>
+                                      <span className="font-mono font-bold text-forest-800 text-xs flex-shrink-0">
+                                        ₹{(Number(prod.regular_price_paise || 0) / 100).toFixed(0)}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 4. DELIVERY PARTNER DOMAIN: Courier Profile, Vehicle, Runs & Earnings */}
+                        {(selectedUser.role === "delivery_partner" || fullUserDetails?.deliveryPartner) && (
+                          <div className="space-y-4 pt-2">
+                            <div className="flex items-center justify-between border-b border-cream-200 pb-2">
+                              <h4 className="font-serif font-bold text-base text-ink-900 flex items-center gap-2">
+                                <TruckIcon size={16} className="text-forest-700" />
+                                Delivery Partner &amp; Courier Logistics
+                              </h4>
+                              <span className="text-xs font-mono text-forest-700 font-bold">
+                                {fullUserDetails?.deliveryPartner?.partner?.public_partner_id || "Courier Partner"}
+                              </span>
+                            </div>
+
+                            {/* Courier Verification & Vehicle Details */}
+                            <div className="bg-amber-50/50 border border-amber-200/80 rounded-xl p-3.5 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                              <div>
+                                <span className="text-[9px] font-mono uppercase text-ink-400 font-bold block">Vehicle Type</span>
+                                <span className="font-bold text-ink-900 uppercase text-[11px]">
+                                  {fullUserDetails?.deliveryPartner?.partner?.vehicle_type || "two_wheeler"}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-[9px] font-mono uppercase text-ink-400 font-bold block">Vehicle Plate</span>
+                                <span className="font-mono font-bold text-ink-900 text-[11px]">
+                                  {fullUserDetails?.deliveryPartner?.partner?.vehicle_number || "N/A"}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-[9px] font-mono uppercase text-ink-400 font-bold block">Driving License</span>
+                                <span className="font-mono text-ink-900 text-[11px] truncate block" title={fullUserDetails?.deliveryPartner?.partner?.driving_license}>
+                                  {fullUserDetails?.deliveryPartner?.partner?.driving_license || "N/A"}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-[9px] font-mono uppercase text-ink-400 font-bold block">Duty Status</span>
+                                <span className={`inline-flex items-center gap-1 font-mono font-bold text-[10px] ${fullUserDetails?.deliveryPartner?.partner?.on_duty ? "text-emerald-700" : "text-ink-500"}`}>
+                                  <span className={`w-1.5 h-1.5 rounded-full ${fullUserDetails?.deliveryPartner?.partner?.on_duty ? "bg-emerald-500 animate-pulse" : "bg-ink-300"}`} />
+                                  {fullUserDetails?.deliveryPartner?.partner?.on_duty ? "ON DUTY" : "OFF DUTY"}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Courier Delivery Runs */}
+                            <div className="space-y-2">
+                              <span className="text-xs font-bold text-ink-700 block">
+                                Assigned Delivery Runs ({fullUserDetails?.deliveryPartner?.deliveries?.length || 0})
+                              </span>
+                              {(!fullUserDetails?.deliveryPartner?.deliveries || fullUserDetails.deliveryPartner.deliveries.length === 0) ? (
+                                <p className="text-xs text-ink-400 italic bg-cream-50/50 p-3 rounded-xl border border-cream-200/60">
+                                  No delivery assignments dispatched to this partner yet.
+                                </p>
+                              ) : (
+                                <div className="space-y-2 max-h-44 overflow-y-auto scrollbar-thin pr-1">
+                                  {fullUserDetails.deliveryPartner.deliveries.map((del: any) => (
+                                    <div key={del.id} className="p-3 rounded-xl bg-white border border-cream-200 text-xs flex justify-between items-center shadow-2xs">
+                                      <div>
+                                        <div className="flex items-center gap-2">
+                                          <span className="font-mono font-bold text-ink-900">Order #{del.order_id?.slice(0, 10)}</span>
+                                          <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase bg-forest-50 text-forest-700 border border-forest-200">
+                                            {del.status}
+                                          </span>
+                                        </div>
+                                        <p className="text-[10px] text-ink-500 mt-0.5">
+                                          Destination: {del.order?.delivery_address_snapshot?.city || "Bangalore"} ({del.order?.delivery_address_snapshot?.postal_code || ""})
+                                        </p>
+                                      </div>
+                                      <span className="font-mono text-[10px] text-ink-400">
+                                        {new Date(del.created_at).toLocaleDateString("en-IN")}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Courier Earnings */}
+                            <div className="space-y-2">
+                              <span className="text-xs font-bold text-ink-700 flex items-center gap-1.5">
+                                <WalletIcon size={13} className="text-forest-700" />
+                                Earnings Ledger ({fullUserDetails?.deliveryPartner?.earnings?.length || 0} Transactions)
+                              </span>
+                              {(!fullUserDetails?.deliveryPartner?.earnings || fullUserDetails.deliveryPartner.earnings.length === 0) ? (
+                                <p className="text-xs text-ink-400 italic bg-cream-50/50 p-3 rounded-xl border border-cream-200/60">
+                                  No payout earnings ledger records found.
+                                </p>
+                              ) : (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-36 overflow-y-auto scrollbar-thin">
+                                  {fullUserDetails.deliveryPartner.earnings.map((earn: any) => (
+                                    <div key={earn.id} className="p-2.5 rounded-xl bg-white border border-cream-200 text-xs flex justify-between items-center">
+                                      <div>
+                                        <p className="font-mono font-bold text-ink-900">₹{(earn.total_earning_paise / 100).toFixed(0)}</p>
+                                        <p className="text-[9px] text-ink-400 font-mono">Base: ₹{(earn.base_earning_paise / 100).toFixed(0)}</p>
+                                      </div>
+                                      <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                        {earn.status}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 5. ADMIN / OPERATIONS DOMAIN */}
+                        {(selectedUser.role === "admin" || selectedUser.role === "super_admin" || selectedUser.role === "operations") && (
+                          <div className="space-y-3 pt-2">
+                            <div className="flex items-center justify-between border-b border-cream-200 pb-2">
+                              <h4 className="font-serif font-bold text-base text-ink-900 flex items-center gap-2">
+                                <ShieldIcon size={16} className="text-forest-700" />
+                                Administrative &amp; Operations Authority
+                              </h4>
+                              <span className="text-xs font-mono text-forest-700 font-bold uppercase">
+                                System Tier: {selectedUser.role}
+                              </span>
+                            </div>
+                            <div className="p-3.5 rounded-xl bg-cream-100/60 border border-cream-200 text-xs space-y-1.5">
+                              <p className="font-bold text-ink-900">Platform Capabilities Granted:</p>
+                              <div className="flex flex-wrap gap-1.5 pt-1">
+                                {["User Directory", "Seller Approvals", "Delivery Logistics", "Financial Payouts", "Audit Trails", "Rate Card Engine"].map((cap) => (
+                                  <span key={cap} className="px-2.5 py-1 rounded-lg bg-white border border-cream-300 font-mono text-[10px] text-forest-800 font-semibold shadow-2xs">
+                                    ✓ {cap}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 6. SECURITY & AUDIT TRAIL LOGS */}
+                        {(fullUserDetails?.auditLogs?.length ?? 0) > 0 && (
+                          <div className="space-y-2 pt-2 border-t border-cream-200">
+                            <span className="text-xs font-bold text-ink-700 flex items-center gap-1.5">
+                              <AlertIcon size={13} className="text-forest-700" />
+                              Recent Security &amp; Audit Events
+                            </span>
+                            <div className="space-y-1.5 max-h-36 overflow-y-auto scrollbar-thin">
+                              {fullUserDetails.auditLogs.map((log: any) => (
+                                <div key={log.id} className="p-2 rounded-lg bg-cream-50/60 border border-cream-200 text-[11px] flex justify-between items-center">
+                                  <div className="flex items-center gap-2 truncate">
+                                    <span className="font-mono font-bold text-forest-900">{log.action}</span>
+                                    <span className="text-ink-400 font-mono text-[10px]">{log.resource_type}</span>
+                                  </div>
+                                  <span className="font-mono text-[10px] text-ink-400 flex-shrink-0">
+                                    {new Date(log.created_at).toLocaleDateString("en-IN")}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    <div className="flex justify-end pt-3 border-t border-cream-200/80">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedUser(null)}
+                        className="px-6 py-2.5 rounded-full bg-forest-800 hover:bg-forest-900 text-white font-medium text-xs uppercase tracking-wider transition-colors cursor-pointer"
+                      >
+                        Done Reviewing
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 2: ACCESS GUARDS */}
+                {activeModalTab === "access" && (
                   <div className="space-y-4">
                     <div className="bg-cream-50/70 border border-cream-300/60 rounded-2xl p-4 space-y-2.5 text-xs">
                       <div className="flex justify-between items-center">
@@ -617,7 +1053,10 @@ export default function AdminUsersPage() {
                       </button>
                     </div>
                   </div>
-                ) : (
+                )}
+
+                {/* TAB 3: EDIT PROFILE FIELDS */}
+                {activeModalTab === "edit" && (
                   <form onSubmit={handleSaveDetails} className="space-y-4">
                     <div className="space-y-1.5">
                       <label className="block text-[11px] font-mono font-medium uppercase tracking-wider text-ink-700">
@@ -655,6 +1094,7 @@ export default function AdminUsersPage() {
                       >
                         <option value="customer">Customer (Standard Buyer)</option>
                         <option value="seller">Seller / Nursery Partner</option>
+                        <option value="delivery_partner">Delivery Partner (Courier)</option>
                         <option value="operations">Operations Manager</option>
                         <option value="admin">Platform Admin</option>
                         <option value="super_admin">Super Admin (Root)</option>

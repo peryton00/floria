@@ -121,7 +121,161 @@ export class AdminService {
   async getUserById(id: string) {
     const user = await userRepository.findById(id);
     if (!user) throw Errors.notFound("User");
-    return user;
+
+    const db = getAdminDb();
+
+    // 1. Customer Context: Orders & Addresses
+    let customerOrders: any[] = [];
+    let customerAddresses: any[] = [];
+    try {
+      const [ordersRes, addressesRes] = await Promise.all([
+        db
+          .from("orders")
+          .select(
+            "id, status, total_amount, currency, payment_status, payment_method, created_at, order_items(id, quantity, unit_price_paise, total_price_paise, product:products(name, slug))",
+          )
+          .eq("customer_id", id)
+          .order("created_at", { ascending: false })
+          .limit(20),
+        db
+          .from("addresses")
+          .select("*")
+          .eq("user_id", id)
+          .order("is_default", { ascending: false }),
+      ]);
+      customerOrders = ordersRes.data || [];
+      customerAddresses = addressesRes.data || [];
+    } catch {
+      // Non-blocking
+    }
+
+    // 2. Seller Context: Nursery Profile, Products, Fulfillments
+    let sellerProfile: any = null;
+    let sellerProducts: any[] = [];
+    let sellerFulfillments: any[] = [];
+    try {
+      const { data: profile } = await db
+        .from("seller_profiles")
+        .select("*")
+        .eq("user_id", id)
+        .maybeSingle();
+
+      if (profile) {
+        sellerProfile = profile;
+        const [prodsRes, fulfillmentsRes] = await Promise.all([
+          db
+            .from("products")
+            .select(
+              "id, name, slug, status, regular_price_paise, inventory:inventory(stock_quantity), created_at",
+            )
+            .eq("seller_id", profile.id)
+            .order("created_at", { ascending: false })
+            .limit(20),
+          db
+            .from("seller_order_fulfillments")
+            .select(
+              "id, order_id, status, total_payout_paise, commission_paise, created_at",
+            )
+            .eq("seller_id", profile.id)
+            .order("created_at", { ascending: false })
+            .limit(20),
+        ]);
+        sellerProducts = prodsRes.data || [];
+        sellerFulfillments = fulfillmentsRes.data || [];
+      }
+    } catch {
+      // Non-blocking
+    }
+
+    // 3. Delivery Partner Context: Courier Record, Assignments, Earnings
+    let courierData: any = null;
+    let courierDeliveries: any[] = [];
+    let courierEarnings: any[] = [];
+    try {
+      const { data: dp } = await db
+        .from("delivery_partners")
+        .select("*")
+        .eq("user_id", id)
+        .maybeSingle();
+
+      courierData = dp;
+
+      if (!courierData && user.email) {
+        const { data: appData } = await db
+          .from("delivery_partner_applications")
+          .select("*")
+          .ilike("email", user.email)
+          .maybeSingle();
+        if (appData) {
+          courierData = { ...appData, is_application: true };
+        }
+      }
+
+      if (dp?.id) {
+        const [delRes, earnRes] = await Promise.all([
+          db
+            .from("delivery_assignments")
+            .select(
+              "id, order_id, status, assigned_at, delivered_at, created_at, order:orders(id, total_amount, status, delivery_address_snapshot)",
+            )
+            .eq("delivery_partner_id", dp.id)
+            .order("created_at", { ascending: false })
+            .limit(20),
+          db
+            .from("delivery_earnings")
+            .select(
+              "id, order_id, base_earning_paise, extra_items_earning_paise, total_earning_paise, status, created_at",
+            )
+            .eq("partner_id", dp.id)
+            .order("created_at", { ascending: false })
+            .limit(20),
+        ]);
+        courierDeliveries = delRes.data || [];
+        courierEarnings = earnRes.data || [];
+      }
+    } catch {
+      // Non-blocking
+    }
+
+    // 4. Activity Logs (Audit Trail)
+    let auditLogs: any[] = [];
+    try {
+      const { data: logs } = await db
+        .from("audit_logs")
+        .select(
+          "id, action, actor_role, resource_type, resource_id, created_at, metadata",
+        )
+        .or(`actor_user_id.eq.${id},resource_id.eq.${id}`)
+        .order("created_at", { ascending: false })
+        .limit(20);
+      auditLogs = logs || [];
+    } catch {
+      // Non-blocking
+    }
+
+    return {
+      ...user,
+      customer: {
+        orders: customerOrders,
+        totalOrders: customerOrders.length,
+        addresses: customerAddresses,
+      },
+      seller: sellerProfile
+        ? {
+            profile: sellerProfile,
+            products: sellerProducts,
+            fulfillments: sellerFulfillments,
+          }
+        : null,
+      deliveryPartner: courierData
+        ? {
+            partner: courierData,
+            deliveries: courierDeliveries,
+            earnings: courierEarnings,
+          }
+        : null,
+      auditLogs,
+    };
   }
 
   async updateUserStatus(
