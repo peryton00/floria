@@ -1,5 +1,4 @@
-// Floria Delivery Mobile — Courier Profile & Account Screen
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -17,11 +16,14 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDeliveryAuth } from "../../lib/contexts/DeliveryAuthContext";
 import { theme } from "../../lib/theme";
 import { FloriaIcon } from "../../components/ui/FloriaIcon";
+import { api } from "../../lib/api";
+import type { DeliveryPartner } from "@floria/types";
 
 export default function ProfileScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user, role, signOut } = useDeliveryAuth();
+  const [partnerProfile, setPartnerProfile] = useState<DeliveryPartner | null>(null);
   const [onDuty, setOnDuty] = useState(true);
   const [signingOut, setSigningOut] = useState(false);
 
@@ -31,14 +33,39 @@ export default function ProfileScreen() {
   const [supportMessage, setSupportMessage] = useState("");
   const [supportSubmitted, setSupportSubmitted] = useState(false);
 
+  useEffect(() => {
+    async function loadPartner() {
+      try {
+        const res = await api.getDeliveryPartnerProfile();
+        if (res.success && res.data) {
+          setPartnerProfile(res.data);
+          setOnDuty(res.data.on_duty);
+        }
+      } catch {
+        // Fallback to local session
+      }
+    }
+    loadPartner();
+  }, []);
+
+  const handleToggleDuty = async (val: boolean) => {
+    setOnDuty(val);
+    try {
+      await api.updateDeliveryPartnerAvailability(val);
+    } catch {
+      setOnDuty(!val);
+    }
+  };
+
   const courierName =
+    partnerProfile?.full_name ||
     user?.user_metadata?.full_name ||
     user?.email?.split("@")[0] ||
     "Authorized Courier";
 
-  const courierId = user?.id
-    ? `FLR-DRV-${user.id.slice(0, 6).toUpperCase()}`
-    : "FLR-DRV-008241";
+  const courierId =
+    partnerProfile?.public_partner_id ||
+    (user?.id ? `FLR-DRV-${user.id.slice(0, 6).toUpperCase()}` : "FLR-DRV-008241");
 
   const initial = (courierName[0] || "C").toUpperCase();
 
@@ -142,7 +169,7 @@ export default function ProfileScreen() {
             </View>
             <Switch
               value={onDuty}
-              onValueChange={setOnDuty}
+              onValueChange={handleToggleDuty}
               trackColor={{
                 false: theme.colors.divider,
                 true: theme.colors.forest,
@@ -158,17 +185,19 @@ export default function ProfileScreen() {
         <View style={styles.card}>
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Assigned Regional Hub</Text>
-            <Text style={styles.infoValue}>Bengaluru South Botanical Cluster</Text>
+            <Text style={styles.infoValue}>{partnerProfile?.city || "Bengaluru Regional Cluster"}</Text>
           </View>
           <View style={styles.infoDivider} />
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Vehicle Classification</Text>
-            <Text style={styles.infoValue}>Two Wheeler (Cargo Box)</Text>
+            <Text style={styles.infoValue}>
+              {partnerProfile?.vehicle_type?.replace("_", " ") || "Two Wheeler"} ({partnerProfile?.vehicle_number || "Verified"})
+            </Text>
           </View>
           <View style={styles.infoDivider} />
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Compensation Model</Text>
-            <Text style={styles.infoValue}>Weekly Direct Deposit (Tue)</Text>
+            <Text style={styles.infoValue}>Direct Ledger Settlement</Text>
           </View>
         </View>
 

@@ -168,10 +168,10 @@ describe("Operations & Delivery Logistics API (Step 5B.1)", () => {
     const res = await request(app)
       .post("/api/v1/operations/deliveries/del-101/status")
       .set("Authorization", "Bearer valid-jwt")
-      .send({ status: "out_for_delivery" });
+      .send({ status: "picked_up" });
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
-    expect(res.body.data.status).toBe("out_for_delivery");
+    expect(res.body.data.status).toBe("picked_up");
   });
 });

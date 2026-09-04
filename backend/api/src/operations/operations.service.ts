@@ -213,22 +213,62 @@ export class OperationsService {
   }
 
   // ── Deliveries ─────────────────────────────────────────────────────────────
-  async getDeliveries(status?: string) {
+  async getDeliveries(status?: string, user?: AuthenticatedUser) {
+    if (
+      user &&
+      (user.role === "delivery_partner" || user.role === "courier")
+    ) {
+      const partnerId = user.deliveryPartnerId || user.id;
+      const { deliveryPartnerRepository } = await import(
+        "../database/repositories/delivery-partner.repository.js"
+      );
+      return deliveryPartnerRepository.findPartnerDeliveries(partnerId, status);
+    }
     return deliveryRepository.findAll(status);
   }
 
-  async getDeliveryById(id: string) {
+  async getDeliveryById(id: string, user?: AuthenticatedUser) {
     const delivery = await deliveryRepository.findById(id);
     if (!delivery) throw Errors.notFound("Delivery assignment");
+
+    // Scoped courier isolation
+    if (
+      user &&
+      (user.role === "delivery_partner" || user.role === "courier")
+    ) {
+      const partnerId = user.deliveryPartnerId || user.id;
+      if (
+        delivery.delivery_partner_id !== partnerId &&
+        delivery.assigned_to !== user.id &&
+        delivery.assigned_to !== partnerId
+      ) {
+        throw Errors.forbidden("You do not have permission to access this delivery.");
+      }
+    }
+
     return delivery;
   }
 
-  async assignDelivery(opUserId: string, orderId: string, assignedTo: string) {
+  async assignDelivery(
+    opUserId: string,
+    orderId: string,
+    assignedTo: string,
+    partnerId?: string,
+  ) {
     const delivery = await deliveryRepository.assign({
       order_id: orderId,
       assigned_to: assignedTo,
       status: "assigned",
     });
+
+    if (partnerId) {
+      const adminDb = getAdminDb();
+      await adminDb
+        .from("delivery_assignments")
+        .update({ delivery_partner_id: partnerId })
+        .eq("id", delivery.id);
+      delivery.delivery_partner_id = partnerId;
+    }
 
     await auditRepository.log({
       actor_user_id: opUserId,
@@ -236,8 +276,32 @@ export class OperationsService {
       action: "DELIVERY_ASSIGNED",
       resource_type: "delivery_assignment",
       resource_id: delivery.id,
-      metadata: { orderId, assignedTo },
+      metadata: { orderId, assignedTo, partnerId },
     });
+
+    // P1: Dispatch notification to courier
+    try {
+      const { notificationService } = await import(
+        "../notifications/notification.service.js"
+      );
+      const recipientUserId = partnerId || assignedTo;
+      await notificationService.createNotification({
+        user_id: recipientUserId,
+        role: "operations",
+        type: "DELIVERY_ASSIGNED",
+        title: "New Delivery Assigned",
+        message: `Order #${orderId.slice(0, 8).toUpperCase()} has been assigned to your route.`,
+        source_type: "delivery_assignment",
+        source_id: delivery.id,
+        navigation: {
+          entityType: "ORDER",
+          entityId: orderId,
+          action: "TRACK",
+        },
+      });
+    } catch {
+      // Async notification failure must not rollback assignment
+    }
 
     return delivery;
   }
@@ -246,15 +310,27 @@ export class OperationsService {
     opUserId: string,
     deliveryId: string,
     assignedTo: string,
+    partnerId?: string,
   ) {
     const delivery = await deliveryRepository.findById(deliveryId);
     if (!delivery) throw Errors.notFound("Delivery assignment");
 
-    const updated = await deliveryRepository.assign({
-      order_id: delivery.order_id,
-      assigned_to: assignedTo,
-      status: "reassigned",
-    });
+    const adminDb = getAdminDb();
+    const now = new Date().toISOString();
+    const { data: updated, error } = await adminDb
+      .from("delivery_assignments")
+      .update({
+        assigned_to: assignedTo,
+        delivery_partner_id: partnerId || null,
+        status: "assigned",
+        assigned_at: now,
+        updated_at: now,
+      })
+      .eq("id", deliveryId)
+      .select()
+      .maybeSingle();
+
+    if (error || !updated) throw Errors.database("Failed to reassign delivery");
 
     await auditRepository.log({
       actor_user_id: opUserId,
@@ -262,7 +338,7 @@ export class OperationsService {
       action: "DELIVERY_REASSIGNED",
       resource_type: "delivery_assignment",
       resource_id: deliveryId,
-      metadata: { from: delivery.assigned_to, to: assignedTo },
+      metadata: { from: delivery.assigned_to, to: assignedTo, partnerId },
     });
 
     return updated;
@@ -272,9 +348,42 @@ export class OperationsService {
     opUserId: string,
     deliveryId: string,
     status: string,
+    user?: AuthenticatedUser,
   ) {
     const delivery = await deliveryRepository.findById(deliveryId);
     if (!delivery) throw Errors.notFound("Delivery assignment");
+
+    // Courier ownership check
+    if (
+      user &&
+      (user.role === "delivery_partner" || user.role === "courier")
+    ) {
+      const partnerId = user.deliveryPartnerId || user.id;
+      if (
+        delivery.delivery_partner_id !== partnerId &&
+        delivery.assigned_to !== user.id &&
+        delivery.assigned_to !== partnerId
+      ) {
+        throw Errors.forbidden("You are not assigned to update this delivery.");
+      }
+    }
+
+    // State machine transition validation
+    const current = delivery.status;
+    const allowedTransitions: Record<string, string[]> = {
+      assigned: ["picked_up"],
+      picked_up: ["out_for_delivery"],
+      out_for_delivery: ["delivered", "failed"],
+      failed: ["out_for_delivery", "assigned"],
+    };
+
+    if (
+      user?.role !== "admin" &&
+      user?.role !== "super_admin" &&
+      !allowedTransitions[current]?.includes(status)
+    ) {
+      throw Errors.invalidTransition(current, status);
+    }
 
     const updated = await deliveryRepository.updateStatus(deliveryId, status);
     let action = "DELIVERY_STATUS_CHANGED";
@@ -283,9 +392,28 @@ export class OperationsService {
     else if (status === "delivered") action = "DELIVERY_COMPLETED";
     else if (status === "failed") action = "DELIVERY_FAILED";
 
+    // Order status synchronization
+    if (delivery.order_id) {
+      try {
+        if (status === "picked_up") {
+          await orderRepository.updateOrderStatus(delivery.order_id, "picked_up");
+        } else if (status === "out_for_delivery") {
+          await orderRepository.updateOrderStatus(
+            delivery.order_id,
+            "out_for_delivery",
+          );
+        }
+      } catch (oErr: any) {
+        console.warn(
+          `[OperationsService] Order status sync notice for order '${delivery.order_id}':`,
+          oErr.message,
+        );
+      }
+    }
+
     await auditRepository.log({
       actor_user_id: opUserId,
-      actor_role: "operations",
+      actor_role: user?.role || "operations",
       action,
       resource_type: "delivery_assignment",
       resource_id: deliveryId,
@@ -309,8 +437,11 @@ export class OperationsService {
     if (!delivery) throw Errors.notFound("Delivery assignment");
 
     // 2. Ownership / Role authorization
+    const partnerId = user.deliveryPartnerId || user.id;
     if (
       delivery.assigned_to !== user.id &&
+      delivery.assigned_to !== partnerId &&
+      delivery.delivery_partner_id !== partnerId &&
       user.role !== "admin" &&
       user.role !== "super_admin"
     ) {
@@ -325,7 +456,7 @@ export class OperationsService {
       return delivery;
     }
 
-    // 4. Validate Delivery State Transition (must be out_for_delivery to complete drop-off)
+    // 4. Validate Delivery State Transition
     if (delivery.status === "delivered") {
       throw Errors.invalidTransition("delivered", "delivered");
     }
@@ -397,10 +528,16 @@ export class OperationsService {
       notes,
     );
 
-    // 7. Update order status if order exists
+    // 7. Update order status to delivered
     try {
       if (delivery.order_id) {
         await orderRepository.updateOrderStatus(delivery.order_id, "delivered");
+        try {
+          const { ledgerService } = await import("../payments/ledger.service.js");
+          await ledgerService.markOrderEarningsAvailable(delivery.order_id);
+        } catch {
+          // Ledger fallback
+        }
       }
     } catch (orderErr: any) {
       console.warn(
@@ -409,7 +546,45 @@ export class OperationsService {
       );
     }
 
-    // 8. Write audit log
+    // 8. Server-Authoritative Delivery Earning Generation (P1 Dynamic Rate Card)
+    try {
+      const targetPartnerId = delivery.delivery_partner_id || partnerId;
+      if (targetPartnerId) {
+        const { deliveryPartnerRepository } = await import(
+          "../database/repositories/delivery-partner.repository.js"
+        );
+        const { deliveryRateCardService } = await import(
+          "../delivery-partners/delivery-rate-card.service.js"
+        );
+
+        const calculation = await deliveryRateCardService.calculateDeliveryEarning(delivery);
+
+        await deliveryPartnerRepository.createEarning({
+          partner_id: targetPartnerId,
+          delivery_id: deliveryId,
+          order_id: delivery.order_id,
+          base_earning_paise: calculation.base_earning_paise,
+          extra_items_earning_paise: calculation.extra_items_earning_paise,
+          total_earning_paise: calculation.total_earning_paise,
+          status: "available",
+          metadata: {
+            recipientName: recipientName || null,
+            podAssetId,
+            rate_card_id: calculation.rate_card_id,
+            rate_card_name: calculation.rate_card_name,
+            currency: calculation.currency,
+            calculated_at: calculation.calculated_at,
+          },
+        });
+      }
+    } catch (earnErr: any) {
+      console.error(
+        "[OperationsService] Delivery earning ledger error:",
+        earnErr.message,
+      );
+    }
+
+    // 9. Write audit log
     await auditRepository.log({
       actor_user_id: user.id,
       actor_role: user.role || "operations",

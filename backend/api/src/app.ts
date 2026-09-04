@@ -24,6 +24,7 @@ import notificationsRoutes from "./notifications/notifications.routes.js";
 import reportsRoutes from "./reports/reports.routes.js";
 import reviewsRoutes from "./reviews/reviews.routes.js";
 import mediaRoutes from "./media/media.routes.js";
+import deliveryPartnersRoutes from "./delivery-partners/delivery-partners.routes.js";
 
 export function createApp() {
   const app = express();
@@ -96,6 +97,7 @@ export function createApp() {
   apiV1.use("/seller", sellersRoutes);
 
   apiV1.use("/operations", operationsRoutes);
+  apiV1.use("/delivery-partners", deliveryPartnersRoutes);
   apiV1.use("/admin", adminRoutes);
 
   apiV1.use("/payments", paymentsRoutes);

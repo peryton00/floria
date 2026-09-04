@@ -47,10 +47,20 @@ export function DeliveryAuthProvider({
         .eq("id", userId)
         .maybeSingle();
 
-      if (error || !data) {
-        setRole(null);
+      if (data?.role) {
+        setRole(data.role);
       } else {
-        setRole(data.role || "customer");
+        const { data: dp } = await supabase
+          .from("delivery_partners")
+          .select("id, status")
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        if (dp) {
+          setRole("delivery_partner");
+        } else {
+          setRole("customer");
+        }
       }
     } catch {
       setRole(null);

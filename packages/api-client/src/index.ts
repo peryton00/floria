@@ -1386,7 +1386,7 @@ export class FloriaApiClient {
 
   public async assignDelivery(
     id: string,
-    data: { assignedTo: string },
+    data: { assignedTo: string; partnerId?: string },
   ): Promise<ApiResponse<import("@floria/types").DeliveryAssignment>> {
     return this.request<import("@floria/types").DeliveryAssignment>(
       `/api/v1/operations/deliveries/${id}/assign`,
@@ -1399,7 +1399,7 @@ export class FloriaApiClient {
 
   public async reassignDelivery(
     id: string,
-    data: { assignedTo: string },
+    data: { assignedTo: string; partnerId?: string },
   ): Promise<ApiResponse<import("@floria/types").DeliveryAssignment>> {
     return this.request<import("@floria/types").DeliveryAssignment>(
       `/api/v1/operations/deliveries/${id}/reassign`,
@@ -1441,6 +1441,186 @@ export class FloriaApiClient {
   ): Promise<ApiResponse<import("@floria/types").DeliveryPodDetails>> {
     return this.request<import("@floria/types").DeliveryPodDetails>(
       `/api/v1/operations/deliveries/${id}/pod`,
+    );
+  }
+
+  // ------------------------------------------------------------------
+  // Delivery Partner Ecosystem APIs (Phase 6)
+  // ------------------------------------------------------------------
+
+  public async submitDeliveryApplication(
+    data: import("@floria/types").SubmitDeliveryApplicationInput,
+  ): Promise<ApiResponse<import("@floria/types").DeliveryPartnerApplication>> {
+    return this.request<import("@floria/types").DeliveryPartnerApplication>(
+      `/api/v1/delivery-partners/applications`,
+      {
+        method: "POST",
+        body: JSON.stringify(data),
+      },
+    );
+  }
+
+  public async getDeliveryApplicationStatus(
+    id: string,
+  ): Promise<ApiResponse<import("@floria/types").DeliveryPartnerApplication>> {
+    return this.request<import("@floria/types").DeliveryPartnerApplication>(
+      `/api/v1/delivery-partners/applications/${id}/status`,
+    );
+  }
+
+  public async activateDeliveryPartner(
+    data: import("@floria/types").ActivateDeliveryPartnerInput,
+  ): Promise<ApiResponse<{ success: boolean; message: string }>> {
+    return this.request<{ success: boolean; message: string }>(
+      `/api/v1/delivery-partners/auth/activate`,
+      {
+        method: "POST",
+        body: JSON.stringify(data),
+      },
+    );
+  }
+
+  public async requestDeliveryPartnerPasswordReset(
+    email: string,
+  ): Promise<ApiResponse<{ success: boolean; message: string }>> {
+    return this.request<{ success: boolean; message: string }>(
+      `/api/v1/delivery-partners/auth/forgot-password`,
+      {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      },
+    );
+  }
+
+  public async resetDeliveryPartnerPassword(
+    data: import("@floria/types").ActivateDeliveryPartnerInput,
+  ): Promise<ApiResponse<{ success: boolean; message: string }>> {
+    return this.request<{ success: boolean; message: string }>(
+      `/api/v1/delivery-partners/auth/reset-password`,
+      {
+        method: "POST",
+        body: JSON.stringify(data),
+      },
+    );
+  }
+
+  public async getDeliveryPartnerProfile(): Promise<
+    ApiResponse<import("@floria/types").DeliveryPartner>
+  > {
+    return this.request<import("@floria/types").DeliveryPartner>(
+      `/api/v1/delivery-partners/me`,
+    );
+  }
+
+  public async updateDeliveryPartnerAvailability(
+    onDuty: boolean,
+  ): Promise<ApiResponse<import("@floria/types").DeliveryPartner>> {
+    return this.request<import("@floria/types").DeliveryPartner>(
+      `/api/v1/delivery-partners/me/availability`,
+      {
+        method: "POST",
+        body: JSON.stringify({ onDuty }),
+      },
+    );
+  }
+
+  public async getDeliveryPartnerDeliveries(
+    params?: QueryParams,
+  ): Promise<ApiResponse<import("@floria/types").DeliveryAssignment[]>> {
+    return this.request<import("@floria/types").DeliveryAssignment[]>(
+      `/api/v1/delivery-partners/my-deliveries${buildQueryString(params)}`,
+    );
+  }
+
+  public async getDeliveryPartnerEarnings(
+    params?: QueryParams,
+  ): Promise<ApiResponse<{
+    today: number;
+    week: number;
+    month: number;
+    completedCount: number;
+    earnings: import("@floria/types").DeliveryEarning[];
+  }>> {
+    return this.request<{
+      today: number;
+      week: number;
+      month: number;
+      completedCount: number;
+      earnings: import("@floria/types").DeliveryEarning[];
+    }>(`/api/v1/delivery-partners/my-earnings${buildQueryString(params)}`);
+  }
+
+  public async getAdminDeliveryApplications(
+    params?: QueryParams,
+  ): Promise<ApiResponse<import("@floria/types").DeliveryPartnerApplication[]>> {
+    return this.request<import("@floria/types").DeliveryPartnerApplication[]>(
+      `/api/v1/delivery-partners/admin/applications${buildQueryString(params)}`,
+    );
+  }
+
+  public async getAdminDeliveryApplicationById(
+    id: string,
+  ): Promise<ApiResponse<import("@floria/types").DeliveryPartnerApplication>> {
+    return this.request<import("@floria/types").DeliveryPartnerApplication>(
+      `/api/v1/delivery-partners/admin/applications/${id}`,
+    );
+  }
+
+  public async approveDeliveryApplication(
+    id: string,
+  ): Promise<ApiResponse<{
+    application: import("@floria/types").DeliveryPartnerApplication;
+    partner: import("@floria/types").DeliveryPartner;
+    activationToken?: string;
+  }>> {
+    return this.request<{
+      application: import("@floria/types").DeliveryPartnerApplication;
+      partner: import("@floria/types").DeliveryPartner;
+      activationToken?: string;
+    }>(`/api/v1/delivery-partners/admin/applications/${id}/approve`, {
+      method: "POST",
+    });
+  }
+
+  public async rejectDeliveryApplication(
+    id: string,
+    reason: string,
+  ): Promise<ApiResponse<import("@floria/types").DeliveryPartnerApplication>> {
+    return this.request<import("@floria/types").DeliveryPartnerApplication>(
+      `/api/v1/delivery-partners/admin/applications/${id}/reject`,
+      {
+        method: "POST",
+        body: JSON.stringify({ reason }),
+      },
+    );
+  }
+
+  public async getAdminDeliveryPartners(
+    params?: QueryParams,
+  ): Promise<ApiResponse<import("@floria/types").DeliveryPartner[]>> {
+    return this.request<import("@floria/types").DeliveryPartner[]>(
+      `/api/v1/delivery-partners/admin/partners${buildQueryString(params)}`,
+    );
+  }
+
+  public async updateAdminDeliveryPartnerStatus(
+    id: string,
+    status: import("@floria/types").DeliveryPartnerStatus,
+  ): Promise<ApiResponse<import("@floria/types").DeliveryPartner>> {
+    return this.request<import("@floria/types").DeliveryPartner>(
+      `/api/v1/delivery-partners/admin/partners/${id}/status`,
+      {
+        method: "POST",
+        body: JSON.stringify({ status }),
+      },
+    );
+  }
+
+  public async getAdminDeliveryPayouts(
+    params?: QueryParams,
+  ): Promise<ApiResponse<import("@floria/types").DeliveryPayout[]>> {
+    return this.request<import("@floria/types").DeliveryPayout[]>(
+      `/api/v1/delivery-partners/admin/payouts${buildQueryString(params)}`,
     );
   }
 
@@ -1793,6 +1973,77 @@ export class FloriaApiClient {
     return this.request<{ removed: boolean }>(
       `/api/v1/admin/pricing-policies/overrides/${productId}`,
       { method: "DELETE" },
+    );
+  }
+
+  // ── P1 Delivery Device Tokens ─────────────────────────────────────────────
+
+  public async registerDeliveryDeviceToken(data: {
+    token: string;
+    platform?: "android" | "ios" | "web";
+    deviceInfo?: Record<string, any>;
+  }): Promise<ApiResponse<import("@floria/types").DeviceToken>> {
+    return this.request<import("@floria/types").DeviceToken>(
+      "/api/v1/delivery-partners/device-token",
+      {
+        method: "POST",
+        body: JSON.stringify(data),
+      },
+    );
+  }
+
+  public async removeDeliveryDeviceToken(
+    token: string,
+  ): Promise<ApiResponse<{ success: boolean }>> {
+    return this.request<{ success: boolean }>(
+      "/api/v1/delivery-partners/device-token",
+      {
+        method: "DELETE",
+        body: JSON.stringify({ token }),
+      },
+    );
+  }
+
+  // ── P1 Delivery Rate Cards ────────────────────────────────────────────────
+
+  public async getActiveDeliveryRateCard(): Promise<
+    ApiResponse<import("@floria/types").DeliveryRateCard>
+  > {
+    return this.request<import("@floria/types").DeliveryRateCard>(
+      "/api/v1/delivery-partners/rate-cards/active",
+    );
+  }
+
+  public async listDeliveryRateCards(): Promise<
+    ApiResponse<import("@floria/types").DeliveryRateCard[]>
+  > {
+    return this.request<import("@floria/types").DeliveryRateCard[]>(
+      "/api/v1/delivery-partners/admin/rate-cards",
+    );
+  }
+
+  public async createDeliveryRateCard(
+    data: import("@floria/types").CreateDeliveryRateCardInput,
+  ): Promise<ApiResponse<import("@floria/types").DeliveryRateCard>> {
+    return this.request<import("@floria/types").DeliveryRateCard>(
+      "/api/v1/delivery-partners/admin/rate-cards",
+      {
+        method: "POST",
+        body: JSON.stringify(data),
+      },
+    );
+  }
+
+  public async updateDeliveryRateCard(
+    id: string,
+    data: import("@floria/types").UpdateDeliveryRateCardInput,
+  ): Promise<ApiResponse<import("@floria/types").DeliveryRateCard>> {
+    return this.request<import("@floria/types").DeliveryRateCard>(
+      `/api/v1/delivery-partners/admin/rate-cards/${id}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(data),
+      },
     );
   }
 }

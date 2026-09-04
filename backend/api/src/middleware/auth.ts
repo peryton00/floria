@@ -12,6 +12,8 @@ export interface AuthenticatedUser {
   role: UserRole | "super_admin";
   sellerId?: string;
   sellerStatus?: SellerStatus;
+  deliveryPartnerId?: string;
+  deliveryPartnerStatus?: string;
   permissions: Permission[];
 }
 
@@ -122,6 +124,8 @@ export async function authenticateToken(
 
     let sellerId: string | undefined = directSellerId;
     let sellerStatus: SellerStatus | undefined;
+    let deliveryPartnerId: string | undefined;
+    let deliveryPartnerStatus: string | undefined;
 
     try {
       let sp: { id: string; status: string } | null = null;
@@ -161,6 +165,26 @@ export async function authenticateToken(
           roleStr = "seller";
         }
       }
+
+      // 4. Delivery Partner profile lookup
+      const { data: dp } = await adminDb
+        .from("delivery_partners")
+        .select("id, status")
+        .or(`user_id.eq.${userId},id.eq.${userId}`)
+        .maybeSingle();
+
+      if (dp) {
+        deliveryPartnerId = dp.id;
+        deliveryPartnerStatus = dp.status;
+        if (
+          dp.status === "active" &&
+          roleStr !== "admin" &&
+          roleStr !== "super_admin" &&
+          roleStr !== "operations"
+        ) {
+          roleStr = "delivery_partner";
+        }
+      }
     } catch {
       // Safe fallback for mocked test DB environments
     }
@@ -174,6 +198,8 @@ export async function authenticateToken(
       role,
       sellerId,
       sellerStatus,
+      deliveryPartnerId,
+      deliveryPartnerStatus,
       permissions,
     };
     req.token = token;

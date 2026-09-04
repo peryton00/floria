@@ -12,7 +12,7 @@ export class NotificationService {
     }
     const created = await notificationRepository.createNotification(dto);
 
-    // Publish realtime event to Redis channel floria:notifications:<user_id>
+    // 1. Publish realtime event to Redis channel floria:notifications:<user_id>
     try {
       const { getRedisClient } = await import("../config/redis.js");
       const redis = getRedisClient();
@@ -35,6 +35,23 @@ export class NotificationService {
         "[NotificationService] Redis publish event failed:",
         redisErr?.message,
       );
+    }
+
+    // 2. Dispatch native mobile push notification (P1 Native Push)
+    try {
+      const { pushNotificationProvider } = await import("./push-provider.js");
+      pushNotificationProvider
+        .sendToUser(dto.user_id, dto.title, dto.message, {
+          notificationId: created.id,
+          type: created.type,
+          navigation: created.data?.navigation || dto.navigation || null,
+          data: created.data || {},
+        })
+        .catch((pushErr: any) => {
+          console.warn("[NotificationService] Push dispatch warning:", pushErr?.message);
+        });
+    } catch {
+      // Continue silently without blocking notification creation
     }
 
     return created;

@@ -21,6 +21,13 @@ export default function CourierEarningsScreen() {
   const insets = useSafeAreaInsets();
   const { user } = useDeliveryAuth();
   const [deliveries, setDeliveries] = useState<DeliveryAssignment[]>([]);
+  const [serverEarnings, setServerEarnings] = useState<{
+    today: number;
+    week: number;
+    month: number;
+    completedCount: number;
+    earnings: any[];
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<"today" | "week" | "month">("today");
@@ -28,11 +35,19 @@ export default function CourierEarningsScreen() {
   const fetchEarnings = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await api.getDeliveries();
-      if (res.success && Array.isArray(res.data)) {
-        setDeliveries(res.data);
+      const [delRes, earnRes] = await Promise.all([
+        api.getDeliveries(),
+        api.getDeliveryPartnerEarnings().catch(() => ({ success: false, data: null })),
+      ]);
+
+      if (delRes.success && Array.isArray(delRes.data)) {
+        setDeliveries(delRes.data);
       } else {
         setDeliveries([]);
+      }
+
+      if (earnRes && earnRes.success && earnRes.data) {
+        setServerEarnings(earnRes.data);
       }
     } catch (e) {
       console.warn("[CourierEarnings] Load failed:", e);
@@ -61,76 +76,25 @@ export default function CourierEarningsScreen() {
     );
   }, [deliveries]);
 
-  // Earnings calculations (standard Floria delivery partner payout model: ₹80 base + ₹40 per batch/distance)
-  const earningsData = useMemo(() => {
-    const now = new Date();
-    const isToday = (dateStr: string) => {
-      const d = new Date(dateStr);
-      return (
-        d.getDate() === now.getDate() &&
-        d.getMonth() === now.getMonth() &&
-        d.getFullYear() === now.getFullYear()
-      );
-    };
+  // Server-Authoritative Earnings
+  const activeAmount = useMemo(() => {
+    if (serverEarnings) {
+      return selectedPeriod === "today"
+        ? serverEarnings.today
+        : selectedPeriod === "week"
+        ? serverEarnings.week
+        : serverEarnings.month;
+    }
+    // Fallback: 80 INR base per delivered assignment
+    return completedDeliveries.length * 80;
+  }, [serverEarnings, selectedPeriod, completedDeliveries]);
 
-    const isThisWeek = (dateStr: string) => {
-      const d = new Date(dateStr);
-      const diffTime = Math.abs(now.getTime() - d.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      return diffDays <= 7;
-    };
-
-    const isThisMonth = (dateStr: string) => {
-      const d = new Date(dateStr);
-      return (
-        d.getMonth() === now.getMonth() &&
-        d.getFullYear() === now.getFullYear()
-      );
-    };
-
-    const todayItems = completedDeliveries.filter((d) =>
-      isToday(d.updated_at || d.created_at || d.assigned_at),
-    );
-    const weekItems = completedDeliveries.filter((d) =>
-      isThisWeek(d.updated_at || d.created_at || d.assigned_at),
-    );
-    const monthItems = completedDeliveries.filter((d) =>
-      isThisMonth(d.updated_at || d.created_at || d.assigned_at),
-    );
-
-    const getPayoutForDelivery = (d: DeliveryAssignment) => {
-      const itemCount = (d as any).packagesCount || (d as any).orderItemCount || 1;
-      return 80 + (itemCount > 1 ? (itemCount - 1) * 20 : 0);
-    };
-
-    const todayTotal = todayItems.reduce((acc, d) => acc + getPayoutForDelivery(d), 0);
-    const weekTotal = weekItems.reduce((acc, d) => acc + getPayoutForDelivery(d), 0);
-    const monthTotal = monthItems.reduce((acc, d) => acc + getPayoutForDelivery(d), 0);
-
-    return {
-      todayTotal,
-      todayCount: todayItems.length,
-      weekTotal,
-      weekCount: weekItems.length,
-      monthTotal,
-      monthCount: monthItems.length,
-      getPayoutForDelivery,
-    };
-  }, [completedDeliveries]);
-
-  const activeAmount =
-    selectedPeriod === "today"
-      ? earningsData.todayTotal
-      : selectedPeriod === "week"
-      ? earningsData.weekTotal
-      : earningsData.monthTotal;
-
-  const activeCount =
-    selectedPeriod === "today"
-      ? earningsData.todayCount
-      : selectedPeriod === "week"
-      ? earningsData.weekCount
-      : earningsData.monthCount;
+  const activeCount = useMemo(() => {
+    if (serverEarnings) {
+      return serverEarnings.completedCount;
+    }
+    return completedDeliveries.length;
+  }, [serverEarnings, completedDeliveries]);
 
   return (
     <View style={styles.screen}>
@@ -266,7 +230,12 @@ export default function CourierEarningsScreen() {
             </View>
           ) : (
             completedDeliveries.map((item) => {
-              const payout = earningsData.getPayoutForDelivery(item);
+              const matchingRow = serverEarnings?.earnings?.find(
+                (e: any) => e.delivery_id === item.id,
+              );
+              const payout = matchingRow
+                ? matchingRow.total_earning_paise / 100
+                : 80;
               const dateObj = new Date(item.updated_at || item.created_at || item.assigned_at);
               const formattedDate = dateObj.toLocaleDateString("en-IN", {
                 month: "short",

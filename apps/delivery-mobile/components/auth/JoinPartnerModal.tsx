@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { theme } from "../../lib/theme";
 import { FloriaIcon } from "../ui/FloriaIcon";
+import { api } from "../../lib/api";
 
 interface JoinPartnerModalProps {
   visible: boolean;
@@ -65,10 +66,22 @@ export function JoinPartnerModal({ visible, onClose }: JoinPartnerModalProps) {
     try {
       setLoading(true);
       setError(null);
-      // Wait for dispatch registration payload processing
-      await new Promise((r) => setTimeout(r, 900));
-      setSubmitted(true);
-      setStep(3);
+      const res = await api.submitDeliveryApplication({
+        full_name: fullName.trim(),
+        email: email.toLowerCase().trim(),
+        phone: phone.trim(),
+        city: city.trim(),
+        vehicle_type: vehicleType,
+        vehicle_number: vehicleNumber.toUpperCase().trim(),
+        driving_license: drivingLicense.toUpperCase().trim(),
+      });
+
+      if (res.success && res.data) {
+        setSubmitted(true);
+        setStep(3);
+      } else {
+        throw new Error(res.error?.message || "Failed to submit application");
+      }
     } catch (e: any) {
       setError(e.message || "Failed to submit application. Please try again.");
     } finally {

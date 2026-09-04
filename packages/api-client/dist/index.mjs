@@ -841,6 +841,115 @@ var FloriaApiClient = class {
       `/api/v1/operations/deliveries/${id}/pod`
     );
   }
+  // ------------------------------------------------------------------
+  // Delivery Partner Ecosystem APIs (Phase 6)
+  // ------------------------------------------------------------------
+  async submitDeliveryApplication(data) {
+    return this.request(
+      `/api/v1/delivery-partners/applications`,
+      {
+        method: "POST",
+        body: JSON.stringify(data)
+      }
+    );
+  }
+  async getDeliveryApplicationStatus(id) {
+    return this.request(
+      `/api/v1/delivery-partners/applications/${id}/status`
+    );
+  }
+  async activateDeliveryPartner(data) {
+    return this.request(
+      `/api/v1/delivery-partners/auth/activate`,
+      {
+        method: "POST",
+        body: JSON.stringify(data)
+      }
+    );
+  }
+  async requestDeliveryPartnerPasswordReset(email) {
+    return this.request(
+      `/api/v1/delivery-partners/auth/forgot-password`,
+      {
+        method: "POST",
+        body: JSON.stringify({ email })
+      }
+    );
+  }
+  async resetDeliveryPartnerPassword(data) {
+    return this.request(
+      `/api/v1/delivery-partners/auth/reset-password`,
+      {
+        method: "POST",
+        body: JSON.stringify(data)
+      }
+    );
+  }
+  async getDeliveryPartnerProfile() {
+    return this.request(
+      `/api/v1/delivery-partners/me`
+    );
+  }
+  async updateDeliveryPartnerAvailability(onDuty) {
+    return this.request(
+      `/api/v1/delivery-partners/me/availability`,
+      {
+        method: "POST",
+        body: JSON.stringify({ onDuty })
+      }
+    );
+  }
+  async getDeliveryPartnerDeliveries(params) {
+    return this.request(
+      `/api/v1/delivery-partners/my-deliveries${buildQueryString(params)}`
+    );
+  }
+  async getDeliveryPartnerEarnings(params) {
+    return this.request(`/api/v1/delivery-partners/my-earnings${buildQueryString(params)}`);
+  }
+  async getAdminDeliveryApplications(params) {
+    return this.request(
+      `/api/v1/delivery-partners/admin/applications${buildQueryString(params)}`
+    );
+  }
+  async getAdminDeliveryApplicationById(id) {
+    return this.request(
+      `/api/v1/delivery-partners/admin/applications/${id}`
+    );
+  }
+  async approveDeliveryApplication(id) {
+    return this.request(`/api/v1/delivery-partners/admin/applications/${id}/approve`, {
+      method: "POST"
+    });
+  }
+  async rejectDeliveryApplication(id, reason) {
+    return this.request(
+      `/api/v1/delivery-partners/admin/applications/${id}/reject`,
+      {
+        method: "POST",
+        body: JSON.stringify({ reason })
+      }
+    );
+  }
+  async getAdminDeliveryPartners(params) {
+    return this.request(
+      `/api/v1/delivery-partners/admin/partners${buildQueryString(params)}`
+    );
+  }
+  async updateAdminDeliveryPartnerStatus(id, status) {
+    return this.request(
+      `/api/v1/delivery-partners/admin/partners/${id}/status`,
+      {
+        method: "POST",
+        body: JSON.stringify({ status })
+      }
+    );
+  }
+  async getAdminDeliveryPayouts(params) {
+    return this.request(
+      `/api/v1/delivery-partners/admin/payouts${buildQueryString(params)}`
+    );
+  }
   // ── Media Upload Sessions (/api/v1/media) ──────────────────────────────────
   async createUploadSession(data) {
     return this.request("/api/v1/media/upload-session", {
@@ -1025,6 +1134,54 @@ var FloriaApiClient = class {
     return this.request(
       `/api/v1/admin/pricing-policies/overrides/${productId}`,
       { method: "DELETE" }
+    );
+  }
+  // ── P1 Delivery Device Tokens ─────────────────────────────────────────────
+  async registerDeliveryDeviceToken(data) {
+    return this.request(
+      "/api/v1/delivery-partners/device-token",
+      {
+        method: "POST",
+        body: JSON.stringify(data)
+      }
+    );
+  }
+  async removeDeliveryDeviceToken(token) {
+    return this.request(
+      "/api/v1/delivery-partners/device-token",
+      {
+        method: "DELETE",
+        body: JSON.stringify({ token })
+      }
+    );
+  }
+  // ── P1 Delivery Rate Cards ────────────────────────────────────────────────
+  async getActiveDeliveryRateCard() {
+    return this.request(
+      "/api/v1/delivery-partners/rate-cards/active"
+    );
+  }
+  async listDeliveryRateCards() {
+    return this.request(
+      "/api/v1/delivery-partners/admin/rate-cards"
+    );
+  }
+  async createDeliveryRateCard(data) {
+    return this.request(
+      "/api/v1/delivery-partners/admin/rate-cards",
+      {
+        method: "POST",
+        body: JSON.stringify(data)
+      }
+    );
+  }
+  async updateDeliveryRateCard(id, data) {
+    return this.request(
+      `/api/v1/delivery-partners/admin/rate-cards/${id}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(data)
+      }
     );
   }
 };

@@ -15,7 +15,7 @@ export type Timestamp = string; // ISO-8601
 // Roles
 // ------------------------------------------------------------------
 
-export type UserRole = "customer" | "seller" | "operations" | "admin";
+export type UserRole = "customer" | "seller" | "operations" | "admin" | "delivery_partner" | "courier";
 
 // ------------------------------------------------------------------
 // Order state machine
@@ -717,6 +717,7 @@ export interface DeliveryAssignment {
   id: UUID;
   order_id: string;
   assigned_to: string;
+  delivery_partner_id?: UUID | null;
   status: DeliveryAssignmentStatus;
   assigned_at: Timestamp;
   picked_up_at?: Timestamp | null;
@@ -751,4 +752,152 @@ export interface DeliveryPodDetails {
   recipientName?: string | null;
   notes?: string | null;
   deliveredAt?: Timestamp | null;
+}
+
+// ------------------------------------------------------------------
+// Delivery Partner Ecosystem (Phase 6)
+// ------------------------------------------------------------------
+
+export type DeliveryApplicationStatus = "pending" | "approved" | "rejected";
+export type DeliveryPartnerStatus = "active" | "suspended" | "inactive";
+
+export interface DeliveryPartnerApplication {
+  id: UUID;
+  full_name: string;
+  email: string;
+  phone: string;
+  city: string;
+  vehicle_type: string;
+  vehicle_number: string;
+  driving_license: string;
+  status: DeliveryApplicationStatus;
+  rejection_reason?: string | null;
+  submitted_documents?: any[];
+  reviewed_by?: UUID | null;
+  reviewed_at?: Timestamp | null;
+  submitted_at: Timestamp;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+}
+
+export interface DeliveryPartner {
+  id: UUID;
+  user_id?: UUID | null;
+  public_partner_id: string;
+  full_name: string;
+  email: string;
+  phone: string;
+  city: string;
+  vehicle_type: string;
+  vehicle_number: string;
+  driving_license: string;
+  status: DeliveryPartnerStatus;
+  on_duty: boolean;
+  active_delivery_id?: UUID | null;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+}
+
+export interface SubmitDeliveryApplicationInput {
+  full_name: string;
+  email: string;
+  phone: string;
+  city: string;
+  vehicle_type: string;
+  vehicle_number: string;
+  driving_license: string;
+}
+
+export interface ActivateDeliveryPartnerInput {
+  token: string;
+  password: string;
+}
+
+export type DeliveryEarningStatus = "pending" | "available" | "paid";
+
+export interface DeliveryEarning {
+  id: UUID;
+  partner_id: UUID;
+  delivery_id: UUID;
+  order_id: string;
+  base_earning_paise: number;
+  extra_items_earning_paise: number;
+  total_earning_paise: number;
+  status: DeliveryEarningStatus;
+  payout_id?: UUID | null;
+  metadata?: Record<string, any>;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+}
+
+export type DeliveryPayoutStatus = "scheduled" | "processing" | "paid" | "failed";
+
+export interface DeliveryPayout {
+  id: UUID;
+  partner_id: UUID;
+  amount_paise: number;
+  status: DeliveryPayoutStatus;
+  period_start?: Timestamp | null;
+  period_end?: Timestamp | null;
+  paid_at: Timestamp;
+  created_at: Timestamp;
+}
+
+// ------------------------------------------------------------------
+// Phase P1: Device Tokens & Dynamic Delivery Rate Card
+// ------------------------------------------------------------------
+
+export type DevicePlatform = "android" | "ios" | "web";
+
+export interface DeviceToken {
+  id: UUID;
+  user_id: UUID;
+  partner_id?: UUID | null;
+  token: string;
+  platform: DevicePlatform;
+  device_info?: Record<string, any>;
+  is_active: boolean;
+  last_used_at: Timestamp;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+}
+
+export interface RegisterDeviceTokenInput {
+  token: string;
+  platform: DevicePlatform;
+  device_info?: Record<string, any>;
+}
+
+export type RateCardStatus = "draft" | "active" | "inactive" | "superseded";
+
+export interface DeliveryRateCard {
+  id: UUID;
+  name: string;
+  base_earning_paise: number;
+  currency: string;
+  effective_from: Timestamp;
+  effective_to?: Timestamp | null;
+  status: RateCardStatus;
+  metadata?: Record<string, any>;
+  created_by?: UUID | null;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+}
+
+export interface CreateDeliveryRateCardInput {
+  name: string;
+  base_earning_paise: number;
+  currency?: string;
+  effective_from?: Timestamp;
+  effective_to?: Timestamp | null;
+  status?: RateCardStatus;
+  metadata?: Record<string, any>;
+}
+
+export interface UpdateDeliveryRateCardInput {
+  name?: string;
+  base_earning_paise?: number;
+  effective_to?: Timestamp | null;
+  status?: RateCardStatus;
+  metadata?: Record<string, any>;
 }

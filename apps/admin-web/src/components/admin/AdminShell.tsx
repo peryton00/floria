@@ -25,6 +25,7 @@ import {
   LogoutIcon,
   ImageIcon,
   CloseIcon,
+  TruckIcon,
 } from "@/components/ui/Icons";
 
 interface AdminShellProps {
@@ -148,6 +149,7 @@ export function AdminShell({ children }: AdminShellProps) {
       items: [
         { label: "Users", href: "/admin/users", icon: <UserGroupIcon size={16} /> },
         { label: "Sellers", href: "/admin/sellers", icon: <LeafIcon size={16} /> },
+        { label: "Delivery Partners", href: "/admin/delivery-partners", icon: <TruckIcon size={16} /> },
         { label: "Reports", href: "/admin/reports", icon: <AlertIcon size={16} /> },
         { label: "Audit Logs", href: "/admin/audit-logs", icon: <ShieldIcon size={16} /> },
         { label: "Business Policies", href: "/admin/settings", icon: <SettingsIcon size={16} /> },

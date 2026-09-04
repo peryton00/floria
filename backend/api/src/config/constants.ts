@@ -69,6 +69,20 @@ export const ROLE_PERMISSIONS: Record<UserRole | "super_admin", Permission[]> =
       "pickup.manage",
       "delivery.manage",
     ],
+    delivery_partner: [
+      "profile.read.self",
+      "profile.update.self",
+      "fulfillment.read",
+      "fulfillment.update",
+      "delivery.manage",
+    ],
+    courier: [
+      "profile.read.self",
+      "profile.update.self",
+      "fulfillment.read",
+      "fulfillment.update",
+      "delivery.manage",
+    ],
     admin: [
       "users.read",
       "sellers.read",

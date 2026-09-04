@@ -45,6 +45,18 @@ describe("Delivery Mobile Operational Workflow & State Machine (Step 5B.2.1)", (
       updated_at: "2026-08-28T01:00:00Z",
     },
     {
+      id: "del-001b",
+      order_id: "ord-101b",
+      assigned_to: "usr-courier-1",
+      status: "picked_up",
+      assigned_at: "2026-08-28T01:00:00Z",
+      picked_up_at: "2026-08-28T01:10:00Z",
+      out_for_delivery_at: null,
+      delivered_at: null,
+      created_at: "2026-08-28T01:00:00Z",
+      updated_at: "2026-08-28T01:10:00Z",
+    },
+    {
       id: "del-002",
       order_id: "ord-102",
       assigned_to: "usr-courier-1",
@@ -157,7 +169,7 @@ describe("Delivery Mobile Operational Workflow & State Machine (Step 5B.2.1)", (
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.data).toHaveLength(3);
+      expect(res.body.data).toHaveLength(mockDeliveriesData.length);
 
       // Verify KPI metrics calculation from payload
       const assigned = res.body.data.filter(
@@ -171,7 +183,7 @@ describe("Delivery Mobile Operational Workflow & State Machine (Step 5B.2.1)", (
       ).length;
 
       expect(assigned).toBe(1);
-      expect(inTransit).toBe(1);
+      expect(inTransit).toBe(2);
       expect(delivered).toBe(1);
     });
 
@@ -233,7 +245,7 @@ describe("Delivery Mobile Operational Workflow & State Machine (Step 5B.2.1)", (
       setupAuth("usr-courier-1", "operations");
 
       const res = await request(app)
-        .post("/api/v1/operations/deliveries/del-001/status")
+        .post("/api/v1/operations/deliveries/del-001b/status")
         .set("Authorization", "Bearer valid-jwt")
         .send({ status: "out_for_delivery" });
 

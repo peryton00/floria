@@ -147,7 +147,7 @@ export class OperationsController {
   ): Promise<void> {
     try {
       const status = req.query.status as string | undefined;
-      const deliveries = await operationsService.getDeliveries(status);
+      const deliveries = await operationsService.getDeliveries(status, req.user);
       res.json({ success: true, data: deliveries });
     } catch (err) {
       next(err);
@@ -162,6 +162,7 @@ export class OperationsController {
     try {
       const delivery = await operationsService.getDeliveryById(
         req.params.id as string,
+        req.user,
       );
       res.json({ success: true, data: delivery });
     } catch (err) {
@@ -177,10 +178,12 @@ export class OperationsController {
     try {
       const orderId = req.body.orderId || req.params.id;
       const assignedTo = req.body.assignedTo || req.body.assigned_to;
+      const partnerId = req.body.partnerId || req.body.partner_id;
       const delivery = await operationsService.assignDelivery(
         req.user!.id,
         orderId,
         assignedTo,
+        partnerId,
       );
       res.status(201).json({ success: true, data: delivery });
     } catch (err) {
@@ -196,10 +199,12 @@ export class OperationsController {
     try {
       const deliveryId = req.params.id as string;
       const assignedTo = req.body.assignedTo || req.body.assigned_to;
+      const partnerId = req.body.partnerId || req.body.partner_id;
       const updated = await operationsService.reassignDelivery(
         req.user!.id,
         deliveryId,
         assignedTo,
+        partnerId,
       );
       res.json({ success: true, data: updated });
     } catch (err) {
@@ -219,6 +224,7 @@ export class OperationsController {
         req.user!.id,
         deliveryId,
         status,
+        req.user,
       );
       res.json({ success: true, data: updated });
     } catch (err) {

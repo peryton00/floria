@@ -390,13 +390,50 @@ declare class FloriaApiClient {
     getDeliveryById(id: string): Promise<ApiResponse<_floria_types.DeliveryAssignment>>;
     assignDelivery(id: string, data: {
         assignedTo: string;
+        partnerId?: string;
     }): Promise<ApiResponse<_floria_types.DeliveryAssignment>>;
     reassignDelivery(id: string, data: {
         assignedTo: string;
+        partnerId?: string;
     }): Promise<ApiResponse<_floria_types.DeliveryAssignment>>;
     updateDeliveryStatus(id: string, status: _floria_types.DeliveryAssignmentStatus | string): Promise<ApiResponse<_floria_types.DeliveryAssignment>>;
     completeDeliveryWithPod(id: string, data: _floria_types.CompleteDeliveryPayload): Promise<ApiResponse<_floria_types.DeliveryAssignment>>;
     getDeliveryPod(id: string): Promise<ApiResponse<_floria_types.DeliveryPodDetails>>;
+    submitDeliveryApplication(data: _floria_types.SubmitDeliveryApplicationInput): Promise<ApiResponse<_floria_types.DeliveryPartnerApplication>>;
+    getDeliveryApplicationStatus(id: string): Promise<ApiResponse<_floria_types.DeliveryPartnerApplication>>;
+    activateDeliveryPartner(data: _floria_types.ActivateDeliveryPartnerInput): Promise<ApiResponse<{
+        success: boolean;
+        message: string;
+    }>>;
+    requestDeliveryPartnerPasswordReset(email: string): Promise<ApiResponse<{
+        success: boolean;
+        message: string;
+    }>>;
+    resetDeliveryPartnerPassword(data: _floria_types.ActivateDeliveryPartnerInput): Promise<ApiResponse<{
+        success: boolean;
+        message: string;
+    }>>;
+    getDeliveryPartnerProfile(): Promise<ApiResponse<_floria_types.DeliveryPartner>>;
+    updateDeliveryPartnerAvailability(onDuty: boolean): Promise<ApiResponse<_floria_types.DeliveryPartner>>;
+    getDeliveryPartnerDeliveries(params?: QueryParams): Promise<ApiResponse<_floria_types.DeliveryAssignment[]>>;
+    getDeliveryPartnerEarnings(params?: QueryParams): Promise<ApiResponse<{
+        today: number;
+        week: number;
+        month: number;
+        completedCount: number;
+        earnings: _floria_types.DeliveryEarning[];
+    }>>;
+    getAdminDeliveryApplications(params?: QueryParams): Promise<ApiResponse<_floria_types.DeliveryPartnerApplication[]>>;
+    getAdminDeliveryApplicationById(id: string): Promise<ApiResponse<_floria_types.DeliveryPartnerApplication>>;
+    approveDeliveryApplication(id: string): Promise<ApiResponse<{
+        application: _floria_types.DeliveryPartnerApplication;
+        partner: _floria_types.DeliveryPartner;
+        activationToken?: string;
+    }>>;
+    rejectDeliveryApplication(id: string, reason: string): Promise<ApiResponse<_floria_types.DeliveryPartnerApplication>>;
+    getAdminDeliveryPartners(params?: QueryParams): Promise<ApiResponse<_floria_types.DeliveryPartner[]>>;
+    updateAdminDeliveryPartnerStatus(id: string, status: _floria_types.DeliveryPartnerStatus): Promise<ApiResponse<_floria_types.DeliveryPartner>>;
+    getAdminDeliveryPayouts(params?: QueryParams): Promise<ApiResponse<_floria_types.DeliveryPayout[]>>;
     createUploadSession(data: {
         profile: string;
         filename: string;
@@ -496,6 +533,18 @@ declare class FloriaApiClient {
     removePricingOverride(productId: string): Promise<ApiResponse<{
         removed: boolean;
     }>>;
+    registerDeliveryDeviceToken(data: {
+        token: string;
+        platform?: "android" | "ios" | "web";
+        deviceInfo?: Record<string, any>;
+    }): Promise<ApiResponse<_floria_types.DeviceToken>>;
+    removeDeliveryDeviceToken(token: string): Promise<ApiResponse<{
+        success: boolean;
+    }>>;
+    getActiveDeliveryRateCard(): Promise<ApiResponse<_floria_types.DeliveryRateCard>>;
+    listDeliveryRateCards(): Promise<ApiResponse<_floria_types.DeliveryRateCard[]>>;
+    createDeliveryRateCard(data: _floria_types.CreateDeliveryRateCardInput): Promise<ApiResponse<_floria_types.DeliveryRateCard>>;
+    updateDeliveryRateCard(id: string, data: _floria_types.UpdateDeliveryRateCardInput): Promise<ApiResponse<_floria_types.DeliveryRateCard>>;
 }
 
 export { type ApiClientConfig, type ApiResponse, FloriaApiClient, type NotificationItem, type NotificationListResponse, type NurserySummary, type ProductReview, type QueryParams, type ReviewListResponse, type ReviewStatus, type ReviewSummary, type SellerDashboardData, type SellerDocument, type SellerNotificationSettings };

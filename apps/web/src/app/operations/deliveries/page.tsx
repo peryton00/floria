@@ -9,23 +9,33 @@ import { TableSkeleton } from "@/components/ui/loading";
 export default function OperationsDeliveriesPage() {
   const { toast } = useToast();
   const [deliveries, setDeliveries] = useState<any[]>([]);
+  const [couriers, setCouriers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeStatus, setActiveStatus] = useState<string>("all");
   const [selectedDelivery, setSelectedDelivery] = useState<any | null>(null);
   const [assignee, setAssignee] = useState("");
+  const [selectedPartnerId, setSelectedPartnerId] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchDeliveries = async () => {
     try {
       setLoading(true);
-      const res = await api.getDeliveries(
-        activeStatus !== "all" ? { status: activeStatus } : undefined,
-      );
-      if (res.success && res.data) {
-        setDeliveries(res.data);
+      const [delRes, courRes] = await Promise.all([
+        api.getDeliveries(
+          activeStatus !== "all" ? { status: activeStatus } : undefined,
+        ),
+        api.getAdminDeliveryPartners({ status: "active" }).catch(() => ({ success: true, data: [] })),
+      ]);
+
+      if (delRes.success && delRes.data) {
+        setDeliveries(delRes.data);
       } else {
-        setError(res.error?.message || "Failed to load delivery board");
+        setError(delRes.error?.message || "Failed to load delivery board");
+      }
+
+      if (courRes && courRes.success && courRes.data) {
+        setCouriers(courRes.data);
       }
     } catch (e: any) {
       setError(e.message || "Failed to connect to API");
@@ -39,20 +49,28 @@ export default function OperationsDeliveriesPage() {
   }, [activeStatus]);
 
   const handleAssign = async () => {
-    if (!selectedDelivery || !assignee.trim()) return;
+    if (!selectedDelivery || (!assignee.trim() && !selectedPartnerId)) return;
     try {
       setActionLoading(true);
+      const chosenCourier = couriers.find((c) => c.id === selectedPartnerId);
+      const assignedName = chosenCourier
+        ? `${chosenCourier.full_name} (${chosenCourier.public_partner_id})`
+        : assignee.trim();
+
       const res = await api.assignDelivery(selectedDelivery.order_id, {
-        assignedTo: assignee.trim(),
+        assignedTo: assignedName,
+        partnerId: selectedPartnerId || undefined,
       });
+
       if (res.success) {
         toast.success(
           "Delivery assigned",
-          `Delivery assigned to ${assignee.trim()}.`,
+          `Delivery assigned to ${assignedName}.`,
         );
         await fetchDeliveries();
         setSelectedDelivery(null);
         setAssignee("");
+        setSelectedPartnerId("");
       } else {
         toast.error(
           "Assignment failed",
@@ -216,21 +234,50 @@ export default function OperationsDeliveriesPage() {
                 </button>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-ink-700 mb-1">
-                  Assign Courier Partner / Operator ID
+              <div className="space-y-3">
+                <label className="block text-xs font-bold uppercase tracking-wider text-ink-700">
+                  Select Registered Courier Partner
                 </label>
+                {couriers.length > 0 ? (
+                  <select
+                    value={selectedPartnerId}
+                    onChange={(e) => {
+                      setSelectedPartnerId(e.target.value);
+                      if (e.target.value) setAssignee("");
+                    }}
+                    className="w-full px-3 py-2 rounded-xl border border-ink-200 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-forest-700 font-sans"
+                  >
+                    <option value="">-- Choose active courier driver --</option>
+                    {couriers.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.full_name} · {c.public_partner_id} ({c.vehicle_type?.replace("_", " ") || "2-Wheeler"} · {c.on_duty ? "🟢 On Duty" : "⚪ Off Duty"})
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <p className="text-[11px] text-ink-400 italic">No approved active couriers found in directory.</p>
+                )}
+
+                <div className="relative flex py-1 items-center">
+                  <div className="flex-grow border-t border-ink-100"></div>
+                  <span className="flex-shrink mx-2 text-[10px] font-mono text-ink-400 uppercase">Or Manual Operator ID</span>
+                  <div className="flex-grow border-t border-ink-100"></div>
+                </div>
+
                 <div className="flex gap-2">
                   <input
                     type="text"
                     value={assignee}
-                    onChange={(e) => setAssignee(e.target.value)}
-                    placeholder="Enter courier operator name or ID..."
+                    onChange={(e) => {
+                      setAssignee(e.target.value);
+                      if (e.target.value) setSelectedPartnerId("");
+                    }}
+                    placeholder="Custom operator name or badge #..."
                     className="flex-1 px-3 py-2 rounded-xl border border-ink-200 text-xs focus:outline-none focus:ring-1 focus:ring-forest-700"
                   />
                   <button
                     type="button"
-                    disabled={actionLoading}
+                    disabled={actionLoading || (!assignee.trim() && !selectedPartnerId)}
                     onClick={handleAssign}
                     className="px-4 py-2 rounded-xl bg-forest-700 hover:bg-forest-800 text-white font-bold text-xs uppercase tracking-wider disabled:opacity-50"
                   >

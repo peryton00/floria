@@ -7,10 +7,15 @@ import {
   useDeliveryAuth,
 } from "../lib/contexts/DeliveryAuthContext";
 
+import { useDeliveryNotifications } from "../lib/notifications/useDeliveryNotifications";
+
 function AuthGate({ children }: { children: React.ReactNode }) {
   const { session, loading, isAuthorizedCourier } = useDeliveryAuth();
   const segments = useSegments();
   const router = useRouter();
+
+  // Register push notifications when authenticated
+  useDeliveryNotifications();
 
   useEffect(() => {
     if (loading) return;
