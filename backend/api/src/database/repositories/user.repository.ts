@@ -12,6 +12,20 @@ export class UserRepository {
       .maybeSingle();
 
     if (error || !data) return null;
+
+    // Fallback: enrich with auth.users email if not directly in user_profiles
+    if (!data.email) {
+      try {
+        const adminDb = getAdminDb();
+        const { data: authUser } = await adminDb.auth.admin.getUserById(userId);
+        if (authUser?.user?.email) {
+          data.email = authUser.user.email;
+        }
+      } catch {
+        // graceful fallback
+      }
+    }
+
     return data as UserProfile;
   }
 
@@ -41,6 +55,25 @@ export class UserRepository {
 
     const { data, error } = await q;
     if (error || !data) return [];
+
+    // Fallback: enrich records missing email from auth.admin
+    const missingEmail = (data as any[]).some((u) => !u.email);
+    if (missingEmail) {
+      try {
+        const { data: authUsers } = await db.auth.admin.listUsers({ perPage: 1000 });
+        if (authUsers?.users) {
+          const emailMap = new Map(authUsers.users.map((au) => [au.id, au.email]));
+          for (const u of data as any[]) {
+            if (!u.email && emailMap.has(u.id)) {
+              u.email = emailMap.get(u.id) || null;
+            }
+          }
+        }
+      } catch {
+        // graceful fallback
+      }
+    }
+
     return data as UserProfile[];
   }
 
