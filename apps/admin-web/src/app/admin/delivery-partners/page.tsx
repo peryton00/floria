@@ -5,11 +5,11 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { api } from "@/lib/api";
 import { TruckIcon, CloseIcon, SearchIcon, CheckIcon, AlertIcon, ShieldIcon } from "@/components/ui/Icons";
 import { useToast } from "@/lib/contexts/ToastContext";
-import type { DeliveryPartnerApplication, DeliveryPartner, DeliveryPayout } from "@floria/types";
+import type { DeliveryPartnerApplication, DeliveryPartner, DeliveryPayout, DeliveryRateCard } from "@floria/types";
 
 export default function AdminDeliveryPartnersPage() {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<"applications" | "directory" | "payouts">("applications");
+  const [activeTab, setActiveTab] = useState<"applications" | "directory" | "payouts" | "rate_cards">("applications");
   
   // Applications state
   const [applications, setApplications] = useState<DeliveryPartnerApplication[]>([]);
@@ -23,6 +23,13 @@ export default function AdminDeliveryPartnersPage() {
 
   // Payouts state
   const [payouts, setPayouts] = useState<DeliveryPayout[]>([]);
+
+  // Rate Cards state
+  const [rateCards, setRateCards] = useState<DeliveryRateCard[]>([]);
+  const [showCreateRateModal, setShowCreateRateModal] = useState(false);
+  const [newRateName, setNewRateName] = useState("");
+  const [newRateAmount, setNewRateAmount] = useState("80");
+  const [newRateStatus, setNewRateStatus] = useState<"active" | "draft" | "inactive">("active");
 
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -62,6 +69,11 @@ export default function AdminDeliveryPartnersPage() {
         if (res.success && res.data) {
           setPayouts(res.data);
         }
+      } else if (activeTab === "rate_cards") {
+        const res = await api.listDeliveryRateCards();
+        if (res.success && res.data) {
+          setRateCards(res.data);
+        }
       }
     } catch (err: any) {
       toast.error(
@@ -76,6 +88,63 @@ export default function AdminDeliveryPartnersPage() {
   useEffect(() => {
     loadData();
   }, [activeTab, appFilter, partnerFilter]);
+
+  const handleCreateRateCard = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newRateName.trim()) {
+      toast.error("Validation Error", "Rate card name is required.");
+      return;
+    }
+    const amountRupees = parseFloat(newRateAmount);
+    if (isNaN(amountRupees) || amountRupees <= 0) {
+      toast.error("Validation Error", "Please enter a valid payout amount in Rupees.");
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      const res = await api.createDeliveryRateCard({
+        name: newRateName.trim(),
+        base_earning_paise: Math.round(amountRupees * 100),
+        currency: "INR",
+        status: newRateStatus,
+      });
+
+      if (res.success) {
+        toast.success("Rate Card Created", `Base payoff set to ₹${amountRupees.toFixed(2)}.`);
+        setShowCreateRateModal(false);
+        setNewRateName("");
+        setNewRateAmount("80");
+        loadData();
+      } else {
+        toast.error("Failed to Create", res.error?.message || "Error creating rate card.");
+      }
+    } catch (err: any) {
+      toast.error("Error", err.message || "Could not create rate card.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleActivateRateCard = async (rateCardId: string, name: string) => {
+    setActionLoading(true);
+    try {
+      const res = await api.updateDeliveryRateCard(rateCardId, {
+        status: "active",
+      });
+
+      if (res.success) {
+        toast.success("Rate Card Activated", `"${name}" is now the active rate card for courier payouts.`);
+        loadData();
+      } else {
+        toast.error("Activation Failed", res.error?.message || "Could not activate rate card.");
+      }
+    } catch (err: any) {
+      toast.error("Error", err.message || "Could not activate rate card.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -215,6 +284,16 @@ export default function AdminDeliveryPartnersPage() {
               }`}
             >
               Payouts Ledger
+            </button>
+            <button
+              onClick={() => { setActiveTab("rate_cards"); setSearchQuery(""); }}
+              className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+                activeTab === "rate_cards"
+                  ? "bg-forest-800 text-white shadow-xs"
+                  : "text-ink-600 hover:text-ink-900"
+              }`}
+            >
+              Rate Cards & Payoff
             </button>
           </div>
         </div>
@@ -479,6 +558,244 @@ export default function AdminDeliveryPartnersPage() {
                 </table>
               </div>
             )}
+          </div>
+        )}
+
+        {/* ── TAB 4: RATE CARDS & PAYOFF MANAGEMENT ─────────────────────────── */}
+        {activeTab === "rate_cards" && (
+          <div className="space-y-6">
+            {/* Active Rate Card Highlight Banner */}
+            {(() => {
+              const activeCard = rateCards.find((r) => r.status === "active") || {
+                name: "Standard Baseline Delivery Rate Card",
+                base_earning_paise: 8000,
+                currency: "INR",
+                status: "active",
+                effective_from: "2026-01-01T00:00:00.000Z",
+              };
+              return (
+                <div className="bg-gradient-to-r from-forest-900 to-forest-800 text-white rounded-3xl p-6 md:p-8 shadow-md border border-forest-700 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-emerald-400/20 text-emerald-300 border border-emerald-400/30">
+                        Live System Rate
+                      </span>
+                      <span className="text-xs text-forest-200 font-mono">
+                        Version Effective: {new Date(activeCard.effective_from).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <h2 className="font-serif text-2xl md:text-3xl font-bold text-white">
+                      {activeCard.name}
+                    </h2>
+                    <p className="text-xs text-forest-200 max-w-xl leading-relaxed">
+                      This base payoff is automatically calculated and credited to the courier's earnings ledger upon valid Proof of Delivery (POD) completion.
+                    </p>
+                  </div>
+
+                  <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 md:p-6 border border-white/15 text-center min-w-[200px] shadow-xs">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-forest-200 block mb-1">
+                      Per Delivery Base Pay
+                    </span>
+                    <span className="font-serif text-3xl md:text-4xl font-bold text-white">
+                      ₹{((activeCard.base_earning_paise || 8000) / 100).toFixed(2)}
+                    </span>
+                    <span className="text-[10px] text-emerald-300 font-mono block mt-1">
+                      {activeCard.currency || "INR"} / Completed Dropoff
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Rate Cards Management Table */}
+            <div className="bg-white rounded-3xl border border-cream-200 shadow-xs overflow-hidden">
+              <div className="p-5 md:p-6 border-b border-cream-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                  <h3 className="font-serif text-lg font-bold text-ink-900">
+                    Configured Delivery Rate Cards
+                  </h3>
+                  <p className="text-xs text-ink-500 mt-0.5">
+                    Manage base payoffs, rain/surge bonus rates, and historical courier pricing models.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowCreateRateModal(true)}
+                  className="px-4 py-2 bg-forest-800 hover:bg-forest-900 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5"
+                >
+                  <span>+ Create New Rate Card</span>
+                </button>
+              </div>
+
+              {loading ? (
+                <div className="p-12 text-center text-xs font-mono text-ink-400 animate-pulse">
+                  Loading configured rate cards...
+                </div>
+              ) : rateCards.length === 0 ? (
+                <div className="p-12 text-center text-xs font-mono text-ink-400">
+                  No custom rate cards created yet. Standard baseline (₹80.00) is currently active.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="bg-cream-50/80 border-b border-cream-200 text-ink-500 font-mono uppercase tracking-wider text-[10px]">
+                        <th className="p-4">Rate Card Name</th>
+                        <th className="p-4">Base Pay (₹)</th>
+                        <th className="p-4">Currency</th>
+                        <th className="p-4">Status</th>
+                        <th className="p-4">Effective Since</th>
+                        <th className="p-4 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-cream-100 font-medium">
+                      {rateCards.map((rc) => {
+                        const isCurrentActive = rc.status === "active";
+                        return (
+                          <tr key={rc.id} className="hover:bg-cream-50/60 transition-colors">
+                            <td className="p-4">
+                              <p className="font-bold text-ink-900">{rc.name}</p>
+                              <p className="font-mono text-[10px] text-ink-400">ID: {rc.id.slice(0, 8)}...</p>
+                            </td>
+                            <td className="p-4 font-bold text-forest-800 text-sm">
+                              ₹{(rc.base_earning_paise / 100).toFixed(2)}
+                            </td>
+                            <td className="p-4 font-mono text-ink-600">
+                              {rc.currency}
+                            </td>
+                            <td className="p-4">
+                              <span
+                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase font-bold tracking-wider ${
+                                  isCurrentActive
+                                    ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                                    : rc.status === "draft"
+                                    ? "bg-amber-100 text-amber-800 border border-amber-200"
+                                    : "bg-ink-100 text-ink-600"
+                                }`}
+                              >
+                                {rc.status}
+                              </span>
+                            </td>
+                            <td className="p-4 text-ink-500 font-mono text-[11px]">
+                              {new Date(rc.effective_from).toLocaleDateString()}
+                            </td>
+                            <td className="p-4 text-right">
+                              {isCurrentActive ? (
+                                <span className="text-[11px] font-bold text-emerald-700 font-mono">
+                                  ✓ Active
+                                </span>
+                              ) : (
+                                <button
+                                  onClick={() => handleActivateRateCard(rc.id, rc.name)}
+                                  disabled={actionLoading}
+                                  className="px-3 py-1 bg-forest-50 hover:bg-forest-800 hover:text-white text-forest-800 border border-forest-300 rounded-lg text-xs font-bold transition-all"
+                                >
+                                  {actionLoading ? "Activating..." : "Set as Active"}
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── MODAL: CREATE RATE CARD ──────────────────────────────────────── */}
+        {showCreateRateModal && (
+          <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white w-full max-w-md rounded-3xl border border-cream-300 shadow-2xl p-6 md:p-8 space-y-6">
+              <div className="flex items-center justify-between border-b border-cream-200 pb-4">
+                <div>
+                  <h3 className="font-serif text-xl font-bold text-ink-900">
+                    Create Delivery Rate Card
+                  </h3>
+                  <p className="text-xs text-ink-500 mt-0.5">
+                    Configure base courier payout per completed delivery.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowCreateRateModal(false)}
+                  className="w-8 h-8 rounded-full bg-cream-100 text-ink-500 hover:text-ink-900 flex items-center justify-center transition-colors"
+                >
+                  <CloseIcon size={16} />
+                </button>
+              </div>
+
+              <form onSubmit={handleCreateRateCard} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-ink-600 mb-1">
+                    Rate Card Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="E.g. Weekend Rush Pay / Monsoon Surge"
+                    value={newRateName}
+                    onChange={(e) => setNewRateName(e.target.value)}
+                    className="w-full text-xs p-3 bg-cream-50 border border-cream-300 rounded-xl focus:outline-none focus:ring-1 focus:ring-forest-800"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-ink-600 mb-1">
+                    Base Payoff (₹ INR per Delivery)
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-3 text-xs font-bold text-ink-400">₹</span>
+                    <input
+                      type="number"
+                      step="1"
+                      min="10"
+                      max="1000"
+                      required
+                      placeholder="80"
+                      value={newRateAmount}
+                      onChange={(e) => setNewRateAmount(e.target.value)}
+                      className="w-full text-xs pl-7 pr-3 py-3 bg-cream-50 border border-cream-300 rounded-xl focus:outline-none focus:ring-1 focus:ring-forest-800 font-mono font-bold text-forest-900"
+                    />
+                  </div>
+                  <p className="text-[10px] text-ink-400 mt-1">
+                    Will be stored as {Math.round((parseFloat(newRateAmount) || 0) * 100)} paise in the database.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-ink-600 mb-1">
+                    Initial Status
+                  </label>
+                  <select
+                    value={newRateStatus}
+                    onChange={(e) => setNewRateStatus(e.target.value as any)}
+                    className="w-full text-xs p-3 bg-cream-50 border border-cream-300 rounded-xl focus:outline-none focus:ring-1 focus:ring-forest-800 font-semibold text-ink-700"
+                  >
+                    <option value="active">Active (Apply to all new deliveries immediately)</option>
+                    <option value="draft">Draft (Save without activating)</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-4 border-t border-cream-200">
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateRateModal(false)}
+                    className="px-4 py-2 rounded-xl text-xs font-medium text-ink-600 hover:bg-cream-100"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={actionLoading}
+                    className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-forest-800 hover:bg-forest-900 transition-all shadow-xs"
+                  >
+                    {actionLoading ? "Saving..." : "Save Rate Card"}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         )}
 
