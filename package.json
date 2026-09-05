@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "pnpm --filter @floria/web dev",
     "dev:backend": "pnpm --filter @floria/api dev",
+    "dev:redis": "redis-server",
+    "redis": "redis-server",
     "dev:seller-web": "pnpm --filter @floria/seller-web dev",
     "dev:admin-web": "pnpm --filter @floria/admin-web dev",
     "dev:customer-mobile": "pnpm --filter @floria/customer-mobile start",

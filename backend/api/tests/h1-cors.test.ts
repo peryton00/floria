@@ -38,13 +38,20 @@ describe("H1: CORS Origin Security Allowlist", () => {
     expect(res.headers["access-control-allow-origin"]).toBe("https://floria-admin-web.vercel.app");
   });
 
-  it("allows scoped Floria preview deployment subdomains", async () => {
-    const res = await request(app)
+  it("strictly rejects squatted / lookalike .vercel.app subdomains (e.g. floria-evil, floria-phish)", async () => {
+    const resEvil = await request(app)
       .options("/health")
-      .set("Origin", "https://floria-web-git-feat-preview.vercel.app")
+      .set("Origin", "https://floria-evil.vercel.app")
       .set("Access-Control-Request-Method", "GET");
 
-    expect(res.headers["access-control-allow-origin"]).toBe("https://floria-web-git-feat-preview.vercel.app");
+    expect(resEvil.headers["access-control-allow-origin"]).toBeUndefined();
+
+    const resPhish = await request(app)
+      .options("/health")
+      .set("Origin", "https://floria-phish.vercel.app")
+      .set("Access-Control-Request-Method", "GET");
+
+    expect(resPhish.headers["access-control-allow-origin"]).toBeUndefined();
   });
 
   it("strictly rejects arbitrary third-party .vercel.app origins", async () => {

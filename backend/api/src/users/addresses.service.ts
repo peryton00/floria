@@ -151,7 +151,11 @@ export class AddressService {
       .from("addresses")
       .update({ is_default: false })
       .eq("user_id", userId);
-    await db.from("addresses").update({ is_default: true }).eq("id", addressId);
+    await db
+      .from("addresses")
+      .update({ is_default: true })
+      .eq("id", addressId)
+      .eq("user_id", userId);
 
     return this.getAddresses(userId, token);
   }
@@ -177,7 +181,8 @@ export class AddressService {
         await db
           .from("addresses")
           .update({ is_default: true })
-          .eq("id", remaining[0].id);
+          .eq("id", remaining[0].id)
+          .eq("user_id", userId);
       }
     }
 

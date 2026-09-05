@@ -16,10 +16,11 @@ The central backend REST API and background worker service for the Floria Platfo
 
 ### Development
 ```bash
+# Start local Redis server
+pnpm dev:redis   # (or: redis-server)
+
 # Start backend in hot-reload mode
-pnpm dev
-# Or from root
-pnpm --filter @floria/api dev
+pnpm dev:backend # (or: pnpm --filter @floria/api dev)
 ```
 
 ### Build & Run
