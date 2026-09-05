@@ -9,8 +9,8 @@ export class NurseryRepository {
     const { data, error } = await db
       .from("seller_profiles")
       .select(
-        `id, business_name, business_description, contact_phone, contact_email,
-         address, logo_url, created_at,
+        `id, business_name, business_description, address, city, state, logo_url,
+         business_type, plant_categories, specializations, created_at,
          rating_summary:seller_rating_summary(review_count, avg_rating, bayesian_rating, ranking_score)`,
       )
       .eq("status", "approved")

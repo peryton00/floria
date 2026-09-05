@@ -18,7 +18,9 @@ export function SellerShell({ children }: SellerShellProps) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const isAuthRoute =
+  const isPublicRoute =
+    pathname === "/" ||
+    pathname === "/seller" ||
     pathname === "/login" ||
     pathname === "/register" ||
     pathname === "/forgot-password" ||
@@ -27,10 +29,10 @@ export function SellerShell({ children }: SellerShellProps) {
     pathname === "/seller/register";
 
   useEffect(() => {
-    if (!isLoading && !isLoggedIn && !isAuthRoute) {
+    if (!isLoading && !isLoggedIn && !isPublicRoute) {
       router.push("/login");
     }
-  }, [isLoading, isLoggedIn, isAuthRoute, router]);
+  }, [isLoading, isLoggedIn, isPublicRoute, router]);
 
   // Loading state — brief hydration flash prevention
   if (isLoading) {
@@ -44,9 +46,9 @@ export function SellerShell({ children }: SellerShellProps) {
     );
   }
 
-  // Not logged in — render login/register pages without shell chrome
+  // Not logged in — render public/auth landing pages without shell chrome
   if (!isLoggedIn) {
-    if (!isAuthRoute) return null;
+    if (!isPublicRoute) return null;
     return <>{children}</>;
   }
 

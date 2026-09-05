@@ -956,6 +956,32 @@ export class FloriaApiClient {
     return this.request<any>("/api/v1/seller/payouts");
   }
 
+  public async getPublicBusinessStats(): Promise<
+    ApiResponse<{
+      totalSellers: number;
+      totalProducts: number;
+      citiesCovered: number;
+      ordersCompleted: number;
+      avgRating: number;
+      activeCategoriesCount: number;
+    }>
+  > {
+    return this.request<{
+      totalSellers: number;
+      totalProducts: number;
+      citiesCovered: number;
+      ordersCompleted: number;
+      avgRating: number;
+      activeCategoriesCount: number;
+    }>("/api/v1/catalog/public/stats");
+  }
+
+  public async getPublicTopBusinesses(
+    limit: number = 3,
+  ): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>(`/api/v1/catalog/sellers?limit=${limit}`);
+  }
+
   public async getSellerAnalytics(
     params?: QueryParams,
   ): Promise<ApiResponse<any>> {

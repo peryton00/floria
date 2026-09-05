@@ -310,6 +310,15 @@ declare class FloriaApiClient {
     getSellerDashboard(): Promise<ApiResponse<SellerDashboardData>>;
     getSellerEarnings(): Promise<ApiResponse<any>>;
     getSellerPayouts(): Promise<ApiResponse<any>>;
+    getPublicBusinessStats(): Promise<ApiResponse<{
+        totalSellers: number;
+        totalProducts: number;
+        citiesCovered: number;
+        ordersCompleted: number;
+        avgRating: number;
+        activeCategoriesCount: number;
+    }>>;
+    getPublicTopBusinesses(limit?: number): Promise<ApiResponse<any[]>>;
     getSellerAnalytics(params?: QueryParams): Promise<ApiResponse<any>>;
     getSellerDocuments(): Promise<ApiResponse<SellerDocument[]>>;
     uploadSellerDocument(data: {

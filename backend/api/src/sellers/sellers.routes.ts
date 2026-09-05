@@ -7,6 +7,7 @@ import {
   requireRole,
 } from "../middleware/authorization.js";
 import { sellerFulfillmentRateLimiter } from "../middleware/rateLimit.js";
+import { productsController } from "../products/products.controller.js";
 
 const router = Router();
 
@@ -16,6 +17,10 @@ router.post("/auth/register", sellerFulfillmentRateLimiter, sellersController.ap
 router.post("/auth/apply", sellerFulfillmentRateLimiter, sellersController.apply);
 router.post("/auth/forgot-password", sellerFulfillmentRateLimiter, sellersController.forgotPassword);
 router.post("/auth/reset-password", sellerFulfillmentRateLimiter, sellersController.resetPassword);
+
+// Public Business Landing Endpoints
+router.get("/public/stats", sellerFulfillmentRateLimiter, productsController.getPublicStats);
+router.get("/public/top", sellerFulfillmentRateLimiter, productsController.getRankedNurseries);
 
 // Profile & Onboarding
 router.get(

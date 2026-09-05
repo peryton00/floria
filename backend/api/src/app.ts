@@ -186,6 +186,26 @@ export function createApp() {
     }
   });
 
+  apiV1.get("/catalog/public/stats", async (_req, res, next) => {
+    try {
+      const { businessStatsService } = await import("./catalog/business-stats.service.js");
+      const stats = await businessStatsService.getPublicStats();
+      res.json({ success: true, data: stats });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  apiV1.get("/catalog/business/stats", async (_req, res, next) => {
+    try {
+      const { businessStatsService } = await import("./catalog/business-stats.service.js");
+      const stats = await businessStatsService.getPublicStats();
+      res.json({ success: true, data: stats });
+    } catch (err) {
+      next(err);
+    }
+  });
+
   apiV1.get("/platform/policies", async (_req, res, next) => {
     try {
       const { deliveryService } = await import("./delivery/delivery.service.js");

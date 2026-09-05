@@ -7,9 +7,9 @@ import { SellerProductProvider } from "@/lib/contexts/SellerProductContext";
 import { SellerShell } from "@/components/seller/SellerShell";
 
 export const metadata: Metadata = {
-  title: "Floria Seller Cockpit — Nursery & Partner Portal",
+  title: "Floria Business | Grow Your Business with Floria",
   description:
-    "Floria Nursery Partner Portal — Manage catalog listings, orders queue, earnings ledger, and logistics fulfillment.",
+    "Join Floria Business. Connect your nursery, flower shop, plant boutique, pottery workshop, or gardening business with local customers across India.",
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },

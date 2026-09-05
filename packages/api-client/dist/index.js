@@ -542,6 +542,12 @@ var FloriaApiClient = class {
   async getSellerPayouts() {
     return this.request("/api/v1/seller/payouts");
   }
+  async getPublicBusinessStats() {
+    return this.request("/api/v1/catalog/public/stats");
+  }
+  async getPublicTopBusinesses(limit = 3) {
+    return this.request(`/api/v1/catalog/sellers?limit=${limit}`);
+  }
   async getSellerAnalytics(params) {
     return this.request(
       `/api/v1/seller/analytics${buildQueryString(params)}`

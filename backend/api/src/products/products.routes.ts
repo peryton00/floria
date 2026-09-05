@@ -7,6 +7,16 @@ const router = Router();
 
 router.get("/", publicCatalogRateLimiter, productsController.getProducts);
 router.get(
+  "/public/stats",
+  publicCatalogRateLimiter,
+  productsController.getPublicStats,
+);
+router.get(
+  "/business/stats",
+  publicCatalogRateLimiter,
+  productsController.getPublicStats,
+);
+router.get(
   "/trending",
   publicCatalogRateLimiter,
   productsController.getTrending,

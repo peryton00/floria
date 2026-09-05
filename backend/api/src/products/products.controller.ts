@@ -3,6 +3,7 @@ import { Request, Response, NextFunction } from "express";
 import { productsService } from "./products.service.js";
 import { productRepository } from "../database/repositories/product.repository.js";
 import { nurseryRepository } from "../database/repositories/nursery.repository.js";
+import { businessStatsService } from "../catalog/business-stats.service.js";
 
 export class ProductsController {
   async getProducts(
@@ -118,8 +119,22 @@ export class ProductsController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const nurseries = await nurseryRepository.findRanked();
-      res.json({ success: true, data: nurseries });
+      const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 20));
+      const nurseries = await nurseryRepository.findRanked(limit);
+      res.json({ success: true, data: nurseries.slice(0, limit) });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async getPublicStats(
+    _req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      const stats = await businessStatsService.getPublicStats();
+      res.json({ success: true, data: stats });
     } catch (err) {
       next(err);
     }
