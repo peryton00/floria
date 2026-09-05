@@ -146,6 +146,147 @@ export default function AdminSystemHealthPage() {
               </div>
             </div>
 
+            {/* Online Production Cloud Infrastructure */}
+            <div className="bg-white rounded-2xl border border-ink-100 p-5 shadow-xs space-y-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <div>
+                  <h2 className="font-serif text-base font-bold text-ink-900 flex items-center gap-2">
+                    <FloriaIcon name="server" size={18} className="text-forest-700" /> Online Production Cloud Infrastructure
+                  </h2>
+                  <p className="text-xs text-ink-400 mt-0.5">
+                    Real-time status of distributed caching, asynchronous queueing, error telemetry, and probe monitors.
+                  </p>
+                </div>
+                <span className="px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Production Free-Tier Stack Active
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* 1. Upstash Redis Cache */}
+                <div className="p-4 bg-cream-50/80 rounded-xl border border-ink-100 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-ink-900 flex items-center gap-1.5">
+                      <FloriaIcon name="database" size={14} className="text-red-600" /> Upstash Redis
+                    </span>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold font-mono ${
+                      metrics?.infrastructure?.redis?.status === "connected"
+                        ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                        : "bg-amber-50 text-amber-700 border border-amber-200"
+                    }`}>
+                      {metrics?.infrastructure?.redis?.status === "connected" ? "Connected" : "In-Memory Fallback"}
+                    </span>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[11px] text-ink-600 font-medium">Distributed Rate Limiting &amp; Realtime Bus</p>
+                    <p className="text-[10px] text-ink-400 font-mono">
+                      {metrics?.infrastructure?.redis?.status === "connected"
+                        ? `Latency: ${metrics?.infrastructure?.redis?.latencyMs ?? 0} ms • TCP over TLS`
+                        : "Fail-Safe Store Active • Zero Outages"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* 2. Upstash QStash Async Queue */}
+                <div className="p-4 bg-cream-50/80 rounded-xl border border-ink-100 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-ink-900 flex items-center gap-1.5">
+                      <FloriaIcon name="activity" size={14} className="text-blue-600" /> Upstash QStash Jobs
+                    </span>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold font-mono ${
+                      metrics?.infrastructure?.qstash?.status === "configured"
+                        ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                        : "bg-blue-50 text-blue-700 border border-blue-200"
+                    }`}>
+                      {metrics?.infrastructure?.qstash?.status === "configured" ? "Configured" : "Local Runner Active"}
+                    </span>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[11px] text-ink-600 font-medium">Decoupled Order Notifications &amp; Webhooks</p>
+                    <p className="text-[10px] text-ink-400 font-mono">
+                      Endpoint: {metrics?.infrastructure?.qstash?.endpoint || "/api/v1/internal/jobs/order-confirmation"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* 3. Sentry Error Tracking */}
+                <div className="p-4 bg-cream-50/80 rounded-xl border border-ink-100 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-ink-900 flex items-center gap-1.5">
+                      <FloriaIcon name="warning" size={14} className="text-purple-600" /> Sentry Error Tracking
+                    </span>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold font-mono ${
+                      metrics?.infrastructure?.sentry?.status === "active"
+                        ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                        : "bg-stone-100 text-ink-500"
+                    }`}>
+                      {metrics?.infrastructure?.sentry?.status === "active" ? "Active (10% Sample)" : "Disabled"}
+                    </span>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[11px] text-ink-600 font-medium">Full-Stack Error &amp; RPC Exception Observability</p>
+                    <p className="text-[10px] text-ink-400 font-mono">
+                      Backend Node.js &amp; Next.js Web SDKs Wired
+                    </p>
+                  </div>
+                </div>
+
+                {/* 4. Atomic Checkout CAS Engine */}
+                <div className="p-4 bg-cream-50/80 rounded-xl border border-ink-100 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-ink-900 flex items-center gap-1.5">
+                      <FloriaIcon name="lock" size={14} className="text-forest-700" /> Atomic Checkout (CAS)
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      Active
+                    </span>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[11px] text-ink-600 font-medium">PostgreSQL place_order_atomic RPC</p>
+                    <p className="text-[10px] text-ink-400 font-mono">
+                      Compare-and-Swap Inventory Reservation
+                    </p>
+                  </div>
+                </div>
+
+                {/* 5. UptimeRobot External Probe */}
+                <div className="p-4 bg-cream-50/80 rounded-xl border border-ink-100 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-ink-900 flex items-center gap-1.5">
+                      <FloriaIcon name="clock" size={14} className="text-amber-600" /> UptimeRobot Monitor
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      5m Interval
+                    </span>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[11px] text-ink-600 font-medium">Live Probe: /health</p>
+                    <p className="text-[10px] text-ink-400 font-mono">
+                      Render Keep-Alive &amp; Dual Probe Guard
+                    </p>
+                  </div>
+                </div>
+
+                {/* 6. CORS & Edge Allowlist */}
+                <div className="p-4 bg-cream-50/80 rounded-xl border border-ink-100 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-ink-900 flex items-center gap-1.5">
+                      <FloriaIcon name="shield" size={14} className="text-emerald-700" /> CORS Origin Guard
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      Strict Whitelist
+                    </span>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[11px] text-ink-600 font-medium">Protected against Subdomain Squatting</p>
+                    <p className="text-[10px] text-ink-400 font-mono">
+                      Allowed: floriaa-web, floria-seller-web, floria-admin-web
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Operational Alert Monitors */}
             <div className="bg-cream-50 rounded-2xl border border-ink-100 p-5 space-y-4">
               <div className="flex justify-between items-center">

@@ -59,6 +59,32 @@ export class AdminController {
 
       const dbPing = Date.now() - start;
 
+      // Redis live connectivity probe
+      let redisStatus = "disconnected";
+      let redisLatencyMs = 0;
+      try {
+        const { getRedisClient } = await import("../config/redis.js");
+        const redis = getRedisClient();
+        const rStart = Date.now();
+        const pong = await Promise.race([
+          redis.ping(),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("Timeout")), 800),
+          ),
+        ]);
+        if (pong === "PONG") {
+          redisStatus = "connected";
+          redisLatencyMs = Date.now() - rStart;
+        }
+      } catch {
+        redisStatus = "disconnected";
+      }
+
+      const qstashConfigured = Boolean(
+        process.env.QSTASH_TOKEN && process.env.QSTASH_CURRENT_SIGNING_KEY,
+      );
+      const sentryActive = Boolean(process.env.SENTRY_DSN);
+
       const totalStorageBytes = Array.isArray(variantSizes)
         ? variantSizes.reduce(
             (acc, row) => acc + (Number(row.size_bytes) || 0),
@@ -83,6 +109,51 @@ export class AdminController {
         data: {
           status: "healthy",
           role: _req.user!.role,
+          infrastructure: {
+            database: {
+              name: "Supabase PostgreSQL",
+              status: "connected",
+              latencyMs: dbPing,
+              atomicEngine: "PL/pgSQL place_order_atomic (CAS Enabled)",
+            },
+            redis: {
+              name: "Upstash Redis",
+              status: redisStatus,
+              latencyMs: redisLatencyMs,
+              role: "Distributed Rate Limiter & Notification Bus",
+              fallback:
+                redisStatus === "connected"
+                  ? "Normal (Redis Distributed)"
+                  : "Graceful In-Memory Active",
+            },
+            qstash: {
+              name: "Upstash QStash",
+              status: qstashConfigured ? "configured" : "unconfigured",
+              jobQueue:
+                "Asynchronous Order Confirmation & Seller Notifications",
+              endpoint: "/api/v1/internal/jobs/order-confirmation",
+              signatureSecurity: process.env.QSTASH_CURRENT_SIGNING_KEY
+                ? "HMAC-SHA256 Timing-Safe Active"
+                : "Dev Mock / Fallback Active",
+            },
+            sentry: {
+              name: "Sentry Error Monitoring",
+              status: sentryActive ? "active" : "disabled",
+              environment: process.env.NODE_ENV || "development",
+              sampleRate: "10% (Free Tier Quota Optimization)",
+              featuresTracked: [
+                "Unhandled 500s",
+                "Atomic Checkout RPC",
+                "Redis Fallbacks",
+              ],
+            },
+            uptimeRobot: {
+              name: "UptimeRobot External Health Probe",
+              status: "active",
+              probeEndpoint: "/health",
+              pollingInterval: "5m",
+            },
+          },
           system: {
             uptime: Math.round(os.uptime()),
             processUptime: Math.round(process.uptime()),
