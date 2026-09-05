@@ -175,12 +175,13 @@ export default function CheckoutPage() {
   const allItemsFreeDelivery =
     cartItems.length > 0 &&
     cartItems.every((item) => Boolean(item.listing?.pricing?.isFreeDelivery));
-  const estimatedDeliveryFeePaise =
-    delSettings?.freeDeliveryEnabled && allItemsFreeDelivery
-      ? 0
-      : (delSettings?.baseDeliveryFeePaise ?? 0);
+  const isFreeDelivery =
+    (delSettings?.freeDeliveryEnabled ?? true) && allItemsFreeDelivery;
+  const estimatedDeliveryFeePaise = isFreeDelivery
+    ? 0
+    : (delSettings?.baseDeliveryFeePaise ?? 4000);
   const estimatedMaintenanceFeePaise =
-    finSettings?.platformMaintenanceFeePaise ?? 0;
+    finSettings?.platformMaintenanceFeePaise ?? 1000;
   const estimatedTotalPaise =
     subtotalPaise + estimatedDeliveryFeePaise + estimatedMaintenanceFeePaise;
 

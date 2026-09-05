@@ -382,7 +382,6 @@ export default async function HomePage(props: HomePageProps) {
                 key={listing.product.id}
                 listing={listing}
                 showBestSeller={i === 0}
-                discountPercent={i === 2 ? 20 : undefined}
               />
             ))}
           </div>

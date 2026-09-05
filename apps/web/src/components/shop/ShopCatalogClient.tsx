@@ -337,7 +337,6 @@ export function ShopCatalogClient({
                     key={listing.product.id}
                     listing={listing}
                     showBestSeller={i === 0}
-                    discountPercent={i === 1 ? 15 : undefined}
                   />
                 ))}
               </div>

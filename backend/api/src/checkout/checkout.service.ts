@@ -331,7 +331,7 @@ export class CheckoutService {
           (li) => li.seller_id_snapshot === sellerId,
         );
         const sellerGrossPaise = sellerItems.reduce(
-          (s, li) => s + li.line_total_paise,
+          (s, li) => s + (li.base_price_paise_snapshot ?? li.line_total_paise) * li.quantity,
           0,
         );
         const sellerCommissionPaise = Math.round(

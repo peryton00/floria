@@ -1665,9 +1665,13 @@ export class SellerRepository {
         if (!order) return;
         uniqueOrders.add(order.id);
 
-        const gross = (item.unit_price_paise_snapshot || 0) * item.quantity;
-        const rate = order.commission_rate ?? 0;
-        const commission = Math.round(gross * rate);
+        const basePrice =
+          item.base_price_paise_snapshot ?? item.unit_price_paise_snapshot ?? 0;
+        const gross = basePrice * item.quantity;
+        const rate =
+          item.commission_rate_snapshot ?? order.commission_rate ?? 0;
+        const commission =
+          item.commission_paise_snapshot ?? Math.round(gross * rate);
 
         totalGross += gross;
         totalCommission += commission;
@@ -1782,7 +1786,9 @@ export class SellerRepository {
       if (!order) return;
 
       uniqueOrders.add(order.id);
-      const gross = (item.unit_price_paise_snapshot || 0) * item.quantity;
+      const basePrice =
+        item.base_price_paise_snapshot ?? item.unit_price_paise_snapshot ?? 0;
+      const gross = basePrice * item.quantity;
       totalGross += gross;
       unitsSold += item.quantity;
 

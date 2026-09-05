@@ -23,8 +23,8 @@ interface ProductCardProps {
 export function ProductCard({
   listing,
   showBestSeller,
-  discountPercent,
-  originalPricePaise,
+  discountPercent: propDiscountPercent,
+  originalPricePaise: propOriginalPricePaise,
 }: ProductCardProps) {
   const { product, inventory, primary_image, seller, rating_summary, pricing } =
     listing;
@@ -39,6 +39,20 @@ export function ProductCard({
 
   // Server price or inventory price
   const sellingPricePaise = pricing?.sellingPricePaise ?? inventory.price_paise;
+  const originalPricePaise =
+    propOriginalPricePaise ??
+    pricing?.originalPricePaise ??
+    pricing?.compareAtPricePaise ??
+    (inventory as any)?.original_price_paise ??
+    null;
+  const discountPercent =
+    propDiscountPercent ??
+    pricing?.discountPercentage ??
+    (originalPricePaise && originalPricePaise > sellingPricePaise
+      ? Math.round(
+          ((originalPricePaise - sellingPricePaise) / originalPricePaise) * 100,
+        )
+      : null);
   const isFreeDelivery = Boolean(pricing?.isFreeDelivery);
 
   // Badge priority logic (Max 2 badges total to prevent badge overload)

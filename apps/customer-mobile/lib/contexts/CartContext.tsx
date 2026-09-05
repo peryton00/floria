@@ -61,7 +61,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     deliveryEnabled: true,
     baseDeliveryFeePaise: 4000, // ₹40.00 standard base delivery fee
     freeDeliveryEnabled: true,
-    freeDeliveryThresholdPaise: 99900, // ₹999.00 free delivery threshold
+    freeDeliveryThresholdPaise: 59900, // ₹599.00 standard free delivery threshold
   });
   const [maintenanceFeePaise, setMaintenanceFeePaise] = useState(1000); // ₹10.00 platform maintenance fee
 
@@ -217,7 +217,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     [items],
   );
 
-  // Free delivery eligibility (all individual items free delivery OR subtotal >= threshold)
+  // Free delivery eligibility (All products in the cart must be free-delivery eligible)
   const allItemsFreeDelivery = useMemo(
     () => items.length > 0 && items.every((i) => Boolean(i.isFreeDelivery)),
     [items],
@@ -227,14 +227,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (items.length === 0) return false;
     if (!deliverySettings.deliveryEnabled) return true;
     if (deliverySettings.freeDeliveryEnabled && allItemsFreeDelivery) return true;
-    if (
-      deliverySettings.freeDeliveryEnabled &&
-      subtotalPaise >= deliverySettings.freeDeliveryThresholdPaise
-    ) {
-      return true;
-    }
     return false;
-  }, [items.length, deliverySettings, allItemsFreeDelivery, subtotalPaise]);
+  }, [items.length, deliverySettings, allItemsFreeDelivery]);
 
   // Server-authoritative delivery fee calculation
   const deliveryFeePaise = useMemo(() => {

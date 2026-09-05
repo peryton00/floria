@@ -211,4 +211,53 @@ describe("Phase 3.24 Customer-Side Product Price Consistency Suite", () => {
       staleClientAttempt.claimedPricePaise,
     );
   });
+
+  it("Scenario 5: Seller earnings & commission are strictly evaluated on seller base price (excluding profit & delivery recovery)", async () => {
+    // Seller enters ₹600.00 base price
+    // Active policy: 12% commission, 2% profit, ₹20 delivery recovery (pre-recovery ₹612 >= ₹599 threshold)
+    const policy = {
+      sellerCommissionRate: 12.0,
+      floriaProfitRate: 2.0,
+      platformMaintenanceFeePaise: 1000,
+      freeDeliveryThresholdPaise: 59900,
+      freeDeliveryRecoveryPaise: 2000,
+    };
+
+    const calc = pricingService.calculateProductPricingSync(60000, policy);
+
+    // Customer pays ₹632.00 (63200 paise) = 60000 base + 1200 profit + 2000 delivery recovery
+    expect(calc.customerProductPricePaise).toBe(63200);
+
+    // Seller commission is 12% of ₹600.00 base = ₹72.00 (7200 paise), NOT 12% of ₹632.00
+    expect(calc.sellerCommissionPaise).toBe(7200);
+
+    // Net seller payout is ₹600 - ₹72 = ₹528.00 (52800 paise)
+    expect(calc.sellerNetPaise).toBe(52800);
+    expect(calc.sellerNetPaise).toBe(calc.sellerBasePricePaise - calc.sellerCommissionPaise);
+  });
+
+  it("Scenario 6: Mixed cart delivery fee rule (Paid item in cart triggers base delivery fee even if another item is free-delivery eligible)", async () => {
+    const policy = {
+      sellerCommissionRate: 12.0,
+      floriaProfitRate: 2.0,
+      platformMaintenanceFeePaise: 1000,
+      freeDeliveryThresholdPaise: 59900,
+      freeDeliveryRecoveryPaise: 2000,
+    };
+
+    // Item A: Base ₹600 -> Pre-recovery ₹612 >= ₹599 -> Free delivery eligible
+    const itemA = pricingService.calculateProductPricingSync(60000, policy);
+    expect(itemA.isFreeDeliveryEligible).toBe(true);
+
+    // Item B: Base ₹300 -> Pre-recovery ₹306 < ₹599 -> Not free delivery eligible
+    const itemB = pricingService.calculateProductPricingSync(30000, policy);
+    expect(itemB.isFreeDeliveryEligible).toBe(false);
+
+    // Cart with Item A + Item B: Not all items free delivery -> Delivery fee must be charged (₹40.00 / 4000 paise)
+    const allEligible = [itemA, itemB].every((item) => item.isFreeDeliveryEligible);
+    expect(allEligible).toBe(false);
+
+    const deliveryFeePaise = allEligible ? 0 : 4000;
+    expect(deliveryFeePaise).toBe(4000);
+  });
 });

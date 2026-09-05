@@ -10,6 +10,21 @@ import type {
 export class DeliveryService {
   async getDeliverySettings(): Promise<DeliverySettings> {
     const db = getAdminDb();
+
+    // 1. Try active pricing policy version first
+    let activeThresholdPaise: number | null = null;
+    try {
+      const { data: activeVersion } = await db
+        .from("pricing_policy_versions")
+        .select("free_delivery_threshold_paise")
+        .eq("status", "active")
+        .maybeSingle();
+
+      if (activeVersion && typeof activeVersion.free_delivery_threshold_paise === "number") {
+        activeThresholdPaise = Number(activeVersion.free_delivery_threshold_paise);
+      }
+    } catch {}
+
     const { data: rows } = await db
       .from("platform_settings")
       .select("key, value")
@@ -35,11 +50,12 @@ export class DeliveryService {
       ? Boolean(settingsMap.get("free_delivery_enabled"))
       : true;
 
-    const freeDeliveryThresholdPaise = settingsMap.has(
-      "free_delivery_threshold_paise",
-    )
-      ? Number(settingsMap.get("free_delivery_threshold_paise"))
-      : 99900; // Default ₹999.00
+    const freeDeliveryThresholdPaise =
+      activeThresholdPaise !== null
+        ? activeThresholdPaise
+        : settingsMap.has("free_delivery_threshold_paise")
+          ? Number(settingsMap.get("free_delivery_threshold_paise"))
+          : 59900; // Default ₹599.00
 
     const masterOrderDeliveryMode =
       (settingsMap.get("master_order_delivery_mode") as any) ||

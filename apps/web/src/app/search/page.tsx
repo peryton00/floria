@@ -257,7 +257,6 @@ export default async function SearchPage({ searchParams }: Props) {
                   key={listing.product.id}
                   listing={listing}
                   showBestSeller={i === 0}
-                  discountPercent={i === 1 ? 15 : undefined}
                 />
               ))}
             </div>

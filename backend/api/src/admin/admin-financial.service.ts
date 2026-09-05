@@ -156,7 +156,13 @@ export class AdminFinancialService {
 
       const sellerGrossPaise =
         fin?.seller_gross_paise ??
-        mappedItems.reduce((s, i) => s + i.unitPricePaise * i.quantity, 0);
+        sItems.reduce(
+          (s, it) =>
+            s +
+            (it.base_price_paise_snapshot ?? it.unit_price_paise_snapshot ?? 0) *
+              it.quantity,
+          0,
+        );
       const commissionPaise =
         fin?.commission_paise ?? Math.round(sellerGrossPaise * commRate);
       const sellerNetPaise =
