@@ -1,129 +1,92 @@
 "use client";
 
 import React from "react";
-import {
-  Users,
-  TrendUp,
-  Star,
-  SquaresFour,
-  ArrowRight,
-} from "@phosphor-icons/react";
-import Link from "next/link";
+import Image from "next/image";
 
-interface ValueProp {
+interface OutcomeItem {
   id: string;
-  icon: React.ElementType;
   title: string;
   description: string;
-  highlight: string;
+  image: string;
 }
 
-const VALUE_PROPS: ValueProp[] = [
+const OUTCOMES: OutcomeItem[] = [
   {
-    id: "discovery",
-    icon: Users,
-    title: "More customers discover your business",
+    id: "reach",
+    title: "Reach more customers",
     description:
-      "Put your storefront in front of nearby homeowners, plant lovers, and event planners actively searching for quality greenery, bouquets, and gardening supplies.",
-    highlight: "Targeted botanical audience",
+      "Get discovered by people actively looking for plants, flowers, gardening products and more in your neighborhood and city.",
+    image: "https://images.unsplash.com/photo-1592150621744-aca64f48394a?auto=format&fit=crop&w=800&q=80",
   },
   {
-    id: "sales",
-    icon: TrendUp,
-    title: "Turn local demand into daily sales",
+    id: "grow",
+    title: "Grow locally",
     description:
-      "Seamless customer checkout and verified same-day delivery logistics make it effortless for neighborhood shoppers to buy directly from your store.",
-    highlight: "Integrated delivery & fast payouts",
+      "Connect your business with customers around you, turning everyday local interest into dependable sales.",
+    image: "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80",
   },
   {
-    id: "reputation",
-    icon: Star,
-    title: "Build a trusted brand reputation",
+    id: "trust",
+    title: "Build trust",
     description:
-      "Showcase verified customer reviews, transparent ratings, and your unique nursery or floral story to turn first-time buyers into loyal repeat customers.",
-    highlight: "Verified buyer reviews",
+      "Let your business reputation grow through real customer experiences, transparent ratings, and verified buyer reviews.",
+    image: "https://images.unsplash.com/photo-1463936575829-25148e1db1b8?auto=format&fit=crop&w=800&q=80",
   },
   {
-    id: "management",
-    icon: SquaresFour,
-    title: "Manage everything in one simple place",
+    id: "manage",
+    title: "Manage everything in one place",
     description:
-      "A dedicated seller workspace to update product availability, track live orders, inspect customer feedback, and view weekly earnings without friction.",
-    highlight: "Real-time orders & inventory",
+      "Once you join, Floria Business gives you the tools to manage catalog, orders, and weekly payouts efficiently.",
+    image: "https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=800&q=80",
   },
 ];
 
 export function WhyFloria() {
   return (
-    <section id="why-floria" className="py-16 sm:py-24 bg-cream-100 border-b border-cream-300">
+    <section id="why-floria" className="py-20 sm:py-28 lg:py-32 bg-cream-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="max-w-3xl mb-12 sm:mb-16">
-          <span className="text-xs font-bold uppercase tracking-widest text-forest-800 bg-forest-100/80 border border-forest-200 px-3.5 py-1.5 rounded-full shadow-2xs">
-            Why Floria Business
-          </span>
-          <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-ink-900 mt-4 leading-tight">
-            Built to help your local botanical business thrive.
+        <div className="max-w-3xl mb-16 sm:mb-24">
+          <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-semibold text-ink-900 leading-[1.12] tracking-tight">
+            More than a marketplace.
           </h2>
-          <p className="text-base sm:text-lg text-ink-600 mt-4 leading-relaxed">
-            Floria is not just a software tool — it is a dedicated local marketplace
-            engineered to connect your craft with people who value it.
+          <p className="text-lg sm:text-xl text-ink-600 font-normal leading-relaxed mt-4">
+            Floria brings local businesses and plant-loving customers together.
           </p>
         </div>
 
-        {/* Value Proposition Grid (2x2 on desktop, stacked on mobile) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-          {VALUE_PROPS.map((prop) => {
-            const Icon = prop.icon;
-            return (
-              <div
-                key={prop.id}
-                className="bg-cream-50 rounded-3xl border border-cream-300/80 p-8 sm:p-10 flex flex-col justify-between hover:border-forest-500/50 hover:shadow-md transition-all group"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="w-14 h-14 rounded-2xl bg-forest-100/90 flex items-center justify-center text-forest-900 border border-forest-200 group-hover:bg-forest-800 group-hover:text-cream-50 transition-colors">
-                      <Icon size={26} weight="duotone" />
-                    </div>
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-forest-800 bg-forest-50 border border-forest-200/60 px-2.5 py-1 rounded-full">
-                      {prop.highlight}
-                    </span>
-                  </div>
-
-                  <h3 className="font-serif text-xl sm:text-2xl font-bold text-ink-900 leading-snug">
-                    {prop.title}
-                  </h3>
-                  <p className="text-sm sm:text-base text-ink-600 mt-3 leading-relaxed">
-                    {prop.description}
-                  </p>
-                </div>
-
-                <div className="pt-6 mt-6 border-t border-cream-200/80 flex items-center gap-1.5 text-xs font-semibold text-forest-800 group-hover:text-forest-900">
-                  <span>Learn how it works</span>
-                  <ArrowRight size={13} weight="bold" className="group-hover:translate-x-1 transition-transform" />
-                </div>
+        {/* Large Editorial Outcome Blocks (2x2 Asymmetric Editorial Layout) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-16">
+          {OUTCOMES.map((item, idx) => (
+            <div
+              key={item.id}
+              className={`flex flex-col ${
+                idx % 2 === 1 ? "md:translate-y-12" : ""
+              }`}
+            >
+              {/* Image Block */}
+              <div className="relative rounded-3xl overflow-hidden shadow-md bg-forest-900 aspect-[16/10] sm:aspect-[16/11] mb-6 sm:mb-8 group">
+                <Image
+                  src={item.image}
+                  alt={item.title}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="object-cover object-center group-hover:scale-103 transition-transform duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-forest-950/30 via-transparent to-transparent pointer-events-none" />
               </div>
-            );
-          })}
-        </div>
 
-        {/* Supporting Callout */}
-        <div className="mt-12 p-6 sm:p-8 rounded-2xl bg-forest-900 text-cream-50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 shadow-lg">
-          <div className="space-y-1">
-            <h4 className="font-serif text-xl sm:text-2xl font-bold">
-              Ready to expand your local footprint?
-            </h4>
-            <p className="text-sm text-forest-200">
-              Join trusted nurseries and florists growing their sales on Floria.
-            </p>
-          </div>
-          <Link
-            href="/register"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-cream-50 hover:bg-cream-100 text-forest-900 text-sm font-bold rounded-xl shadow-xs transition-all active:scale-98 shrink-0"
-          >
-            <span>Start Selling Today</span>
-            <ArrowRight size={16} weight="bold" />
-          </Link>
+              {/* Text Block */}
+              <div className="max-w-md">
+                <h3 className="font-serif text-2xl sm:text-3xl font-semibold text-ink-900 leading-snug">
+                  {item.title}
+                </h3>
+                <p className="text-sm sm:text-base text-ink-600 font-normal leading-relaxed mt-3">
+                  {item.description}
+                </p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>

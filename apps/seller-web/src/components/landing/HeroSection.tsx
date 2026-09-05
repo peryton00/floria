@@ -1,124 +1,134 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ShieldCheck, Sparkle, Storefront, Plant } from "@phosphor-icons/react";
-import { HeroCategoryStrip } from "./HeroCategoryStrip";
+import { ArrowRight } from "@phosphor-icons/react";
+import { api } from "@/lib/api";
+
+interface StatsData {
+  totalSellers: number;
+  totalProducts: number;
+  citiesCovered: number;
+  ordersCompleted: number;
+  avgRating: number;
+}
 
 export function HeroSection() {
+  const [stats, setStats] = useState<StatsData | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadStats() {
+      try {
+        const res = await api.getPublicBusinessStats();
+        if (isMounted && res.success && res.data) {
+          setStats(res.data);
+        }
+      } catch (e) {
+        console.warn("[HeroSection] Live stats fallback:", e);
+      }
+    }
+    loadStats();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const sellerCount = stats?.totalSellers ? `${stats.totalSellers.toLocaleString()}+` : "1,248";
+  const productCount = stats?.totalProducts ? `${stats.totalProducts.toLocaleString()}+` : "18,420+";
+  const cityCount = stats?.citiesCovered ? `${stats.citiesCovered}` : "326";
+
   return (
-    <section className="relative overflow-hidden pt-6 pb-12 sm:pt-10 sm:pb-20 lg:pt-16 lg:pb-24 bg-cream-100 border-b border-cream-300">
-      {/* Subtle warm decorative background blobs */}
-      <div
-        className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-forest-100/50 blur-3xl pointer-events-none"
-        aria-hidden="true"
-      />
-      <div
-        className="absolute top-1/2 -right-32 w-96 h-96 rounded-full bg-cream-300/40 blur-3xl pointer-events-none"
-        aria-hidden="true"
-      />
-
+    <section className="relative pt-6 pb-16 sm:pt-12 sm:pb-24 lg:pt-16 lg:pb-28 bg-cream-100 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
-          {/* Left Column: Editorial Copy, CTAs & Categories */}
-          <div className="lg:col-span-7 flex flex-col items-start space-y-6 sm:space-y-8">
-            {/* Eyebrow badge */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-forest-100/80 border border-forest-300/60 text-forest-900 text-xs font-bold uppercase tracking-widest shadow-2xs">
-              <Sparkle size={14} weight="fill" className="text-forest-700" />
-              <span>PLANTS · BOUQUETS · TOOLS · AND MORE</span>
-            </div>
+        {/* Main Hero Grid: 45% Left (Copy + CTAs), 55% Right (Editorial Image) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
+          {/* Left Column: Editorial Headline, Storytelling & CTAs */}
+          <div className="lg:col-span-6 xl:col-span-5 flex flex-col items-start">
+            {/* Eyebrow */}
+            <p className="text-xs sm:text-[13px] font-semibold tracking-[0.25em] text-forest-800 uppercase font-sans mb-4 sm:mb-5">
+              PLANTS. BOUQUETS. TOOLS. AND MORE.
+            </p>
 
-            {/* Primary Headline */}
-            <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold text-ink-900 leading-[1.12] tracking-tight">
+            {/* Display Headline */}
+            <h1 className="font-serif text-4xl sm:text-6xl lg:text-6xl xl:text-7xl font-semibold text-ink-900 leading-[1.06] tracking-tight mb-5 sm:mb-6">
               Grow your business with{" "}
-              <span className="text-forest-800 italic">Floria.</span>
+              <span className="italic font-normal text-forest-800">Floria.</span>
             </h1>
 
             {/* Supporting Copy */}
-            <p className="text-base sm:text-lg text-ink-600 leading-relaxed max-w-xl">
+            <p className="text-base sm:text-lg text-ink-600 font-normal leading-relaxed max-w-xl mb-8 sm:mb-10">
               Join a growing marketplace for nurseries, flower shops, plant
-              boutiques, gardening businesses and more. Reach more customers, sell
-              locally, and grow with Floria.
+              boutiques, gardening businesses and more. Reach more customers,
+              sell locally, and grow with Floria.
             </p>
 
-            {/* CTA Button Group */}
-            <div className="w-full sm:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 pt-1">
+            {/* CTAs: Exactly 2 actions */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 w-full sm:w-auto">
               <Link
                 href="/register"
-                className="inline-flex items-center justify-center gap-2.5 px-6 py-4 bg-forest-800 hover:bg-forest-900 text-cream-50 text-base font-semibold rounded-xl shadow-md hover:shadow-lg transition-all active:scale-98 focus:outline-none focus-visible:ring-2 focus-visible:ring-forest-800"
+                className="inline-flex items-center justify-center gap-2.5 px-8 py-4 bg-forest-800 hover:bg-forest-900 text-cream-50 text-base font-semibold rounded-xl shadow-md hover:shadow-lg transition-all active:scale-98 focus:outline-none focus-visible:ring-2 focus-visible:ring-forest-800 text-center"
               >
                 <span>Become a Seller</span>
-                <ArrowRight size={18} weight="bold" />
+                <ArrowRight size={17} weight="bold" />
               </Link>
               <Link
                 href="/login"
-                className="inline-flex items-center justify-center gap-2 px-5 py-3.5 border border-cream-400 bg-cream-50 hover:bg-cream-200 text-ink-800 text-sm font-semibold rounded-xl transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-forest-800"
+                className="text-sm sm:text-base font-medium text-ink-700 hover:text-forest-900 transition-colors py-2 text-center sm:text-left focus:outline-none focus-visible:text-forest-900"
               >
-                <span>Already a seller? Sign in</span>
+                Already a seller? <span className="underline underline-offset-4 decoration-cream-300 hover:decoration-forest-800">Sign in</span>
               </Link>
-            </div>
-
-            {/* Trust Assurance micro-strip */}
-            <div className="flex items-center gap-5 text-xs text-ink-500 pt-1">
-              <div className="flex items-center gap-1.5">
-                <ShieldCheck size={16} weight="duotone" className="text-forest-700" />
-                <span>Verified Local Merchants</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Storefront size={16} weight="duotone" className="text-forest-700" />
-                <span>Zero Upfront Listing Fees</span>
-              </div>
-            </div>
-
-            {/* Category Breadth Strip */}
-            <div className="w-full pt-4 border-t border-cream-300/80">
-              <HeroCategoryStrip />
             </div>
           </div>
 
-          {/* Right Column: Premium Editorial Visual Composition */}
-          <div className="lg:col-span-5 relative">
-            <div className="relative mx-auto max-w-md lg:max-w-none">
-              {/* Main Visual Frame */}
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-cream-50 bg-forest-900 aspect-[4/5] sm:aspect-[4/4.5] lg:aspect-[4/5]">
-                <Image
-                  src="https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=1200&q=80"
-                  alt="Botanical business owner arranging fresh floral bouquets and indoor plants in a welcoming local storefront"
-                  fill
-                  priority
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 40vw"
-                  className="object-cover object-center transform hover:scale-102 transition-transform duration-700"
-                />
+          {/* Right Column: Large Photographic Composition */}
+          <div className="lg:col-span-6 xl:col-span-7 relative">
+            <div className="relative rounded-3xl sm:rounded-[2.5rem] overflow-hidden shadow-xl bg-forest-900 aspect-[4/3] sm:aspect-[16/11] lg:aspect-[16/12] w-full">
+              <Image
+                src="https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=1600&q=85"
+                alt="A warm, vibrant botanical storefront with fresh flowers, lush plants, ceramic pots, and gardening tools"
+                fill
+                priority
+                sizes="(max-width: 768px) 100vw, (max-width: 1280px) 55vw, 50vw"
+                className="object-cover object-center transform hover:scale-102 transition-transform duration-700"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-forest-950/40 via-transparent to-transparent pointer-events-none" />
+            </div>
+          </div>
+        </div>
 
-                {/* Subtle Image Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-forest-950/70 via-transparent to-transparent pointer-events-none" />
-
-                {/* Overlaid Editorial Caption Card */}
-                <div className="absolute bottom-4 left-4 right-4 p-4 rounded-2xl bg-cream-50/95 backdrop-blur-md border border-cream-300/80 shadow-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-forest-100 flex items-center justify-center shrink-0 border border-forest-200">
-                      <Plant size={22} weight="duotone" className="text-forest-800" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold uppercase tracking-wider text-forest-900">
-                        Local Partner Ecosystem
-                      </p>
-                      <p className="text-xs text-ink-600">
-                        Connecting passionate growers, florists & artisans with local buyers.
-                      </p>
-                    </div>
-                  </div>
-                </div>
+        {/* Platform Numbers: Editorial, spacious, minimal decoration */}
+        <div className="mt-16 sm:mt-20 pt-10 sm:pt-14 border-t border-cream-300/80">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-8 sm:gap-12 max-w-4xl">
+            {/* Metric 1 */}
+            <div>
+              <div className="font-serif text-3xl sm:text-4xl lg:text-5xl font-semibold text-ink-900 tracking-tight">
+                {sellerCount}
               </div>
+              <p className="text-xs sm:text-sm text-ink-600 font-medium uppercase tracking-wider mt-1.5">
+                Businesses on Floria
+              </p>
+            </div>
 
-              {/* Decorative Accent Tag behind frame */}
-              <div
-                className="hidden sm:block absolute -bottom-5 -left-5 p-3 rounded-2xl bg-forest-800 text-cream-50 text-xs font-bold shadow-xl border border-forest-700"
-                aria-hidden="true"
-              >
-                100% Local & Verified
+            {/* Metric 2 */}
+            <div>
+              <div className="font-serif text-3xl sm:text-4xl lg:text-5xl font-semibold text-ink-900 tracking-tight">
+                {productCount}
               </div>
+              <p className="text-xs sm:text-sm text-ink-600 font-medium uppercase tracking-wider mt-1.5">
+                Products listed
+              </p>
+            </div>
+
+            {/* Metric 3 */}
+            <div className="col-span-2 md:col-span-1">
+              <div className="font-serif text-3xl sm:text-4xl lg:text-5xl font-semibold text-ink-900 tracking-tight">
+                {cityCount}
+              </div>
+              <p className="text-xs sm:text-sm text-ink-600 font-medium uppercase tracking-wider mt-1.5">
+                Cities covered
+              </p>
             </div>
           </div>
         </div>

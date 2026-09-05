@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { CaretDown, Question } from "@phosphor-icons/react";
+import { CaretDown } from "@phosphor-icons/react";
 
 interface FAQItem {
   id: string;
@@ -12,45 +12,51 @@ interface FAQItem {
 const FAQS: FAQItem[] = [
   {
     id: "eligibility",
-    question: "Who can become a Floria Business seller?",
+    question: "Who can join Floria Business?",
     answer:
-      "Any genuine botanical, floral, nursery, or gardening business based in India can apply. This includes plant nurseries, florists, bouquet makers, pottery and planter artisans, soil and fertilizer producers, and gardening tool suppliers.",
+      "Any genuine botanical, floral, nursery, pottery, or gardening business based in India can join. This includes plant nurseries, urban flower boutiques, artisanal ceramic and planter workshops, organic soil and fertilizer producers, and gardening tool creators.",
   },
   {
-    id: "store",
-    question: "Do I need a physical retail storefront to join?",
+    id: "types",
+    question: "What types of businesses can sell on Floria?",
     answer:
-      "No. While many of our partners operate retail nurseries or flower boutiques, independent home growers, urban greenhouses, and artisanal pottery workshops with valid identity and business verification are welcome.",
+      "We support the entire plant, flower, and gardening ecosystem — from retail storefronts and urban greenhouses to independent ceramic artisans and licensed growers.",
   },
   {
     id: "verification",
-    question: "How does the seller verification process work?",
+    question: "How does verification work?",
     answer:
-      "After submitting your registration with basic business details, our partner onboarding team reviews your store profile, location, and photos within 24 to 48 hours to ensure customer trust and authenticity.",
+      "After signing up, you complete a quick business profile with your location and store details. Our onboarding team reviews and approves verified profiles within 24 to 48 hours to ensure customer trust and authenticity.",
   },
   {
-    id: "delivery",
-    question: "How does delivery and courier pickup work?",
+    id: "products",
+    question: "How do I list my products?",
     answer:
-      "When a customer orders from your store, you pack and mark the items as 'Ready for Pickup' in your seller dashboard. A verified Floria delivery courier is automatically assigned to pick up the package from your location and deliver it promptly to the customer.",
+      "Through your seller workspace, you can upload plant and product photos, set your prices, add care/sunlight tags, and specify current inventory stock in just a few clicks.",
   },
   {
-    id: "commission",
-    question: "What are the charges and commissions on Floria?",
+    id: "orders",
+    question: "How do orders and deliveries work?",
     answer:
-      "There are zero upfront joining or listing fees. Floria only retains a small, transparent commission on successfully fulfilled orders based on our standard platform pricing governance. You keep the full net base price you set for your products.",
+      "When a nearby customer places an order, you receive an instant alert. Once packed and marked ready, a verified Floria delivery courier picks up the order directly from your store location and delivers it safely.",
   },
   {
-    id: "payouts",
-    question: "How and when are seller earnings paid out?",
+    id: "fees",
+    question: "Are there any upfront listing fees?",
     answer:
-      "Earnings from fulfilled orders are automatically settled to your verified bank account on a regular weekly payout cycle. You can view itemized ledger breakdowns and downloadable invoices directly in your seller portal.",
+      "No. Floria has zero upfront joining or monthly listing fees. We only retain a small, transparent platform commission on successfully completed orders. You keep the full net base price you set.",
   },
   {
-    id: "management",
-    question: "Can I manage inventory and pricing on my mobile phone?",
+    id: "payments",
+    question: "How and when are payments handled?",
     answer:
-      "Yes. The Floria Seller web portal is fully responsive across mobile, tablet, and desktop devices, allowing you to update stock, adjust pricing, and accept orders on the go.",
+      "Earnings from fulfilled orders are automatically settled to your verified bank account on a regular weekly payout cycle, with clear itemized ledger statements visible in your portal.",
+  },
+  {
+    id: "team",
+    question: "Can multiple people manage my business account?",
+    answer:
+      "Yes. Floria Business provides granular role-based access so your store managers and fulfillment staff can update inventory and handle orders securely.",
   },
 ];
 
@@ -62,49 +68,44 @@ export function SellerFAQ() {
   };
 
   return (
-    <section id="faq" className="py-16 sm:py-24 bg-cream-50 border-b border-cream-300">
+    <section id="faq" className="py-20 sm:py-28 lg:py-32 bg-cream-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12 sm:mb-16">
-          <span className="text-xs font-bold uppercase tracking-widest text-forest-800 bg-forest-100/80 border border-forest-200 px-3.5 py-1.5 rounded-full shadow-2xs">
+        {/* Section Header */}
+        <div className="mb-14 sm:mb-20">
+          <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-semibold text-ink-900 leading-[1.12] tracking-tight">
             Frequently Asked Questions
-          </span>
-          <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-ink-900 mt-4 leading-tight">
-            Got questions? We've got answers.
           </h2>
-          <p className="text-base text-ink-600 mt-3">
+          <p className="text-lg sm:text-xl text-ink-600 font-normal leading-relaxed mt-4">
             Everything you need to know about partnering with Floria.
           </p>
         </div>
 
-        {/* Accordion List */}
-        <div className="space-y-4">
+        {/* Clean Accordion (Minimal borders, no settings-page feel) */}
+        <div className="divide-y divide-cream-300/80 border-y border-cream-300/80">
           {FAQS.map((faq) => {
             const isOpen = openId === faq.id;
             return (
-              <div
-                key={faq.id}
-                className="bg-cream-100 rounded-2xl border border-cream-300/80 overflow-hidden transition-all"
-              >
+              <div key={faq.id} className="py-6 sm:py-8">
                 <button
                   type="button"
                   onClick={() => toggle(faq.id)}
-                  className="w-full flex items-center justify-between p-5 sm:p-6 text-left focus:outline-none focus-visible:bg-cream-200 cursor-pointer"
+                  className="w-full flex items-center justify-between text-left focus:outline-none cursor-pointer group"
                   aria-expanded={isOpen}
                 >
-                  <span className="font-serif text-base sm:text-lg font-bold text-ink-900 pr-4">
+                  <span className="font-serif text-xl sm:text-2xl font-semibold text-ink-900 group-hover:text-forest-800 transition-colors pr-6">
                     {faq.question}
                   </span>
                   <div
-                    className={`w-8 h-8 rounded-full bg-cream-200 flex items-center justify-center text-forest-800 shrink-0 transition-transform duration-200 ${
-                      isOpen ? "rotate-180 bg-forest-100 text-forest-900" : ""
+                    className={`shrink-0 text-ink-600 transition-transform duration-200 ${
+                      isOpen ? "rotate-180 text-forest-800" : ""
                     }`}
                   >
-                    <CaretDown size={16} weight="bold" />
+                    <CaretDown size={20} weight="bold" />
                   </div>
                 </button>
 
                 {isOpen && (
-                  <div className="px-5 sm:px-6 pb-6 text-sm text-ink-600 leading-relaxed border-t border-cream-200/60 pt-4 animate-fadeIn">
+                  <div className="mt-4 text-sm sm:text-base text-ink-600 font-normal leading-relaxed pr-8 animate-fadeIn">
                     {faq.answer}
                   </div>
                 )}

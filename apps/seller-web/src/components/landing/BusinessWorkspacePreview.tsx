@@ -1,69 +1,81 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import {
   Plant,
-  Package,
   ShoppingCart,
   TrendUp,
-  Star,
+  Package,
+  ArrowRight,
   CheckCircle,
   CurrencyInr,
-  Clock,
-  ArrowRight,
 } from "@phosphor-icons/react";
-import Link from "next/link";
 
-interface FeatureTab {
+interface WorkspaceTab {
   id: string;
   name: string;
-  icon: React.ElementType;
-  title: string;
+  headline: string;
   description: string;
-  bullets: string[];
-  mockupContent: React.ReactNode;
+  mockup: React.ReactNode;
 }
 
 export function BusinessWorkspacePreview() {
-  const [activeTabId, setActiveTabId] = useState("catalog");
+  const [activeTabId, setActiveTabId] = useState("products");
 
-  const tabs: FeatureTab[] = [
+  const tabs: WorkspaceTab[] = [
     {
-      id: "catalog",
-      name: "Catalog & Pricing",
-      icon: Plant,
-      title: "Effortless botanical catalog management",
+      id: "products",
+      name: "Products & Inventory",
+      headline: "Live catalog & instant inventory adjustments",
       description:
-        "Upload high-resolution photography, set custom pricing, configure sunlight and care instructions, and manage botanical variations seamlessly.",
-      bullets: [
-        "AI-optimized image variants for fast loading",
-        "Set custom discounted compare-at prices",
-        "Categorize by indoor, outdoor, air-purifying, bonsai & floral",
-      ],
-      mockupContent: (
-        <div className="space-y-3">
+        "Easily publish new plants, flowers, pots, and gardening tools. Update prices, stock counts, and care details anytime from mobile or desktop.",
+      mockup: (
+        <div className="space-y-3 font-sans text-xs">
           <div className="flex items-center justify-between pb-3 border-b border-cream-300">
-            <span className="text-xs font-bold uppercase text-ink-500">Live Products (42)</span>
-            <span className="text-xs font-bold text-forest-800 bg-forest-100 px-2 py-0.5 rounded">All In Stock</span>
+            <span className="font-semibold text-ink-600 uppercase tracking-wider text-[11px]">
+              Active Inventory (48 items)
+            </span>
+            <span className="font-medium text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded text-[11px]">
+              In Stock & Live
+            </span>
           </div>
+
           {[
-            { name: "Monstera Deliciosa (Swiss Cheese)", price: "₹899", stock: "14 available", status: "Active" },
-            { name: "Handcrafted Ceramic Planter (Terracotta)", price: "₹650", stock: "28 available", status: "Active" },
-            { name: "Fresh Pastel Garden Rose Bouquet", price: "₹1,250", stock: "6 available", status: "Active" },
+            {
+              name: "Fiddle Leaf Fig (Ficus lyrata)",
+              category: "Indoor Plants",
+              stock: "18 in stock",
+              price: "₹1,150",
+            },
+            {
+              name: "Handmade Terracotta Planter",
+              category: "Pots & Planters",
+              stock: "32 in stock",
+              price: "₹580",
+            },
+            {
+              name: "Wildflower Garden Bouquet",
+              category: "Floral",
+              stock: "8 in stock",
+              price: "₹890",
+            },
           ].map((item, i) => (
-            <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-cream-50 border border-cream-200">
+            <div
+              key={i}
+              className="flex items-center justify-between p-3 rounded-xl bg-cream-50 border border-cream-200/80"
+            >
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-forest-100 flex items-center justify-center text-forest-800 font-bold text-xs">
+                <div className="w-8 h-8 rounded-lg bg-forest-100 flex items-center justify-center text-forest-800 font-bold text-xs">
                   🌿
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-ink-900">{item.name}</p>
-                  <p className="text-[11px] text-ink-500">{item.stock}</p>
+                  <p className="font-semibold text-ink-900">{item.name}</p>
+                  <p className="text-[11px] text-ink-500">{item.category} · {item.stock}</p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="text-xs font-bold text-forest-900">{item.price}</p>
-                <span className="text-[10px] font-bold text-forest-700 bg-forest-100/60 px-1.5 py-0.5 rounded">{item.status}</span>
+              <div className="text-right font-semibold text-forest-900">
+                {item.price}
               </div>
             </div>
           ))}
@@ -73,179 +85,184 @@ export function BusinessWorkspacePreview() {
     {
       id: "orders",
       name: "Orders & Delivery",
-      icon: ShoppingCart,
-      title: "Real-time dispatch and courier coordination",
+      headline: "Seamless dispatch with Floria courier pickup",
       description:
-        "Receive instant notifications when customers place orders. Mark packages as ready for pickup with one click for our verified logistics fleet.",
-      bullets: [
-        "Live order lifecycle states (Confirmed -> Preparing -> Ready -> Delivered)",
-        "Zero logistics hassle — assigned Floria courier pickup",
-        "Automated customer SMS and notification updates",
-      ],
-      mockupContent: (
-        <div className="space-y-3">
+        "Receive real-time order alerts. When ready, mark for pickup and our verified delivery partner collects and delivers directly to the buyer.",
+      mockup: (
+        <div className="space-y-3 font-sans text-xs">
           <div className="flex items-center justify-between pb-3 border-b border-cream-300">
-            <span className="text-xs font-bold uppercase text-ink-500">Incoming Deliveries</span>
-            <span className="text-xs font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded">3 Ready for Pickup</span>
+            <span className="font-semibold text-ink-600 uppercase tracking-wider text-[11px]">
+              Today's Orders
+            </span>
+            <span className="font-medium text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded text-[11px]">
+              2 Awaiting Courier Pickup
+            </span>
           </div>
+
           {[
-            { id: "FLR-ORD-8821", customer: "Priya S.", items: "2 items (Fiddle Leaf Fig + Pot)", time: "12 mins ago", badge: "Ready for Pickup" },
-            { id: "FLR-ORD-8820", customer: "Amit K.", items: "1 item (Ceramic Planter Set)", time: "35 mins ago", badge: "Preparing" },
-            { id: "FLR-ORD-8818", customer: "Sneha R.", items: "3 items (Bouquet & Fertilizer)", time: "1 hr ago", badge: "Dispatched" },
+            {
+              id: "ORD-9412",
+              items: "Monstera Deliciosa + Ceramic Saucer",
+              customer: "Rahul M.",
+              status: "Ready for Pickup",
+            },
+            {
+              id: "ORD-9411",
+              items: "Fresh Rose Bouquet (Dozen)",
+              customer: "Ananya D.",
+              status: "Preparing",
+            },
+            {
+              id: "ORD-9409",
+              items: "Organic Neem Fertilizer (1kg)",
+              customer: "Vikram P.",
+              status: "Delivered",
+            },
           ].map((ord, i) => (
-            <div key={i} className="p-3 rounded-xl bg-cream-50 border border-cream-200 flex items-center justify-between">
+            <div
+              key={i}
+              className="p-3 rounded-xl bg-cream-50 border border-cream-200/80 flex items-center justify-between"
+            >
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono font-bold text-forest-900">{ord.id}</span>
-                  <span className="text-[11px] text-ink-500">• {ord.customer}</span>
+                  <span className="font-mono font-bold text-forest-900">{ord.id}</span>
+                  <span className="text-ink-500">· {ord.customer}</span>
                 </div>
                 <p className="text-[11px] text-ink-600 mt-0.5">{ord.items}</p>
               </div>
-              <div className="text-right">
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-forest-100 text-forest-800">
-                  {ord.badge}
-                </span>
-                <p className="text-[10px] text-ink-400 mt-1">{ord.time}</p>
-              </div>
+              <span
+                className={`text-[10px] font-semibold px-2 py-0.5 rounded ${
+                  ord.status === "Delivered"
+                    ? "bg-forest-100 text-forest-800"
+                    : ord.status === "Ready for Pickup"
+                    ? "bg-amber-100 text-amber-800"
+                    : "bg-cream-200 text-ink-700"
+                }`}
+              >
+                {ord.status}
+              </span>
             </div>
           ))}
         </div>
       ),
     },
     {
-      id: "earnings",
-      name: "Financials & Payouts",
-      icon: CurrencyInr,
-      title: "Transparent earnings and automatic bank transfers",
+      id: "analytics",
+      name: "Payouts & Analytics",
+      headline: "Transparent weekly bank transfers & reports",
       description:
-        "Track daily gross revenue, net payouts, platform governance deductions, and downloadable GST invoice summaries with 100% financial clarity.",
-      bullets: [
-        "Automated weekly bank account settlements",
-        "Clear ledger statements with zero hidden charges",
-        "Live financial dashboard showing payout milestones",
-      ],
-      mockupContent: (
-        <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-3 pb-2">
-            <div className="p-3 bg-cream-50 rounded-xl border border-cream-200">
-              <p className="text-[10px] font-bold uppercase text-ink-500">This Week's Net</p>
-              <p className="text-lg font-serif font-bold text-forest-900 mt-0.5">₹24,850</p>
-              <span className="text-[10px] text-forest-700 font-bold">↑ 18% vs last week</span>
+        "Track sales trends, top-selling botanical items, and weekly bank settlements with zero surprise deductions.",
+      mockup: (
+        <div className="space-y-3 font-sans text-xs">
+          <div className="grid grid-cols-2 gap-3 pb-1">
+            <div className="p-3.5 bg-cream-50 rounded-xl border border-cream-200/80">
+              <span className="text-[11px] font-medium text-ink-500 uppercase tracking-wider">
+                This Week's Sales
+              </span>
+              <p className="font-serif text-2xl font-bold text-forest-900 mt-1">₹34,800</p>
+              <span className="text-[10px] font-medium text-forest-700">↑ 24% vs last week</span>
             </div>
-            <div className="p-3 bg-cream-50 rounded-xl border border-cream-200">
-              <p className="text-[10px] font-bold uppercase text-ink-500">Next Payout</p>
-              <p className="text-lg font-serif font-bold text-ink-900 mt-0.5">Monday</p>
-              <span className="text-[10px] text-ink-500">Bank Transfer Direct</span>
+            <div className="p-3.5 bg-cream-50 rounded-xl border border-cream-200/80">
+              <span className="text-[11px] font-medium text-ink-500 uppercase tracking-wider">
+                Scheduled Payout
+              </span>
+              <p className="font-serif text-2xl font-bold text-ink-900 mt-1">Monday</p>
+              <span className="text-[10px] font-medium text-ink-500">Direct Bank Settlement</span>
             </div>
           </div>
-          <div className="p-3 rounded-xl bg-forest-900 text-cream-50 text-xs flex items-center justify-between">
+
+          <div className="p-3 rounded-xl bg-forest-900 text-cream-50 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <CheckCircle size={16} weight="fill" className="text-emerald-400" />
-              <span>Settlement Account Verified</span>
+              <span className="text-xs font-medium">Verified Settlement Account</span>
             </div>
-            <span className="font-mono text-[11px] text-cream-200">HDFC •••• 4129</span>
+            <span className="font-mono text-[11px] text-cream-200">HDFC •••• 5021</span>
           </div>
         </div>
       ),
     },
   ];
 
-  const activeTab = tabs.find((t) => t.id === activeTabId) || tabs[0];
+  const currentTab = tabs.find((t) => t.id === activeTabId) || tabs[0];
 
   return (
-    <section id="workspace" className="py-16 sm:py-24 bg-cream-100 border-b border-cream-300">
+    <section id="workspace" className="py-20 sm:py-28 lg:py-32 bg-cream-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="max-w-3xl mb-12 sm:mb-16">
-          <span className="text-xs font-bold uppercase tracking-widest text-forest-800 bg-forest-100/80 border border-forest-200 px-3.5 py-1.5 rounded-full shadow-2xs">
-            Seller Workspace
-          </span>
-          <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-ink-900 mt-4 leading-tight">
-            Everything your business needs to grow.
+        {/* Section Header */}
+        <div className="max-w-3xl mb-14 sm:mb-20">
+          <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-semibold text-ink-900 leading-[1.12] tracking-tight">
+            Your business. All in one place.
           </h2>
-          <p className="text-base sm:text-lg text-ink-600 mt-4 leading-relaxed">
-            Gain full control of your store with a dedicated workspace engineered
-            for high operational speed.
+          <p className="text-lg sm:text-xl text-ink-600 font-normal leading-relaxed mt-4">
+            Once you join, Floria Business provides an operational cockpit designed
+            specifically for botanical, floral, and gardening stores.
           </p>
         </div>
 
-        {/* Interactive Tab Switcher */}
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-3 border-b border-cream-300 mb-8 sm:mb-12">
+        {/* Tab Navigation (Understated typographic tabs, no heavy pill buttons) */}
+        <div className="flex items-center gap-6 sm:gap-10 border-b border-cream-300/80 mb-10 overflow-x-auto no-scrollbar">
           {tabs.map((tab) => {
-            const Icon = tab.icon;
             const isActive = tab.id === activeTabId;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTabId(tab.id)}
-                className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap focus:outline-none cursor-pointer ${
+                className={`pb-4 text-sm sm:text-base font-semibold transition-colors relative whitespace-nowrap cursor-pointer focus:outline-none ${
                   isActive
-                    ? "bg-forest-800 text-cream-50 shadow-xs"
-                    : "bg-cream-50 text-ink-700 hover:bg-cream-200 hover:text-forest-900 border border-cream-300/80"
+                    ? "text-forest-900 font-bold"
+                    : "text-ink-600 hover:text-ink-900"
                 }`}
               >
-                <Icon size={16} weight={isActive ? "fill" : "duotone"} />
                 <span>{tab.name}</span>
+                {isActive && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-forest-800" />
+                )}
               </button>
             );
           })}
         </div>
 
-        {/* Tab Detail & Visual Mockup Preview */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center bg-cream-50 rounded-3xl border border-cream-300/90 p-6 sm:p-10 shadow-sm">
-          {/* Left Column: Feature Highlights */}
-          <div className="lg:col-span-6 space-y-6">
-            <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-forest-800">
-                Capability Spotlight
-              </span>
-              <h3 className="font-serif text-2xl sm:text-3xl font-bold text-ink-900 mt-1">
-                {activeTab.title}
-              </h3>
-              <p className="text-sm sm:text-base text-ink-600 mt-3 leading-relaxed">
-                {activeTab.description}
-              </p>
-            </div>
-
-            <ul className="space-y-3 pt-2">
-              {activeTab.bullets.map((bullet, idx) => (
-                <li key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm text-ink-800 font-medium">
-                  <CheckCircle size={18} weight="fill" className="text-forest-700 shrink-0 mt-0.5" />
-                  <span>{bullet}</span>
-                </li>
-              ))}
-            </ul>
-
-            <div className="pt-4">
+        {/* Workspace Preview Showcase */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
+          {/* Left Description */}
+          <div className="lg:col-span-5 space-y-5">
+            <h3 className="font-serif text-2xl sm:text-3xl font-semibold text-ink-900 leading-snug">
+              {currentTab.headline}
+            </h3>
+            <p className="text-sm sm:text-base text-ink-600 font-normal leading-relaxed">
+              {currentTab.description}
+            </p>
+            <div className="pt-2">
               <Link
                 href="/register"
-                className="inline-flex items-center gap-2 px-5 py-3 bg-forest-800 hover:bg-forest-900 text-cream-50 text-sm font-semibold rounded-xl transition-all shadow-xs"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-forest-800 hover:text-forest-900 group"
               >
-                <span>Access Seller Portal</span>
-                <ArrowRight size={15} weight="bold" />
+                <span>Explore seller tools with your account</span>
+                <ArrowRight size={15} weight="bold" className="group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
           </div>
 
-          {/* Right Column: High-Fidelity UI Mockup Frame */}
-          <div className="lg:col-span-6">
-            <div className="bg-cream-100 rounded-2xl border border-cream-300 shadow-md p-5 sm:p-6 relative">
-              {/* Header Bar */}
-              <div className="flex items-center justify-between pb-4 mb-4 border-b border-cream-300">
+          {/* Right High-Fidelity Cockpit Preview Frame */}
+          <div className="lg:col-span-7">
+            <div className="bg-cream-100 rounded-3xl border border-cream-300 shadow-md p-6 sm:p-8">
+              {/* Browser / App Header */}
+              <div className="flex items-center justify-between pb-4 mb-5 border-b border-cream-300/80">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-rose-400" />
-                  <div className="w-3 h-3 rounded-full bg-amber-400" />
-                  <div className="w-3 h-3 rounded-full bg-emerald-400" />
-                  <span className="text-[11px] font-mono text-ink-500 ml-2 font-medium">
-                    floria.in/seller/workspace
+                  <div className="w-2.5 h-2.5 rounded-full bg-rose-400" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+                  <span className="text-[11px] font-mono text-ink-500 ml-2">
+                    seller.floria.in/cockpit
                   </span>
                 </div>
-                <span className="text-[10px] font-bold uppercase bg-forest-100 text-forest-800 px-2 py-0.5 rounded">
-                  Live Preview
+                <span className="text-[10px] font-bold uppercase tracking-wider text-forest-800 bg-forest-100 px-2 py-0.5 rounded">
+                  Operational Cockpit
                 </span>
               </div>
 
-              {/* Mockup Canvas */}
-              {activeTab.mockupContent}
+              {/* Dynamic Tab Mockup */}
+              {currentTab.mockup}
             </div>
           </div>
         </div>
