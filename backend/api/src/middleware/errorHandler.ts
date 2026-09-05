@@ -2,6 +2,7 @@
 import { Request, Response, NextFunction } from "express";
 import { ApiError } from "../utils/errors.js";
 import { logger } from "../utils/logger.js";
+import { captureExceptionWithTags } from "../config/sentry.js";
 
 export function errorHandler(
   err: Error | ApiError | any,
@@ -32,6 +33,18 @@ export function errorHandler(
 
   // Unhandled error
   logger.error("Unhandled API Error", err);
+
+  // Report to Sentry with request context
+  try {
+    captureExceptionWithTags(err, {
+      path: _req.path,
+      method: _req.method,
+      status: 500,
+    }, {
+      url: _req.originalUrl,
+      headers: _req.headers,
+    });
+  } catch {}
 
   const isProd = process.env.NODE_ENV === "production";
   res.status(500).json({

@@ -1,4 +1,5 @@
 // Floria Standalone Backend Server Entrypoint
+import { initSentry } from "./config/sentry.js";
 import { createApp } from "./app.js";
 import { getEnv } from "./config/env.js";
 import { logger } from "./utils/logger.js";
@@ -6,6 +7,7 @@ import { mediaWorkerInstance } from "./media/worker/media.worker.js";
 
 async function bootstrap() {
   try {
+    initSentry();
     const env = getEnv();
     const app = createApp();
 

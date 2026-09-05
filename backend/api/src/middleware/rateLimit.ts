@@ -1,73 +1,114 @@
-// Floria API — Centralized Configurable Rate Limiting with Redis Store
-import rateLimit, { type Store, type ClientRateLimitInfo, type Options } from "express-rate-limit";
+// Floria API — Centralized Configurable Rate Limiting with Redis Store & Memory Fallback
+import rateLimit, { MemoryStore, type Store, type ClientRateLimitInfo, type Options } from "express-rate-limit";
 import { Errors } from "../utils/errors.js";
 import { getRedisClient } from "../config/redis.js";
 
 /**
  * Native ioredis Store implementation for express-rate-limit v7.
- * Provides distributed rate limiting across horizontal API instances.
+ * Provides distributed rate limiting across horizontal API instances
+ * with graceful in-memory fallback during Redis outages.
  */
 export class RedisRateLimitStore implements Store {
   windowMs = 60000;
   prefix: string;
   localKeys = false;
+  private memoryFallback: MemoryStore;
+  private isRedisHealthy = true;
 
   constructor(prefix = "rl:") {
     this.prefix = prefix;
+    this.memoryFallback = new MemoryStore();
   }
 
   init(options: Options): void {
     this.windowMs = options.windowMs;
+    this.memoryFallback.init(options);
   }
 
   async increment(key: string): Promise<ClientRateLimitInfo> {
-    const redis = getRedisClient();
-    const fullKey = `${this.prefix}${key}`;
+    try {
+      const redis = getRedisClient();
+      const fullKey = `${this.prefix}${key}`;
 
-    const results = await redis
-      .multi()
-      .incr(fullKey)
-      .pttl(fullKey)
-      .exec();
+      const results = await redis
+        .multi()
+        .incr(fullKey)
+        .pttl(fullKey)
+        .exec();
 
-    if (!results) {
-      throw new Error("Redis transaction execution failed");
+      if (!results) {
+        throw new Error("Redis transaction execution failed");
+      }
+
+      const [incrErr, hitsResult] = results[0];
+      const [ttlErr, ttlResult] = results[1];
+
+      if (incrErr) throw incrErr as Error;
+      if (ttlErr) throw ttlErr as Error;
+
+      const totalHits = Number(hitsResult);
+      let ttlMs = Number(ttlResult);
+
+      // If key was just created and has no TTL (-1 or -2), set window expiration
+      if (ttlMs < 0) {
+        await redis.pexpire(fullKey, this.windowMs);
+        ttlMs = this.windowMs;
+      }
+
+      this.isRedisHealthy = true;
+      const resetTime = new Date(Date.now() + Math.max(0, ttlMs));
+      return { totalHits, resetTime };
+    } catch (err: any) {
+      if (this.isRedisHealthy) {
+        console.warn(`[RateLimit] Redis store error on prefix '${this.prefix}': ${err.message}. Falling back to in-memory store.`);
+        this.isRedisHealthy = false;
+        try {
+          import("../config/sentry.js").then(({ captureMessageWithTags }) => {
+            captureMessageWithTags(
+              `Rate limiter fell back to in-memory store on prefix ${this.prefix}`,
+              "warning",
+              {
+                feature: "rate-limit",
+                store: "redis",
+                fallback: "memory",
+                prefix: this.prefix,
+              },
+              { error: err?.message },
+            );
+          }).catch(() => {});
+        } catch {}
+      }
+      return this.memoryFallback.increment(key);
     }
-
-    const [incrErr, hitsResult] = results[0];
-    const [ttlErr, ttlResult] = results[1];
-
-    if (incrErr) throw incrErr as Error;
-    if (ttlErr) throw ttlErr as Error;
-
-    const totalHits = Number(hitsResult);
-    let ttlMs = Number(ttlResult);
-
-    // If key was just created and has no TTL (-1 or -2), set window expiration
-    if (ttlMs < 0) {
-      await redis.pexpire(fullKey, this.windowMs);
-      ttlMs = this.windowMs;
-    }
-
-    const resetTime = new Date(Date.now() + Math.max(0, ttlMs));
-    return { totalHits, resetTime };
   }
 
   async decrement(key: string): Promise<void> {
-    const redis = getRedisClient();
-    await redis.decr(`${this.prefix}${key}`);
+    try {
+      const redis = getRedisClient();
+      await redis.decr(`${this.prefix}${key}`);
+    } catch {
+      await this.memoryFallback.decrement(key);
+    }
   }
 
   async resetKey(key: string): Promise<void> {
-    const redis = getRedisClient();
-    await redis.del(`${this.prefix}${key}`);
+    try {
+      const redis = getRedisClient();
+      await redis.del(`${this.prefix}${key}`);
+    } catch {
+      await this.memoryFallback.resetKey(key);
+    }
   }
 
   async resetAll(): Promise<void> {
-    const redis = getRedisClient();
-    const keys = await redis.keys(`${this.prefix}*`);
-    if (keys.length > 0) {
-      await redis.del(...keys);
+    try {
+      const redis = getRedisClient();
+      const keys = await redis.keys(`${this.prefix}*`);
+      if (keys.length > 0) {
+        await redis.del(...keys);
+      }
+    } catch {
+      await this.memoryFallback.resetAll();
     }
   }
 }

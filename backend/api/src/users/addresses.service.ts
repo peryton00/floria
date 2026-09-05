@@ -45,8 +45,8 @@ export class AddressService {
           phone: input.phone || "",
           updated_at: new Date().toISOString(),
         });
-      } catch (profileErr: any) {
-        console.warn("[AddressService] user_profiles upsert warning:", profileErr?.message);
+      } catch (profileErr: unknown) {
+        console.warn("[AddressService] user_profiles upsert warning:", (profileErr as Error)?.message);
       }
     }
 

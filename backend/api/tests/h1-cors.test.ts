@@ -38,7 +38,14 @@ describe("H1: CORS Origin Security Allowlist", () => {
     expect(res.headers["access-control-allow-origin"]).toBe("https://floria-admin-web.vercel.app");
   });
 
-  it("strictly rejects squatted / lookalike .vercel.app subdomains (e.g. floria-evil, floria-phish)", async () => {
+  it("strictly rejects squatted / lookalike .vercel.app subdomains (e.g. floria-evil, floria-phish, unverified floria-web)", async () => {
+    const resSingleA = await request(app)
+      .options("/health")
+      .set("Origin", "https://floria-web.vercel.app")
+      .set("Access-Control-Request-Method", "GET");
+
+    expect(resSingleA.headers["access-control-allow-origin"]).toBeUndefined();
+
     const resEvil = await request(app)
       .options("/health")
       .set("Origin", "https://floria-evil.vercel.app")

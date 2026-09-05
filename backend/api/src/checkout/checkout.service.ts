@@ -152,29 +152,6 @@ export class CheckoutService {
       });
     }
 
-    // 4. Atomic Inventory Deduction (Oversale & Concurrency Protection)
-    for (const li of lineItems) {
-      const currentInv = invMap.get(li.product_id);
-      const newStock = (currentInv?.stock_quantity ?? 0) - li.quantity;
-      if (newStock < 0) {
-        throw Errors.outOfStock(li.product_name_snapshot);
-      }
-
-      const { data: updatedInv, error: invErr } = await db
-        .from("inventory")
-        .update({
-          stock_quantity: newStock,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("product_id", li.product_id)
-        .gte("stock_quantity", li.quantity)
-        .select();
-
-      if (invErr || !updatedInv || updatedInv.length === 0) {
-        throw Errors.outOfStock(li.product_name_snapshot);
-      }
-    }
-
     const subtotalPaise = lineItems.reduce(
       (s, li) => s + li.line_total_paise,
       0,
@@ -243,12 +220,55 @@ export class CheckoutService {
       notes: input.paymentMethod === "cod" ? "COD" : "Online",
     };
 
-    // 5. Create Order & Items
-    const orderId = await orderRepository.createOrder(
-      orderPayload,
-      lineItems,
-      fulfillments,
-    );
+    // 5. Atomic Order Creation & Inventory Reservation (Postgres RPC transaction)
+    let orderId: string;
+    try {
+      orderId = await orderRepository.placeOrderAtomic(
+        orderPayload,
+        lineItems,
+        fulfillments,
+      );
+    } catch (err: any) {
+      if (err?.message?.includes("OUT_OF_STOCK") || err?.code === "P0001") {
+        const match = err.message?.match(/OUT_OF_STOCK:\s*(.*)/);
+        const productName = match ? match[1] : "One or more products";
+
+        try {
+          const { captureMessageWithTags } = await import("../config/sentry.js");
+          captureMessageWithTags(
+            `Checkout out of stock during atomic placement: ${productName}`,
+            "warning",
+            {
+              feature: "checkout-rpc",
+              operation: "place_order_atomic",
+              error_type: "OUT_OF_STOCK",
+              customer_id: input.userId,
+            },
+            { product_name: productName, error: err.message },
+          );
+        } catch {}
+
+        throw Errors.outOfStock(productName);
+      }
+
+      try {
+        const { captureExceptionWithTags } = await import("../config/sentry.js");
+        captureExceptionWithTags(
+          err,
+          {
+            feature: "checkout-rpc",
+            operation: "place_order_atomic",
+            customer_id: input.userId,
+          },
+          {
+            subtotalPaise,
+            itemCount: lineItems.length,
+          },
+        );
+      } catch {}
+
+      throw err;
+    }
 
     // 5b. Save Multi-Nursery Financial Attribution & Seller Ledger Entries
     try {
@@ -378,9 +398,23 @@ export class CheckoutService {
   }
 
   /**
-   * Dispatches order placed notifications to customer and nursery partners once payment is confirmed.
+   * Dispatches order placed notifications asynchronously via QStash job queue
+   * (or fallback local execution if unconfigured).
    */
   async dispatchOrderPlacedNotifications(orderId: string): Promise<void> {
+    try {
+      const { qstashService } = await import("../jobs/qstash.service.js");
+      await qstashService.publishOrderConfirmation(orderId);
+    } catch (err) {
+      console.warn("[CheckoutService] QStash dispatch notice, falling back to direct:", err);
+      await this.dispatchOrderPlacedNotificationsDirect(orderId);
+    }
+  }
+
+  /**
+   * Direct execution of order placed notifications (called by QStash internal job handler or fallback).
+   */
+  async dispatchOrderPlacedNotificationsDirect(orderId: string): Promise<void> {
     const db = getAdminDb();
     try {
       const { data: order } = await db
@@ -458,7 +492,7 @@ export class CheckoutService {
       }
     } catch (notifErr) {
       console.error(
-        "[CheckoutService] dispatchOrderPlacedNotifications error:",
+        "[CheckoutService] dispatchOrderPlacedNotificationsDirect error:",
         notifErr,
       );
     }

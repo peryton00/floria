@@ -126,4 +126,11 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+import { withSentryConfig } from "@sentry/nextjs";
+
+export default withSentryConfig(nextConfig, {
+  // Suppress verbose build logging in CI
+  silent: true,
+  // Disable Sentry telemetry & logger to reduce build output noise
+  disableLogger: true,
+});

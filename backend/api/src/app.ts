@@ -25,8 +25,11 @@ import reportsRoutes from "./reports/reports.routes.js";
 import reviewsRoutes from "./reviews/reviews.routes.js";
 import mediaRoutes from "./media/media.routes.js";
 import deliveryPartnersRoutes from "./delivery-partners/delivery-partners.routes.js";
+import { createInternalJobsRouter } from "./jobs/internal-jobs.routes.js";
+import { initSentry } from "./config/sentry.js";
 
 export function createApp() {
+  initSentry();
   const app = express();
 
   // 1. Security, CORS & Correlation Logging
@@ -53,10 +56,65 @@ export function createApp() {
     res.status(200).end();
   });
 
-  app.get("/health", (_req, res) => {
-    res.json({
-      status: "healthy",
+  // Helper for fast probe timeout
+  const runProbe = async (
+    fn: () => Promise<any>,
+    timeoutMs = 800,
+  ): Promise<boolean> => {
+    try {
+      const res = await Promise.race([
+        fn(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Timeout")), timeoutMs),
+        ),
+      ]);
+      return !!res;
+    } catch {
+      return false;
+    }
+  };
+
+  app.get("/health", async (_req, res) => {
+    const db = getAdminDb();
+    const dbOkPromise = runProbe(async () => {
+      const { error } = await db.from("categories").select("id").limit(1);
+      return !error;
+    });
+
+    const redisOkPromise = runProbe(async () => {
+      const { getRedisClient } = await import("./config/redis.js");
+      const client = getRedisClient();
+      const pong = await client.ping();
+      return pong === "PONG";
+    });
+
+    const [dbOk, redisOk] = await Promise.all([dbOkPromise, redisOkPromise]);
+
+    if (!dbOk) {
+      return res.status(503).json({
+        status: "unhealthy",
+        service: "floria-api",
+        checks: {
+          database: "disconnected",
+          redis: redisOk ? "connected" : "disconnected",
+        },
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    const isDegraded = !redisOk;
+    return res.status(200).json({
+      status: isDegraded ? "degraded" : "healthy",
       service: "floria-api",
+      checks: {
+        database: "connected",
+        redis: redisOk ? "connected" : "disconnected",
+      },
+      ...(isDegraded
+        ? {
+            note: "Redis is unreachable. Fallback in-memory rate limiting and queue processing active.",
+          }
+        : {}),
       timestamp: new Date().toISOString(),
     });
   });
@@ -104,6 +162,7 @@ export function createApp() {
   apiV1.use("/notifications", notificationsRoutes);
   apiV1.use("/reports", reportsRoutes);
   apiV1.use("/media", mediaRoutes);
+  apiV1.use("/internal/jobs", createInternalJobsRouter());
   app.use("/api/v1", reviewsRoutes); // reviews routes self-contain full paths
 
   // Public Platform Pricing & Delivery Rules (Accessible to storefront & checkout)

@@ -19,28 +19,30 @@ export class WishlistService {
     }
 
     const settings = await pricingService.getFinancialSettings();
-    let overrideMap = new Map<string, any>();
+    let overrideMap = new Map<string, { product_id: string; custom_customer_price_paise: number }>();
     try {
       const { data: overrides } = await db
         .from("product_pricing_overrides")
         .select("product_id, custom_customer_price_paise")
         .eq("is_active", true);
       if (overrides) {
-        overrideMap = new Map(overrides.map((o: any) => [o.product_id, o]));
+        overrideMap = new Map(overrides.map((o) => [o.product_id, o]));
       }
     } catch {}
 
     if (wishlist.wishlist_items && Array.isArray(wishlist.wishlist_items)) {
-      wishlist.wishlist_items = wishlist.wishlist_items.map((wi: any) => {
-        if (wi.product) {
-          wi.product = productsService.enrichWithDbPricing(
-            wi.product,
-            settings,
-            overrideMap,
-          );
-        }
-        return wi;
-      });
+      wishlist.wishlist_items = wishlist.wishlist_items.map(
+        (wi: { product?: unknown; [key: string]: unknown }) => {
+          if (wi.product) {
+            wi.product = productsService.enrichWithDbPricing(
+              wi.product,
+              settings,
+              overrideMap,
+            );
+          }
+          return wi;
+        },
+      );
     }
 
     return wishlist;

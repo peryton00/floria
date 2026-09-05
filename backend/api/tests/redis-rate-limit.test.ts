@@ -43,4 +43,28 @@ describe("M2: RedisRateLimitStore Distributed Adapter", () => {
     const rawVal = await redis.get(`rl:test:${testKey}`);
     expect(rawVal).toBeNull();
   });
+
+  it("gracefully falls back to in-memory store when Redis throws an error", async () => {
+    const fallbackStore = new RedisRateLimitStore("rl:fallback:");
+    fallbackStore.init({ windowMs: 10000 } as any);
+
+    const redis = getRedisClient();
+    const originalMulti = redis.multi;
+
+    // Simulate Redis failure
+    redis.multi = (() => {
+      throw new Error("Simulated Redis network disconnection");
+    }) as any;
+
+    try {
+      const fallbackRes = await fallbackStore.increment("failing_client_ip");
+      expect(fallbackRes.totalHits).toBe(1);
+      expect(fallbackRes.resetTime).toBeInstanceOf(Date);
+
+      const fallbackRes2 = await fallbackStore.increment("failing_client_ip");
+      expect(fallbackRes2.totalHits).toBe(2);
+    } finally {
+      redis.multi = originalMulti;
+    }
+  });
 });

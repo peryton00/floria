@@ -6,11 +6,13 @@ import { paymentsService } from "../src/payments/payments.service.js";
 
 const mockGetUser = vi.fn();
 const mockFrom = vi.fn();
+const mockRpc = vi.fn();
 
 vi.mock("../src/config/database.js", () => {
   return {
     getAdminDb: () => ({
       from: mockFrom,
+      rpc: mockRpc,
     }),
     getAnonDb: () => ({
       auth: {
@@ -19,9 +21,11 @@ vi.mock("../src/config/database.js", () => {
     }),
     getUserDb: () => ({
       from: mockFrom,
+      rpc: mockRpc,
     }),
     getDbForUser: () => ({
       from: mockFrom,
+      rpc: mockRpc,
     }),
   };
 });
@@ -31,6 +35,7 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    setupAuthUser("default-user", "customer");
     app = createApp();
   });
 
@@ -191,12 +196,24 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
           }),
         };
       }
+      if (table === "categories") {
+        return {
+          select: () => ({
+            limit: async () => ({ data: [{ id: "cat-1" }], error: null }),
+            eq: () => ({
+              order: async () => ({ data: [], error: null }),
+              maybeSingle: async () => ({ data: null, error: null }),
+            }),
+          }),
+        };
+      }
       return {
         select: () => ({
           eq: () => ({
             order: async () => ({ data: [], error: null }),
             maybeSingle: async () => ({ data: null }),
           }),
+          limit: async () => ({ data: [{ id: "cat-1" }], error: null }),
           order: async () => ({ data: [], error: null }),
         }),
         insert: async () => ({ error: null }),
@@ -518,11 +535,27 @@ describe("Floria Security Test Matrix & Hardening Audit (Phase 3.8A)", () => {
           select: () => ({
             eq: () => ({ maybeSingle: async () => ({ data: null }) }),
             in: async () => ({ data: [] }),
+            limit: async () => ({ data: [{ id: "cat-1" }], error: null }),
             maybeSingle: async () => ({ data: null }),
           }),
           insert: async () => ({ error: null }),
           delete: () => ({ eq: async () => ({ error: null }) }),
         };
+      });
+
+      mockRpc.mockImplementation(async (fnName: string, _args: any) => {
+        if (fnName === "place_order_atomic") {
+          if (currentStock >= 1) {
+            currentStock -= 1;
+            return { data: "FLR-NEW-1", error: null };
+          } else {
+            return {
+              data: null,
+              error: { message: "OUT_OF_STOCK: Plant", code: "P0001" },
+            };
+          }
+        }
+        return { data: null, error: null };
       });
 
       // Request A (Stock = 1 -> 0)

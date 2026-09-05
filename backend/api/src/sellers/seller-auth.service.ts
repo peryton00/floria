@@ -66,8 +66,8 @@ export class SellerAuthService {
     state: string;
     postal_code: string;
     gst_number?: string;
-    settlement_account?: any;
-    submitted_documents?: any[];
+    settlement_account?: Record<string, unknown>;
+    submitted_documents?: Array<Record<string, unknown>>;
   }): Promise<{
     application: SellerApplication;
     sellerId: string;
@@ -104,8 +104,9 @@ export class SellerAuthService {
           "This email is already registered as a Delivery Partner. An account cannot be both a delivery partner and a seller.",
         );
       }
-    } catch (mErr: any) {
-      if (mErr.statusCode === 422 || mErr.code === "VALIDATION_ERROR") throw mErr;
+    } catch (mErr: unknown) {
+      const typedErr = mErr as Error & { statusCode?: number; code?: string };
+      if (typedErr.statusCode === 422 || typedErr.code === "VALIDATION_ERROR") throw typedErr;
     }
 
     // 3. Securely hash password
@@ -349,7 +350,9 @@ export class SellerAuthService {
     if (!isValid || !profile) {
       if (credential) {
         const failedAttempts = (credential.failed_login_attempts || 0) + 1;
-        const updates: any = { failed_login_attempts: failedAttempts };
+        const updates: { failed_login_attempts: number; locked_until?: string } = {
+          failed_login_attempts: failedAttempts,
+        };
         if (failedAttempts >= 5) {
           updates.locked_until = new Date(Date.now() + 15 * 60 * 1000).toISOString();
         }
@@ -371,7 +374,11 @@ export class SellerAuthService {
 
     if (status === "under_review" || status === "application_submitted" || status === "pending") {
       const app = await sellerAuthRepository.findApplicationBySellerId(profile.id);
-      const err: any = new Error("Your seller application is still under review.");
+      const err = new Error("Your seller application is still under review.") as Error & {
+        statusCode: number;
+        code: string;
+        data?: Record<string, unknown>;
+      };
       err.statusCode = 403;
       err.code = "SELLER_UNDER_REVIEW";
       err.data = { status: "under_review", submittedAt: app?.submitted_at || profile.created_at };
@@ -380,7 +387,11 @@ export class SellerAuthService {
 
     if (status === "needs_correction") {
       const app = await sellerAuthRepository.findApplicationBySellerId(profile.id);
-      const err: any = new Error("Your seller application requires correction.");
+      const err = new Error("Your seller application requires correction.") as Error & {
+        statusCode: number;
+        code: string;
+        data?: Record<string, unknown>;
+      };
       err.statusCode = 403;
       err.code = "SELLER_NEEDS_CORRECTION";
       err.data = {
@@ -393,7 +404,11 @@ export class SellerAuthService {
 
     if (status === "rejected") {
       const app = await sellerAuthRepository.findApplicationBySellerId(profile.id);
-      const err: any = new Error("Your seller application was not approved.");
+      const err = new Error("Your seller application was not approved.") as Error & {
+        statusCode: number;
+        code: string;
+        data?: Record<string, unknown>;
+      };
       err.statusCode = 403;
       err.code = "SELLER_REJECTED";
       err.data = {
@@ -404,7 +419,10 @@ export class SellerAuthService {
     }
 
     if (status === "suspended" || status === "deactivated") {
-      const err: any = new Error("Your seller account is currently unavailable.");
+      const err = new Error("Your seller account is currently unavailable.") as Error & {
+        statusCode: number;
+        code: string;
+      };
       err.statusCode = 403;
       err.code = "SELLER_SUSPENDED";
       throw err;
@@ -568,7 +586,7 @@ export class SellerAuthService {
       state?: string;
       postal_code?: string;
       gst_number?: string;
-      submitted_documents?: any[];
+      submitted_documents?: Array<Record<string, unknown>>;
     },
   ): Promise<SellerApplication> {
     const existing = await sellerAuthRepository.findApplicationBySellerId(sellerId);

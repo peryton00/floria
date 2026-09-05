@@ -14,10 +14,12 @@
   },
   "dependencies": {
     "@floria/types": "workspace:*",
+    "@sentry/node": "^10.73.0",
     "@supabase/supabase-js": "^2.49.1",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "@types/ws": "^8.18.1",
+    "@upstash/qstash": "^2.11.3",
     "bullmq": "^5.41.6",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",

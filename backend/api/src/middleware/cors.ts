@@ -23,7 +23,6 @@ export function createCorsMiddleware() {
 
       const isFloriaDomain =
         origin === "https://floriaa-web.vercel.app" ||
-        origin === "https://floria-web.vercel.app" ||
         origin === "https://floria-seller-web.vercel.app" ||
         origin === "https://floria-admin-web.vercel.app" ||
         origin === "https://floria-api.onrender.com";
