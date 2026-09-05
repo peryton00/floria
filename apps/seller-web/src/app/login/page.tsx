@@ -70,51 +70,57 @@ export default function SellerLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] flex items-center justify-center px-4 py-12 font-sans">
+    <div className="min-h-screen bg-cream-100 flex items-center justify-center px-4 py-12 font-sans antialiased">
       <div className="w-full max-w-md">
         {/* Brand Header */}
         <div className="flex flex-col items-center mb-6">
-          <Link href="/" className="flex items-center gap-2.5 mb-2 group">
+          <Link href="/" className="flex items-center gap-2.5 mb-2 group focus:outline-none">
             <Image
               src="/brand_logo.svg"
               alt="Floria"
-              width={6}
-              height={8}
-              className="w-auto h-9 object-contain"
+              width={24}
+              height={32}
+              style={{ height: "32px" }}
+              className="w-auto object-contain"
               priority
             />
-            <span className="font-serif text-3xl font-semibold text-[#1A2E22] tracking-tight">
-              Floria
-            </span>
+            <div className="flex items-baseline gap-1.5">
+              <span className="font-serif text-3xl font-bold text-forest-900 tracking-tight">
+                FLORIA
+              </span>
+              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-forest-800 font-sans">
+                Business
+              </span>
+            </div>
           </Link>
-          <span className="text-[11px] font-bold uppercase tracking-widest text-[#2D5A3C] bg-[#EAF2EC] px-3 py-1 rounded-full border border-[#D0E2D4]">
+          <span className="text-[11px] font-bold uppercase tracking-widest text-forest-800 bg-forest-100/80 px-3 py-1 rounded-full border border-forest-200/80">
             Seller Portal
           </span>
         </div>
 
         {/* Tab Switcher: Login vs Become a Seller */}
-        <div className="flex bg-[#EFECE6] p-1 rounded-xl mb-6 text-xs font-bold">
+        <div className="flex bg-cream-200 p-1 rounded-xl mb-6 text-xs font-bold border border-cream-300/60">
           <Link
             href="/login"
-            className="flex-1 text-center py-2.5 rounded-lg bg-white text-[#1A2E22] shadow-sm tracking-wider uppercase transition-all"
+            className="flex-1 text-center py-2.5 rounded-lg bg-cream-50 text-forest-900 shadow-xs tracking-wider uppercase transition-all"
           >
             Sign In
           </Link>
           <Link
             href="/register"
-            className="flex-1 text-center py-2.5 rounded-lg text-[#6B7280] hover:text-[#1A2E22] tracking-wider uppercase transition-all"
+            className="flex-1 text-center py-2.5 rounded-lg text-ink-500 hover:text-forest-900 tracking-wider uppercase transition-all"
           >
             Become a Seller
           </Link>
         </div>
 
         {/* Login Card */}
-        <div className="bg-white rounded-2xl border border-[#E8E4DC] shadow-sm p-8 space-y-6">
+        <div className="bg-cream-50 rounded-2xl border border-cream-300/90 shadow-sm p-8 space-y-6">
           <div className="text-center space-y-1">
-            <h1 className="font-serif text-2xl font-bold text-[#1A2E22]">
-              Sign In to Your Nursery
+            <h1 className="font-serif text-2xl font-bold text-ink-900">
+              Sign In to Your Store
             </h1>
-            <p className="text-xs text-[#6B7280]">
+            <p className="text-xs text-ink-600">
               Enter your Gmail/Email or Seller ID and password to access your dashboard.
             </p>
           </div>

@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 export function BusinessFooter() {
   const currentYear = new Date().getFullYear();
@@ -10,16 +11,31 @@ export function BusinessFooter() {
     <footer className="bg-cream-100 border-t border-cream-300/80 pt-16 pb-12 text-ink-700">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-10 lg:gap-14 pb-14 border-b border-cream-300/80">
-          {/* Brand Column */}
+          {/* Brand Column with Floria Logo */}
           <div className="col-span-2 space-y-4">
-            <div className="flex items-baseline gap-2">
-              <span className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-forest-900">
-                Floria
-              </span>
-              <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.2em] text-forest-800">
-                Business
-              </span>
-            </div>
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2.5 group"
+              aria-label="Floria Business home"
+            >
+              <Image
+                src="/brand_logo.svg"
+                alt="Floria Logo"
+                width={24}
+                height={32}
+                style={{ height: "28px" }}
+                className="w-auto object-contain"
+              />
+              <div className="flex items-baseline gap-1.5">
+                <span className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-forest-900 group-hover:text-forest-700 transition-colors">
+                  FLORIA
+                </span>
+                <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.2em] text-forest-800 font-sans">
+                  Business
+                </span>
+              </div>
+            </Link>
+
             <p className="font-serif italic text-base text-ink-600">
               Discover. Choose. Grow.
             </p>

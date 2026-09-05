@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { List, X, ArrowRight, SignIn } from "@phosphor-icons/react";
 
 interface NavLink {
@@ -52,18 +53,29 @@ export function BusinessNavbar() {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between gap-6">
-            {/* Brand Logo with Typographic Descriptor (Not a UI status pill) */}
+            {/* Brand Logo with Official Floria SVG Logo + Typographic Descriptor */}
             <Link
               href="/"
-              className="flex items-baseline gap-2 group focus:outline-none focus-visible:ring-2 focus-visible:ring-forest-800 rounded-lg p-1 -m-1"
+              className="flex items-center gap-2.5 group focus:outline-none focus-visible:ring-2 focus-visible:ring-forest-800 rounded-lg p-1 -m-1"
               aria-label="Floria Business Home"
             >
-              <span className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-forest-900 group-hover:text-forest-700 transition-colors">
-                Floria
-              </span>
-              <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.2em] text-forest-800 font-sans">
-                Business
-              </span>
+              <Image
+                src="/brand_logo.svg"
+                alt="Floria Logo"
+                width={24}
+                height={32}
+                priority
+                style={{ height: "30px" }}
+                className="w-auto object-contain transition-all duration-300"
+              />
+              <div className="flex items-baseline gap-1.5">
+                <span className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-forest-900 group-hover:text-forest-700 transition-colors">
+                  FLORIA
+                </span>
+                <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.2em] text-forest-800 font-sans">
+                  Business
+                </span>
+              </div>
             </Link>
 
             {/* Desktop Navigation Links */}
@@ -135,13 +147,23 @@ export function BusinessNavbar() {
           <div className="fixed inset-y-0 right-0 max-w-xs w-full bg-cream-50 shadow-2xl p-6 flex flex-col justify-between border-l border-cream-300">
             <div className="space-y-6">
               <div className="flex items-center justify-between pb-4 border-b border-cream-300">
-                <div className="flex items-baseline gap-2">
-                  <span className="font-serif text-2xl font-bold tracking-tight text-forest-900">
-                    Floria
-                  </span>
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-forest-800">
-                    Business
-                  </span>
+                <div className="flex items-center gap-2.5">
+                  <Image
+                    src="/brand_logo.svg"
+                    alt="Floria Logo"
+                    width={20}
+                    height={26}
+                    style={{ height: "26px" }}
+                    className="w-auto object-contain"
+                  />
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="font-serif text-2xl font-bold tracking-tight text-forest-900">
+                      FLORIA
+                    </span>
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-forest-800">
+                      Business
+                    </span>
+                  </div>
                 </div>
                 <button
                   type="button"
