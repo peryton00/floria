@@ -12,6 +12,8 @@ export interface AppEnv {
   SUPABASE_URL: string;
   SUPABASE_ANON_KEY: string;
   SUPABASE_SERVICE_ROLE_KEY: string;
+  SELLER_SESSION_SECRET: string;
+  DELIVERY_SESSION_SECRET: string;
   CORS_ALLOWED_ORIGINS: string[];
   API_PORT: number;
   NODE_ENV: string;
@@ -21,6 +23,7 @@ export interface AppEnv {
 function validateEnv(): AppEnv {
   const isTest =
     process.env.NODE_ENV === "test" || process.env.VITEST === "true";
+  const isProd = process.env.NODE_ENV === "production";
 
   const url =
     process.env.SUPABASE_URL ||
@@ -35,11 +38,20 @@ function validateEnv(): AppEnv {
     process.env.SUPABASE_SERVICE_ROLE_KEY ||
     (isTest ? "test-mock-service-role-key" : undefined);
 
+  const sellerSessionSecret =
+    process.env.SELLER_SESSION_SECRET ||
+    (!isProd ? "dev-seller-session-secret-floria-local-2026" : undefined);
+  const deliverySessionSecret =
+    process.env.DELIVERY_SESSION_SECRET ||
+    (!isProd ? "dev-delivery-session-secret-floria-local-2026" : undefined);
+
   const missing: string[] = [];
   if (!url) missing.push("SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL)");
   if (!anonKey)
     missing.push("SUPABASE_ANON_KEY (or NEXT_PUBLIC_SUPABASE_ANON_KEY)");
   if (!serviceRoleKey) missing.push("SUPABASE_SERVICE_ROLE_KEY");
+  if (!sellerSessionSecret) missing.push("SELLER_SESSION_SECRET");
+  if (!deliverySessionSecret) missing.push("DELIVERY_SESSION_SECRET");
 
   if (missing.length > 0) {
     const errorMsg = `[Floria API] Critical Environment Startup Error:\nMissing required production environment variables:\n- ${missing.join("\n- ")}\n\nServer process startup aborted for security integrity.`;
@@ -62,6 +74,8 @@ function validateEnv(): AppEnv {
     SUPABASE_URL: url!,
     SUPABASE_ANON_KEY: anonKey!,
     SUPABASE_SERVICE_ROLE_KEY: serviceRoleKey!,
+    SELLER_SESSION_SECRET: sellerSessionSecret!,
+    DELIVERY_SESSION_SECRET: deliverySessionSecret!,
     CORS_ALLOWED_ORIGINS: corsOrigins,
     API_PORT: port,
     NODE_ENV: nodeEnv,

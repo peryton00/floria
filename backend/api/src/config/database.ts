@@ -3,6 +3,7 @@ import { createClient, SupabaseClient } from "@supabase/supabase-js";
 // @ts-ignore
 import WebSocket from "ws";
 import { getEnv } from "./env.js";
+import { Errors } from "../utils/errors.js";
 
 // Ensure native WebSocket polyfill is available for @supabase/supabase-js in Node < 22
 if (typeof globalThis.WebSocket === "undefined") {
@@ -70,17 +71,23 @@ export function getAnonDb(): SupabaseClient {
 }
 
 /**
- * Returns user-scoped Supabase client when a valid user JWT is provided,
- * otherwise falls back to trusted admin client.
+ * Returns user-scoped Supabase client when a valid user JWT is provided.
+ * Fails closed: throws AuthRequiredError if the token is missing, invalid, or cannot construct a user client.
+ * Never silently falls back to the privileged admin client.
  */
 export function getDbForUser(userAccessToken?: string): SupabaseClient {
-  if (userAccessToken && userAccessToken.length > 10) {
-    try {
-      return getUserDb(userAccessToken);
-    } catch {
-      return getAdminDb();
-    }
+  if (!userAccessToken || typeof userAccessToken !== "string" || userAccessToken.trim().length <= 10) {
+    throw Errors.authRequired(
+      "Authentication token is required to access user-scoped database operations.",
+    );
   }
-  return getAdminDb();
+  try {
+    return getUserDb(userAccessToken.trim());
+  } catch (err: any) {
+    throw Errors.authRequired(
+      "Failed to initialize authenticated user database client: " +
+        (err?.message || "Invalid token"),
+    );
+  }
 }
 

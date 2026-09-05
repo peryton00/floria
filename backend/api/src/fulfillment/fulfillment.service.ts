@@ -40,12 +40,27 @@ export class FulfillmentService {
       sellerId,
     );
     if (!record) {
-      // Check if order exists in orders table to support legacy/demo/seed orders
       const { getAdminDb } = await import("../config/database.js");
       const db = getAdminDb();
+
+      let targetSellerId = sellerId;
+      let targetUserId = sellerId;
+      try {
+        const { data: prof } = await db
+          .from("seller_profiles")
+          .select("id, user_id")
+          .or(`id.eq.${sellerId},user_id.eq.${sellerId}`)
+          .maybeSingle();
+        if (prof) {
+          targetSellerId = prof.id || sellerId;
+          targetUserId = prof.user_id || sellerId;
+        }
+      } catch {}
+
+      // 1. Check if master order exists
       const { data: order } = await db
         .from("orders")
-        .select("id, status")
+        .select("id, status, seller_id")
         .eq("id", masterOrderId)
         .maybeSingle();
 
@@ -54,12 +69,36 @@ export class FulfillmentService {
         throw Errors.notFound("Fulfillment record");
       }
 
+      // 2. IDOR protection: Verify calling seller has items in this order
+      const { data: items } = await db
+        .from("order_items")
+        .select("id, seller_id_snapshot, product:products(seller_id)")
+        .eq("order_id", masterOrderId);
+
+      const hasLegitimateItem = Array.isArray(items) && items.some((item: any) => {
+        const snapshotMatch =
+          item.seller_id_snapshot === targetSellerId ||
+          item.seller_id_snapshot === targetUserId;
+        const productSellerMatch =
+          item.product?.seller_id === targetSellerId ||
+          item.product?.seller_id === targetUserId;
+        return snapshotMatch || productSellerMatch;
+      });
+
+      const isDirectOrderSeller =
+        order.seller_id === targetSellerId ||
+        order.seller_id === targetUserId;
+
+      if (!hasLegitimateItem && !isDirectOrderSeller) {
+        throw Errors.forbidden("You do not have items in this order.");
+      }
+
       // Provision initial fulfillment record for this order & seller
       const { data: newRecord } = await db
         .from("seller_order_fulfillments")
         .insert({
           order_id: masterOrderId,
-          seller_id: sellerId,
+          seller_id: targetSellerId,
           status: "Order Placed",
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),

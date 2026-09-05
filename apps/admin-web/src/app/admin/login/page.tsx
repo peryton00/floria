@@ -76,21 +76,6 @@ function AdminLoginForm() {
         throw new Error("Access restricted: Your account does not have Admin privileges.");
       }
 
-      try {
-        await fetch("/api/auth/audit", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "USER_LOGIN",
-            role: "admin",
-            user_id: data.user.id,
-            email: data.user.email,
-          }),
-        });
-      } catch (auditErr) {
-        console.warn("Failed to audit login:", auditErr);
-      }
-
       router.replace("/admin/dashboard");
     } catch (err: any) {
       setError(err.message || "Failed to sign in");

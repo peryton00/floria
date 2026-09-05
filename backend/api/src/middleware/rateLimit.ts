@@ -8,6 +8,10 @@ import { Errors } from "../utils/errors.js";
 // Seller fulfillment: 30 requests / minute / user
 // Public catalog: 120 requests / minute / IP
 
+if (process.env.NODE_ENV === "production") {
+  console.info("[RateLimit] In-memory rate limiting active across endpoints. Set up Redis store adapter if deploying across multiple horizontal instances.");
+}
+
 export const authRateLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 10,

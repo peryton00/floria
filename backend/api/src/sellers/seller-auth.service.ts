@@ -5,6 +5,8 @@ import { sellerAuthRepository } from "../database/repositories/seller-auth.repos
 import { sellerRepository } from "../database/repositories/seller.repository.js";
 import { auditRepository } from "../database/repositories/audit.repository.js";
 import { getAdminDb, getAnonDb } from "../config/database.js";
+import { getEnv } from "../config/env.js";
+import { signSessionToken } from "../utils/session-token.js";
 import { Errors } from "../utils/errors.js";
 import type { SellerProfile, SellerApplication, SellerStatus } from "@floria/types";
 
@@ -426,6 +428,7 @@ export class SellerAuthService {
     }
 
     if (!token) {
+      const env = getEnv();
       const sessionPayload = {
         sub: profile.user_id || profile.id,
         seller_id: profile.id,
@@ -434,7 +437,7 @@ export class SellerAuthService {
         iat: Math.floor(Date.now() / 1000),
         exp: Math.floor(Date.now() / 1000) + 7 * 24 * 3600, // 7 days
       };
-      token = Buffer.from(JSON.stringify(sessionPayload)).toString("base64url");
+      token = signSessionToken(sessionPayload, env.SELLER_SESSION_SECRET);
     }
 
     return {

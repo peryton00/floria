@@ -589,24 +589,71 @@ export class SellerRepository {
     const targetSellerId = sellerProf?.id || sellerId;
     const targetUserId = sellerProf?.user_id || sellerId;
 
-    const now = new Date().toISOString();
-    const prodPayload: Record<string, unknown> = { updated_at: now };
-
-    if (updates.name) prodPayload["name"] = updates.name.trim();
-    if (updates.category_id) prodPayload["category_id"] = updates.category_id;
-    if (updates.description !== undefined)
-      prodPayload["description"] = updates.description?.trim() || null;
-    if (updates.care_instructions !== undefined)
-      prodPayload["care_instructions"] =
-        updates.care_instructions?.trim() || null;
-    if (updates.status) prodPayload["status"] = updates.status;
-
-    await db
+    // 1. Verify product exists
+    const { data: existingProd } = await db
       .from("products")
-      .update(prodPayload)
-      .eq("id", productId);
+      .select("id, seller_id, name")
+      .eq("id", productId)
+      .neq("status", "deleted")
+      .maybeSingle();
 
-    // Update Inventory
+    if (!existingProd) return null;
+
+    const isCreator =
+      existingProd.seller_id === targetSellerId ||
+      existingProd.seller_id === targetUserId;
+
+    // Check if seller has inventory listing for this product
+    const { data: existingSellerInv } = await db
+      .from("inventory")
+      .select("id")
+      .eq("product_id", productId)
+      .or(`seller_id.eq.${targetSellerId},seller_id.eq.${targetUserId}`)
+      .maybeSingle();
+
+    if (!isCreator && !existingSellerInv) {
+      // Caller neither created the product nor lists it in their inventory
+      return null;
+    }
+
+    const now = new Date().toISOString();
+    const hasProdFields =
+      updates.name !== undefined ||
+      updates.category_id !== undefined ||
+      updates.description !== undefined ||
+      updates.care_instructions !== undefined ||
+      updates.status !== undefined;
+
+    // 2. Mutate products table only if seller is the creator and product fields are present
+    if (hasProdFields) {
+      if (!isCreator) {
+        // Non-creators listing a shared catalog item cannot modify core catalog attributes
+        return null;
+      }
+
+      const prodPayload: Record<string, unknown> = { updated_at: now };
+      if (updates.name) prodPayload["name"] = updates.name.trim();
+      if (updates.category_id) prodPayload["category_id"] = updates.category_id;
+      if (updates.description !== undefined)
+        prodPayload["description"] = updates.description?.trim() || null;
+      if (updates.care_instructions !== undefined)
+        prodPayload["care_instructions"] =
+          updates.care_instructions?.trim() || null;
+      if (updates.status) prodPayload["status"] = updates.status;
+
+      const { data: updatedProdRows, error: prodUpdateErr } = await db
+        .from("products")
+        .update(prodPayload)
+        .eq("id", productId)
+        .or(`seller_id.eq.${targetSellerId},seller_id.eq.${targetUserId}`)
+        .select("id");
+
+      if (prodUpdateErr || !updatedProdRows || updatedProdRows.length === 0) {
+        return null;
+      }
+    }
+
+    // 3. Update or Insert Seller-Scoped Inventory
     if (
       updates.price_paise !== undefined ||
       updates.stock_quantity !== undefined ||
@@ -626,27 +673,12 @@ export class SellerRepository {
       if (updates.sku !== undefined)
         invPayload["sku"] = updates.sku?.trim() || null;
 
-      let { data: existingInv } = await db
-        .from("inventory")
-        .select("id")
-        .eq("product_id", productId)
-        .or(`seller_id.eq.${targetSellerId},seller_id.eq.${targetUserId}`)
-        .maybeSingle();
-
-      if (!existingInv) {
-        const { data: anyInv } = await db
-          .from("inventory")
-          .select("id")
-          .eq("product_id", productId)
-          .maybeSingle();
-        existingInv = anyInv;
-      }
-
-      if (existingInv) {
+      if (existingSellerInv) {
         await db
           .from("inventory")
           .update({ ...invPayload, seller_id: targetSellerId })
-          .eq("id", existingInv.id);
+          .eq("id", existingSellerInv.id)
+          .or(`seller_id.eq.${targetSellerId},seller_id.eq.${targetUserId}`);
       } else {
         await db.from("inventory").insert({
           product_id: productId,
@@ -660,8 +692,8 @@ export class SellerRepository {
       }
     }
 
-    // Update Primary image if image_url or asset_id provided
-    if (updates.asset_id || updates.image_url) {
+    // 4. Update Primary image if seller is creator and image_url or asset_id provided
+    if (isCreator && (updates.asset_id || updates.image_url)) {
       const supabaseUrl =
         process.env.SUPABASE_URL ||
         process.env.NEXT_PUBLIC_SUPABASE_URL ||

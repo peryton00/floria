@@ -2,6 +2,8 @@
 // Validates Bearer token using Supabase Auth -> builds typed AuthenticatedUser context
 import { Request, Response, NextFunction } from "express";
 import { getAdminDb, getAnonDb } from "../config/database.js";
+import { getEnv } from "../config/env.js";
+import { verifySessionToken } from "../utils/session-token.js";
 import { Errors } from "../utils/errors.js";
 import { Permission, ROLE_PERMISSIONS } from "../config/constants.js";
 import type { UserRole, SellerStatus } from "@floria/types";
@@ -71,23 +73,39 @@ export async function authenticateToken(
       // Supabase verification fallback
     }
 
-    // 2. If not Supabase JWT, check if signed seller session token
+    // 2. If not Supabase JWT, verify signed seller session token
     if (!userId) {
       try {
-        const decoded = JSON.parse(Buffer.from(token, "base64url").toString("utf8"));
-        if (decoded && decoded.exp && decoded.exp > Math.floor(Date.now() / 1000) && decoded.seller_id) {
-          userId = decoded.sub || decoded.seller_id;
-          email = decoded.email;
-          fallbackRole = decoded.role || "seller";
-          directSellerId = decoded.seller_id;
+        const env = getEnv();
+        const sellerSession = verifySessionToken(token, env.SELLER_SESSION_SECRET);
+        if (sellerSession && sellerSession.seller_id) {
+          userId = (sellerSession.sub as string) || (sellerSession.seller_id as string);
+          email = sellerSession.email as string | undefined;
+          fallbackRole = (sellerSession.role as string) || "seller";
+          directSellerId = sellerSession.seller_id as string;
         }
       } catch {
-        // Invalid token format
+        // Invalid seller token
+      }
+    }
+
+    // 3. If not seller token, verify signed delivery partner session token
+    if (!userId) {
+      try {
+        const env = getEnv();
+        const deliverySession = verifySessionToken(token, env.DELIVERY_SESSION_SECRET);
+        if (deliverySession && (deliverySession.delivery_partner_id || deliverySession.role === "delivery_partner")) {
+          userId = (deliverySession.sub as string) || (deliverySession.delivery_partner_id as string);
+          email = deliverySession.email as string | undefined;
+          fallbackRole = "delivery_partner";
+        }
+      } catch {
+        // Invalid delivery partner token
       }
     }
 
     if (!userId) {
-      return next(Errors.authRequired("Invalid or expired session token."));
+      return next(Errors.authRequired("Session expired or invalid. Please log in again."));
     }
 
     const { data: profile } = await adminDb
@@ -180,7 +198,8 @@ export async function authenticateToken(
           dp.status === "active" &&
           roleStr !== "admin" &&
           roleStr !== "super_admin" &&
-          roleStr !== "operations"
+          roleStr !== "operations" &&
+          roleStr !== "seller"
         ) {
           roleStr = "delivery_partner";
         }

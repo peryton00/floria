@@ -4,6 +4,8 @@ import { promisify } from "node:util";
 import { deliveryPartnerRepository } from "../database/repositories/delivery-partner.repository.js";
 import { auditRepository } from "../database/repositories/audit.repository.js";
 import { getAdminDb, getAnonDb } from "../config/database.js";
+import { getEnv } from "../config/env.js";
+import { signSessionToken } from "../utils/session-token.js";
 import { Errors } from "../utils/errors.js";
 import type {
   DeliveryPartnerApplication,
@@ -849,6 +851,7 @@ export class DeliveryPartnersService {
     }
 
     if (!token) {
+      const env = getEnv();
       const sessionPayload = {
         sub: partner.user_id || partner.id,
         delivery_partner_id: partner.id,
@@ -858,7 +861,7 @@ export class DeliveryPartnersService {
         iat: Math.floor(Date.now() / 1000),
         exp: Math.floor(Date.now() / 1000) + 7 * 24 * 3600,
       };
-      token = Buffer.from(JSON.stringify(sessionPayload)).toString("base64url");
+      token = signSessionToken(sessionPayload, env.DELIVERY_SESSION_SECRET);
     }
 
     return {

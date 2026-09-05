@@ -97,42 +97,36 @@ export function requireApprovedSeller(
     return next();
   }
 
+  if (req.user.role !== "seller") {
+    return next(Errors.forbidden("Seller role required."));
+  }
+
   if (!req.user.sellerId) {
     return next(Errors.forbidden("No seller profile associated with account."));
   }
 
-  if (
-    req.user.role !== "seller" &&
-    req.user.sellerStatus !== "approved" &&
-    req.user.sellerStatus !== "active"
-  ) {
-    return next(Errors.forbidden("Seller role required."));
-  }
+  switch (req.user.sellerStatus) {
+    case "approved":
+    case "active":
+      return next();
 
-  if (req.user.sellerStatus === "suspended" || req.user.sellerStatus === "deactivated") {
-    return next(Errors.forbidden("Your seller account is currently unavailable."));
-  }
+    case "suspended":
+    case "deactivated":
+      return next(Errors.forbidden("Your seller account is currently unavailable."));
 
-  if (
-    req.user.sellerStatus === "pending" ||
-    req.user.sellerStatus === "under_review" ||
-    req.user.sellerStatus === "application_submitted" ||
-    req.user.sellerStatus === "application_incomplete"
-  ) {
-    return next(Errors.forbidden("Your seller account is pending approval."));
-  }
+    case "pending":
+    case "under_review":
+    case "application_submitted":
+    case "application_incomplete":
+      return next(Errors.forbidden("Your seller application is pending approval."));
 
-  if (req.user.sellerStatus === "needs_correction") {
-    return next(Errors.forbidden("Your seller application requires correction."));
-  }
+    case "needs_correction":
+      return next(Errors.forbidden("Your seller application requires correction."));
 
-  if (req.user.sellerStatus === "rejected") {
-    return next(Errors.forbidden("Your seller application was not approved."));
-  }
+    case "rejected":
+      return next(Errors.forbidden("Your seller application was not approved."));
 
-  if (req.user.sellerStatus !== "approved" && req.user.sellerStatus !== "active") {
-    return next(Errors.forbidden("Active seller approval required."));
+    default:
+      return next(Errors.forbidden("Active seller approval required."));
   }
-
-  next();
 }

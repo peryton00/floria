@@ -21,11 +21,17 @@ export function createCorsMiddleware() {
         /^https?:\/\/10\.\d{1,3}\.\d{1,3}\.\d{1,3}(:\d+)?$/.test(origin) ||
         /^https?:\/\/172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}(:\d+)?$/.test(origin);
 
+      const isFloriaDomain =
+        origin === "https://floriaa-web.vercel.app" ||
+        origin === "https://floria-seller-web.vercel.app" ||
+        origin === "https://floria-admin-web.vercel.app" ||
+        origin === "https://floria-web.vercel.app" ||
+        /^https:\/\/floria[a-z0-9-]*\.vercel\.app$/.test(origin) ||
+        /^https:\/\/floria[a-z0-9-]*\.onrender\.com$/.test(origin);
+
       if (
         env.CORS_ALLOWED_ORIGINS.includes(origin) ||
-        env.CORS_ALLOWED_ORIGINS.includes("*") ||
-        origin.endsWith(".vercel.app") ||
-        origin.endsWith(".onrender.com") ||
+        isFloriaDomain ||
         isLanOrLocal
       ) {
         return callback(null, true);

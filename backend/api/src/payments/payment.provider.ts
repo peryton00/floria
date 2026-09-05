@@ -1,5 +1,5 @@
 // Floria API — Payment Provider Abstraction Layer & Cashfree Production Provider
-import { randomUUID, createHmac } from "crypto";
+import { randomUUID, createHmac, timingSafeEqual } from "crypto";
 
 export interface CreatePaymentIntentInput {
   masterOrderId: string;
@@ -396,9 +396,11 @@ export class CashfreePaymentProvider implements PaymentProvider {
         .update(payloadToSign)
         .digest("base64");
 
+      const sigBuffer = Buffer.from(input.signature, "utf8");
+      const computedBuffer = Buffer.from(computedSig, "utf8");
       const isValid =
-        computedSig === input.signature ||
-        input.signature.includes(computedSig);
+        sigBuffer.length === computedBuffer.length &&
+        timingSafeEqual(sigBuffer, computedBuffer);
 
       return {
         isValid,

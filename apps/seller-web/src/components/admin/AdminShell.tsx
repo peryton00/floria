@@ -86,15 +86,6 @@ export function AdminShell({ children }: AdminShellProps) {
   }, [router]);
 
   const handleLogout = async () => {
-    try {
-      await fetch("/api/auth/audit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "USER_LOGOUT", role: "admin" }),
-      });
-    } catch (e) {
-      console.warn("Failed to audit logout:", e);
-    }
     const supabase = getSupabaseBrowserClient();
     await supabase.auth.signOut();
     router.replace("/admin/login");
