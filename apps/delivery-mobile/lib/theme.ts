@@ -59,6 +59,13 @@ export const theme = {
     },
   },
   typography: {
+    fontFamilies: {
+      display: "CormorantGaramond",
+      serif: "CormorantGaramond",
+      sans: "Inter",
+      body: "Inter",
+      ui: "Inter",
+    },
     title: {
       fontSize: 22,
       fontWeight: "700" as const,

@@ -5,7 +5,7 @@
    ============================================================ */
 
 /* Google Fonts */
-@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Manrope:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Inter:wght@400;500;600;700&display=swap");
 
 @import "tailwindcss";
 
@@ -13,6 +13,13 @@
    Tailwind CSS v4 @theme configuration
    ============================================================ */
 @theme {
+  /* --- Typography Font Families --- */
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: "Cormorant Garamond", Georgia, serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-script: "Cormorant Garamond", Georgia, serif;
+
   /* --- Scales: Forest --- */
   --color-forest-50:  #F4F8F4;
   --color-forest-100: #DDE7DD;
@@ -126,6 +133,13 @@
   /* --- Typography Tokens --- */
   --floria-text-primary:   #212529;
   --floria-text-secondary: #6C756F;
+  --font-display:          "Cormorant Garamond", Georgia, serif;
+  --font-sans:             "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-body:             var(--font-sans);
+  --font-ui:               var(--font-sans);
+  --font-serif:            var(--font-display);
+  --font-script:           "Cormorant Garamond", Georgia, serif;
+  --font-editorial:        var(--font-display);
 
   /* --- Functional Semantic Aliases --- */
   --color-primary:         var(--floria-forest);
@@ -146,18 +160,26 @@
 body {
   background-color: var(--floria-page);
   color: var(--floria-text-primary);
-  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-sans);
   margin: 0;
   padding: 0;
   -webkit-font-smoothing: antialiased;
 }
 
-.font-serif {
-  font-family: "Playfair Display", Georgia, serif;
+.font-serif,
+.font-display {
+  font-family: var(--font-display);
 }
 
-.font-sans {
-  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+.font-sans,
+.font-body,
+.font-ui {
+  font-family: var(--font-sans);
+}
+
+.font-script {
+  font-family: var(--font-script);
+  font-style: italic;
 }
 
 /* ============================================================

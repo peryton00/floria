@@ -126,11 +126,10 @@ stateDiagram-v2
 
 ## 8. Design System Conformance (`DESIGN.md`)
 
-- **Typography Correction:** **[INCORRECT IN STEP 5A PROMPTS -> CORRECTED]**
-  - All UI elements, buttons, badges, and numeric data must use **`DM Sans`** (`--font-ui`).
-  - Narrative body text, delivery notes, and instructions must use **`Manrope`** (`--font-body`).
-  - Section titles must use **`Cormorant Garamond`** (`--font-serif`).
-  - Accidental font introductions (such as `Be Vietnam Pro`) are strictly rejected.
+- **Typography Correction:**
+  - All UI elements, buttons, badges, numeric data, and body copy use **`Inter`** (`--font-sans`, `--font-ui`, `--font-body`).
+  - Brand titles and section headlines use **`Cormorant Garamond`** (`--font-display`, `--font-serif`).
+  - Accidental font introductions are strictly rejected.
 - **Color Tokens:**
   - Page Background: Warm Cream (`#F9F8F3`)
   - Elevated Cards: Linen (`#FBF8F1`) with `1px border #E2D9CC`

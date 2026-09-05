@@ -38,8 +38,12 @@ export const Colors = {
 
 export const Typography = {
   fontFamilies: {
-    serif: "Georgia",
-    sans: "System",
+    display: "CormorantGaramond",
+    serif: "CormorantGaramond",
+    sans: "Inter",
+    body: "Inter",
+    ui: "Inter",
+    script: "CormorantGaramond",
   },
   fontSizes: {
     xs: 11,

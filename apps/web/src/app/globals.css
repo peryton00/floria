@@ -5,7 +5,7 @@
    ============================================================ */
 
 /* Google Fonts — must precede all other rules (CSS spec) */
-@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Manrope:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Inter:wght@400;500;600;700&display=swap");
 
 @import "tailwindcss";
 
@@ -145,10 +145,11 @@
   --color-info-100:    #E0F0FC;
 
   /* --- Typography --- */
-  --font-display: "Cormorant Garamond", serif;
-  --font-body: "Manrope", sans-serif;
-  --font-ui: "DM Sans", sans-serif;
-  --font-editorial: "Playfair Display", serif;
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-ui: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-editorial: "Cormorant Garamond", Georgia, serif;
+  --font-script: "Cormorant Garamond", Georgia, serif;
 
   --font-serif: var(--font-display);
   --font-sans:  var(--font-body);
@@ -298,6 +299,7 @@
   --font-editorial: var(--font-editorial);
   --font-serif: var(--font-serif);
   --font-sans: var(--font-sans);
+  --font-script: var(--font-script);
 
   /* Border radius */
   --radius-sm:   var(--radius-sm);
@@ -504,4 +506,23 @@ p {
     opacity: 1 !important;
     transition: opacity 100ms linear !important;
   }
+}
+
+/* ============================================================
+   Typography Utility Classes
+   ============================================================ */
+.font-serif,
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-sans,
+.font-body,
+.font-ui {
+  font-family: var(--font-sans);
+}
+
+.font-script {
+  font-family: var(--font-script);
+  font-style: italic;
 }

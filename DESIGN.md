@@ -50,27 +50,27 @@ Floria’s palette is inspired by lush plant canopies, rich terracotta pottery, 
 
 ## 3. Typography Rules & Font Hierarchy
 
-Floria combines an elegant classical editorial serif for storytelling display with an ultra-clean, legible modern sans-serif for UI, numbers, and data.
+Floria standardizes on a 3-tier typography system: Cormorant Garamond gives Floria its botanical character, Inter makes Floria highly usable and functional, and a restrained script/italic accent provides occasional human warmth.
 
 ### Font Stacks
 
-1. **Display / Headlines (`h1`, `h2`, `h3`):** `"Cormorant Garamond", Georgia, serif`
-   - Weight: `500` (Medium) or `600` (SemiBold).
+1. **Display / Headlines (`--font-display`, `--font-serif`):** `"Cormorant Garamond", Georgia, serif`
+   - Weights: `400` (Regular), `500` (Medium), `600` (SemiBold).
    - Line height: `1.15 – 1.25`. Letter-spacing: `-0.01em` (track-tight).
-   - Used for: Hero statements, section titles, product names on detail pages, editorial callouts.
-2. **Editorial Serif (`--font-editorial`):** `"Playfair Display", serif`
-   - Used sparingly for quotes, testimonials, and premium marketing badges.
-3. **Body Text (`--font-body`):** `"Manrope", -apple-system, BlinkMacSystemFont, sans-serif`
-   - Weight: `400` (Regular), `500` (Medium).
-   - Line height: `1.5 – 1.6`. Max line length: `65ch`.
-   - Used for: Product descriptions, reviews, paragraphs, articles.
-4. **UI, Buttons, Inputs, Tables & Badges (`--font-ui`):** `"DM Sans", sans-serif`
-   - Weight: `500` (Medium), `600` (SemiBold), `700` (Bold).
-   - Used for: Buttons, navigation labels, input text, table cells, metric values, prices.
+   - Used for: Brand headlines, hero statements, large editorial section headings, campaign storytelling, and prominent category intros.
+2. **Body & Functional UI (`--font-sans`, `--font-body`, `--font-ui`):** `"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`
+   - Weights: `400` (Regular for body), `500` / `600` (Medium/SemiBold for UI hierarchy, buttons, inputs, navigation), `700` (Bold for prominent metrics/prices).
+   - Line height: `1.5 – 1.6` for body copy; tight/standard for UI components.
+   - Used for: Body text, navigation, buttons, forms, inputs, tables, product names, prices, filters, search, checkout, seller dashboard, and admin interface.
+3. **Decorative Script Accent (`--font-script`):** `"Cormorant Garamond", Georgia, serif` (italic style) / Floria Script Accent
+   - Weight: Controlled single weight (`400` / `500` italic).
+   - Used for: Restrained editorial annotations, campaign sub-phrases, seasonal touches, and marketing compositions.
+   - **Never used for:** Functional UI, buttons, prices, navigation, forms, checkout, or tables.
 
 ### Anti-Patterns
 
-- `Inter` is banned for display and core marketing typography.
+- Forcing Cormorant Garamond into dense functional UI (tables, small metadata, form inputs).
+- Using decorative script for functional UI, buttons, checkout, or prices.
 - Generic browser serif (`Times New Roman`) is banned.
 - Pure black (`#000000`) text is banned — always use Charcoal (`#212529`).
 
@@ -132,7 +132,7 @@ Restrained, warm botanical diffusion (never harsh black or neon glow).
 - **Surface:** Sand (`#EFE8DC`) or Elevated Linen (`#FBF8F1`), border `1px solid #E2D9CC`.
 - **Height:** `h-11` (44px) standard.
 - **Focus:** `outline: none; ring: 2px solid #1E3A2B; ring-offset: 2px;`.
-- **Typography:** DM Sans, 14px/15px, `#212529`. Placeholder: `#6C756F`.
+- **Typography:** Inter, 14px/15px, `#212529`. Placeholder: `#6C756F`.
 - **Labels:** Positioned cleanly above input with `text-xs font-semibold uppercase tracking-wider text-ink-700`.
 
 ### 3. Product Cards
