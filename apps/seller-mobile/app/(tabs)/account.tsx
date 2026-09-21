@@ -258,8 +258,7 @@ const styles = StyleSheet.create({
   },
   pageTitle: {
     fontSize: Typography.fontSizes.lg,
-    fontFamily: "Georgia",
-    fontWeight: "bold",
+    fontFamily: Typography.fontFamilies.serif,
     color: Colors.forest,
   },
   scrollContent: {
@@ -292,8 +291,7 @@ const styles = StyleSheet.create({
   },
   placeholderText: {
     fontSize: 24,
-    fontFamily: "Georgia",
-    fontWeight: "bold",
+    fontFamily: Typography.fontFamilies.serif,
     color: Colors.forest,
   },
   profileDetails: {
@@ -302,8 +300,7 @@ const styles = StyleSheet.create({
   },
   nurseryName: {
     fontSize: Typography.fontSizes.base,
-    fontFamily: "Georgia",
-    fontWeight: "bold",
+    fontFamily: Typography.fontFamilies.serif,
     color: Colors.ink,
   },
   statusRow: {

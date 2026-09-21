@@ -1,7 +1,7 @@
 import React from "react";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "../../lib/theme";
+import { Colors, Typography } from "../../lib/theme";
 
 function TabIcon({ name, color }: { name: string; color?: any }) {
   switch (name) {
@@ -24,8 +24,7 @@ export default function TabLayout() {
         },
         headerTintColor: Colors.forest,
         headerTitleStyle: {
-          fontFamily: "Georgia",
-          fontWeight: "bold",
+          fontFamily: Typography.fontFamilies.serif,
           fontSize: 18,
         },
         tabBarStyle: {

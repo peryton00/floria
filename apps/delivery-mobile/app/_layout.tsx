@@ -2,12 +2,28 @@ import React, { useEffect } from "react";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { ActivityIndicator, View } from "react-native";
+import * as SplashScreen from "expo-splash-screen";
+import {
+  useFonts,
+  CormorantGaramond_400Regular,
+  CormorantGaramond_500Medium,
+  CormorantGaramond_600SemiBold,
+  CormorantGaramond_400Regular_Italic,
+} from "@expo-google-fonts/cormorant-garamond";
+import {
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+} from "@expo-google-fonts/inter";
 import {
   DeliveryAuthProvider,
   useDeliveryAuth,
 } from "../lib/contexts/DeliveryAuthContext";
-
 import { useDeliveryNotifications } from "../lib/notifications/useDeliveryNotifications";
+import { theme } from "../lib/theme";
+
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function AuthGate({ children }: { children: React.ReactNode }) {
   const { session, loading, isAuthorizedCourier } = useDeliveryAuth();
@@ -36,12 +52,12 @@ function AuthGate({ children }: { children: React.ReactNode }) {
       <View
         style={{
           flex: 1,
-          backgroundColor: "#F9F8F3",
+          backgroundColor: theme.colors.cream,
           justifyContent: "center",
           alignItems: "center",
         }}
       >
-        <ActivityIndicator size="large" color="#1E3A2B" />
+        <ActivityIndicator size="large" color={theme.colors.forest} />
       </View>
     );
   }
@@ -50,20 +66,41 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 }
 
 export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts({
+    CormorantGaramond_400Regular,
+    CormorantGaramond_500Medium,
+    CormorantGaramond_600SemiBold,
+    CormorantGaramond_400Regular_Italic,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+  });
+
+  useEffect(() => {
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [fontsLoaded, fontError]);
+
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
+
   return (
     <DeliveryAuthProvider>
       <AuthGate>
         <Stack
           screenOptions={{
             headerStyle: {
-              backgroundColor: "#1E3A2B", // Floria Forest Green
+              backgroundColor: theme.colors.forest,
             },
-            headerTintColor: "#FFFFFF",
+            headerTintColor: theme.colors.white,
             headerTitleStyle: {
-              fontWeight: "600",
+              fontFamily: theme.typography.fontFamilies.sansSemiBold,
             },
             contentStyle: {
-              backgroundColor: "#F9F8F3", // Floria Warm Cream
+              backgroundColor: theme.colors.cream,
             },
           }}
         >

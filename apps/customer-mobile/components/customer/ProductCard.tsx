@@ -358,9 +358,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   productName: {
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
     fontSize: 14,
-    fontWeight: "bold",
     color: Colors.ink,
     lineHeight: 18,
     minHeight: 36,

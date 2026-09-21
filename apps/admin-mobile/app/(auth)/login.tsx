@@ -151,9 +151,8 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: Typography.fontSizes.xl,
-    fontWeight: "bold",
     color: Colors.ink,
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
     marginBottom: Spacing.xs,
   },
   subtitle: {

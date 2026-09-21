@@ -70,8 +70,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: Typography.fontSizes.md + 1,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
     color: Colors.ink,
   },
   subtitle: {

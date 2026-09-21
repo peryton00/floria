@@ -9,7 +9,7 @@ import {
   User,
 } from "phosphor-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Colors } from "../../lib/theme";
+import { Colors, Typography } from "../../lib/theme";
 import { useCart } from "../../lib/contexts/CartContext";
 import { useWishlist } from "../../lib/contexts/WishlistContext";
 import { LocationSelector } from "../../components/customer/LocationSelector";
@@ -113,8 +113,7 @@ export default function TabLayout() {
         },
         headerTintColor: Colors.forest,
         headerTitleStyle: {
-          fontFamily: "Georgia",
-          fontWeight: "bold",
+          fontFamily: Typography.fontFamilies.serif,
           fontSize: 17,
           color: Colors.ink,
         },
@@ -235,8 +234,7 @@ const styles = StyleSheet.create({
   },
   wordmarkTitle: {
     fontSize: 17,
-    fontFamily: "Georgia",
-    fontWeight: "bold",
+    fontFamily: Typography.fontFamilies.serif,
     color: Colors.ink,
     lineHeight: 20,
   },

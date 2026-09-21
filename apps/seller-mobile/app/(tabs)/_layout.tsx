@@ -18,7 +18,7 @@ import {
   Bell,
 } from "phosphor-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Colors } from "../../lib/theme";
+import { Colors, Typography } from "../../lib/theme";
 import { useSellerAuth } from "../../lib/contexts/SellerAuthContext";
 import { useSellerNotifications } from "../../lib/contexts/SellerNotificationContext";
 import { haptics } from "../../lib/haptics";
@@ -171,8 +171,7 @@ export default function TabLayout() {
         },
         headerTintColor: Colors.forest,
         headerTitleStyle: {
-          fontFamily: "Georgia",
-          fontWeight: "bold",
+          fontFamily: Typography.fontFamilies.serif,
           fontSize: 17,
           color: Colors.ink,
         },
@@ -262,8 +261,7 @@ const styles = StyleSheet.create({
   },
   wordmarkTitle: {
     fontSize: 17,
-    fontFamily: "Georgia",
-    fontWeight: "bold",
+    fontFamily: Typography.fontFamilies.serif,
     color: Colors.ink,
     lineHeight: 20,
   },

@@ -207,9 +207,8 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: Typography.fontSizes.lg,
-    fontWeight: "bold",
     color: "#0F172A",
-    fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
+    fontFamily: Typography.fontFamilies.serif,
     textAlign: "center",
     marginBottom: 6,
   },

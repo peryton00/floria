@@ -416,8 +416,7 @@ const styles = StyleSheet.create({
   },
   pageTitle: {
     fontSize: Typography.fontSizes.lg,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
     color: Colors.forest,
   },
   scrollContent: {
@@ -436,8 +435,7 @@ const styles = StyleSheet.create({
   },
   specimenName: {
     fontSize: Typography.fontSizes.base,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
     color: Colors.ink,
   },
   botanicalName: {

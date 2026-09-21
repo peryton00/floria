@@ -611,17 +611,15 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     fontSize: Typography.fontSizes.lg,
-    fontWeight: "bold",
     color: Colors.white,
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
   },
   profileInfo: {
     flex: 1,
   },
   userName: {
     fontSize: Typography.fontSizes.base,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
     color: Colors.ink,
   },
   userEmail: {
@@ -674,9 +672,8 @@ const styles = StyleSheet.create({
   },
   guestTitle: {
     fontSize: Typography.fontSizes.sm,
-    fontWeight: "bold",
     color: Colors.ink,
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
   },
   guestSub: {
     fontSize: 11,
@@ -715,8 +712,7 @@ const styles = StyleSheet.create({
   },
   quickActionLabel: {
     fontSize: Typography.fontSizes.sm,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.sansSemiBold,
     color: Colors.ink,
   },
   quickActionSub: {
@@ -812,8 +808,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: Typography.fontSizes.md,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
     color: Colors.ink,
     flex: 1,
   },
@@ -888,9 +883,8 @@ const styles = StyleSheet.create({
   },
   preferenceTitle: {
     fontSize: Typography.fontSizes.xs + 1,
-    fontWeight: "700",
     color: Colors.ink,
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.sansSemiBold,
   },
   preferenceSub: {
     fontSize: 10.5,

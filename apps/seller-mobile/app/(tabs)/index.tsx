@@ -451,9 +451,8 @@ const styles = StyleSheet.create({
     height: 28,
   },
   brandTitle: {
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
     fontSize: Typography.fontSizes.lg,
-    fontWeight: "bold",
     color: Colors.forest,
     letterSpacing: -0.3,
   },
@@ -502,9 +501,8 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   greetingName: {
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
     fontSize: Typography.fontSizes.xl,
-    fontWeight: "bold",
     color: Colors.forest,
   },
   section: {
@@ -557,9 +555,8 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   todayCardValue: {
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.sansBold,
     fontSize: 22,
-    fontWeight: "bold",
     color: Colors.forest,
     marginVertical: 2,
   },
@@ -704,9 +701,8 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   orderCardCode: {
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.sansSemiBold,
     fontSize: Typography.fontSizes.sm,
-    fontWeight: "bold",
     color: Colors.ink,
   },
   orderCardMiddleRow: {

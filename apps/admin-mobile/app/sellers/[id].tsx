@@ -248,8 +248,7 @@ const styles = StyleSheet.create({
   },
   partnerName: {
     fontSize: Typography.fontSizes.lg,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
     color: Colors.white,
   },
   ownerText: {
@@ -267,8 +266,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: Typography.fontSizes.sm,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
     color: Colors.ink,
     marginBottom: Spacing.xs,
   },

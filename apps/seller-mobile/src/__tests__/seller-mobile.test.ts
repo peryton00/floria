@@ -1,4 +1,21 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+
+const memoryStore: Record<string, string> = {};
+vi.mock("@react-native-async-storage/async-storage", () => ({
+  default: {
+    getItem: vi.fn(async (key: string) => memoryStore[key] ?? null),
+    setItem: vi.fn(async (key: string, val: string) => {
+      memoryStore[key] = val;
+    }),
+    removeItem: vi.fn(async (key: string) => {
+      delete memoryStore[key];
+    }),
+    clear: vi.fn(async () => {
+      for (const k of Object.keys(memoryStore)) delete memoryStore[k];
+    }),
+  },
+}));
+
 import {
   formatINR,
   paiseToRupees,

@@ -181,8 +181,7 @@ const styles = StyleSheet.create({
   },
   orderId: {
     fontSize: Typography.fontSizes.sm,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.sansSemiBold,
     color: Colors.ink,
   },
   orderDate: {

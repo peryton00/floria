@@ -294,8 +294,7 @@ const styles = StyleSheet.create({
   },
   orderId: {
     fontSize: Typography.fontSizes.xl,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.sansBold,
     color: Colors.white,
     marginTop: 2,
   },
@@ -314,8 +313,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: Typography.fontSizes.sm,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.sansSemiBold,
     color: Colors.ink,
     marginBottom: Spacing.md,
   },

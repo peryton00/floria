@@ -1,4 +1,21 @@
-// Floria Delivery Mobile — Canonical Visual Theme Tokens (DESIGN.md)
+export const Fonts = {
+  display: {
+    regular: "CormorantGaramond_400Regular",
+    medium: "CormorantGaramond_500Medium",
+    semiBold: "CormorantGaramond_600SemiBold",
+    italic: "CormorantGaramond_400Regular_Italic",
+  },
+  sans: {
+    regular: "Inter_400Regular",
+    medium: "Inter_500Medium",
+    semiBold: "Inter_600SemiBold",
+    bold: "Inter_700Bold",
+  },
+  script: {
+    regular: "CormorantGaramond_400Regular_Italic",
+  },
+} as const;
+
 export const theme = {
   colors: {
     forest: "#1E3A2B", // Deep Botanical Forest Green
@@ -60,11 +77,18 @@ export const theme = {
   },
   typography: {
     fontFamilies: {
-      display: "CormorantGaramond",
-      serif: "CormorantGaramond",
-      sans: "Inter",
-      body: "Inter",
-      ui: "Inter",
+      display: Fonts.display.semiBold,
+      serif: Fonts.display.semiBold,
+      displayRegular: Fonts.display.regular,
+      displayMedium: Fonts.display.medium,
+      displaySemiBold: Fonts.display.semiBold,
+      sans: Fonts.sans.regular,
+      sansMedium: Fonts.sans.medium,
+      sansSemiBold: Fonts.sans.semiBold,
+      sansBold: Fonts.sans.bold,
+      body: Fonts.sans.regular,
+      ui: Fonts.sans.medium,
+      script: Fonts.script.regular,
     },
     title: {
       fontSize: 22,

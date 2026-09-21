@@ -131,17 +131,16 @@ const styles = StyleSheet.create({
     marginBottom: 3,
   },
   title: {
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.sansSemiBold,
     fontSize: Typography.fontSizes.sm,
     flex: 1,
     paddingRight: Spacing.xs,
   },
   titleUnread: {
-    fontWeight: "bold",
     color: Colors.ink,
   },
   titleRead: {
-    fontWeight: "600",
+    fontFamily: Typography.fontFamilies.sans,
     color: Colors.inkLight,
   },
   timeAgo: {

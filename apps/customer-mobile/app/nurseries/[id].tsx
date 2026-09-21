@@ -237,13 +237,11 @@ const styles = StyleSheet.create({
   avatarText: {
     color: Colors.white,
     fontSize: Typography.fontSizes.xxl,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
   },
   nurseryTitle: {
     fontSize: Typography.fontSizes.lg,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
     color: Colors.ink,
     textAlign: "center",
   },
@@ -289,8 +287,7 @@ const styles = StyleSheet.create({
   },
   sectionHeading: {
     fontSize: Typography.fontSizes.md,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
     color: Colors.ink,
     marginBottom: Spacing.sm,
   },

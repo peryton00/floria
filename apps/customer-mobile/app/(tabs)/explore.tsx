@@ -616,8 +616,7 @@ const styles = StyleSheet.create({
   },
   categoriesHeading: {
     fontSize: Typography.fontSizes.lg,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
     color: Colors.ink,
     marginBottom: 2,
   },
@@ -669,9 +668,8 @@ const styles = StyleSheet.create({
   },
   categoryCardName: {
     fontSize: Typography.fontSizes.sm,
-    fontWeight: "bold",
     color: Colors.white,
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
   },
   categoryCardDesc: {
     fontSize: 10,

@@ -245,9 +245,8 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: Typography.fontSizes.xl,
-    fontWeight: "bold",
     color: "#1A2E22",
-    fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
+    fontFamily: Typography.fontFamilies.serif,
     marginBottom: 4,
   },
   subtitle: {

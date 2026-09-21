@@ -534,8 +534,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: Typography.fontSizes.lg,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
     color: Colors.ink,
   },
   formCard: {
@@ -553,9 +552,8 @@ const styles = StyleSheet.create({
   },
   formTitle: {
     fontSize: Typography.fontSizes.base,
-    fontWeight: "bold",
     color: Colors.ink,
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
     marginBottom: Spacing.sm,
   },
   gpsButton: {
@@ -629,8 +627,7 @@ const styles = StyleSheet.create({
   },
   addressName: {
     fontSize: Typography.fontSizes.sm,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.sansSemiBold,
     color: Colors.ink,
   },
   defaultBadge: {

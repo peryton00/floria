@@ -879,8 +879,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   topHeaderTitle: {
-    fontFamily: "Georgia",
-    fontWeight: "bold",
+    fontFamily: Typography.fontFamilies.serif,
     fontSize: 16,
     color: Colors.ink,
   },
@@ -900,6 +899,45 @@ const styles = StyleSheet.create({
   image: {
     width: "100%",
     height: "100%",
+  },
+  heroBadgeRow: {
+    position: "absolute",
+    top: Spacing.md,
+    left: Spacing.md,
+    flexDirection: "row",
+    gap: Spacing.xs,
+  },
+  rareBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: Colors.terracotta,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: BorderRadius.full,
+  },
+  rareBadgeText: {
+    fontSize: 10,
+    fontWeight: "bold",
+    color: Colors.white,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  organicBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: Colors.forest,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: BorderRadius.full,
+  },
+  organicBadgeText: {
+    fontSize: 10,
+    fontWeight: "bold",
+    color: Colors.white,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   placeholder: {
     width: "100%",
@@ -995,8 +1033,7 @@ const styles = StyleSheet.create({
   },
   productName: {
     fontSize: Typography.fontSizes.xl,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
     color: Colors.ink,
     lineHeight: Typography.lineHeights.xl,
   },
@@ -1170,8 +1207,7 @@ const styles = StyleSheet.create({
   },
   sectionHeading: {
     fontSize: Typography.fontSizes.sm + 1,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
     color: Colors.ink,
     marginBottom: Spacing.xs,
   },
@@ -1417,8 +1453,7 @@ const styles = StyleSheet.create({
   },
   recTitle: {
     fontSize: Typography.fontSizes.md + 1,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
     color: Colors.ink,
   },
   recSubtitle: {

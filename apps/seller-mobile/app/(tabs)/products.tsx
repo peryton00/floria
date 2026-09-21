@@ -317,8 +317,7 @@ const styles = StyleSheet.create({
   },
   pageTitle: {
     fontSize: Typography.fontSizes.lg,
-    fontFamily: "Georgia",
-    fontWeight: "bold",
+    fontFamily: Typography.fontFamilies.serif,
     color: Colors.forest,
   },
   addPlantButton: {
@@ -430,9 +429,8 @@ const styles = StyleSheet.create({
   },
   productName: {
     fontSize: Typography.fontSizes.sm,
-    fontWeight: "bold",
     color: Colors.ink,
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
   },
   productPrice: {
     fontSize: Typography.fontSizes.sm,

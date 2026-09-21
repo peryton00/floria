@@ -415,8 +415,7 @@ const styles = StyleSheet.create({
   },
   topBarTitle: {
     fontSize: Typography.fontSizes.lg,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
     color: Colors.forest,
   },
   loadingContainer: {
@@ -479,8 +478,7 @@ const styles = StyleSheet.create({
   },
   bankName: {
     fontSize: Typography.fontSizes.base,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.sansSemiBold,
     color: Colors.ink,
   },
   accountHolder: {
@@ -592,8 +590,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: Typography.fontSizes.md,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
     color: Colors.forest,
   },
   modalField: {

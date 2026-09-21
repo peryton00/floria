@@ -246,9 +246,8 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: Typography.fontSizes.xxl,
-    fontWeight: "bold",
     color: Colors.ink,
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
     marginBottom: 4,
     textAlign: "center",
   },

@@ -282,8 +282,7 @@ const styles = StyleSheet.create({
   },
   summaryTitle: {
     fontSize: Typography.fontSizes.sm,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.sansSemiBold,
     color: Colors.ink,
     marginBottom: Spacing.sm,
     paddingBottom: Spacing.xs,

@@ -347,9 +347,8 @@ const styles = StyleSheet.create({
   },
   heroAmount: {
     fontSize: 32,
-    fontWeight: "800",
     color: theme.colors.forest,
-    fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
+    fontFamily: theme.typography.fontFamilies.sansBold,
   },
   walletIconCircle: {
     width: 46,

@@ -401,8 +401,7 @@ const styles = StyleSheet.create({
   },
   sheetTitle: {
     fontSize: Typography.fontSizes.lg,
-    fontFamily: "Georgia",
-    fontWeight: "bold",
+    fontFamily: Typography.fontFamilies.serif,
     color: Colors.ink,
     marginBottom: Spacing.xs,
   },

@@ -243,9 +243,8 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
   },
   headerTitle: {
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
     fontSize: 17,
-    fontWeight: "bold",
     color: Colors.ink,
   },
   unreadCountBadge: {
@@ -318,9 +317,8 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   emptyTitle: {
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
     fontSize: Typography.fontSizes.lg,
-    fontWeight: "bold",
     color: Colors.ink,
     marginBottom: Spacing.xs,
   },
@@ -335,9 +333,8 @@ const styles = StyleSheet.create({
     minWidth: 160,
   },
   errorTitle: {
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
     fontSize: Typography.fontSizes.md,
-    fontWeight: "bold",
     color: Colors.ink,
     marginTop: Spacing.sm,
     marginBottom: Spacing.xs,

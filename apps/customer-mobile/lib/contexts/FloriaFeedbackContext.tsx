@@ -566,8 +566,7 @@ const styles = StyleSheet.create({
   },
   sheetTitle: {
     fontSize: Typography.fontSizes.lg,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
     color: Colors.ink,
     flex: 1,
   },

@@ -130,8 +130,7 @@ const styles = StyleSheet.create({
   },
   orderNumber: {
     fontSize: Typography.fontSizes.sm,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.sansSemiBold,
     color: Colors.ink,
   },
   date: {

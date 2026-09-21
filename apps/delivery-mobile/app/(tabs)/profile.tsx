@@ -351,13 +351,12 @@ const styles = StyleSheet.create({
   avatarText: {
     color: theme.colors.white,
     fontSize: 28,
-    fontWeight: "700",
-    fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
+    fontFamily: theme.typography.fontFamilies.serif,
   },
   userName: {
     fontSize: 20,
-    fontWeight: "700",
     color: theme.colors.forest,
+    fontFamily: theme.typography.fontFamilies.serif,
     marginBottom: 2,
   },
   courierIdText: {

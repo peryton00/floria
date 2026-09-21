@@ -353,8 +353,7 @@ const styles = StyleSheet.create({
   },
   pageTitle: {
     fontSize: Typography.fontSizes.lg,
-    fontFamily: "Georgia",
-    fontWeight: "bold",
+    fontFamily: Typography.fontFamilies.serif,
     color: Colors.forest,
   },
 });

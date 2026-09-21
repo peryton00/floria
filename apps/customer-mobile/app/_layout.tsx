@@ -1,15 +1,52 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { StatusBar } from "react-native";
 import { Stack } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import {
+  useFonts,
+  CormorantGaramond_400Regular,
+  CormorantGaramond_500Medium,
+  CormorantGaramond_600SemiBold,
+  CormorantGaramond_400Regular_Italic,
+} from "@expo-google-fonts/cormorant-garamond";
+import {
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+} from "@expo-google-fonts/inter";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { CustomerAuthProvider } from "../lib/contexts/CustomerAuthContext";
 import { CartProvider } from "../lib/contexts/CartContext";
 import { WishlistProvider } from "../lib/contexts/WishlistContext";
 import { NotificationProvider } from "../lib/contexts/NotificationContext";
 import { FloriaFeedbackProvider } from "../lib/contexts/FloriaFeedbackContext";
-import { Colors } from "../lib/theme";
+import { Colors, Typography } from "../lib/theme";
+
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts({
+    CormorantGaramond_400Regular,
+    CormorantGaramond_500Medium,
+    CormorantGaramond_600SemiBold,
+    CormorantGaramond_400Regular_Italic,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+  });
+
+  useEffect(() => {
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [fontsLoaded, fontError]);
+
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
+
   return (
     <SafeAreaProvider>
       <CustomerAuthProvider>
@@ -29,8 +66,7 @@ export default function RootLayout() {
                     },
                     headerTintColor: Colors.forest,
                     headerTitleStyle: {
-                      fontWeight: "bold",
-                      fontFamily: "Georgia",
+                      fontFamily: Typography.fontFamilies.serif,
                       fontSize: 17,
                       color: Colors.ink,
                     },

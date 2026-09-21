@@ -351,8 +351,7 @@ const styles = StyleSheet.create({
   },
   pageTitle: {
     fontSize: Typography.fontSizes.lg,
-    fontFamily: "Georgia",
-    fontWeight: "bold",
+    fontFamily: Typography.fontFamilies.serif,
     color: Colors.forest,
   },
   rangeContainer: {
@@ -413,8 +412,7 @@ const styles = StyleSheet.create({
   },
   kpiValue: {
     fontSize: Typography.fontSizes.xl,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.sansBold,
     color: Colors.forest,
     marginVertical: 4,
   },
@@ -515,9 +513,8 @@ const styles = StyleSheet.create({
   },
   plantNameText: {
     fontSize: Typography.fontSizes.sm,
-    fontWeight: "bold",
     color: Colors.ink,
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
   },
   plantQuantityText: {
     fontSize: Typography.fontSizes.xs,

@@ -375,9 +375,8 @@ const styles = StyleSheet.create({
   },
   heroTitle: {
     fontSize: Typography.fontSizes.xl,
-    fontWeight: "bold",
     color: Colors.white,
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
     lineHeight: Typography.lineHeights.xl,
     marginBottom: Spacing.xs,
   },
@@ -444,9 +443,8 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: Typography.fontSizes.md + 1,
-    fontWeight: "bold",
     color: Colors.ink,
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
   },
   sectionSubtitle: {
     fontSize: 11,

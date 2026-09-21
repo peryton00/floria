@@ -91,8 +91,7 @@ const styles = StyleSheet.create({
   },
   value: {
     fontSize: Typography.fontSizes.xl,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.sansBold,
   },
   subtitle: {
     fontSize: 10,

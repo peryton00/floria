@@ -277,8 +277,7 @@ const styles = StyleSheet.create({
   },
   topBarTitle: {
     fontSize: Typography.fontSizes.lg,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
     color: Colors.forest,
   },
   loadingContainer: {
@@ -314,8 +313,7 @@ const styles = StyleSheet.create({
   },
   summaryValue: {
     fontSize: Typography.fontSizes.lg,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.sansBold,
     color: Colors.ink,
   },
   balancesGrid: {
@@ -339,8 +337,7 @@ const styles = StyleSheet.create({
   },
   balanceValue: {
     fontSize: Typography.fontSizes.lg,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.sansBold,
   },
   balanceSub: {
     fontSize: 10,

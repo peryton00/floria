@@ -464,8 +464,7 @@ const styles = StyleSheet.create({
   },
   orderTitle: {
     fontSize: Typography.fontSizes.md,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.sansSemiBold,
     color: Colors.ink,
   },
   orderTimestamp: {
@@ -508,9 +507,8 @@ const styles = StyleSheet.create({
   },
   itemName: {
     fontSize: Typography.fontSizes.sm,
-    fontWeight: "bold",
     color: Colors.ink,
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
   },
   itemQty: {
     fontSize: Typography.fontSizes.xs,
@@ -654,8 +652,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: Typography.fontSizes.md,
-    fontFamily: "Georgia",
-    fontWeight: "bold",
+    fontFamily: Typography.fontFamilies.serif,
     color: Colors.ink,
   },
   modalSubtitle: {
@@ -695,8 +692,7 @@ const styles = StyleSheet.create({
   },
   pageTitle: {
     fontSize: Typography.fontSizes.lg,
-    fontFamily: "Georgia",
-    fontWeight: "bold",
+    fontFamily: Typography.fontFamilies.serif,
     color: Colors.forest,
   },
 });

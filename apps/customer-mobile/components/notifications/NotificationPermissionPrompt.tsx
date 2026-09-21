@@ -102,9 +102,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.sansSemiBold,
     fontSize: Typography.fontSizes.sm,
-    fontWeight: "bold",
     color: Colors.ink,
     marginBottom: 2,
   },

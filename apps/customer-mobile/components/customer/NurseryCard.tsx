@@ -106,17 +106,15 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     color: Colors.white,
-    fontWeight: "bold",
     fontSize: Typography.fontSizes.sm,
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
   },
   headerInfo: {
     flex: 1,
   },
   title: {
     fontSize: Typography.fontSizes.sm + 1,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
     color: Colors.ink,
   },
   locationRow: {

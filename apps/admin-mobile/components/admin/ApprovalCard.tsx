@@ -106,9 +106,8 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     color: Colors.white,
-    fontWeight: "bold",
     fontSize: Typography.fontSizes.lg,
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
   },
   info: {
     flex: 1,

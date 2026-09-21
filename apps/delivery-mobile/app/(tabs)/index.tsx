@@ -385,9 +385,8 @@ const styles = StyleSheet.create({
   },
   courierName: {
     fontSize: 20,
-    fontWeight: "700",
     color: theme.colors.forest,
-    fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
+    fontFamily: theme.typography.fontFamilies.serif,
   },
   dutyPill: {
     flexDirection: "row",

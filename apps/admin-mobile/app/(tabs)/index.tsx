@@ -269,8 +269,7 @@ const styles = StyleSheet.create({
   },
   unauthTitle: {
     fontSize: Typography.fontSizes.xl,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
     color: Colors.ink,
     marginBottom: Spacing.xs,
   },
@@ -307,8 +306,7 @@ const styles = StyleSheet.create({
   },
   adminName: {
     fontSize: Typography.fontSizes.lg,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
     color: Colors.white,
     marginTop: 2,
   },
@@ -331,8 +329,7 @@ const styles = StyleSheet.create({
   },
   sectionHeading: {
     fontSize: Typography.fontSizes.sm,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
     color: Colors.ink,
     marginBottom: Spacing.xs,
     textTransform: "uppercase",
@@ -363,8 +360,7 @@ const styles = StyleSheet.create({
   },
   triageVal: {
     fontSize: Typography.fontSizes.xxl,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.sansBold,
     color: Colors.ink,
     marginVertical: 2,
   },
@@ -392,8 +388,7 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: Typography.fontSizes.sm,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.sansSemiBold,
     color: Colors.ink,
   },
   linkText: {
@@ -413,8 +408,7 @@ const styles = StyleSheet.create({
   },
   opsVal: {
     fontSize: Typography.fontSizes.xl,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.sansBold,
     color: Colors.forest,
   },
   opsLabel: {
@@ -440,8 +434,7 @@ const styles = StyleSheet.create({
   },
   revenueAmount: {
     fontSize: Typography.fontSizes.xxl,
-    fontWeight: "bold",
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.sansBold,
     color: Colors.forest,
     marginVertical: 2,
   },

@@ -356,9 +356,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
   },
   topBarTitle: {
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
     fontSize: Typography.fontSizes.md,
-    fontWeight: "bold",
     color: Colors.forest,
   },
   loadingContainer: {
@@ -422,8 +421,7 @@ const styles = StyleSheet.create({
   },
   idValue: {
     fontSize: 11,
-    fontFamily: "Georgia",
-    fontWeight: "bold",
+    fontFamily: Typography.fontFamilies.sansSemiBold,
     color: Colors.forest,
   },
   sectionCard: {
@@ -434,9 +432,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
   },
   sectionHeading: {
-    fontFamily: "Georgia",
+    fontFamily: Typography.fontFamilies.serif,
     fontSize: Typography.fontSizes.base,
-    fontWeight: "bold",
     color: Colors.forest,
     marginBottom: 4,
   },
