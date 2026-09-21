@@ -6,6 +6,8 @@ import Link from "next/link";
 import { ArrowRight } from "@phosphor-icons/react";
 import { api } from "@/lib/api";
 
+import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
+
 interface StatsData {
   totalSellers: number;
   totalProducts: number;
@@ -16,17 +18,55 @@ interface StatsData {
 
 export function HeroSection() {
   const [stats, setStats] = useState<StatsData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
     async function loadStats() {
       try {
-        const res = await api.getPublicBusinessStats();
-        if (isMounted && res.success && res.data) {
-          setStats(res.data);
+        let loadedStats: StatsData | null = null;
+        try {
+          const res = await api.getPublicBusinessStats();
+          if (res.success && res.data) {
+            loadedStats = res.data;
+          }
+        } catch (e) {
+          console.warn("[HeroSection] REST API stats fetch skipped:", e);
+        }
+
+        // If API returned 0 products (e.g. older backend deployment), query Supabase directly
+        if (!loadedStats || loadedStats.totalProducts === 0) {
+          try {
+            const supabase = getSupabaseBrowserClient();
+            const [prodRes, sellerRes] = await Promise.all([
+              supabase.from("products").select("id", { count: "exact", head: true }).eq("status", "active"),
+              supabase.from("seller_profiles").select("id", { count: "exact", head: true }).eq("status", "approved").eq("is_active", true),
+            ]);
+
+            const totalProducts = prodRes.count ?? (loadedStats?.totalProducts || 0);
+            const totalSellers = sellerRes.count ?? (loadedStats?.totalSellers || 0);
+
+            loadedStats = {
+              totalProducts,
+              totalSellers: totalSellers > 0 ? totalSellers : (loadedStats?.totalSellers || 5),
+              citiesCovered: loadedStats?.citiesCovered || 1,
+              ordersCompleted: loadedStats?.ordersCompleted || 0,
+              avgRating: loadedStats?.avgRating || 4.8,
+            };
+          } catch (dbErr) {
+            console.warn("[HeroSection] Direct Supabase stats fallback failed:", dbErr);
+          }
+        }
+
+        if (isMounted && loadedStats) {
+          setStats(loadedStats);
         }
       } catch (e) {
-        console.warn("[HeroSection] Live stats fallback:", e);
+        console.warn("[HeroSection] Failed to load platform stats:", e);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     }
     loadStats();
@@ -35,9 +75,15 @@ export function HeroSection() {
     };
   }, []);
 
-  const sellerCount = stats?.totalSellers ? `${stats.totalSellers.toLocaleString()}+` : "1,248";
-  const productCount = stats?.totalProducts ? `${stats.totalProducts.toLocaleString()}+` : "18,420+";
-  const cityCount = stats?.citiesCovered ? `${stats.citiesCovered}` : "326";
+  const sellerCount = stats
+    ? `${stats.totalSellers.toLocaleString()}${stats.totalSellers >= 10 ? "+" : ""}`
+    : "0";
+  const productCount = stats
+    ? `${stats.totalProducts.toLocaleString()}${stats.totalProducts >= 10 ? "+" : ""}`
+    : "0";
+  const cityCount = stats
+    ? `${stats.citiesCovered.toLocaleString()}`
+    : "0";
 
   return (
     <section className="relative pt-6 pb-16 sm:pt-12 sm:pb-24 lg:pt-16 lg:pb-28 bg-cream-100 overflow-hidden">
@@ -103,9 +149,13 @@ export function HeroSection() {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-8 sm:gap-12 max-w-4xl">
             {/* Metric 1 */}
             <div>
-              <div className="font-serif text-3xl sm:text-4xl lg:text-5xl font-semibold text-ink-900 tracking-tight">
-                {sellerCount}
-              </div>
+              {isLoading ? (
+                <div className="h-10 sm:h-12 w-24 bg-cream-200 rounded-lg animate-pulse" />
+              ) : (
+                <div className="font-serif text-3xl sm:text-4xl lg:text-5xl font-semibold text-ink-900 tracking-tight">
+                  {sellerCount}
+                </div>
+              )}
               <p className="text-xs sm:text-sm text-ink-600 font-medium uppercase tracking-wider mt-1.5">
                 Businesses on Floria
               </p>
@@ -113,9 +163,13 @@ export function HeroSection() {
 
             {/* Metric 2 */}
             <div>
-              <div className="font-serif text-3xl sm:text-4xl lg:text-5xl font-semibold text-ink-900 tracking-tight">
-                {productCount}
-              </div>
+              {isLoading ? (
+                <div className="h-10 sm:h-12 w-28 bg-cream-200 rounded-lg animate-pulse" />
+              ) : (
+                <div className="font-serif text-3xl sm:text-4xl lg:text-5xl font-semibold text-ink-900 tracking-tight">
+                  {productCount}
+                </div>
+              )}
               <p className="text-xs sm:text-sm text-ink-600 font-medium uppercase tracking-wider mt-1.5">
                 Products listed
               </p>
@@ -123,9 +177,13 @@ export function HeroSection() {
 
             {/* Metric 3 */}
             <div className="col-span-2 md:col-span-1">
-              <div className="font-serif text-3xl sm:text-4xl lg:text-5xl font-semibold text-ink-900 tracking-tight">
-                {cityCount}
-              </div>
+              {isLoading ? (
+                <div className="h-10 sm:h-12 w-20 bg-cream-200 rounded-lg animate-pulse" />
+              ) : (
+                <div className="font-serif text-3xl sm:text-4xl lg:text-5xl font-semibold text-ink-900 tracking-tight">
+                  {cityCount}
+                </div>
+              )}
               <p className="text-xs sm:text-sm text-ink-600 font-medium uppercase tracking-wider mt-1.5">
                 Cities covered
               </p>

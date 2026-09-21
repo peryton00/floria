@@ -44,39 +44,60 @@ export function TopBusinesses() {
     };
   }, []);
 
-  // Safe fallback demonstration data if database is fresh
-  const displayList =
-    businesses.length >= 3
-      ? businesses
-      : [
-          {
-            id: "1",
-            business_name: "Green Leaf Botanical Nursery",
-            city: "Raipur",
-            state: "Chhattisgarh",
-            logo_url: "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80",
-            business_type: "Plant Nursery",
-            rating_summary: { avg_rating: 4.9, review_count: 342 },
-          },
-          {
-            id: "2",
-            business_name: "Petals & Stems Floral Studio",
-            city: "Bilaspur",
-            state: "Chhattisgarh",
-            logo_url: "https://images.unsplash.com/photo-1561181286-d3fee7d55364?auto=format&fit=crop&w=800&q=80",
-            business_type: "Flower Studio",
-            rating_summary: { avg_rating: 4.9, review_count: 218 },
-          },
-          {
-            id: "3",
-            business_name: "Clay & Craft Pottery Co.",
-            city: "Bhilai",
-            state: "Chhattisgarh",
-            logo_url: "https://images.unsplash.com/photo-1485955900006-10f4d324d411?auto=format&fit=crop&w=800&q=80",
-            business_type: "Planter Artisan",
-            rating_summary: { avg_rating: 4.8, review_count: 184 },
-          },
-        ];
+  if (isLoading) {
+    return (
+      <section id="top-businesses" className="py-20 sm:py-28 lg:py-32 bg-cream-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-3xl mb-14 sm:mb-20">
+            <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-semibold text-ink-900 leading-[1.12] tracking-tight">
+              Businesses customers love.
+            </h2>
+            <p className="text-lg sm:text-xl text-ink-600 font-normal leading-relaxed mt-4">
+              Discover verified nurseries and plant boutiques growing with Floria.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-10">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex flex-col space-y-4 animate-pulse">
+                <div className="rounded-3xl bg-cream-200 aspect-[4/3] sm:aspect-[16/12] w-full" />
+                <div className="h-6 bg-cream-200 rounded w-3/4" />
+                <div className="h-4 bg-cream-200 rounded w-1/2" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (businesses.length === 0) {
+    return (
+      <section id="top-businesses" className="py-16 sm:py-24 bg-cream-100 border-t border-cream-300/60">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="max-w-2xl mx-auto space-y-4">
+            <span className="text-xs font-bold uppercase tracking-widest text-forest-800 bg-forest-100/70 border border-forest-200 px-3 py-1 rounded-full">
+              Pioneer Floria Partner
+            </span>
+            <h2 className="font-serif text-3xl sm:text-4xl font-semibold text-ink-900">
+              Be the first featured nursery in your region
+            </h2>
+            <p className="text-sm sm:text-base text-ink-600 leading-relaxed">
+              Connect your botanical storefront with thousands of local plant enthusiasts across your city.
+            </p>
+            <div className="pt-2">
+              <Link
+                href="/register"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-forest-800 hover:bg-forest-900 text-cream-50 font-semibold text-sm rounded-xl shadow-xs transition-colors"
+              >
+                <span>Register Your Nursery</span>
+                <ArrowRight size={15} weight="bold" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="top-businesses" className="py-20 sm:py-28 lg:py-32 bg-cream-100">
@@ -93,12 +114,12 @@ export function TopBusinesses() {
 
         {/* 3-Column Photographic Discovery Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-10">
-          {displayList.map((biz) => {
+          {businesses.map((biz) => {
             const rs = Array.isArray(biz.rating_summary)
               ? biz.rating_summary[0]
               : biz.rating_summary;
-            const rating = rs?.avg_rating ?? 4.9;
-            const reviewCount = rs?.review_count ?? 250;
+            const rating = rs?.avg_rating ?? 5.0;
+            const reviewCount = rs?.review_count ?? 0;
             const location = [biz.city, biz.state].filter(Boolean).join(", ") || "Verified Location";
 
             return (

@@ -44,9 +44,7 @@ describe("Floria Business Public Landing Endpoints", () => {
         if (table === "products") {
           return {
             select: () => ({
-              eq: () => ({
-                is: () => Promise.resolve({ count: 180, data: null, error: null }),
-              }),
+              eq: () => Promise.resolve({ count: 180, data: null, error: null }),
             }),
           };
         }

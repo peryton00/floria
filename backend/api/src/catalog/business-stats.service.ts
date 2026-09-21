@@ -36,8 +36,7 @@ export class BusinessStatsService {
         db
           .from("products")
           .select("id", { count: "exact", head: true })
-          .eq("status", "active")
-          .is("deleted_at", null),
+          .eq("status", "active"),
 
         // Distinct cities across approved sellers
         db
@@ -63,6 +62,16 @@ export class BusinessStatsService {
           .select("id", { count: "exact", head: true })
           .eq("is_active", true),
       ]);
+
+      if (productsRes.error) {
+        console.warn("[BusinessStatsService] Error querying products count:", productsRes.error);
+      }
+      if (sellersRes.error) {
+        console.warn("[BusinessStatsService] Error querying sellers count:", sellersRes.error);
+      }
+      if (citiesRes.error) {
+        console.warn("[BusinessStatsService] Error querying cities:", citiesRes.error);
+      }
 
       const totalSellers = sellersRes.count ?? (Array.isArray(sellersRes.data) ? sellersRes.data.length : 0);
       const totalProducts = productsRes.count ?? (Array.isArray(productsRes.data) ? productsRes.data.length : 0);
@@ -110,7 +119,6 @@ export class BusinessStatsService {
       };
     } catch (err: any) {
       console.warn("[BusinessStatsService] Error querying public platform stats:", err?.message || err);
-      // Return zero counts on error rather than fabricated numbers
       return {
         totalSellers: 0,
         totalProducts: 0,

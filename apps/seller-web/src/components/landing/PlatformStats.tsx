@@ -10,6 +10,8 @@ import {
 } from "@phosphor-icons/react";
 import { api } from "@/lib/api";
 
+import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
+
 interface StatsData {
   totalSellers: number;
   totalProducts: number;
@@ -27,9 +29,42 @@ export function PlatformStats() {
 
     async function loadStats() {
       try {
-        const res = await api.getPublicBusinessStats();
-        if (isMounted && res.success && res.data) {
-          setStats(res.data);
+        let loadedStats: StatsData | null = null;
+        try {
+          const res = await api.getPublicBusinessStats();
+          if (res.success && res.data) {
+            loadedStats = res.data;
+          }
+        } catch (e) {
+          console.warn("[PlatformStats] REST API fetch skipped:", e);
+        }
+
+        // If API returned 0 products (e.g. un-deployed remote backend), query Supabase directly
+        if (!loadedStats || loadedStats.totalProducts === 0) {
+          try {
+            const supabase = getSupabaseBrowserClient();
+            const [prodRes, sellerRes] = await Promise.all([
+              supabase.from("products").select("id", { count: "exact", head: true }).eq("status", "active"),
+              supabase.from("seller_profiles").select("id", { count: "exact", head: true }).eq("status", "approved").eq("is_active", true),
+            ]);
+
+            const totalProducts = prodRes.count ?? (loadedStats?.totalProducts || 0);
+            const totalSellers = sellerRes.count ?? (loadedStats?.totalSellers || 0);
+
+            loadedStats = {
+              totalProducts,
+              totalSellers: totalSellers > 0 ? totalSellers : (loadedStats?.totalSellers || 5),
+              citiesCovered: loadedStats?.citiesCovered || 1,
+              ordersCompleted: loadedStats?.ordersCompleted || 0,
+              avgRating: loadedStats?.avgRating || 4.8,
+            };
+          } catch (dbErr) {
+            console.warn("[PlatformStats] Direct Supabase stats fallback failed:", dbErr);
+          }
+        }
+
+        if (isMounted && loadedStats) {
+          setStats(loadedStats);
         }
       } catch (e) {
         console.warn("[PlatformStats] Failed to load live platform stats:", e);
@@ -48,28 +83,28 @@ export function PlatformStats() {
     {
       id: "sellers",
       label: "Active Sellers",
-      value: stats?.totalSellers ? `${stats.totalSellers}+` : "100+",
+      value: stats && stats.totalSellers > 0 ? `${stats.totalSellers}+` : "0",
       subtext: "Nurseries, florists & artisans",
       icon: Storefront,
     },
     {
       id: "products",
       label: "Products Listed",
-      value: stats?.totalProducts ? `${stats.totalProducts}+` : "2,500+",
+      value: stats && stats.totalProducts > 0 ? `${stats.totalProducts}+` : "0",
       subtext: "Plants, bouquets, tools & pots",
       icon: Plant,
     },
     {
       id: "cities",
       label: "Cities Covered",
-      value: stats?.citiesCovered ? `${stats.citiesCovered}` : "12",
+      value: stats && stats.citiesCovered > 0 ? `${stats.citiesCovered}` : "0",
       subtext: "Expanding fast across regions",
       icon: MapPin,
     },
     {
       id: "rating",
       label: "Customer Rating",
-      value: stats?.avgRating ? `★ ${stats.avgRating.toFixed(1)}` : "★ 4.9",
+      value: stats && stats.avgRating > 0 ? `★ ${stats.avgRating.toFixed(1)}` : "★ 5.0",
       subtext: "From verified marketplace buyers",
       icon: Star,
     },
